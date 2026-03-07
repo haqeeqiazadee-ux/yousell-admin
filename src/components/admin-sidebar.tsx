@@ -25,8 +25,11 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { useUser } from "@/components/user-context";
 
 const navItems = [
   { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -42,12 +45,22 @@ const navItems = [
 export function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const user = useUser();
 
   const handleSignOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/admin/login");
   };
+
+  const initials = user?.full_name
+    ? user.full_name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : user?.email?.slice(0, 2).toUpperCase() ?? "AD";
 
   return (
     <Sidebar>
@@ -86,6 +99,23 @@ export function AdminSidebar() {
       </SidebarContent>
       <SidebarFooter className="border-t border-border p-2">
         <SidebarMenu>
+          {user && (
+            <SidebarMenuItem>
+              <div className="flex items-center gap-2 px-2 py-1.5">
+                <Avatar className="h-6 w-6">
+                  <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col min-w-0 flex-1">
+                  <span className="text-xs font-medium truncate">
+                    {user.full_name || user.email}
+                  </span>
+                  <Badge variant="outline" className="w-fit text-[10px] px-1 py-0">
+                    {user.role}
+                  </Badge>
+                </div>
+              </div>
+            </SidebarMenuItem>
+          )}
           <SidebarMenuItem>
             <SidebarMenuButton onClick={handleSignOut}>
               <LogOut className="h-4 w-4" />

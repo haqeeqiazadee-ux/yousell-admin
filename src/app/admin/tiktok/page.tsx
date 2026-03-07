@@ -1,8 +1,17 @@
-export default function TiktokPage() {
+"use client";
+
+import { Music2 } from "lucide-react";
+import { PlatformProducts } from "@/components/platform-products";
+
+export default function TikTokPage() {
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold font-outfit tracking-tight">Tiktok</h1>
-      <p className="text-muted-foreground">This module will be implemented in a later phase.</p>
-    </div>
+    <PlatformProducts
+      title="TikTok Shop"
+      apiPath="/api/admin/tiktok"
+      emptyIcon={Music2}
+      emptyMessage="No TikTok products discovered"
+      emptyDescription="Configure your TikTok/Apify API key in Settings to start discovering trending TikTok Shop products."
+      statusBadge={{ label: "Apify Provider", configured: false }}
+    />
   );
 }

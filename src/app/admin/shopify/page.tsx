@@ -1,8 +1,17 @@
+"use client";
+
+import { Store } from "lucide-react";
+import { PlatformProducts } from "@/components/platform-products";
+
 export default function ShopifyPage() {
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold font-outfit tracking-tight">Shopify</h1>
-      <p className="text-muted-foreground">This module will be implemented in a later phase.</p>
-    </div>
+    <PlatformProducts
+      title="Shopify"
+      apiPath="/api/admin/products?platform=shopify"
+      emptyIcon={Store}
+      emptyMessage="No Shopify products connected"
+      emptyDescription="Connect your Shopify store in Settings to sync and analyze your product catalog."
+      statusBadge={{ label: "Not Connected", configured: false }}
+    />
   );
 }
