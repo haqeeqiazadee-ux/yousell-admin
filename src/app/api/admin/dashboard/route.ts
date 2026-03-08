@@ -21,5 +21,13 @@ export async function GET() {
     amazon: amazon.count || 0,
     trends: trends.count || 0,
     competitors: competitors.count || 0,
+    services: {
+      supabase: true,
+      auth: true,
+      railway: !!process.env.RAILWAY_API_URL && process.env.RAILWAY_API_URL !== "http://localhost:3001",
+      ai: !!process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_API_KEY.includes("your-"),
+      email: !!process.env.RESEND_API_KEY && !process.env.RESEND_API_KEY.includes("your-"),
+      apify: !!process.env.APIFY_API_TOKEN && !process.env.APIFY_API_TOKEN.includes("your-"),
+    },
   });
 }

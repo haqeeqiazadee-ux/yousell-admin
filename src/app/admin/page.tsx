@@ -22,12 +22,22 @@ import {
   Activity,
 } from "lucide-react";
 
+interface ServiceStatus {
+  supabase: boolean;
+  auth: boolean;
+  railway: boolean;
+  ai: boolean;
+  email: boolean;
+  apify: boolean;
+}
+
 interface DashboardStats {
   products: number;
   tiktok: number;
   amazon: number;
   trends: number;
   competitors: number;
+  services: ServiceStatus;
 }
 
 interface PreViralProduct {
@@ -243,26 +253,31 @@ export default function AdminDashboard() {
             <CardTitle className="text-lg">System Status</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span>Supabase</span>
-              <Badge variant="outline" className="text-green-500 border-green-500/30">Connected</Badge>
-            </div>
-            <div className="flex justify-between">
-              <span>Auth + RBAC</span>
-              <Badge variant="outline" className="text-green-500 border-green-500/30">Active</Badge>
-            </div>
-            <div className="flex justify-between">
-              <span>Railway API</span>
-              <Badge variant="outline" className="text-yellow-500 border-yellow-500/30">Not Configured</Badge>
-            </div>
-            <div className="flex justify-between">
-              <span>AI Engine</span>
-              <Badge variant="outline" className="text-yellow-500 border-yellow-500/30">Not Configured</Badge>
-            </div>
-            <div className="flex justify-between">
-              <span>Resend Email</span>
-              <Badge variant="outline" className="text-yellow-500 border-yellow-500/30">Not Configured</Badge>
-            </div>
+            {[
+              { label: "Supabase", key: "supabase" as const },
+              { label: "Auth + RBAC", key: "auth" as const },
+              { label: "AI Engine (Claude)", key: "ai" as const },
+              { label: "Resend Email", key: "email" as const },
+              { label: "Apify Scrapers", key: "apify" as const },
+              { label: "Railway API", key: "railway" as const },
+            ].map((svc) => {
+              const active = stats?.services?.[svc.key] ?? false;
+              return (
+                <div key={svc.key} className="flex justify-between">
+                  <span>{svc.label}</span>
+                  <Badge
+                    variant="outline"
+                    className={
+                      active
+                        ? "text-green-500 border-green-500/30"
+                        : "text-yellow-500 border-yellow-500/30"
+                    }
+                  >
+                    {active ? "Connected" : "Not Configured"}
+                  </Badge>
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
 
