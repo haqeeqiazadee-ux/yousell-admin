@@ -28,13 +28,54 @@ export interface InfluencerResult {
  * Additional: YouTube Data API, Pinterest Creator API, TikTok Creator Marketplace
  */
 export async function searchInfluencers(
-  _niche: string,
+  niche: string,
   _platform?: string
 ): Promise<InfluencerResult[]> {
-  // TODO Phase 15: Implement Ainfluencer API
-  // TODO: Implement Modash free tier
-  // TODO: YouTube Data API for creator discovery
+  if (process.env.APIFY_API_TOKEN) {
+    return searchViaApify(niche);
+  }
   return [];
+}
+
+async function searchViaApify(niche: string): Promise<InfluencerResult[]> {
+  const token = process.env.APIFY_API_TOKEN;
+  if (!token) return [];
+
+  try {
+    const res = await fetch(
+      `https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items?token=${token}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          search: niche,
+          resultsLimit: 15,
+        }),
+        signal: AbortSignal.timeout(60000),
+      }
+    );
+
+    if (!res.ok) {
+      console.error(`Apify Influencer error: ${res.status}`);
+      return [];
+    }
+
+    const items = await res.json();
+    if (!Array.isArray(items)) return [];
+
+    return items.slice(0, 15).map((item: Record<string, unknown>) => ({
+      username: (item.username as string) || (item.name as string) || "unknown",
+      platform: "instagram",
+      followers: parseInt(String(item.followersCount || item.followers || 0), 10),
+      engagementRate: parseFloat(String(item.engagementRate || 0)) || 0,
+      niche,
+      email: (item.email as string) || (item.businessEmail as string) || undefined,
+      profileUrl: (item.url as string) || `https://instagram.com/${item.username || ""}`,
+    }));
+  } catch (err) {
+    console.error("Apify Influencer search failed:", err);
+    return [];
+  }
 }
 
 /**

@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { searchTikTokProducts } from "@/lib/providers/tiktok";
+import { searchAmazonProducts } from "@/lib/providers/amazon";
+import { searchShopifyProducts } from "@/lib/providers/shopify";
+import { searchPinterestProducts } from "@/lib/providers/pinterest";
+import { searchTrends } from "@/lib/providers/trends";
+import type { ProductResult } from "@/lib/providers/types";
 
 export async function GET() {
   try {
@@ -26,28 +32,91 @@ export async function POST(request: Request) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await request.json();
-    const { scan_mode, client_id } = body;
+    const { scan_mode, keywords } = body;
 
     if (!scan_mode) {
       return NextResponse.json({ error: "scan_mode is required" }, { status: 400 });
     }
 
-    const record: Record<string, unknown> = {
+    const searchTerms = keywords?.length
+      ? keywords
+      : ["trending products", "viral products 2024", "best sellers"];
+
+    // Run all platform scans in parallel
+    const scanPromises: Promise<ProductResult[]>[] = [];
+    const platformLabels: string[] = [];
+
+    if (scan_mode === "quick" || scan_mode === "full") {
+      scanPromises.push(searchTikTokProducts(searchTerms[0]));
+      platformLabels.push("tiktok");
+      scanPromises.push(searchAmazonProducts(searchTerms[0]));
+      platformLabels.push("amazon");
+    }
+
+    if (scan_mode === "full") {
+      scanPromises.push(searchShopifyProducts(searchTerms[0]));
+      platformLabels.push("shopify");
+      scanPromises.push(searchPinterestProducts(searchTerms[0]));
+      platformLabels.push("pinterest");
+    }
+
+    // Run trends search
+    if (scan_mode === "full") {
+      searchTrends(searchTerms).catch(console.error);
+    }
+
+    const results = await Promise.allSettled(scanPromises);
+
+    // Collect all products
+    let totalProducts = 0;
+    const errors: string[] = [];
+
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i];
+      if (result.status === "fulfilled" && result.value.length > 0) {
+        const products = result.value;
+        totalProducts += products.length;
+
+        // Upsert products into Supabase
+        const rows = products.map((p) => ({
+          title: p.title,
+          platform: p.platform,
+          price: p.price,
+          currency: p.currency,
+          image_url: p.imageUrl || null,
+          url: p.url,
+          score_overall: p.score || null,
+          metadata: p.metadata,
+          status: "active",
+        }));
+
+        const { error: insertError } = await supabase
+          .from("products")
+          .upsert(rows, { onConflict: "url", ignoreDuplicates: true });
+
+        if (insertError) {
+          // If upsert fails (e.g., no unique constraint on url), try regular insert
+          const { error: fallbackError } = await supabase
+            .from("products")
+            .insert(rows);
+          if (fallbackError) {
+            errors.push(`${platformLabels[i]}: ${fallbackError.message}`);
+          }
+        }
+      } else if (result.status === "rejected") {
+        errors.push(`${platformLabels[i]}: ${result.reason}`);
+      }
+    }
+
+    return NextResponse.json({
+      status: "completed",
       scan_mode,
-      triggered_by: user.id,
-      status: "running",
-    };
-    if (client_id) record.client_id = client_id;
-
-    const { data, error } = await supabase
-      .from("scan_history")
-      .insert(record)
-      .select()
-      .single();
-
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ scan: data }, { status: 201 });
-  } catch {
+      products_found: totalProducts,
+      platforms_scanned: platformLabels,
+      errors: errors.length > 0 ? errors : undefined,
+    }, { status: 201 });
+  } catch (err) {
+    console.error("Scan error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
