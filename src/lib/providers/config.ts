@@ -4,14 +4,17 @@ export interface ProviderInfo {
   id: string;
   name: string;
   description: string;
-  category: "ai" | "ecommerce" | "trends" | "social" | "competitor" | "email";
+  category: "ai" | "ecommerce" | "trends" | "social" | "competitor" | "email" | "influencer" | "supplier";
   envKeys: string[];
   docsUrl?: string;
   freeQuota?: string;
   phase: number;
+  pendingApproval?: boolean;
+  fallback?: string;
 }
 
 export const PROVIDERS: ProviderInfo[] = [
+  // === AI & Core ===
   {
     id: "supabase",
     name: "Supabase",
@@ -31,7 +34,7 @@ export const PROVIDERS: ProviderInfo[] = [
   {
     id: "resend",
     name: "Resend",
-    description: "Transactional email for alerts and reports",
+    description: "Transactional email for alerts, reports, and outreach",
     category: "email",
     envKeys: ["RESEND_API_KEY"],
     phase: 5,
@@ -39,61 +42,60 @@ export const PROVIDERS: ProviderInfo[] = [
   {
     id: "apify",
     name: "Apify",
-    description: "Web scraping for TikTok, Amazon, and supplier data",
+    description: "Web scraping for TikTok, Amazon, Pinterest, Shopify, supplier data",
     category: "ecommerce",
     envKeys: ["APIFY_API_TOKEN"],
     freeQuota: "$5/mo free tier",
     phase: 5,
   },
+  // === E-Commerce (pending approval) ===
   {
     id: "tiktok",
-    name: "TikTok Shop",
-    description: "TikTok product discovery and trending analysis",
+    name: "TikTok Research API",
+    description: "Official TikTok product data (pending approval)",
     category: "social",
     envKeys: ["TIKTOK_API_KEY"],
+    phase: 8,
+    pendingApproval: true,
+    fallback: "Apify TikTok Shop + ScrapeCreators + TikTok Creative Center",
+  },
+  {
+    id: "scrape_creators",
+    name: "ScrapeCreators",
+    description: "TikTok Shop product discovery (fallback)",
+    category: "social",
+    envKeys: ["SCRAPE_CREATORS_API_KEY"],
+    freeQuota: "100 free requests/mo",
     phase: 8,
   },
   {
     id: "amazon_pa",
-    name: "Amazon Product Advertising",
-    description: "Official Amazon product data API",
+    name: "Amazon Product Advertising API",
+    description: "Official Amazon product data (pending approval)",
     category: "ecommerce",
     envKeys: ["AMAZON_PA_API_KEY", "AMAZON_PA_API_SECRET", "AMAZON_ASSOCIATE_TAG"],
     phase: 9,
+    pendingApproval: true,
+    fallback: "Apify Amazon BSR + RapidAPI Real-Time Amazon",
   },
   {
     id: "rapidapi",
-    name: "RapidAPI",
-    description: "Amazon product data via third-party API",
+    name: "RapidAPI (Real-Time Amazon)",
+    description: "Amazon product data via third-party API (fallback)",
     category: "ecommerce",
     envKeys: ["RAPIDAPI_KEY"],
     freeQuota: "500 free/mo",
     phase: 9,
   },
+  // === Trends & Research ===
   {
     id: "reddit",
     name: "Reddit API",
     description: "Community sentiment and trend discovery",
     category: "trends",
     envKeys: ["REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET"],
+    freeQuota: "Free (2 min signup)",
     phase: 7,
-  },
-  {
-    id: "serpapi",
-    name: "SerpAPI",
-    description: "Search engine results for competitor analysis",
-    category: "competitor",
-    envKeys: ["SERPAPI_KEY"],
-    freeQuota: "100 free/mo",
-    phase: 12,
-  },
-  {
-    id: "pinterest",
-    name: "Pinterest",
-    description: "Pinterest product pins and trend data",
-    category: "social",
-    envKeys: ["PINTEREST_APP_ID", "PINTEREST_APP_SECRET"],
-    phase: 10,
   },
   {
     id: "youtube",
@@ -104,11 +106,105 @@ export const PROVIDERS: ProviderInfo[] = [
     freeQuota: "10k units/day free",
     phase: 15,
   },
+  {
+    id: "product_hunt",
+    name: "Product Hunt",
+    description: "Digital product trend discovery",
+    category: "trends",
+    envKeys: ["PRODUCT_HUNT_TOKEN"],
+    freeQuota: "Free (2 min signup)",
+    phase: 11,
+  },
+  // === Social Platforms ===
+  {
+    id: "pinterest",
+    name: "Pinterest Business API",
+    description: "Pinterest product pins and trend data",
+    category: "social",
+    envKeys: ["PINTEREST_APP_ID", "PINTEREST_APP_SECRET"],
+    freeQuota: "Free basic tier",
+    phase: 10,
+  },
+  // === Competitor Intel ===
+  {
+    id: "serpapi",
+    name: "SerpAPI",
+    description: "Search engine results for competitor analysis",
+    category: "competitor",
+    envKeys: ["SERPAPI_KEY"],
+    freeQuota: "100 free/mo",
+    phase: 12,
+  },
+  // === Influencer ===
+  {
+    id: "ainfluencer",
+    name: "Ainfluencer",
+    description: "Influencer discovery and matching (100% free)",
+    category: "influencer",
+    envKeys: ["AINFLUENCER_API_KEY"],
+    freeQuota: "100% free",
+    phase: 15,
+  },
+  {
+    id: "modash",
+    name: "Modash",
+    description: "Influencer analytics and audience data",
+    category: "influencer",
+    envKeys: ["MODASH_API_KEY"],
+    freeQuota: "20 results/search free",
+    phase: 15,
+  },
+  {
+    id: "hypeauditor",
+    name: "HypeAuditor",
+    description: "Fake follower detection and audience quality",
+    category: "influencer",
+    envKeys: ["HYPEAUDITOR_API_KEY"],
+    freeQuota: "Limited free tier",
+    phase: 15,
+  },
+  // === Supplier ===
+  {
+    id: "alibaba",
+    name: "Alibaba Open API",
+    description: "Supplier discovery from Alibaba.com",
+    category: "supplier",
+    envKeys: ["ALIBABA_APP_KEY"],
+    freeQuota: "Free (10 min signup)",
+    phase: 15,
+  },
+  {
+    id: "cj_dropshipping",
+    name: "CJ Dropshipping",
+    description: "Dropshipping supplier and product data",
+    category: "supplier",
+    envKeys: ["CJ_DROPSHIPPING_API_KEY"],
+    freeQuota: "Free (5 min signup)",
+    phase: 15,
+  },
+  {
+    id: "faire",
+    name: "Faire",
+    description: "Wholesale supplier marketplace",
+    category: "supplier",
+    envKeys: ["FAIRE_API_KEY"],
+    freeQuota: "Free (5 min signup)",
+    phase: 15,
+  },
 ];
 
+export const CATEGORY_LABELS: Record<string, string> = {
+  ai: "AI & Core",
+  ecommerce: "E-Commerce",
+  trends: "Trends & Research",
+  social: "Social Platforms",
+  competitor: "Competitor Intel",
+  email: "Email",
+  influencer: "Influencer Discovery",
+  supplier: "Supplier Discovery",
+};
+
 export function getProviderStatus(envKeys: string[]): "connected" | "missing" {
-  // In client-side code we can only check NEXT_PUBLIC_ vars
-  // Server-side API route handles the full check
   return envKeys.every((key) => key.startsWith("NEXT_PUBLIC_") && process.env[key])
     ? "connected"
     : "missing";

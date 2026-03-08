@@ -10,8 +10,17 @@ import {
   Music2,
   ShoppingCart,
   Store,
+  PinIcon,
+  FileText,
+  Bot,
+  HandCoins,
+  Scan,
+  Users,
+  UserSearch,
+  Truck,
   Settings,
   LogOut,
+  Bell,
 } from "lucide-react";
 import {
   Sidebar,
@@ -31,14 +40,32 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/components/user-context";
 
-const navItems = [
+const mainNav = [
   { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { title: "Scan Control", href: "/admin/scan", icon: Scan },
   { title: "Products", href: "/admin/products", icon: Package },
   { title: "Trend Scout", href: "/admin/trends", icon: TrendingUp },
+];
+
+const channelNav = [
+  { title: "TikTok Shop", href: "/admin/tiktok", icon: Music2 },
+  { title: "Amazon FBA", href: "/admin/amazon", icon: ShoppingCart },
+  { title: "Shopify DTC", href: "/admin/shopify", icon: Store },
+  { title: "Pinterest", href: "/admin/pinterest", icon: PinIcon },
+  { title: "Digital Products", href: "/admin/digital", icon: FileText },
+  { title: "AI Affiliates", href: "/admin/affiliates/ai", icon: Bot },
+  { title: "Physical Affiliates", href: "/admin/affiliates/physical", icon: HandCoins },
+];
+
+const intelligenceNav = [
   { title: "Competitors", href: "/admin/competitors", icon: Swords },
-  { title: "TikTok", href: "/admin/tiktok", icon: Music2 },
-  { title: "Amazon", href: "/admin/amazon", icon: ShoppingCart },
-  { title: "Shopify", href: "/admin/shopify", icon: Store },
+  { title: "Influencers", href: "/admin/influencers", icon: UserSearch },
+  { title: "Suppliers", href: "/admin/suppliers", icon: Truck },
+];
+
+const managementNav = [
+  { title: "Clients", href: "/admin/clients", icon: Users },
+  { title: "Notifications", href: "/admin/notifications", icon: Bell },
   { title: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
@@ -53,6 +80,9 @@ export function AdminSidebar() {
     router.push("/admin/login");
   };
 
+  const isActive = (href: string) =>
+    pathname === href || (href !== "/admin" && pathname.startsWith(href));
+
   const initials = user?.full_name
     ? user.full_name
         .split(" ")
@@ -61,6 +91,22 @@ export function AdminSidebar() {
         .toUpperCase()
         .slice(0, 2)
     : user?.email?.slice(0, 2).toUpperCase() ?? "AD";
+
+  const renderNav = (items: typeof mainNav) => (
+    <SidebarMenu>
+      {items.map((item) => (
+        <SidebarMenuItem key={item.href}>
+          <SidebarMenuButton
+            render={<Link href={item.href} />}
+            isActive={isActive(item.href)}
+          >
+            <item.icon className="h-4 w-4" />
+            <span>{item.title}</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      ))}
+    </SidebarMenu>
+  );
 
   return (
     <Sidebar>
@@ -76,25 +122,19 @@ export function AdminSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Platform</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    render={<Link href={item.href} />}
-                    isActive={
-                      pathname === item.href ||
-                      (item.href !== "/admin" &&
-                        pathname.startsWith(item.href))
-                    }
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
+          <SidebarGroupContent>{renderNav(mainNav)}</SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Discovery Channels</SidebarGroupLabel>
+          <SidebarGroupContent>{renderNav(channelNav)}</SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Intelligence</SidebarGroupLabel>
+          <SidebarGroupContent>{renderNav(intelligenceNav)}</SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Management</SidebarGroupLabel>
+          <SidebarGroupContent>{renderNav(managementNav)}</SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="border-t border-border p-2">

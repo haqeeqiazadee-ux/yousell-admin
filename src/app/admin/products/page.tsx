@@ -29,12 +29,16 @@ import {
   Search,
   ExternalLink,
 } from "lucide-react";
-import type { Product, ProductPlatform } from "@/lib/types/product";
+import type { Product } from "@/lib/types/product";
 
-const platformColors: Record<ProductPlatform, string> = {
+const platformColors: Record<string, string> = {
   tiktok: "text-pink-500 border-pink-500/30",
   amazon: "text-orange-500 border-orange-500/30",
   shopify: "text-green-500 border-green-500/30",
+  pinterest: "text-red-500 border-red-500/30",
+  digital: "text-purple-500 border-purple-500/30",
+  ai_affiliate: "text-cyan-500 border-cyan-500/30",
+  physical_affiliate: "text-emerald-500 border-emerald-500/30",
   manual: "text-blue-500 border-blue-500/30",
 };
 

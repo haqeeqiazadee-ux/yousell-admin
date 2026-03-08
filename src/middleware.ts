@@ -33,25 +33,40 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isLoginPage = request.nextUrl.pathname === "/admin/login";
-  const isUnauthorizedPage = request.nextUrl.pathname === "/admin/unauthorized";
-  const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
+  const pathname = request.nextUrl.pathname;
+  const isLoginPage = pathname === "/admin/login";
+  const isUnauthorizedPage = pathname === "/admin/unauthorized";
+  const isAdminRoute = pathname.startsWith("/admin");
+  const isDashboardRoute = pathname.startsWith("/dashboard");
 
-  // Protected routes — redirect to login if not authenticated
+  // Protected admin routes — redirect to login if not authenticated
   if (!user && isAdminRoute && !isLoginPage) {
     const url = request.nextUrl.clone();
     url.pathname = "/admin/login";
     return NextResponse.redirect(url);
   }
 
-  // Redirect logged-in users away from login page
-  if (user && isLoginPage) {
+  // Protected client dashboard — redirect to login if not authenticated
+  if (!user && isDashboardRoute) {
     const url = request.nextUrl.clone();
-    url.pathname = "/admin";
+    url.pathname = "/admin/login";
     return NextResponse.redirect(url);
   }
 
-  // Admin role enforcement — non-admin users get redirected
+  // Redirect logged-in users away from login page based on role
+  if (user && isLoginPage) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    const url = request.nextUrl.clone();
+    url.pathname = profile?.role === "client" ? "/dashboard" : "/admin";
+    return NextResponse.redirect(url);
+  }
+
+  // Admin role enforcement — non-admin users redirected from /admin/*
   if (user && isAdminRoute && !isLoginPage && !isUnauthorizedPage) {
     const { data: profile } = await supabase
       .from("profiles")
@@ -61,7 +76,22 @@ export async function middleware(request: NextRequest) {
 
     if (!profile || profile.role !== "admin") {
       const url = request.nextUrl.clone();
-      url.pathname = "/admin/unauthorized";
+      url.pathname = profile?.role === "client" ? "/dashboard" : "/admin/unauthorized";
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // Dashboard route — admin users get redirected to /admin
+  if (user && isDashboardRoute) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.role === "admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin";
       return NextResponse.redirect(url);
     }
   }
@@ -70,5 +100,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/dashboard/:path*"],
 };
