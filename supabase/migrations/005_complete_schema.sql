@@ -1,25 +1,22 @@
 -- Phase 4: Complete database schema — all missing tables per spec
 -- Run this in Supabase SQL Editor
+-- IDEMPOTENT: safe to run multiple times
 
 -- ============================================================
 -- 1. ALTER existing products table to add missing columns
 -- ============================================================
 DO $$ BEGIN
-  -- Add channel column
   ALTER TABLE products ADD COLUMN IF NOT EXISTS channel TEXT;
-  -- Add composite scoring columns
   ALTER TABLE products ADD COLUMN IF NOT EXISTS final_score INTEGER DEFAULT 0;
   ALTER TABLE products ADD COLUMN IF NOT EXISTS trend_score INTEGER DEFAULT 0;
   ALTER TABLE products ADD COLUMN IF NOT EXISTS viral_score INTEGER DEFAULT 0;
   ALTER TABLE products ADD COLUMN IF NOT EXISTS profit_score INTEGER DEFAULT 0;
   ALTER TABLE products ADD COLUMN IF NOT EXISTS trend_stage TEXT CHECK (trend_stage IN ('emerging', 'rising', 'exploding', 'saturated'));
-  -- Add AI insight columns
   ALTER TABLE products ADD COLUMN IF NOT EXISTS ai_insight_haiku TEXT;
   ALTER TABLE products ADD COLUMN IF NOT EXISTS ai_insight_sonnet TEXT;
 END $$;
 
--- Update platform enum to support all 7 channels + manual
--- (PostgreSQL doesn't allow easy enum alteration, so add new values)
+-- Update platform enum
 DO $$ BEGIN
   ALTER TYPE product_platform ADD VALUE IF NOT EXISTS 'pinterest';
   ALTER TYPE product_platform ADD VALUE IF NOT EXISTS 'digital';
@@ -32,7 +29,7 @@ END $$;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS push_token TEXT;
 
 -- ============================================================
--- 2. CLIENTS table
+-- 2. CLIENTS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS clients (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -44,31 +41,33 @@ CREATE TABLE IF NOT EXISTS clients (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can manage clients" ON clients;
 CREATE POLICY "Admins can manage clients" ON clients FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
 -- ============================================================
--- 3. PRODUCT_METRICS (time series for sparklines)
+-- 3. PRODUCT_METRICS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS product_metrics (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-  metric_type TEXT NOT NULL, -- 'sales', 'views', 'score', etc.
+  metric_type TEXT NOT NULL,
   value DECIMAL(12, 2) NOT NULL,
   recorded_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE product_metrics ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can manage product_metrics" ON product_metrics;
 CREATE POLICY "Admins can manage product_metrics" ON product_metrics FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 CREATE INDEX IF NOT EXISTS idx_product_metrics_product ON product_metrics(product_id, recorded_at);
 
 -- ============================================================
--- 4. VIRAL_SIGNALS (six signal readings per scan)
+-- 4. VIRAL_SIGNALS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS viral_signals (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-  scan_id UUID, -- references scan_history
+  scan_id UUID,
   micro_influencer_convergence DECIMAL(5,2) DEFAULT 0,
   comment_purchase_intent DECIMAL(5,2) DEFAULT 0,
   hashtag_acceleration DECIMAL(5,2) DEFAULT 0,
@@ -79,6 +78,7 @@ CREATE TABLE IF NOT EXISTS viral_signals (
   recorded_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE viral_signals ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can manage viral_signals" ON viral_signals;
 CREATE POLICY "Admins can manage viral_signals" ON viral_signals FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 CREATE INDEX IF NOT EXISTS idx_viral_signals_product ON viral_signals(product_id);
@@ -103,13 +103,14 @@ CREATE TABLE IF NOT EXISTS influencers (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE influencers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can manage influencers" ON influencers;
 CREATE POLICY "Admins can manage influencers" ON influencers FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 CREATE INDEX IF NOT EXISTS idx_influencers_platform ON influencers(platform);
 CREATE INDEX IF NOT EXISTS idx_influencers_tier ON influencers(tier);
 
 -- ============================================================
--- 6. PRODUCT_INFLUENCERS (junction)
+-- 6. PRODUCT_INFLUENCERS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS product_influencers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -121,11 +122,12 @@ CREATE TABLE IF NOT EXISTS product_influencers (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE product_influencers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can manage product_influencers" ON product_influencers;
 CREATE POLICY "Admins can manage product_influencers" ON product_influencers FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
 -- ============================================================
--- 7. COMPETITOR_STORES (replaces basic competitors table for Phase 12)
+-- 7. COMPETITOR_STORES
 -- ============================================================
 CREATE TABLE IF NOT EXISTS competitor_stores (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -144,6 +146,7 @@ CREATE TABLE IF NOT EXISTS competitor_stores (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE competitor_stores ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can manage competitor_stores" ON competitor_stores;
 CREATE POLICY "Admins can manage competitor_stores" ON competitor_stores FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
@@ -157,7 +160,7 @@ CREATE TABLE IF NOT EXISTS suppliers (
   moq INTEGER DEFAULT 0,
   unit_price DECIMAL(10,2) DEFAULT 0,
   shipping_cost DECIMAL(10,2) DEFAULT 0,
-  lead_time INTEGER DEFAULT 0, -- days
+  lead_time INTEGER DEFAULT 0,
   white_label BOOLEAN DEFAULT false,
   dropship BOOLEAN DEFAULT false,
   us_warehouse BOOLEAN DEFAULT false,
@@ -167,11 +170,12 @@ CREATE TABLE IF NOT EXISTS suppliers (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE suppliers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can manage suppliers" ON suppliers;
 CREATE POLICY "Admins can manage suppliers" ON suppliers FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
 -- ============================================================
--- 9. PRODUCT_SUPPLIERS (junction)
+-- 9. PRODUCT_SUPPLIERS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS product_suppliers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -180,6 +184,7 @@ CREATE TABLE IF NOT EXISTS product_suppliers (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE product_suppliers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can manage product_suppliers" ON product_suppliers;
 CREATE POLICY "Admins can manage product_suppliers" ON product_suppliers FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
@@ -205,6 +210,7 @@ CREATE TABLE IF NOT EXISTS financial_models (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE financial_models ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can manage financial_models" ON financial_models;
 CREATE POLICY "Admins can manage financial_models" ON financial_models FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
@@ -223,6 +229,7 @@ CREATE TABLE IF NOT EXISTS marketing_strategies (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE marketing_strategies ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can manage marketing_strategies" ON marketing_strategies;
 CREATE POLICY "Admins can manage marketing_strategies" ON marketing_strategies FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
@@ -243,6 +250,7 @@ CREATE TABLE IF NOT EXISTS launch_blueprints (
   generated_by TEXT NOT NULL DEFAULT 'claude-sonnet'
 );
 ALTER TABLE launch_blueprints ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can manage launch_blueprints" ON launch_blueprints;
 CREATE POLICY "Admins can manage launch_blueprints" ON launch_blueprints FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
@@ -262,11 +270,12 @@ CREATE TABLE IF NOT EXISTS affiliate_programs (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE affiliate_programs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can manage affiliate_programs" ON affiliate_programs;
 CREATE POLICY "Admins can manage affiliate_programs" ON affiliate_programs FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
 -- ============================================================
--- 14. PRODUCT_ALLOCATIONS (client product visibility)
+-- 14. PRODUCT_ALLOCATIONS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS product_allocations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -283,9 +292,10 @@ CREATE TABLE IF NOT EXISTS product_allocations (
   UNIQUE(client_id, product_id)
 );
 ALTER TABLE product_allocations ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can manage product_allocations" ON product_allocations;
 CREATE POLICY "Admins can manage product_allocations" ON product_allocations FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
--- Clients can view their own visible allocations
+DROP POLICY IF EXISTS "Clients can view own allocations" ON product_allocations;
 CREATE POLICY "Clients can view own allocations" ON product_allocations FOR SELECT
   USING (
     visible_to_client = true AND
@@ -297,7 +307,7 @@ CREATE POLICY "Clients can view own allocations" ON product_allocations FOR SELE
   );
 
 -- ============================================================
--- 15. PRODUCT_REQUESTS (client requests for more products)
+-- 15. PRODUCT_REQUESTS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS product_requests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -312,6 +322,7 @@ CREATE TABLE IF NOT EXISTS product_requests (
   products_released INTEGER DEFAULT 0
 );
 ALTER TABLE product_requests ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can manage product_requests" ON product_requests;
 CREATE POLICY "Admins can manage product_requests" ON product_requests FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
@@ -332,6 +343,7 @@ CREATE TABLE IF NOT EXISTS automation_jobs (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE automation_jobs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can manage automation_jobs" ON automation_jobs;
 CREATE POLICY "Admins can manage automation_jobs" ON automation_jobs FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
@@ -364,10 +376,11 @@ CREATE TABLE IF NOT EXISTS scan_history (
   cost_estimate DECIMAL(10,4) DEFAULT 0,
   triggered_by UUID REFERENCES profiles(id),
   status TEXT DEFAULT 'running' CHECK (status IN ('running', 'completed', 'failed')),
-  progress INTEGER DEFAULT 0, -- 0-100
+  progress INTEGER DEFAULT 0,
   log JSONB DEFAULT '[]'
 );
 ALTER TABLE scan_history ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can manage scan_history" ON scan_history;
 CREATE POLICY "Admins can manage scan_history" ON scan_history FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
@@ -386,6 +399,7 @@ CREATE TABLE IF NOT EXISTS outreach_emails (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE outreach_emails ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can manage outreach_emails" ON outreach_emails;
 CREATE POLICY "Admins can manage outreach_emails" ON outreach_emails FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
@@ -395,7 +409,7 @@ CREATE POLICY "Admins can manage outreach_emails" ON outreach_emails FOR ALL
 CREATE TABLE IF NOT EXISTS notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  type TEXT NOT NULL, -- 'hot_product', 'scan_complete', 'request_fulfilled', etc.
+  type TEXT NOT NULL,
   title TEXT NOT NULL,
   body TEXT NOT NULL,
   product_id UUID REFERENCES products(id) ON DELETE SET NULL,
@@ -403,10 +417,13 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own notifications" ON notifications;
 CREATE POLICY "Users can view own notifications" ON notifications FOR SELECT
   USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own notifications" ON notifications;
 CREATE POLICY "Users can update own notifications" ON notifications FOR UPDATE
   USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Admins can manage all notifications" ON notifications;
 CREATE POLICY "Admins can manage all notifications" ON notifications FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, read, created_at DESC);
@@ -417,19 +434,20 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, read
 CREATE TABLE IF NOT EXISTS imported_files (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   filename TEXT NOT NULL,
-  type TEXT NOT NULL, -- 'csv', 'xlsx'
-  source_platform TEXT, -- 'tiktok', 'amazon', etc.
+  type TEXT NOT NULL,
+  source_platform TEXT,
   rows_imported INTEGER DEFAULT 0,
   errors JSONB DEFAULT '[]',
   uploaded_by UUID REFERENCES profiles(id),
   uploaded_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE imported_files ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can manage imported_files" ON imported_files;
 CREATE POLICY "Admins can manage imported_files" ON imported_files FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
 -- ============================================================
--- ADDITIONAL INDEXES for performance
+-- ADDITIONAL INDEXES
 -- ============================================================
 CREATE INDEX IF NOT EXISTS idx_products_final_score ON products(final_score DESC);
 CREATE INDEX IF NOT EXISTS idx_products_viral_score ON products(viral_score DESC);
