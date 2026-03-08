@@ -25,10 +25,10 @@ import {
 interface ServiceStatus {
   supabase: boolean;
   auth: boolean;
-  railway: boolean;
   ai: boolean;
   email: boolean;
   apify: boolean;
+  rapidapi: boolean;
 }
 
 interface DashboardStats {
@@ -259,7 +259,7 @@ export default function AdminDashboard() {
               { label: "AI Engine (Claude)", key: "ai" as const },
               { label: "Resend Email", key: "email" as const },
               { label: "Apify Scrapers", key: "apify" as const },
-              { label: "Railway API", key: "railway" as const },
+              { label: "RapidAPI", key: "rapidapi" as const },
             ].map((svc) => {
               const active = stats?.services?.[svc.key] ?? false;
               return (
