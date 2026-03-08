@@ -53,43 +53,36 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Helper: get user role via RPC (bypasses RLS issues)
+  async function getUserRole(userId: string): Promise<string | null> {
+    const { data } = await supabase.rpc("get_user_role", { user_id: userId });
+    return data as string | null;
+  }
+
   // Redirect logged-in users away from login page based on role
   if (user && isLoginPage) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
+    const role = await getUserRole(user.id);
     const url = request.nextUrl.clone();
-    url.pathname = profile?.role === "client" ? "/dashboard" : "/admin";
+    url.pathname = role === "client" ? "/dashboard" : "/admin";
     return NextResponse.redirect(url);
   }
 
   // Admin role enforcement — non-admin users redirected from /admin/*
   if (user && isAdminRoute && !isLoginPage && !isUnauthorizedPage) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
+    const role = await getUserRole(user.id);
 
-    if (!profile || profile.role !== "admin") {
+    if (!role || role !== "admin") {
       const url = request.nextUrl.clone();
-      url.pathname = profile?.role === "client" ? "/dashboard" : "/admin/unauthorized";
+      url.pathname = role === "client" ? "/dashboard" : "/admin/unauthorized";
       return NextResponse.redirect(url);
     }
   }
 
   // Dashboard route — admin users get redirected to /admin
   if (user && isDashboardRoute) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
+    const role = await getUserRole(user.id);
 
-    if (profile?.role === "admin") {
+    if (role === "admin") {
       const url = request.nextUrl.clone();
       url.pathname = "/admin";
       return NextResponse.redirect(url);
