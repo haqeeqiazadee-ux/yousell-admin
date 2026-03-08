@@ -205,7 +205,7 @@ export const CATEGORY_LABELS: Record<string, string> = {
 };
 
 export function getProviderStatus(envKeys: string[]): "connected" | "missing" {
-  return envKeys.every((key) => key.startsWith("NEXT_PUBLIC_") && process.env[key])
+  return envKeys.every((key) => !!process.env[key])
     ? "connected"
     : "missing";
 }

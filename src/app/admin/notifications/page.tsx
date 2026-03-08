@@ -48,10 +48,10 @@ export default function NotificationsPage() {
   }, [fetchNotifications]);
 
   const markAsRead = async (id: string) => {
-    const res = await fetch(`/api/admin/notifications/${id}`, {
+    const res = await fetch("/api/admin/notifications", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ read: true }),
+      body: JSON.stringify({ id }),
     });
 
     if (res.ok) {

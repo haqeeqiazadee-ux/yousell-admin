@@ -53,7 +53,7 @@ async function searchViaApify(query: string): Promise<ProductResult[]> {
       currency: "USD",
       imageUrl: (item.thumbnail as string) || (item.image as string) || undefined,
       url: (item.url as string) || "",
-      platform: "shopify" as const,
+      platform: "digital" as const,
       score: typeof item.sales_count === "number" ? Math.min(100, Math.round((item.sales_count as number) / 10)) : undefined,
       metadata: {
         type: "digital",

@@ -25,7 +25,7 @@ export interface ProductResult {
   currency: string;
   imageUrl?: string;
   url: string;
-  platform: "tiktok" | "amazon" | "shopify";
+  platform: "tiktok" | "amazon" | "shopify" | "pinterest" | "digital" | "ai_affiliate" | "physical_affiliate" | "manual";
   score?: number;
   metadata: Record<string, unknown>;
 }

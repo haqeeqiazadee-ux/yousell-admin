@@ -6,21 +6,39 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  // Helper to safely count from a table (returns 0 if table doesn't exist)
+  async function safeCount(table: string, filter?: { column: string; value: string }) {
+    try {
+      let query = supabase.from(table).select("*", { count: "exact", head: true });
+      if (filter) query = query.eq(filter.column, filter.value);
+      const { count } = await query;
+      return count || 0;
+    } catch {
+      return 0;
+    }
+  }
+
   // Fetch counts in parallel
-  const [products, tiktok, amazon, trends, competitors] = await Promise.all([
-    supabase.from("products").select("*", { count: "exact", head: true }),
-    supabase.from("products").select("*", { count: "exact", head: true }).eq("platform", "tiktok"),
-    supabase.from("products").select("*", { count: "exact", head: true }).eq("platform", "amazon"),
-    supabase.from("trend_keywords").select("*", { count: "exact", head: true }),
-    supabase.from("competitors").select("*", { count: "exact", head: true }),
+  const [products, tiktok, amazon, trends, competitors, clients, influencers, suppliers] = await Promise.all([
+    safeCount("products"),
+    safeCount("products", { column: "platform", value: "tiktok" }),
+    safeCount("products", { column: "platform", value: "amazon" }),
+    safeCount("trend_keywords"),
+    safeCount("competitors"),
+    safeCount("clients"),
+    safeCount("influencers"),
+    safeCount("suppliers"),
   ]);
 
   return NextResponse.json({
-    products: products.count || 0,
-    tiktok: tiktok.count || 0,
-    amazon: amazon.count || 0,
-    trends: trends.count || 0,
-    competitors: competitors.count || 0,
+    products,
+    tiktok,
+    amazon,
+    trends,
+    competitors,
+    clients,
+    influencers,
+    suppliers,
     services: {
       supabase: true,
       auth: true,

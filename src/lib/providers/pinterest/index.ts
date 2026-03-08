@@ -58,7 +58,7 @@ async function searchViaApify(query: string): Promise<ProductResult[]> {
       currency: "USD",
       imageUrl: (item.imageUrl as string) || (item.image as string) || undefined,
       url: (item.url as string) || (item.link as string) || "",
-      platform: "shopify" as const, // Pinterest products typically link to Shopify stores
+      platform: "pinterest" as const,
       score: typeof item.saves === "number" ? Math.min(100, Math.round((item.saves as number) / 100)) : undefined,
       metadata: {
         saves: item.saves || item.repinCount || 0,

@@ -9,6 +9,7 @@ export async function POST(request: Request) {
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
+    const platform = formData.get("platform") as string || "manual";
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -25,44 +26,108 @@ export async function POST(request: Request) {
       );
     }
 
-    const text = await file.text();
-
-    if (isCSV) {
-      const lines = text.split("\n").filter((line) => line.trim());
-      if (lines.length === 0) {
-        return NextResponse.json({ error: "File is empty" }, { status: 400 });
-      }
-
-      const headers = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
-      const previewRows: Record<string, string>[] = [];
-
-      for (let i = 1; i < Math.min(lines.length, 6); i++) {
-        const values = lines[i].split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
-        const row: Record<string, string> = {};
-        headers.forEach((header, idx) => {
-          row[header] = values[idx] || "";
-        });
-        previewRows.push(row);
-      }
-
+    if (isExcel) {
       return NextResponse.json({
-        fileName: file.name,
-        fileType: "csv",
-        columns: headers,
-        totalRows: lines.length - 1,
-        preview: previewRows,
+        result: {
+          filename: file.name,
+          rows_imported: 0,
+          errors: 1,
+          status: "failed",
+        },
+        message: "Excel parsing requires the xlsx library. Use CSV format instead.",
       });
     }
 
-    // For Excel files, return column info from raw text parsing
-    // Full Excel parsing would require a library like xlsx
+    const text = await file.text();
+    const lines = text.split("\n").filter((line) => line.trim());
+
+    if (lines.length <= 1) {
+      return NextResponse.json({
+        result: {
+          filename: file.name,
+          rows_imported: 0,
+          errors: 0,
+          status: "failed",
+        },
+        message: "File is empty or has only headers",
+      });
+    }
+
+    const headers = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, "").toLowerCase());
+
+    // Map CSV columns to product fields
+    const titleCol = headers.findIndex((h) => ["title", "name", "product", "product_name", "product_title"].includes(h));
+    const priceCol = headers.findIndex((h) => ["price", "cost", "retail_price", "product_price"].includes(h));
+    const urlCol = headers.findIndex((h) => ["url", "link", "product_url", "external_url"].includes(h));
+    const imageCol = headers.findIndex((h) => ["image", "image_url", "photo", "thumbnail"].includes(h));
+    const categoryCol = headers.findIndex((h) => ["category", "type", "product_type"].includes(h));
+
+    if (titleCol === -1) {
+      return NextResponse.json({
+        result: {
+          filename: file.name,
+          rows_imported: 0,
+          errors: 1,
+          status: "failed",
+        },
+        message: "CSV must have a 'title' or 'name' column",
+      });
+    }
+
+    let imported = 0;
+    let errors = 0;
+    const products: Record<string, unknown>[] = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
+      const title = values[titleCol];
+      if (!title) { errors++; continue; }
+
+      products.push({
+        title,
+        platform,
+        price: priceCol >= 0 ? parseFloat(values[priceCol]) || null : null,
+        external_url: urlCol >= 0 ? values[urlCol] || null : null,
+        image_url: imageCol >= 0 ? values[imageCol] || null : null,
+        category: categoryCol >= 0 ? values[categoryCol] || null : null,
+        status: "draft",
+        created_by: user.id,
+        updated_by: user.id,
+      });
+    }
+
+    if (products.length > 0) {
+      const { error: insertError } = await supabase
+        .from("products")
+        .insert(products);
+
+      if (insertError) {
+        errors += products.length;
+        imported = 0;
+      } else {
+        imported = products.length;
+      }
+    }
+
+    // Log the import
+    await supabase.from("imported_files").insert({
+      filename: file.name,
+      type: "csv",
+      source_platform: platform,
+      rows_imported: imported,
+      errors: [{ count: errors }],
+      uploaded_by: user.id,
+    });
+
+    const status = errors === 0 ? "success" : imported > 0 ? "partial" : "failed";
+
     return NextResponse.json({
-      fileName: file.name,
-      fileType: "excel",
-      columns: [],
-      totalRows: 0,
-      preview: [],
-      message: "Excel parsing requires the xlsx library. Install it with: npm install xlsx",
+      result: {
+        filename: file.name,
+        rows_imported: imported,
+        errors,
+        status,
+      },
     });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
