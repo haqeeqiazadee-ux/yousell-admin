@@ -95,6 +95,7 @@ export default function ScanPage() {
   const [scanning, setScanning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [scanRunning, setScanRunning] = useState(false);
+  const [engineReady, setEngineReady] = useState<boolean | null>(null);
 
   const fetchHistory = useCallback(async () => {
     setLoading(true);
@@ -102,8 +103,10 @@ export default function ScanPage() {
       const res = await fetch("/api/admin/scan");
       const data = await res.json();
       setHistory(data.scans || []);
+      setEngineReady(data.engine_ready ?? true);
     } catch {
       setHistory([]);
+      setEngineReady(false);
     }
     setLoading(false);
   }, []);
@@ -161,11 +164,18 @@ export default function ScanPage() {
 
   return (
     <div className="space-y-6">
-      {/* Mock Data Banner */}
-      <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-700 dark:text-yellow-400">
-        <strong>MOCK DATA</strong> — Scan engine not yet connected. Connect
-        Railway backend in Settings to enable live scans.
-      </div>
+      {/* Engine Status Banner */}
+      {engineReady === false && (
+        <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-700 dark:text-yellow-400">
+          <strong>LIMITED</strong> — No scraping API keys configured (Apify / RapidAPI).
+          Add them in Settings to enable live scans.
+        </div>
+      )}
+      {engineReady === true && (
+        <div className="rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-700 dark:text-green-400">
+          <strong>LIVE</strong> — Scan engine connected and ready to discover products.
+        </div>
+      )}
 
       {/* Page Header */}
       <div>

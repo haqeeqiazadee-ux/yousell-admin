@@ -19,7 +19,13 @@ export async function GET() {
       .order("started_at", { ascending: false });
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ scans: data || [] });
+
+    // Check if at least one scraping provider is configured
+    const hasApify = !!process.env.APIFY_API_TOKEN && !process.env.APIFY_API_TOKEN.includes("your-");
+    const hasRapidApi = !!process.env.RAPIDAPI_KEY && !process.env.RAPIDAPI_KEY.includes("your-");
+    const engineReady = hasApify || hasRapidApi;
+
+    return NextResponse.json({ scans: data || [], engine_ready: engineReady });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
