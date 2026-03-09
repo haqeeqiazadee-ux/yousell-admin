@@ -44,8 +44,53 @@ async function fetchFromApify(category: string): Promise<Supplier[]> {
     console.warn('APIFY_API_TOKEN not set');
     return [];
   }
-  // Placeholder — actual Apify Alibaba/AliExpress actor integration needed
-  return [];
+
+  try {
+    const res = await fetch(
+      `https://api.apify.com/v2/acts/devcake~alibaba-products-scraper/run-sync-get-dataset-items?token=${token}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          queries: [category],
+          maxItems: 20,
+        }),
+        signal: AbortSignal.timeout(90000),
+      }
+    );
+
+    if (!res.ok) {
+      console.error(`Apify Alibaba error: ${res.status} ${res.statusText}`);
+      return [];
+    }
+
+    const items = await res.json();
+    if (!Array.isArray(items)) return [];
+
+    return items.slice(0, 20).map((item: Record<string, unknown>) => {
+      const priceMin = typeof item.price_min === 'number' ? item.price_min : parseFloat(String(item.price_min || '0')) || 0;
+      const moqRaw = String(item.moq || '1');
+      const moqNum = parseInt(moqRaw.replace(/[^\d]/g, ''), 10) || 1;
+
+      return {
+        name: (item.name as string) || 'Unknown Product',
+        country: (item.countryCode as string) || 'CN',
+        moq: moqNum,
+        unit_price: priceMin,
+        shipping_cost: 0,
+        lead_time: 14,
+        white_label: false,
+        dropship: false,
+        us_warehouse: false,
+        certifications: (item.is_alibaba_guaranteed ? ['Alibaba Guaranteed'] : []) as string[],
+        contact: (item.company_name as string) || null,
+        platform: 'alibaba',
+      };
+    });
+  } catch (err) {
+    console.error('Apify Alibaba supplier search failed:', err);
+    return [];
+  }
 }
 
 async function fetchFromCJDropshipping(category: string): Promise<Supplier[]> {

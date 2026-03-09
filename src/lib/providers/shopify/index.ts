@@ -22,13 +22,13 @@ async function searchViaApify(query: string): Promise<ProductResult[]> {
 
   try {
     const res = await fetch(
-      `https://api.apify.com/v2/acts/dtrungtin~shopify-product-scraper/run-sync-get-dataset-items?token=${token}`,
+      `https://api.apify.com/v2/acts/clearpath~shop-by-shopify-product-scraper/run-sync-get-dataset-items?token=${token}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          search: query,
-          maxItems: 20,
+          query,
+          maxResults: 20,
         }),
         signal: AbortSignal.timeout(60000),
       }
@@ -45,17 +45,20 @@ async function searchViaApify(query: string): Promise<ProductResult[]> {
     return items.slice(0, 20).map((item: Record<string, unknown>, i: number) => ({
       id: `shopify-${(item.id as string) || i}`,
       title: (item.title as string) || "Untitled",
-      price: parseFloat(String(item.price || (item.variants as Record<string, unknown>[])?.[0]?.price || 0)) || 0,
-      currency: "USD",
-      imageUrl: (item.image as string) || ((item.images as string[]) || [])[0] || undefined,
-      url: (item.url as string) || (item.handle ? `https://shopify.com/products/${item.handle}` : ""),
+      price: typeof item.price === "number" ? item.price : parseFloat(String(item.price || 0)) || 0,
+      currency: (item.currency as string) || "USD",
+      imageUrl: ((item.images as { url: string }[]) || [])[0]?.url || (item.image as string) || undefined,
+      url: (item.url as string) || (item.slug ? `https://shop.app/p/${item.id}` : ""),
       platform: "shopify" as const,
       score: undefined,
       metadata: {
         vendor: item.vendor || null,
-        productType: item.product_type || item.productType || null,
-        tags: item.tags || [],
-        variants: Array.isArray(item.variants) ? (item.variants as unknown[]).length : 0,
+        productType: item.productType || null,
+        availableForSale: item.availableForSale ?? null,
+        onSale: item.onSale ?? null,
+        originalPrice: item.originalPrice || null,
+        variantsCount: item.variantsCount || 0,
+        slug: item.slug || null,
       },
     }));
   } catch (err) {
