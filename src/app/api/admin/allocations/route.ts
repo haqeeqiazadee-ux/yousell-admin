@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { clientId, productIds } = body;
+  const { clientId, productIds, visible_to_client } = body;
 
   if (!clientId || !productIds?.length) {
     return NextResponse.json({ error: 'clientId and productIds are required' }, { status: 400 });
@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
           product_id: productId,
           allocated_by: user.id,
           status: 'active',
+          visible_to_client: visible_to_client !== false,
           allocated_at: new Date().toISOString(),
         }))
       );

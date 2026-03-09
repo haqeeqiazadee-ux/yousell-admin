@@ -22,13 +22,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Plus } from "lucide-react";
+import { Users, Plus, Trash2 } from "lucide-react";
 
 interface Client {
   id: string;
   name: string;
   email: string;
   plan: "starter" | "growth" | "professional" | "enterprise";
+  default_product_limit?: number;
   niche: string;
   notes?: string;
   created_at: string;
@@ -39,6 +40,13 @@ const planColors: Record<string, string> = {
   growth: "text-blue-500 border-blue-500/30",
   professional: "text-purple-500 border-purple-500/30",
   enterprise: "text-yellow-600 border-yellow-500/30",
+};
+
+const PLAN_LIMITS: Record<string, number> = {
+  starter: 3,
+  growth: 10,
+  professional: 25,
+  enterprise: 50,
 };
 
 export default function ClientsPage() {
@@ -53,6 +61,7 @@ export default function ClientsPage() {
   const [newNiche, setNewNiche] = useState("");
   const [newNotes, setNewNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<string | null>(null);
 
   const fetchClients = useCallback(async () => {
     setLoading(true);
@@ -93,6 +102,26 @@ export default function ClientsPage() {
       fetchClients();
     }
     setSubmitting(false);
+  };
+
+  const handleUpdatePlan = async (clientId: string, plan: string) => {
+    const res = await fetch("/api/admin/clients", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: clientId, plan }),
+    });
+    if (res.ok) {
+      setEditingPlan(null);
+      fetchClients();
+    }
+  };
+
+  const handleDeleteClient = async (clientId: string, clientName: string) => {
+    if (!confirm(`Delete client "${clientName}"? This cannot be undone.`)) return;
+    const res = await fetch(`/api/admin/clients?id=${clientId}`, {
+      method: "DELETE",
+    });
+    if (res.ok) fetchClients();
   };
 
   return (
@@ -207,8 +236,10 @@ export default function ClientsPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Plan</TableHead>
+                  <TableHead>Limit</TableHead>
                   <TableHead>Niche</TableHead>
                   <TableHead>Created</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -221,18 +252,47 @@ export default function ClientsPage() {
                       {client.email}
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={planColors[client.plan]}
-                      >
-                        {client.plan}
-                      </Badge>
+                      {editingPlan === client.id ? (
+                        <select
+                          defaultValue={client.plan}
+                          onChange={(e) => handleUpdatePlan(client.id, e.target.value)}
+                          onBlur={() => setEditingPlan(null)}
+                          autoFocus
+                          className="rounded-md border px-2 py-1 text-xs"
+                        >
+                          <option value="starter">Starter</option>
+                          <option value="growth">Growth</option>
+                          <option value="professional">Professional</option>
+                          <option value="enterprise">Enterprise</option>
+                        </select>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className={`${planColors[client.plan]} cursor-pointer`}
+                          onClick={() => setEditingPlan(client.id)}
+                        >
+                          {client.plan}
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {client.default_product_limit || PLAN_LIMITS[client.plan] || 3} products
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {client.niche || "\u2014"}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {new Date(client.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => handleDeleteClient(client.id, client.name)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}

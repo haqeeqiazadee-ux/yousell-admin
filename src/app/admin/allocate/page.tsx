@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Package, AlertTriangle, Zap } from "lucide-react";
+import { Package, AlertTriangle, Zap, Eye, EyeOff } from "lucide-react";
 
 interface AllocationRequest {
   id: string;
@@ -22,6 +22,7 @@ interface RecentAllocation {
   product_name: string;
   platform: string;
   allocated_at: string;
+  visible_to_client: boolean;
 }
 
 interface TopProduct {
@@ -39,6 +40,7 @@ export default function AllocatePage() {
   const [selectedClient, setSelectedClient] = useState<string>('');
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
   const [allocating, setAllocating] = useState(false);
+  const [visibleToClient, setVisibleToClient] = useState(true);
   const [loading, setLoading] = useState(true);
 
   const fetchAllocations = useCallback(async () => {
@@ -116,7 +118,7 @@ export default function AllocatePage() {
           </div>
 
           {selectedProducts.size > 0 && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <select
                 value={selectedClient}
                 onChange={(e) => setSelectedClient(e.target.value)}
@@ -127,6 +129,19 @@ export default function AllocatePage() {
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
+              <button
+                type="button"
+                onClick={() => setVisibleToClient(!visibleToClient)}
+                className={`flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium transition-colors ${
+                  visibleToClient
+                    ? "border-green-500/30 text-green-600 bg-green-50"
+                    : "border-gray-300 text-gray-500"
+                }`}
+                title={visibleToClient ? "Products will be visible to client" : "Products hidden from client"}
+              >
+                {visibleToClient ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                {visibleToClient ? "Visible" : "Hidden"}
+              </button>
               <Button
                 size="sm"
                 disabled={!selectedClient || allocating}
@@ -139,6 +154,7 @@ export default function AllocatePage() {
                       body: JSON.stringify({
                         clientId: selectedClient,
                         productIds: Array.from(selectedProducts),
+                        visible_to_client: visibleToClient,
                       }),
                     });
                     setSelectedProducts(new Set());
@@ -272,11 +288,16 @@ export default function AllocatePage() {
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="flex items-center gap-3">
                       <Badge variant="outline" className="text-xs">
                         {alloc.platform}
                       </Badge>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      {alloc.visible_to_client ? (
+                        <Eye className="h-3.5 w-3.5 text-green-500" />
+                      ) : (
+                        <EyeOff className="h-3.5 w-3.5 text-gray-400" />
+                      )}
+                      <p className="text-xs text-muted-foreground">
                         {new Date(alloc.allocated_at).toLocaleDateString()}
                       </p>
                     </div>
