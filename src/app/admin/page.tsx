@@ -150,12 +150,12 @@ export default function AdminDashboard() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       {/* Top bar */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-0.5">YouSell Admin Intelligence Platform</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">YouSell Admin Intelligence Platform</p>
         </div>
         <div className="flex items-center gap-3">
           {lastScan && (
@@ -218,11 +218,11 @@ export default function AdminDashboard() {
         {/* KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {kpis.map(kpi => (
-            <div key={kpi.label} className="bg-white rounded-xl border border-gray-200 p-4">
+            <div key={kpi.label} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4">
               <div className={`w-9 h-9 rounded-lg ${kpi.bg} flex items-center justify-center mb-3`}>
                 <kpi.icon size={18} className={kpi.color} />
               </div>
-              <p className="text-2xl font-bold text-gray-900">{loading ? '—' : kpi.value}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{loading ? '—' : kpi.value}</p>
               <p className="text-xs text-gray-500 mt-0.5">{kpi.label}</p>
             </div>
           ))}
@@ -232,10 +232,10 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* Scan Control Panel */}
-          <div className="lg:col-span-1 bg-white rounded-xl border border-gray-200 p-5">
+          <div className="lg:col-span-1 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
             <div className="flex items-center gap-2 mb-4">
               <Scan size={16} className="text-gray-700" />
-              <h2 className="font-semibold text-gray-900">Scan Control Panel</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Scan Control Panel</h2>
             </div>
             <div className="space-y-3">
               <Link href="/admin/scan?mode=quick" className="block w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-3 transition-colors">
@@ -269,10 +269,10 @@ export default function AdminDashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div className="lg:col-span-1 bg-white rounded-xl border border-gray-200 p-5">
+          <div className="lg:col-span-1 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
             <div className="flex items-center gap-2 mb-4">
               <Zap size={16} className="text-gray-700" />
-              <h2 className="font-semibold text-gray-900">Quick Actions</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Quick Actions</h2>
             </div>
             <div className="space-y-2">
               {[
@@ -295,10 +295,10 @@ export default function AdminDashboard() {
           </div>
 
           {/* System Status */}
-          <div className="lg:col-span-1 bg-white rounded-xl border border-gray-200 p-5">
+          <div className="lg:col-span-1 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
             <div className="flex items-center gap-2 mb-4">
               <Activity size={16} className="text-gray-700" />
-              <h2 className="font-semibold text-gray-900">System Status</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">System Status</h2>
             </div>
             <div className="space-y-2.5">
               {systemStatus.map(s => (
@@ -324,11 +324,11 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
           {/* Scan History */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Clock size={16} className="text-gray-700" />
-                <h2 className="font-semibold text-gray-900">Scan History</h2>
+                <h2 className="font-semibold text-gray-900 dark:text-gray-100">Scan History</h2>
               </div>
               <Link href="/admin/scan" className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
                 View all <ChevronRight size={12} />
@@ -365,10 +365,10 @@ export default function AdminDashboard() {
           </div>
 
           {/* Live Trend Feed */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
             <div className="flex items-center gap-2 mb-4">
               <BarChart2 size={16} className="text-gray-700" />
-              <h2 className="font-semibold text-gray-900">Live Trend Feed</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Live Trend Feed</h2>
               <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full ml-auto">Realtime</span>
             </div>
             {stats.productsTracked === 0 ? (

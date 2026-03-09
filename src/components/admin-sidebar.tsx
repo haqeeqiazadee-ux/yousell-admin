@@ -40,6 +40,7 @@ import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/components/user-context";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const mainNav = [
   { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -161,10 +162,13 @@ export function AdminSidebar() {
             </SidebarMenuItem>
           )}
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleSignOut}>
-              <LogOut className="h-4 w-4" />
-              <span>Sign Out</span>
-            </SidebarMenuButton>
+            <div className="flex items-center justify-between px-2">
+              <SidebarMenuButton onClick={handleSignOut} className="flex-1">
+                <LogOut className="h-4 w-4" />
+                <span>Sign Out</span>
+              </SidebarMenuButton>
+              <ThemeToggle />
+            </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

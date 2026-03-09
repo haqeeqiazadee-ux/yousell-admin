@@ -119,11 +119,11 @@ export function calculateFinalScore(trend: number, viral: number, profit: number
 
 // --- Badge classification (Section 6) ---
 
-export function getTierFromScore(score: number): 'HOT' | 'WARM' | 'WATCH' | 'COLD' {
-  if (score >= 80) return 'HOT';
-  if (score >= 60) return 'WARM';
-  if (score >= 40) return 'WATCH';
-  return 'COLD';
+export function getTierFromScore(score: number): 'HOT' | 'RISING' | 'EMERGING' | 'SATURATED' {
+  if (score >= 85) return 'HOT';
+  if (score >= 70) return 'RISING';
+  if (score >= 40) return 'EMERGING';
+  return 'SATURATED';
 }
 
 // --- Trend lifecycle stage (Section 1 of build brief) ---
@@ -152,6 +152,9 @@ export interface RejectionInput {
   isFragileHazardous: boolean;
   hasCertification: boolean;
   fastestUSDeliveryDays: number;
+  hasIPOrTrademarkRisk?: boolean;
+  retailPrice?: number;
+  competitorCount?: number;
 }
 
 export function shouldRejectProduct(input: RejectionInput): { rejected: boolean; reasons: string[] } {
@@ -167,8 +170,61 @@ export function shouldRejectProduct(input: RejectionInput): { rejected: boolean;
     reasons.push('Fragile/hazardous without certification');
   if (input.fastestUSDeliveryDays > 15)
     reasons.push('No supplier with USA delivery under 15 days');
+  if (input.hasIPOrTrademarkRisk)
+    reasons.push('IP or trademark infringement risk detected');
+  if (input.retailPrice !== undefined && input.retailPrice < 10)
+    reasons.push('Retail price below $10 minimum threshold');
+  if (input.competitorCount !== undefined && input.competitorCount > 100)
+    reasons.push('Market oversaturated (100+ direct competitors)');
 
   return { rejected: reasons.length > 0, reasons };
+}
+
+// --- Influencer Conversion Score ---
+
+export interface InfluencerInputs {
+  followerCount?: number;
+  engagementRate?: number;
+  avgViews?: number;
+  conversionRate?: number;
+  nicheRelevance?: number;
+}
+
+export function calculateInfluencerConversionScore(inputs: InfluencerInputs): number {
+  // Follower tier scoring (0-20)
+  let followerScore = 0;
+  const followers = inputs.followerCount ?? 0;
+  if (followers >= 10000 && followers <= 100000) followerScore = 20; // micro-influencer sweet spot
+  else if (followers >= 100000 && followers <= 500000) followerScore = 15;
+  else if (followers >= 1000) followerScore = 10;
+  else followerScore = 5;
+
+  // Engagement rate scoring (0-30) — higher weight, most predictive
+  let engagementScore = 0;
+  const er = inputs.engagementRate ?? 0;
+  if (er >= 5) engagementScore = 30;
+  else if (er >= 3) engagementScore = 25;
+  else if (er >= 1.5) engagementScore = 15;
+  else engagementScore = 5;
+
+  // View-to-follower ratio via avgViews (0-20)
+  let viewScore = 0;
+  const viewRatio = followers > 0 ? (inputs.avgViews ?? 0) / followers : 0;
+  if (viewRatio >= 0.5) viewScore = 20;
+  else if (viewRatio >= 0.2) viewScore = 15;
+  else if (viewRatio >= 0.1) viewScore = 10;
+
+  // Conversion rate (0-15)
+  let convScore = 0;
+  const cr = inputs.conversionRate ?? 0;
+  if (cr >= 3) convScore = 15;
+  else if (cr >= 1.5) convScore = 10;
+  else if (cr >= 0.5) convScore = 5;
+
+  // Niche relevance (0-15)
+  const nicheScore = Math.min(15, Math.max(0, (inputs.nicheRelevance ?? 0) * 0.15));
+
+  return Math.min(100, Math.max(0, Math.round(followerScore + engagementScore + viewScore + convScore + nicheScore)));
 }
 
 // --- Score explanation ---

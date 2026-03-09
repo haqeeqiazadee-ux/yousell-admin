@@ -64,12 +64,12 @@ export function calculateCompositeScore(product: Product): CompositeScore {
   return { viral_score, profitability_score, overall_score };
 }
 
-// Badge classification per spec: 80+=HOT, 60+=WARM, 40+=WATCH, <40=COLD
-export function getTierFromScore(score: number): 'HOT' | 'WARM' | 'WATCH' | 'COLD' {
-  if (score >= 80) return 'HOT';
-  if (score >= 60) return 'WARM';
-  if (score >= 40) return 'WATCH';
-  return 'COLD';
+// Badge classification per spec: 85+=HOT, 70+=RISING, 40+=EMERGING, <40=SATURATED
+export function getTierFromScore(score: number): 'HOT' | 'RISING' | 'EMERGING' | 'SATURATED' {
+  if (score >= 85) return 'HOT';
+  if (score >= 70) return 'RISING';
+  if (score >= 40) return 'EMERGING';
+  return 'SATURATED';
 }
 
 // Trend lifecycle stage per spec
@@ -80,7 +80,7 @@ export function getStageFromScore(viralScore: number): 'emerging' | 'rising' | '
   return 'saturated';
 }
 
-// Auto-rejection rules per spec (Section 7)
+// Auto-rejection rules per spec (Section 7) — 8 rules
 export function shouldRejectProduct(input: {
   grossMargin: number;
   shippingCostPct: number;
@@ -88,6 +88,9 @@ export function shouldRejectProduct(input: {
   isFragileHazardous: boolean;
   hasCertification: boolean;
   fastestUSDeliveryDays: number;
+  hasIPOrTrademarkRisk?: boolean;
+  retailPrice?: number;
+  competitorCount?: number;
 }): { rejected: boolean; reasons: string[] } {
   const reasons: string[] = [];
 
@@ -101,6 +104,12 @@ export function shouldRejectProduct(input: {
     reasons.push('Fragile/hazardous without certification');
   if (input.fastestUSDeliveryDays > 15)
     reasons.push('No supplier with USA delivery under 15 days');
+  if (input.hasIPOrTrademarkRisk)
+    reasons.push('IP or trademark infringement risk detected');
+  if (input.retailPrice !== undefined && input.retailPrice < 10)
+    reasons.push('Retail price below $10 minimum threshold');
+  if (input.competitorCount !== undefined && input.competitorCount > 100)
+    reasons.push('Market oversaturated (100+ direct competitors)');
 
   return { rejected: reasons.length > 0, reasons };
 }
