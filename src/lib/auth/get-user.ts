@@ -15,8 +15,8 @@ export async function getUser(): Promise<User | null> {
     if (!token) return null;
 
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
       {
         global: {
           headers: {
@@ -37,7 +37,7 @@ export async function getUser(): Promise<User | null> {
 
     return {
       id: user.id,
-      email: user.email!,
+      email: user.email || '',
       role: profile?.role || 'viewer',
     };
   } catch {
