@@ -21,6 +21,7 @@ import {
   Settings,
   LogOut,
   Bell,
+  Eye,
 } from "lucide-react";
 import {
   Sidebar,
@@ -61,6 +62,7 @@ const intelligenceNav = [
   { title: "Competitors", href: "/admin/competitors", icon: Swords },
   { title: "Influencers", href: "/admin/influencers", icon: UserSearch },
   { title: "Suppliers", href: "/admin/suppliers", icon: Truck },
+  { title: "Blueprints", href: "/admin/blueprints", icon: Eye },
 ];
 
 const managementNav = [

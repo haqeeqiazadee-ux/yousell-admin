@@ -102,6 +102,23 @@ export default function AdminDashboard() {
       }
     }
     fetchData()
+
+    // Supabase Realtime — live updates without polling
+    const sb = getSupabase()
+    const channel = sb.channel('dashboard-realtime')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'products'
+      }, () => { fetchData() })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'scan_history'
+      }, () => { fetchData() })
+      .subscribe()
+
+    return () => { sb.removeChannel(channel) }
   }, [])
 
   function formatTime(iso: string) {

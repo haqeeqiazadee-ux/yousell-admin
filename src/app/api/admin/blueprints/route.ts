@@ -1,51 +1,59 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
-import { getUser } from '@/lib/auth/get-user';
+import { createClient } from '@/lib/supabase/server';
 
-export async function GET(req: NextRequest) {
-  const user = await getUser();
+export async function GET() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: blueprints, error } = await supabaseAdmin
-    .from('blueprints')
-    .select('*, products(*)')
-    .order('created_at', { ascending: false });
+  const { data: blueprints, error } = await supabase
+    .from('launch_blueprints')
+    .select('*, products(id, title, platform, final_score, trend_stage)')
+    .order('generated_at', { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: 'Failed to fetch blueprints' }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ blueprints });
+  return NextResponse.json(blueprints || []);
 }
 
 export async function POST(req: NextRequest) {
-  const user = await getUser();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const body = await req.json();
-  const { title, productId, strategy, targetAudience, marketingPlan, pricingStrategy } = body;
+  const { product_id, positioning, product_page_content, pricing_strategy,
+    video_script, ad_blueprint, launch_timeline, risk_notes } = body;
 
-  const { data: blueprint, error } = await supabaseAdmin
-    .from('blueprints')
+  if (!product_id) {
+    return NextResponse.json({ error: 'product_id is required' }, { status: 400 });
+  }
+
+  const { data: blueprint, error } = await supabase
+    .from('launch_blueprints')
     .insert({
-      title,
-      product_id: productId,
-      strategy,
-      target_audience: targetAudience,
-      marketing_plan: marketingPlan,
-      pricing_strategy: pricingStrategy,
-      created_by: user.id,
+      product_id,
+      positioning,
+      product_page_content,
+      pricing_strategy,
+      video_script,
+      ad_blueprint,
+      launch_timeline,
+      risk_notes,
+      generated_by: 'sonnet',
     })
-    .select()
+    .select('*, products(id, title, platform, final_score)')
     .single();
 
   if (error) {
-    return NextResponse.json({ error: 'Failed to create blueprint' }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ blueprint });
+  return NextResponse.json(blueprint);
 }
