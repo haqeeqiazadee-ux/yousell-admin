@@ -65,7 +65,9 @@ const intelligenceNav = [
 
 const managementNav = [
   { title: "Clients", href: "/admin/clients", icon: Users },
+  { title: "Allocate Products", href: "/admin/allocate", icon: Package },
   { title: "Notifications", href: "/admin/notifications", icon: Bell },
+  { title: "Import CSV", href: "/admin/import", icon: FileText },
   { title: "Settings", href: "/admin/settings", icon: Settings },
 ];
 

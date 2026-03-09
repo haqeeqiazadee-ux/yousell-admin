@@ -43,24 +43,27 @@ export function calculateCompositeScore(product: {
   };
 }
 
-// --- Functions used by scoring route ---
+// --- Trend Opportunity Score (Section 6 of build brief) ---
 
 export interface TrendInputs {
-  googleTrendsSlope?: number;
-  searchVolume?: number;
-  socialMentions?: number;
+  tiktokGrowth?: number;
+  influencerActivity?: number;
+  amazonDemand?: number;
+  competition?: number;
+  profitMargin?: number;
 }
 
 export function calculateTrendScore(inputs: TrendInputs): number {
-  let score = 0;
-  if ((inputs.googleTrendsSlope ?? 0) > 0.5) score += 40;
-  else if ((inputs.googleTrendsSlope ?? 0) > 0) score += 20;
-  if ((inputs.searchVolume ?? 0) > 10000) score += 30;
-  else if ((inputs.searchVolume ?? 0) > 1000) score += 15;
-  if ((inputs.socialMentions ?? 0) > 500) score += 30;
-  else if ((inputs.socialMentions ?? 0) > 50) score += 15;
-  return Math.min(100, score);
+  return Math.min(100, Math.max(0, Math.round(
+    (inputs.tiktokGrowth ?? 0) * 0.35 +
+    (inputs.influencerActivity ?? 0) * 0.25 +
+    (inputs.amazonDemand ?? 0) * 0.20 +
+    (inputs.competition ?? 0) * -0.10 +
+    (inputs.profitMargin ?? 0) * 0.10
+  )));
 }
+
+// --- Early Viral Score (Section 5 — six pre-viral signals) ---
 
 export interface ViralInputs {
   microInfluencerConvergence?: number;
@@ -72,55 +75,103 @@ export interface ViralInputs {
 }
 
 export function calculateViralScore(inputs: ViralInputs): number {
-  const values = [
-    inputs.microInfluencerConvergence ?? 0,
-    inputs.commentPurchaseIntent ?? 0,
-    inputs.hashtagAcceleration ?? 0,
-    inputs.creatorNicheExpansion ?? 0,
-    inputs.engagementVelocity ?? 0,
-    inputs.supplySideResponse ?? 0,
-  ];
-  const avg = values.reduce((a, b) => a + b, 0) / values.length;
-  return Math.min(100, Math.round(avg));
+  // Weights MUST sum to 1.0: 0.25+0.20+0.20+0.15+0.10+0.10 = 1.00
+  const score =
+    (inputs.microInfluencerConvergence ?? 0) * 0.25 +
+    (inputs.commentPurchaseIntent ?? 0) * 0.20 +
+    (inputs.hashtagAcceleration ?? 0) * 0.20 +
+    (inputs.creatorNicheExpansion ?? 0) * 0.15 +
+    (inputs.engagementVelocity ?? 0) * 0.10 +
+    (inputs.supplySideResponse ?? 0) * 0.10;
+  return Math.min(100, Math.max(0, Math.round(score)));
 }
 
+// --- Profitability Score (Section 7) ---
+
 export interface ProfitInputs {
-  price?: number;
-  costOfGoods?: number;
-  shippingCost?: number;
-  marketplaceFees?: number;
+  profitMargin?: number;
+  shippingFeasibility?: number;
+  marketingEfficiency?: number;
+  supplierReliability?: number;
+  operationalRisk?: number;
 }
 
 export function calculateProfitScore(inputs: ProfitInputs): number {
-  const price = inputs.price ?? 0;
-  const totalCost = (inputs.costOfGoods ?? 0) + (inputs.shippingCost ?? 0) + (inputs.marketplaceFees ?? 0);
-  if (price <= 0) return 0;
-  const margin = (price - totalCost) / price;
-  if (margin >= 0.5) return 100;
-  if (margin >= 0.3) return 70;
-  if (margin >= 0.15) return 40;
-  return 10;
+  const score =
+    (inputs.profitMargin ?? 0) * 0.40 +
+    (inputs.shippingFeasibility ?? 0) * 0.20 +
+    (inputs.marketingEfficiency ?? 0) * 0.20 +
+    (inputs.supplierReliability ?? 0) * 0.10 -
+    (inputs.operationalRisk ?? 0) * 0.10;
+  return Math.min(100, Math.max(0, Math.round(score)));
 }
+
+// --- Final Opportunity Score (Section 6) ---
 
 export function calculateFinalScore(trend: number, viral: number, profit: number): number {
-  return Math.round(trend * 0.3 + viral * 0.4 + profit * 0.3);
+  // Weights: Trend 0.40, Viral 0.35, Profit 0.25 = 1.00
+  return Math.min(100, Math.max(0, Math.round(
+    trend * 0.40 +
+    viral * 0.35 +
+    profit * 0.25
+  )));
 }
 
-export function getTierFromScore(score: number): string {
-  if (score >= 80) return "S";
-  if (score >= 60) return "A";
-  if (score >= 40) return "B";
-  if (score >= 20) return "C";
-  return "D";
+// --- Badge classification (Section 6) ---
+
+export function getTierFromScore(score: number): 'HOT' | 'WARM' | 'WATCH' | 'COLD' {
+  if (score >= 80) return 'HOT';
+  if (score >= 60) return 'WARM';
+  if (score >= 40) return 'WATCH';
+  return 'COLD';
 }
 
-export function getStageFromViralScore(viralScore: number): string {
-  if (viralScore >= 80) return "mainstream";
-  if (viralScore >= 60) return "accelerating";
-  if (viralScore >= 40) return "emerging";
-  if (viralScore >= 20) return "early";
-  return "pre-viral";
+// --- Trend lifecycle stage (Section 1 of build brief) ---
+
+export function getStageFromViralScore(viralScore: number): 'emerging' | 'rising' | 'exploding' | 'saturated' {
+  if (viralScore >= 85) return 'exploding';
+  if (viralScore >= 70) return 'rising';
+  if (viralScore >= 40) return 'emerging';
+  return 'saturated';
 }
+
+// --- AI insight tier determination ---
+
+export function getAiInsightTier(finalScore: number): 'none' | 'haiku' | 'sonnet' {
+  if (finalScore >= 75) return 'sonnet';  // On-demand only, NEVER automatic
+  if (finalScore >= 60) return 'haiku';
+  return 'none';
+}
+
+// --- Auto-rejection rules (Section 7) ---
+
+export interface RejectionInput {
+  grossMargin: number;
+  shippingCostPct: number;
+  breakEvenMonths: number;
+  isFragileHazardous: boolean;
+  hasCertification: boolean;
+  fastestUSDeliveryDays: number;
+}
+
+export function shouldRejectProduct(input: RejectionInput): { rejected: boolean; reasons: string[] } {
+  const reasons: string[] = [];
+
+  if (input.grossMargin < 0.40)
+    reasons.push('Gross margin below 40%');
+  if (input.shippingCostPct > 0.30)
+    reasons.push('Shipping exceeds 30% of retail');
+  if (input.breakEvenMonths > 2)
+    reasons.push('Break-even exceeds 2 months');
+  if (input.isFragileHazardous && !input.hasCertification)
+    reasons.push('Fragile/hazardous without certification');
+  if (input.fastestUSDeliveryDays > 15)
+    reasons.push('No supplier with USA delivery under 15 days');
+
+  return { rejected: reasons.length > 0, reasons };
+}
+
+// --- Score explanation ---
 
 export function explainScore(
   type: string,
@@ -128,9 +179,9 @@ export function explainScore(
   details: { trendScore?: number; viralScore?: number; profitScore?: number }
 ): string {
   const tier = getTierFromScore(score);
-  const parts = [`${type} score: ${score}/100 (Tier ${tier}).`];
+  const parts = [`${type} score: ${score}/100 (${tier}).`];
   if (details.trendScore !== undefined) parts.push(`Trend: ${details.trendScore}/100.`);
   if (details.viralScore !== undefined) parts.push(`Viral: ${details.viralScore}/100.`);
   if (details.profitScore !== undefined) parts.push(`Profit: ${details.profitScore}/100.`);
-  return parts.join(" ");
+  return parts.join(' ');
 }

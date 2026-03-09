@@ -10,10 +10,12 @@ import {
   Target, DollarSign, Eye
 } from 'lucide-react'
 
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getSupabase() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  )
+}
 
 interface Stats {
   productsTracked: number
@@ -70,9 +72,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function fetchData() {
       try {
+        const sb = getSupabase()
         const [products, scans] = await Promise.all([
-          supabase.from('products').select('id, name, viral_score, trend_stage, platform, final_score, channel').order('final_score', { ascending: false }),
-          supabase.from('scan_history').select('*').order('created_at', { ascending: false }).limit(5),
+          sb.from('products').select('id, name, viral_score, trend_stage, platform, final_score, channel').order('final_score', { ascending: false }),
+          sb.from('scan_history').select('*').order('created_at', { ascending: false }).limit(5),
         ])
 
         if (products.data) {

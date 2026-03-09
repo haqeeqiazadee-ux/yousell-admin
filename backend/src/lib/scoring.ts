@@ -57,7 +57,50 @@ export function calculateCompositeScore(product: Product): CompositeScore {
 
   viral_score = Math.min(100, viral_score);
 
-  const overall_score = Math.round(viral_score * 0.6 + profitability_score * 0.4);
+  // Final Score = Trend(0.40) + Viral(0.35) + Profit(0.25) per spec
+  // For discovery scoring, we use viral as a proxy for trend+viral
+  const overall_score = Math.round(viral_score * 0.60 + profitability_score * 0.40);
 
   return { viral_score, profitability_score, overall_score };
+}
+
+// Badge classification per spec: 80+=HOT, 60+=WARM, 40+=WATCH, <40=COLD
+export function getTierFromScore(score: number): 'HOT' | 'WARM' | 'WATCH' | 'COLD' {
+  if (score >= 80) return 'HOT';
+  if (score >= 60) return 'WARM';
+  if (score >= 40) return 'WATCH';
+  return 'COLD';
+}
+
+// Trend lifecycle stage per spec
+export function getStageFromScore(viralScore: number): 'emerging' | 'rising' | 'exploding' | 'saturated' {
+  if (viralScore >= 85) return 'exploding';
+  if (viralScore >= 70) return 'rising';
+  if (viralScore >= 40) return 'emerging';
+  return 'saturated';
+}
+
+// Auto-rejection rules per spec (Section 7)
+export function shouldRejectProduct(input: {
+  grossMargin: number;
+  shippingCostPct: number;
+  breakEvenMonths: number;
+  isFragileHazardous: boolean;
+  hasCertification: boolean;
+  fastestUSDeliveryDays: number;
+}): { rejected: boolean; reasons: string[] } {
+  const reasons: string[] = [];
+
+  if (input.grossMargin < 0.40)
+    reasons.push('Gross margin below 40%');
+  if (input.shippingCostPct > 0.30)
+    reasons.push('Shipping exceeds 30% of retail');
+  if (input.breakEvenMonths > 2)
+    reasons.push('Break-even exceeds 2 months');
+  if (input.isFragileHazardous && !input.hasCertification)
+    reasons.push('Fragile/hazardous without certification');
+  if (input.fastestUSDeliveryDays > 15)
+    reasons.push('No supplier with USA delivery under 15 days');
+
+  return { rejected: reasons.length > 0, reasons };
 }

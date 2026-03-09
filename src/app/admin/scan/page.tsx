@@ -9,10 +9,12 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getSupabase() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  )
+}
 
 type ScanMode = 'quick' | 'full' | 'client'
 type ScanStatus = 'idle' | 'confirming' | 'running' | 'completed' | 'failed' | 'cancelled'
@@ -93,7 +95,7 @@ function ScanPageContent() {
   }, [])
 
   async function fetchHistory() {
-    const { data } = await supabase
+    const { data } = await getSupabase()
       .from('scan_history')
       .select('*')
       .order('created_at', { ascending: false })
@@ -113,7 +115,7 @@ function ScanPageContent() {
     setError(null)
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
+      const { data: { session } } = await getSupabase().auth.getSession()
       const res = await fetch('/api/admin/scan', {
         method: 'POST',
         headers: {
@@ -140,7 +142,7 @@ function ScanPageContent() {
   function pollJobStatus(id: string) {
     pollRef.current = setInterval(async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        const { data: { session } } = await getSupabase().auth.getSession()
         const res = await fetch(`/api/admin/scan?jobId=${id}`, {
           headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
         })
@@ -170,7 +172,7 @@ function ScanPageContent() {
     if (!jobId) { setStatus('idle'); return }
     if (pollRef.current) clearInterval(pollRef.current)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
+      const { data: { session } } = await getSupabase().auth.getSession()
       await fetch(`/api/admin/scan?jobId=${jobId}`, {
         method: 'DELETE',
         headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
