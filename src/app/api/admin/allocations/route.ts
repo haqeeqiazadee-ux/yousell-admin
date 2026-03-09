@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { count: activeCount, error: countError } = await supabaseAdmin
-      .from('allocations')
+      .from('product_allocations')
       .select('*', { count: 'exact', head: true })
       .eq('client_id', clientId)
       .eq('status', 'active');
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { error } = await supabaseAdmin
-      .from('allocations')
+      .from('product_allocations')
       .insert(
         productIds.map((productId: string) => ({
           client_id: clientId,
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
   const clientId = req.nextUrl.searchParams.get('clientId');
 
   let query = supabaseAdmin
-    .from('allocations')
+    .from('product_allocations')
     .select('*, products(*), clients(*)')
     .order('allocated_at', { ascending: false });
 

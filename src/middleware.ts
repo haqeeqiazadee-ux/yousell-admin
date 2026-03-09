@@ -4,18 +4,38 @@ import { NextResponse, type NextRequest } from 'next/server'
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
     { cookies: { getAll() { return request.cookies.getAll() }, setAll(cookiesToSet) { cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value)); supabaseResponse = NextResponse.next({ request }); cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options)) } } }
   )
   const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
-  if (pathname.startsWith('/admin') && pathname !== '/admin/login' && !user) {
-    return NextResponse.redirect(new URL('/admin/login', request.url))
+
+  // Admin routes: require authenticated user with admin role
+  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+    if (!user) {
+      return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
+    // Check admin role from user metadata
+    const role = user.user_metadata?.role || user.app_metadata?.role
+    if (role !== 'admin' && role !== 'super_admin') {
+      return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
   }
+
+  // Redirect logged-in admin users away from login page
   if (pathname === '/admin/login' && user) {
-    return NextResponse.redirect(new URL('/admin', request.url))
+    const role = user.user_metadata?.role || user.app_metadata?.role
+    if (role === 'admin' || role === 'super_admin') {
+      return NextResponse.redirect(new URL('/admin', request.url))
+    }
   }
+
+  // Client dashboard routes: require authenticated user
+  if (pathname.startsWith('/dashboard') && !user) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
   return supabaseResponse
 }
-export const config = { matcher: ['/admin/:path*'] }
+export const config = { matcher: ['/admin/:path*', '/dashboard/:path*'] }
