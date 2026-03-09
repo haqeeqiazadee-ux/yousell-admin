@@ -60,13 +60,23 @@ export default function AdminDashboard() {
   const [lastScan, setLastScan] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const [serviceStatus, setServiceStatus] = useState<Record<string, boolean>>({})
+
+  useEffect(() => {
+    // Fetch service status from server-side API (never expose keys in client bundle)
+    fetch('/api/admin/dashboard')
+      .then(r => r.json())
+      .then(d => { if (d.services) setServiceStatus(d.services) })
+      .catch(() => {})
+  }, [])
+
   const systemStatus: SystemStatus[] = [
-    { label: 'Supabase', status: 'connected', detail: 'Connected' },
-    { label: 'Auth + RBAC', status: 'connected', detail: 'Connected' },
-    { label: 'AI Engine (Claude)', status: process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY ? 'connected' : 'warning', detail: process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY ? 'Active' : 'Not Configured' },
-    { label: 'Resend Email', status: process.env.NEXT_PUBLIC_RESEND_API_KEY ? 'connected' : 'warning', detail: process.env.NEXT_PUBLIC_RESEND_API_KEY ? 'Active' : 'Not Configured' },
-    { label: 'Apify Scrapers', status: 'warning', detail: 'Not Configured' },
-    { label: 'RapidAPI', status: 'warning', detail: 'Not Configured' },
+    { label: 'Supabase', status: serviceStatus.supabase ? 'connected' : 'warning', detail: serviceStatus.supabase ? 'Connected' : 'Check Config' },
+    { label: 'Auth + RBAC', status: serviceStatus.auth ? 'connected' : 'warning', detail: serviceStatus.auth ? 'Connected' : 'Check Config' },
+    { label: 'AI Engine (Claude)', status: serviceStatus.ai ? 'connected' : 'warning', detail: serviceStatus.ai ? 'Active' : 'Not Configured' },
+    { label: 'Resend Email', status: serviceStatus.email ? 'connected' : 'warning', detail: serviceStatus.email ? 'Active' : 'Not Configured' },
+    { label: 'Apify Scrapers', status: serviceStatus.apify ? 'connected' : 'warning', detail: serviceStatus.apify ? 'Active' : 'Not Configured' },
+    { label: 'RapidAPI', status: serviceStatus.rapidapi ? 'connected' : 'warning', detail: serviceStatus.rapidapi ? 'Active' : 'Not Configured' },
   ]
 
   useEffect(() => {
