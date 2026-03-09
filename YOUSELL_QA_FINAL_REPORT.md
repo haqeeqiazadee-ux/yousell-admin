@@ -18,9 +18,9 @@ However, **18 spec deviations** were identified across scoring logic, UI complet
 | Severity | Count | Description |
 |----------|-------|-------------|
 | **P0 — Critical** | 3 | Breaks core business logic or blocks CI |
-| **P1 — High** | 6 | Major spec deviation, missing key feature |
+| **P1 — High** | 7 | Major spec deviation, missing key feature |
 | **P2 — Medium** | 7 | Functional gap, poor UX, or incomplete feature |
-| **P3 — Low/Info** | 5 | Minor, cosmetic, or informational |
+| **P3 — Low/Info** | 7 | Minor, cosmetic, or informational |
 
 ---
 
@@ -82,7 +82,13 @@ However, **18 spec deviations** were identified across scoring logic, UI complet
 **Issue:** Client scan mode exists but there's no dropdown to select which client the scan is for. The scan starts without client context.
 **Impact:** Client-specific scans can't be properly attributed or filtered by client niche.
 
-### P1-6: Dashboard Page Renders Its Own Layout Chrome
+### P1-6: 20 of 22 Admin API Routes Missing Role Check
+**Files:** All `/api/admin/*` routes except `scan` and `settings`
+**Issue:** Only `/api/admin/scan` (uses `isAdmin()`) and `/api/admin/settings` (queries profile role) enforce admin role. The remaining 20 routes only verify authentication — any logged-in user (including clients) could call them directly via API.
+**Impact:** A client user who knows the API paths could read/modify products, clients, allocations, automation jobs, and other admin-only data.
+**Fix:** Add `isAdmin()` check to all `/api/admin/*` route handlers. See Section 5a for full table.
+
+### P1-7: Dashboard Page Renders Its Own Layout Chrome
 **File:** `src/app/admin/page.tsx:153-170`
 **Issue:** The dashboard page renders its own `min-h-screen bg-gray-50` wrapper and top bar, duplicating what `layout.tsx` already provides. This will cause nested chrome (double headers/backgrounds) when the sidebar layout is fixed.
 **Fix:** Remove the duplicate layout wrapper from the dashboard page.
@@ -153,6 +159,51 @@ However, **18 spec deviations** were identified across scoring logic, UI complet
 ### P3-5: No Test Suite Exists
 **Issue:** No `__tests__/`, `*.test.ts`, or `*.spec.ts` files found in the codebase. No test runner configured in `package.json`.
 **Impact:** No automated regression testing. All QA is manual.
+
+### P3-6: Blueprint PDF Route Returns HTML
+**File:** `src/app/api/admin/blueprints/[id]/pdf/route.ts`
+**Issue:** Route is named `/pdf/` but returns `text/html` content, not an actual PDF document.
+
+### P3-7: `user.email!` Non-Null Assertion in Client Routes
+**Files:** `src/app/api/dashboard/products/route.ts`, `src/app/api/dashboard/requests/route.ts`
+**Issue:** Both routes use `user.email!` (non-null assertion) which could throw if email is null.
+
+---
+
+## 5a. Security Deep-Dive: API Route Auth Gaps
+
+**IMPORTANT FINDING:** Only 2 of 22 admin API routes enforce admin role checks. The rest only verify authentication (any logged-in user).
+
+| Route | Auth Check | Admin Role Check |
+|-------|-----------|-----------------|
+| `/api/admin/scan` | getUser() | ✅ isAdmin() |
+| `/api/admin/settings` | getUser() | ✅ profile.role query |
+| `/api/admin/products` | getUser() | ❌ Auth only |
+| `/api/admin/clients` | getUser() | ❌ Auth only |
+| `/api/admin/allocations` | getUser() | ❌ Auth only |
+| `/api/admin/influencers` | getUser() | ❌ Auth only |
+| `/api/admin/suppliers` | getUser() | ❌ Auth only |
+| `/api/admin/competitors` | getUser() | ❌ Auth only |
+| `/api/admin/blueprints` | getUser() | ❌ Auth only |
+| `/api/admin/trends` | getUser() | ❌ Auth only |
+| `/api/admin/scoring` | getUser() | ❌ Auth only |
+| `/api/admin/automation` | getUser() | ❌ Auth only |
+| `/api/admin/financial` | getUser() | ❌ Auth only |
+| `/api/admin/notifications` | getUser() | ❌ Auth only |
+| `/api/admin/import` | getUser() | ❌ Auth only |
+| `/api/admin/tiktok` | getUser() | ❌ Auth only |
+| `/api/admin/amazon` | getUser() | ❌ Auth only |
+| `/api/admin/pinterest` | getUser() | ❌ Auth only |
+| `/api/admin/digital` | getUser() | ❌ Auth only |
+| `/api/admin/affiliates` | getUser() | ❌ Auth only |
+
+**Impact:** Any authenticated client user could access admin API endpoints by calling them directly. While the middleware blocks admin page navigation, API routes are unprotected.
+**Fix:** Add `isAdmin()` or equivalent role check to all `/api/admin/*` route handlers.
+
+**Additional API concerns:**
+- `/api/admin/influencers` and `/api/admin/suppliers` POST handlers pass request body directly to Supabase `.insert()` with no field validation
+- `/api/admin/import` CSV parsing uses naive comma splitting that breaks on quoted fields containing commas
+- Three different auth patterns used across routes (functional but inconsistent)
 
 ---
 
@@ -312,6 +363,9 @@ However, **18 spec deviations** were identified across scoring logic, UI complet
 | Zero `: any` in frontend src/ | ✅ PASS | |
 | Sonnet never called automatically | ✅ PASS | On-demand only for 75+ |
 | No XSS vectors in client code | ✅ PASS | No dangerouslySetInnerHTML |
+| Admin role check on all admin APIs | ❌ FAIL | Only 2/22 admin routes check role (see §5a) |
+| Input validation on POST routes | ⚠️ PARTIAL | influencers & suppliers pass body unvalidated |
+| CSV import handles edge cases | ❌ FAIL | Naive comma split breaks on quoted fields |
 
 ### Module 15: Email & Notifications
 | Test | Result | Notes |
