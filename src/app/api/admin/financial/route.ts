@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { calculateProfitability } from "@/lib/scoring/profitability";
 
 // GET /api/admin/financial?product_id=xxx — get financial model for a product
 export async function GET(request: Request) {
@@ -53,25 +52,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "productId and retailPrice are required" }, { status: 400 });
     }
 
-    const result = calculateProfitability({
-      retailPrice,
-      costs: costs || {
-        manufacturingCost: 0,
-        packagingCost: 0,
-        shippingCost: 0,
-        threePLFbaCost: 0,
-        paymentProcessing: 0,
-        marketplaceFees: 0,
-        influencerMarketing: 0,
-        paidAds: 0,
-      },
-      monthlyVelocity: monthlyVelocity || 100,
-      hasUsSupplier: hasUsSupplier ?? false,
-      supplierLeadTime: supplierLeadTime ?? 30,
-      isHazardous: isHazardous ?? false,
-      isFragile: isFragile ?? false,
-      requiresSpecialCert: requiresSpecialCert ?? false,
-    });
+    const totalCosts = costs
+      ? Object.values(costs as Record<string, number>).reduce((sum: number, v: number) => sum + (v || 0), 0)
+      : 0;
+    const grossMargin = retailPrice > 0 ? (retailPrice - totalCosts) / retailPrice : 0;
+    const velocity = monthlyVelocity || 100;
+    const breakEvenUnits = grossMargin > 0 ? Math.ceil(totalCosts / (retailPrice * grossMargin)) : 0;
+
+    const riskFlags: string[] = [];
+    if (isHazardous) riskFlags.push("hazardous_material");
+    if (isFragile) riskFlags.push("fragile");
+    if (requiresSpecialCert) riskFlags.push("special_cert_required");
+    if (!hasUsSupplier) riskFlags.push("no_us_supplier");
+    if ((supplierLeadTime ?? 30) > 45) riskFlags.push("long_lead_time");
+
+    const autoRejected = grossMargin < 0.15 || riskFlags.length >= 3;
+    const rejectionReasons: string[] = [];
+    if (grossMargin < 0.15) rejectionReasons.push("Margin below 15%");
+    if (riskFlags.length >= 3) rejectionReasons.push("Too many risk flags");
 
     // Store financial model
     const { data, error } = await supabase
@@ -79,25 +77,25 @@ export async function POST(request: Request) {
       .insert({
         product_id: productId,
         retail_price: retailPrice,
-        total_cost: result.totalCost,
-        gross_margin: result.grossMargin,
-        break_even_units: result.breakEvenUnits,
+        total_cost: totalCosts,
+        gross_margin: grossMargin,
+        break_even_units: breakEvenUnits,
         influencer_roi: null,
         ad_roas_estimate: null,
-        revenue_30day: result.revenue30day,
-        revenue_60day: result.revenue60day,
-        revenue_90day: result.revenue90day,
+        revenue_30day: velocity * retailPrice,
+        revenue_60day: velocity * retailPrice * 2,
+        revenue_90day: velocity * retailPrice * 3,
         cost_breakdown: costs || {},
-        risk_flags: result.riskFlags,
-        auto_rejected: result.autoRejected,
-        rejection_reason: result.rejectionReasons.join("; ") || null,
+        risk_flags: riskFlags,
+        auto_rejected: autoRejected,
+        rejection_reason: rejectionReasons.join("; ") || null,
       })
       .select()
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    return NextResponse.json({ model: data, analysis: result }, { status: 201 });
+    return NextResponse.json({ model: data, analysis: { totalCost: totalCosts, grossMargin, breakEvenUnits, riskFlags, autoRejected, rejectionReasons } }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
