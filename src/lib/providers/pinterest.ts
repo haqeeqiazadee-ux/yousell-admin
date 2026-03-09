@@ -15,7 +15,7 @@ export interface PinterestProduct {
 
 export async function scrapePinterestProducts(query?: string): Promise<PinterestProduct[]> {
   const cached = await getCachedProducts('pinterest', query || '');
-  if (cached) return cached as PinterestProduct[];
+  if (cached) return cached as unknown as PinterestProduct[];
 
   const apiKey = process.env.PINTEREST_API_KEY;
   if (!apiKey) {
@@ -37,17 +37,18 @@ export async function scrapePinterestProducts(query?: string): Promise<Pinterest
 
     const data = await response.json();
 
-    return (data.items || []).map((p: any) => ({
-      external_id: p.id,
-      title: p.title || p.description?.slice(0, 100),
-      price: p.price?.value || 0,
-      url: p.link || `https://pinterest.com/pin/${p.id}`,
-      image_url: p.media?.images?.['600x']?.url || '',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- external API response
+    return ((data.items || []) as Record<string, any>[]).map((p) => ({
+      external_id: String(p.id || ''),
+      title: String(p.title || (p.description as string)?.slice(0, 100) || ''),
+      price: Number(p.price?.value || 0),
+      url: String(p.link || `https://pinterest.com/pin/${p.id}`),
+      image_url: String(p.media?.images?.['600x']?.url || ''),
       sales_count: 0,
-      review_count: p.aggregated_pin_data?.aggregated_stats?.saves || 0,
+      review_count: Number(p.aggregated_pin_data?.aggregated_stats?.saves || 0),
       rating: 0,
       source: 'pinterest' as const,
-      pin_count: p.aggregated_pin_data?.aggregated_stats?.saves || 0,
+      pin_count: Number(p.aggregated_pin_data?.aggregated_stats?.saves || 0),
     }));
   } catch (error) {
     console.error('Pinterest scrape error:', error);

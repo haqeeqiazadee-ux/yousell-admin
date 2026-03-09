@@ -133,9 +133,9 @@ function ScanPageContent() {
       const { jobId: id } = await res.json()
       setJobId(id)
       pollJobStatus(id)
-    } catch (e: any) {
+    } catch (e: unknown) {
       setStatus('failed')
-      setError(e.message || 'Failed to start scan. Please try again.')
+      setError(e instanceof Error ? e.message : 'Failed to start scan. Please try again.')
     }
   }
 
