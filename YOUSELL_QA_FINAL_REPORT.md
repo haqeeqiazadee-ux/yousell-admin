@@ -13,7 +13,7 @@ The YouSell Admin platform is a well-structured Next.js 14 + Supabase applicatio
 
 However, **18 spec deviations** were identified across scoring logic, UI completeness, and navigation. The most critical issue is the **badge tier threshold mismatch** — the codebase uses different cutoff values than the spec, which directly affects product classification and client-facing reports.
 
-**Overall Spec Compliance: ~72%** (108/150 checkpoints passed)
+**Overall Spec Compliance: ~78%** (117/150 checkpoints passed)
 
 | Severity | Count | Description |
 |----------|-------|-------------|
@@ -49,22 +49,24 @@ However, **18 spec deviations** were identified across scoring logic, UI complet
 
 ## 3. P1 — High Priority Issues
 
-### P1-1: Products Page Missing 7-Tab Discovery Interface
+### P1-1: Products Page Is Flat List — Discovery Channels Are Separate Routes
 **File:** `src/app/admin/products/page.tsx`
 **Spec says:** 7 discovery channel tabs (TikTok Shop, Amazon FBA, Shopify DTC, Pinterest, Digital Products, AI Affiliates, Physical Affiliates) each showing platform-specific product views.
-**Code has:** Flat product table with search. Platform-specific API routes exist (`/api/admin/tiktok`, `/api/admin/amazon`, `/api/admin/pinterest`, `/api/admin/digital`) but the products page doesn't use tabbed navigation to display them.
-**Note:** `platform-products.tsx` component exists for platform-specific listings but isn't used on the products page.
+**Code has:** The products page is a flat table with search. However, all 7 discovery channels DO exist as separate route pages (`/admin/tiktok`, `/admin/amazon`, `/admin/shopify`, `/admin/pinterest`, `/admin/digital`, `/admin/affiliates/ai`, `/admin/affiliates/physical`), each using the shared `PlatformProducts` component. This is an architectural choice (separate pages vs. tabs) that works but differs from spec.
+**Note:** Shopify uses a different API pattern (`/api/admin/products?platform=shopify`) vs. other platforms that have dedicated endpoints. All pages are only reachable via the sidebar (which itself isn't wired — see P0-3).
 
 ### P1-2: Middleware Redirects Non-Admin Users to Login Instead of Unauthorized
 **File:** `src/middleware.ts:21-23`
 **Spec says:** Non-admin authenticated users should see an "unauthorized" page.
 **Code does:** Redirects to `/admin/login` for both unauthenticated AND non-admin users.
+**Note:** The unauthorized page DOES exist at `src/app/admin/unauthorized/page.tsx` (40 lines, with ShieldX icon, "Access Denied" title, and sign-out button). The middleware simply doesn't redirect to it.
 **Impact:** An authenticated non-admin user gets stuck in a redirect loop (login → middleware checks → redirect to login) because they're already logged in.
+**Fix:** Change middleware line 22 to redirect to `/admin/unauthorized` instead of `/admin/login` for authenticated non-admin users.
 
 ### P1-3: No Analytics or Reports Pages
 **Spec says:** Analytics dashboard and reporting functionality.
-**Code has:** No `src/app/admin/analytics/` or `src/app/admin/reports/` directories exist.
-**Impact:** No trend analytics visualization, no exportable reports for clients.
+**Code has:** No `src/app/admin/analytics/` or `src/app/admin/reports/` directories exist. However, the platform does have: trends page (`/admin/trends`) with keyword tracking and direction indicators, blueprints page (`/admin/blueprints`) with PDF export, and a notifications page (`/admin/notifications`).
+**Impact:** No dedicated trend analytics visualization or exportable client reports beyond blueprints.
 
 ### P1-4: Influencer Page Missing Key Features
 **File:** `src/app/admin/influencers/page.tsx`
@@ -331,7 +333,7 @@ However, **18 spec deviations** were identified across scoring logic, UI complet
 | Badge/Tier Classification | ❌ | 0% — wrong thresholds |
 | AI Cost Control (Sonnet never auto) | ✅ | 100% |
 | Client Plans & Limits | ✅ | 100% |
-| 7 Discovery Channels | ⚠️ | 70% — APIs exist, UI tabs missing |
+| 7 Discovery Channels | ✅ | 90% — All 7 exist as separate pages (not tabs), using shared PlatformProducts component |
 | Provider Abstraction Layer | ✅ | 90% |
 | Automation Jobs (disabled default) | ✅ | 100% |
 | Master Kill Switch | ✅ | 100% |
@@ -347,16 +349,17 @@ However, **18 spec deviations** were identified across scoring logic, UI complet
 
 ## 8. Missing Features (Not Implemented)
 
-| Feature | Spec Section | Effort |
-|---------|-------------|--------|
-| Analytics dashboard page | Section 12 | Medium |
-| Reports page with exports | Section 13 | Medium |
-| 7-tab discovery interface on products page | Section 4 | Medium |
-| Unauthorized page for non-admin users | Section 2 | Small |
-| Product edit/delete/archive UI | Section 4 | Small |
-| Pagination on list views | General UX | Small |
-| Test suite (unit + integration) | QA | Large |
-| Excel (.xlsx) import support | Section 10 | Small |
+| Feature | Spec Section | Effort | Notes |
+|---------|-------------|--------|-------|
+| Analytics dashboard page | Section 12 | Medium | No `/admin/analytics` route |
+| Reports page with exports | Section 13 | Medium | Blueprints have PDF export but no general reports |
+| Middleware → unauthorized redirect | Section 2 | Tiny | Page exists, just fix middleware redirect |
+| Product edit/delete/archive UI | Section 4 | Small | Only add exists |
+| Pagination on list views | General UX | Small | APIs support limits, UI doesn't paginate |
+| Test suite (unit + integration) | QA | Large | Zero test files in codebase |
+| Excel (.xlsx) import support | Section 10 | Small | CSV only currently |
+| Error handling on fetch calls | General | Small | Most pages silently fail on API errors |
+| Influencer edit/delete | Section 8 | Small | Only add exists |
 
 ---
 
@@ -411,6 +414,21 @@ The previous audit (`YouSell_QA_Audit_Report.md`, 215 tests) had many "Unknown" 
 - `app/admin/setup/page.tsx` (279 lines)
 - `app/admin/influencers/page.tsx` (300 lines)
 - `app/admin/login/page.tsx` (91 lines)
+- `app/admin/unauthorized/page.tsx` (40 lines)
+- `app/admin/suppliers/page.tsx` (334 lines)
+- `app/admin/competitors/page.tsx` (244 lines)
+- `app/admin/blueprints/page.tsx` (187 lines)
+- `app/admin/notifications/page.tsx` (164 lines)
+- `app/admin/import/page.tsx` (244 lines)
+- `app/admin/trends/page.tsx` (237 lines)
+- `app/admin/tiktok/page.tsx` (18 lines)
+- `app/admin/amazon/page.tsx` (18 lines)
+- `app/admin/shopify/page.tsx` (18 lines)
+- `app/admin/pinterest/page.tsx` (18 lines)
+- `app/admin/digital/page.tsx` (18 lines)
+- `app/admin/affiliates/page.tsx` (62 lines)
+- `app/admin/affiliates/ai/page.tsx` (18 lines)
+- `app/admin/affiliates/physical/page.tsx` (18 lines)
 - 26 API route files (`app/api/`)
 - `components/admin-sidebar.tsx`
 - `components/product-card.tsx`
@@ -441,7 +459,7 @@ The previous audit (`YouSell_QA_Audit_Report.md`, 215 tests) had many "Unknown" 
 ### Config
 - `package.json`, `tsconfig.json`, `tailwind.config.ts`, `postcss.config.mjs`
 
-**Total files audited: 80+**
+**Total files audited: 95+**
 
 ---
 
