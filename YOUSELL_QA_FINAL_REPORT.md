@@ -11,27 +11,35 @@
 
 The YouSell Admin platform is a well-structured Next.js 14 + Supabase application with solid fundamentals: TypeScript strict mode, proper auth middleware, server-side API key storage, and a comprehensive component library. The build compiles successfully with zero TypeScript errors.
 
-However, **18 spec deviations** were identified across scoring logic, UI completeness, and navigation. The most critical issue is the **badge tier threshold mismatch** — the codebase uses different cutoff values than the spec, which directly affects product classification and client-facing reports.
+However, **33 issues** were identified across scoring logic, UI completeness, navigation, and security. The most critical findings are: **three conflicting tier threshold systems**, a **service role key exposure risk**, the **client dashboard being completely broken** (wrong ID used in queries), and the **backend worker using legacy scoring** that doesn't populate the columns the frontend expects.
 
 **Overall Spec Compliance: ~78%** (117/150 checkpoints passed)
 
 | Severity | Count | Description |
 |----------|-------|-------------|
-| **P0 — Critical** | 3 | Breaks core business logic or blocks CI |
-| **P1 — High** | 7 | Major spec deviation, missing key feature |
-| **P2 — Medium** | 7 | Functional gap, poor UX, or incomplete feature |
+| **P0 — Critical** | 6 | Breaks core business logic or blocks CI |
+| **P1 — High** | 10 | Major spec deviation, missing key feature |
+| **P2 — Medium** | 10 | Functional gap, poor UX, or incomplete feature |
 | **P3 — Low/Info** | 7 | Minor, cosmetic, or informational |
 
 ---
 
 ## 2. P0 — Critical Issues
 
-### P0-1: Badge Tier Thresholds Mismatch
-**File:** `src/lib/scoring/composite.ts:122-127` and `src/components/score-badge.tsx`
+### P0-1: Three Conflicting Tier Threshold Systems
+**Files:** `src/lib/scoring/composite.ts:122-127`, `src/components/score-badge.tsx`, `src/lib/types/product.ts`, `src/components/product-card.tsx`
 **Spec says:** HOT ≥ 80, WARM 60-79, WATCH 40-59, COLD < 40
-**Code uses:** HOT ≥ 85, RISING ≥ 70, EMERGING ≥ 40, SATURATED < 40
-**Impact:** Products scoring 80-84 are classified as RISING instead of HOT. Products scoring 60-69 classified as EMERGING instead of WARM. This directly misguides admin decisions and client-facing reports.
-**Fix:** Update `getTierFromScore()` thresholds to match spec: `if (score >= 80) return 'HOT'; if (score >= 60) return 'WARM'; if (score >= 40) return 'WATCH'; return 'COLD';`
+**Code has THREE different systems:**
+- `composite.ts` + `score-badge.tsx`: HOT ≥ 85, RISING ≥ 70, EMERGING ≥ 40, SATURATED < 40
+- `product.ts` (`getTierBadge()`): hot ≥ 80, warm ≥ 60, watch ≥ 40, cold < 40
+- `product-card.tsx` (gauge colors): red ≥ 80, orange ≥ 60, yellow ≥ 40, gray < 40
+
+**Additionally, two different naming schemes:**
+- Type system (`TierBadge`): `hot | warm | watch | cold`
+- UI components: `HOT | RISING | EMERGING | SATURATED`
+
+**Impact:** A product scoring 82 shows a red gauge (product-card), "warm" tier (product.ts), but "RISING" badge (score-badge). Complete inconsistency across the UI.
+**Fix:** Unify all files to spec thresholds (80/60/40) and spec naming (HOT/WARM/WATCH/COLD).
 
 ### P0-2: ESLint Cannot Run — CI/CD Blocker
 **File:** `package.json` (eslint ^10.0.3)
@@ -44,6 +52,24 @@ However, **18 spec deviations** were identified across scoring logic, UI complet
 **Issue:** `admin-sidebar.tsx` exists with 18 nav items across 4 groups (Platform, Discovery Channels, Intelligence, Management) but `layout.tsx` renders only a minimal top bar with user email/role. The sidebar is never imported or rendered.
 **Impact:** Users have NO navigation between admin pages. They must manually type URLs or rely on dashboard links. The 7 Discovery Channel pages, Intelligence section, and Management pages are effectively unreachable from the UI.
 **Fix:** Import and render `AdminSidebar` in `layout.tsx` with a flex layout (`sidebar + main content`).
+
+### P0-4: Service Role Key Exposure Risk
+**File:** `src/lib/supabase.ts`
+**Issue:** `supabaseAdmin` (service role client bypassing RLS) is created in a file with no `"use server"` directive or `server-only` import guard. This file is imported by `src/lib/providers/cache.ts`, which is imported by frontend provider modules. If tree-shaking fails, the `SUPABASE_SERVICE_ROLE_KEY` could leak to the browser bundle.
+**Impact:** Full database access bypassing all RLS policies.
+**Fix:** Add `import 'server-only'` at the top of `src/lib/supabase.ts` and `src/lib/supabase/admin.ts`.
+
+### P0-5: Client Dashboard Queries Use Wrong ID — Completely Broken
+**File:** `src/app/dashboard/page.tsx`
+**Issue:** Client dashboard uses `user.id` (Supabase auth UUID) as `client_id` in queries, but `product_allocations.client_id` references `clients.id` (a separate UUID). Auth user IDs and client table IDs are different.
+**Impact:** Client dashboard will ALWAYS return zero products and zero requests. The entire client-facing experience is non-functional.
+**Fix:** Look up the client record by `user.email` first (as the API routes do), then use `client.id` for allocation queries.
+
+### P0-6: Backend Worker Uses Legacy 2-Factor Scoring
+**File:** `backend/src/worker.ts`
+**Issue:** The scan worker uses `calculateCompositeScore()` which computes `viral * 0.60 + profitability * 0.40` (legacy). It writes to `overall_score` and `viral_score` but NEVER populates `final_score`, `trend_score`, or `profit_score` columns that the frontend expects.
+**Impact:** Products discovered by scans will have empty/null `final_score` values. The dashboard, product cards, and scoring badges will show 0 or broken data.
+**Fix:** Update worker to use the 3-pillar scoring: `calculateFinalScore(trend, viral, profit)` and populate all score columns.
 
 ---
 
@@ -93,6 +119,26 @@ However, **18 spec deviations** were identified across scoring logic, UI complet
 **Issue:** The dashboard page renders its own `min-h-screen bg-gray-50` wrapper and top bar, duplicating what `layout.tsx` already provides. This will cause nested chrome (double headers/backgrounds) when the sidebar layout is fixed.
 **Fix:** Remove the duplicate layout wrapper from the dashboard page.
 
+### P1-8: Provider Stubs Return Empty/Zero Data
+**Files:** `src/lib/providers/influencers.ts`, `src/lib/providers/trends.ts`, `src/lib/providers/suppliers.ts`
+**Issue:** Multiple provider implementations are stubs:
+- `fetchFromAInfluencer()` and `fetchFromModash()` return empty arrays
+- `fetchFromPytrends()` returns zero-value placeholder data (corrupts trend scores)
+- `fetchFromSerpApi()` returns empty array
+- CJ Dropshipping in `suppliers.ts` is a stub
+**Impact:** Influencer discovery, trend analysis, and some supplier features are non-functional despite having UI for them.
+
+### P1-9: `.env.local.example` Contains Real Supabase Project URL
+**File:** `.env.local.example`
+**Issue:** Contains a real Supabase project URL (`gqrwienipczrejscqdhk.supabase.co`) instead of a placeholder.
+**Impact:** Exposes project infrastructure details in version control.
+**Fix:** Replace with `your-project-id.supabase.co` placeholder.
+
+### P1-10: Duplicate Migration Numbering & Missing Migration 006
+**Files:** `supabase/migrations/`
+**Issue:** Two files named `001_*`, two named `002_*`, and migration `006` is completely missing (jumps from 005 to 007). `001_initial_schema.sql` has NO RLS on any table.
+**Impact:** Migration tooling will fail or run in wrong order. If `001_initial_schema.sql` runs without the RBAC migration, all data is publicly exposed.
+
 ---
 
 ## 4. P2 — Medium Priority Issues
@@ -134,6 +180,21 @@ However, **18 spec deviations** were identified across scoring logic, UI complet
 <DialogTrigger render={<Button>...</Button>} />
 ```
 **Issue:** The `render` prop pattern for `DialogTrigger` is specific to Base UI. If using standard shadcn/ui (Radix-based), this would fail. The codebase appears to use a custom Base UI integration. This works but is non-standard and may confuse contributors.
+
+### P2-8: Frontend/Backend Scoring & Provider Code Duplication
+**Files:** `backend/src/lib/scoring.ts` vs `src/lib/scoring/composite.ts`, `backend/src/lib/providers.ts` vs `src/lib/providers/`, `backend/src/lib/email.ts` vs `src/lib/email.ts`
+**Issue:** Scoring, provider scraping, and email logic are fully duplicated between frontend and backend with DIVERGENT implementations. Backend uses legacy 2-factor scoring while frontend has the 3-pillar system.
+**Impact:** Products scored by the backend worker have different values than the frontend scoring API. Fixes to one codebase don't propagate to the other.
+
+### P2-9: `next/image` External Domains Not Configured
+**File:** `next.config.mjs`
+**Issue:** Config is empty (`{}`). No `images.remotePatterns` configured. Product images from external URLs (picsum.photos, Alibaba, TikTok, etc.) will fail with `next/image`.
+**Impact:** Product images broken on client dashboard pages that use `next/image`.
+
+### P2-10: Default Currency GBP in Database Schema
+**File:** `supabase/migrations/003_products.sql`
+**Issue:** Products table defaults currency to `'GBP'` but the platform targets US market (USD pricing in mock data, US delivery rules in auto-rejection).
+**Fix:** Change default to `'USD'`.
 
 ---
 
@@ -381,10 +442,10 @@ However, **18 spec deviations** were identified across scoring logic, UI complet
 
 | Spec Section | Status | Compliance |
 |-------------|--------|-----------|
-| Composite Scoring (Final/Trend/Viral/Profit) | ✅ | 95% — formulas correct, thresholds wrong |
+| Composite Scoring (Final/Trend/Viral/Profit) | ⚠️ | 80% — formulas correct, thresholds wrong, backend uses legacy scoring |
 | 6 Pre-Viral Signals | ✅ | 100% |
 | Auto-Rejection Rules | ✅ | 100% (+ 3 bonus rules) |
-| Badge/Tier Classification | ❌ | 0% — wrong thresholds |
+| Badge/Tier Classification | ❌ | 0% — 3 conflicting threshold systems, 2 naming schemes |
 | AI Cost Control (Sonnet never auto) | ✅ | 100% |
 | Client Plans & Limits | ✅ | 100% |
 | 7 Discovery Channels | ✅ | 90% — All 7 exist as separate pages (not tabs), using shared PlatformProducts component |
@@ -437,18 +498,35 @@ The previous audit (`YouSell_QA_Audit_Report.md`, 215 tests) had many "Unknown" 
 
 ## 10. Recommendations (Priority Order)
 
-1. **[IMMEDIATE]** Fix badge tier thresholds in `composite.ts` and `score-badge.tsx` to match spec (80/60/40)
-2. **[IMMEDIATE]** Wire `admin-sidebar.tsx` into `layout.tsx` — users literally cannot navigate
-3. **[THIS WEEK]** Fix ESLint config (downgrade to v9 or migrate to flat config)
-4. **[THIS WEEK]** Create `/admin/unauthorized` page and update middleware redirect
-5. **[THIS WEEK]** Add client selector to scan page for client mode
-6. **[THIS WEEK]** Remove duplicate layout wrappers from dashboard and scan pages
-7. **[NEXT SPRINT]** Add 7-tab interface to products page using existing platform APIs
-8. **[NEXT SPRINT]** Add product edit/delete/archive functionality
-9. **[NEXT SPRINT]** Add pagination to product and influencer tables
-10. **[BACKLOG]** Build analytics and reports pages
-11. **[BACKLOG]** Add test suite (Jest + React Testing Library)
-12. **[BACKLOG]** Add Excel import support
+### IMMEDIATE (Blocking)
+1. **Add `import 'server-only'` to `src/lib/supabase.ts` and `src/lib/supabase/admin.ts`** — prevents service role key leaking to browser
+2. **Fix client dashboard ID mismatch** — look up client by email, then use `client.id` for queries
+3. **Update backend worker** to use 3-pillar scoring and populate `final_score`/`trend_score`/`profit_score`
+4. **Unify tier thresholds** across all files to spec (80/60/40) with consistent naming (HOT/WARM/WATCH/COLD)
+5. **Wire `admin-sidebar.tsx` into `layout.tsx`** — users cannot navigate without it
+
+### THIS WEEK
+6. **Add `isAdmin()` role check to all 20 unprotected admin API routes**
+7. **Fix ESLint config** (downgrade to v9 or migrate to flat config)
+8. **Fix middleware** to redirect non-admin to `/admin/unauthorized` (page already exists)
+9. **Remove `.env.local.example` real Supabase URL** — replace with placeholder
+10. **Remove duplicate layout wrappers** from dashboard and scan pages
+11. **Configure `next.config.mjs` `images.remotePatterns`** for external product images
+12. **Fix duplicate migration numbering** and add missing migration 006
+
+### NEXT SPRINT
+13. Add client selector to scan page for client mode
+14. Add product edit/delete/archive functionality
+15. Add pagination to product and influencer tables
+16. Consolidate frontend/backend scoring into shared package
+17. Replace provider stubs with real implementations or clear "not implemented" UI
+18. Change default currency from GBP to USD
+
+### BACKLOG
+19. Build analytics and reports pages
+20. Add test suite (Jest + React Testing Library)
+21. Add Excel import support
+22. Fix CSV parser to handle quoted fields
 
 ---
 
