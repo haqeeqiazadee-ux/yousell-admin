@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation';
 import { getUser } from '@/lib/auth/get-user';
 
 export default async function AdminLayout({
@@ -6,14 +5,13 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getUser();
+  // Auth check is handled by middleware - layout just provides the chrome.
+  // Login/unauthorized pages render without the nav wrapper via their own markup.
+  const user = await getUser().catch(() => null);
 
+  // If no user, just render children (login page, unauthorized, etc.)
   if (!user) {
-    redirect('/admin/login');
-  }
-
-  if (user.role !== 'admin') {
-    redirect('/dashboard');
+    return <>{children}</>;
   }
 
   return (
