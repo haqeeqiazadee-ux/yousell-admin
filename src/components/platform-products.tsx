@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScoreBadge } from "@/components/score-badge";
+import Image from "next/image";
 import { Package, Search, ExternalLink } from "lucide-react";
 import type { Product } from "@/lib/types/product";
 import type { LucideIcon } from "lucide-react";
@@ -122,10 +123,13 @@ export function PlatformProducts({
                     <TableCell>
                       <div className="flex items-center gap-3">
                         {product.image_url ? (
-                          <img
+                          <Image
                             src={product.image_url}
                             alt=""
+                            width={40}
+                            height={40}
                             className="h-10 w-10 rounded object-cover"
+                            unoptimized
                           />
                         ) : (
                           <div className="h-10 w-10 rounded bg-muted flex items-center justify-center">

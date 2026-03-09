@@ -109,8 +109,8 @@ export function calculateProfitability(input: ProfitabilityInput): Profitability
     );
   }
 
-  if (input.isHazardous || input.isFragile || input.requiresSpecialCert) {
-    rejectionReasons.push("Product is hazardous, fragile, or requires special certification");
+  if ((input.isHazardous || input.isFragile) && input.requiresSpecialCert) {
+    rejectionReasons.push("Product is hazardous/fragile and requires special certification not obtained");
   }
 
   if (!input.hasUsSupplier || input.supplierLeadTime > 15) {

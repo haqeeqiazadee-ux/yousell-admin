@@ -6,6 +6,7 @@ import { searchShopifyProducts } from "@/lib/providers/shopify/index";
 import { searchPinterestProducts } from "@/lib/providers/pinterest/index";
 import { searchTrends } from "@/lib/providers/trends/index";
 import type { ProductResult } from "@/lib/providers/types";
+import { sendProductAlert } from "@/lib/email";
 
 export async function GET() {
   try {
@@ -66,7 +67,7 @@ export async function POST(request: Request) {
 
     const searchTerms = keywords?.length
       ? keywords
-      : ["trending products", "viral products 2025", "best sellers"];
+      : ["trending products", "viral products 2026", "best sellers"];
 
     // Create scan history entry
     let scanId: string | null = null;
@@ -166,6 +167,24 @@ export async function POST(request: Request) {
           .eq("id", scanId);
       } catch {
         // Best effort
+      }
+    }
+
+    // Send email alerts for HOT (80+) and PRE-VIRAL (85+) products
+    if (hotProducts > 0 && user.email) {
+      try {
+        for (let i = 0; i < results.length; i++) {
+          const result = results[i];
+          if (result.status === "fulfilled") {
+            for (const p of result.value) {
+              if ((p.score || 0) >= 80) {
+                await sendProductAlert(user.email, p.title, p.score || 0);
+              }
+            }
+          }
+        }
+      } catch {
+        // Best effort — don't block scan completion
       }
     }
 

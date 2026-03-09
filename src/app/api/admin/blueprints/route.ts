@@ -65,9 +65,9 @@ export async function POST(request: Request) {
     }
 
     const score = product.final_score || product.score_overall || 0;
-    if (score < 60) {
+    if (score < 75) {
       return NextResponse.json(
-        { error: `Product score ${score} is below 60 minimum for blueprint generation` },
+        { error: `Product score ${score} is below 75 minimum for Sonnet blueprint generation` },
         { status: 400 }
       );
     }
