@@ -90,10 +90,21 @@ export function getTierBadge(score: number): TierBadge {
   return "cold";
 }
 
-/** Get trend stage from Early Viral Score */
-export function getTrendStage(viralScore: number): TrendStage {
-  if (viralScore >= 70) return "emerging";
-  if (viralScore >= 50) return "rising";
-  if (viralScore >= 30) return "exploding";
+/** Get trend stage from Early Viral Score per build brief Section 5 */
+export function getTrendStage(viralScore: number, declining?: boolean): TrendStage {
+  if (declining) return "saturated";
+  if (viralScore >= 85) return "exploding";
+  if (viralScore >= 70) return "rising";
+  if (viralScore >= 40) return "emerging";
   return "saturated";
 }
+
+/** Package tier limits per build brief Section 12 */
+export const PACKAGE_TIERS = {
+  starter: { label: "Starter", productsPerPlatform: 3 },
+  growth: { label: "Growth", productsPerPlatform: 10 },
+  professional: { label: "Professional", productsPerPlatform: 25 },
+  enterprise: { label: "Enterprise", productsPerPlatform: 50 },
+} as const;
+
+export type PackageTier = keyof typeof PACKAGE_TIERS;
