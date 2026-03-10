@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { getUser } from '@/lib/auth/get-user';
-import { isAdmin } from '@/lib/auth/roles';
+import { requireAdmin } from '@/lib/auth/roles';
 
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:4000';
 
 export async function POST(req: NextRequest) {
-  const user = await getUser();
-  if (!user) {
+  let user;
+  try {
+    user = await requireAdmin();
+  } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  if (!(await isAdmin())) {
-    return NextResponse.json({ error: 'Forbidden: admin access required' }, { status: 403 });
   }
 
   const body = await req.json();
@@ -20,14 +17,9 @@ export async function POST(req: NextRequest) {
   const query = body.query || '';
 
   try {
-    const token = req.cookies.get('sb-access-token')?.value;
-
     const response = await fetch(`${BACKEND_URL}/api/scan`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         mode,
         query,
@@ -52,25 +44,17 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const user = await getUser();
-  if (!user) {
+  try {
+    await requireAdmin();
+  } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  if (!(await isAdmin())) {
-    return NextResponse.json({ error: 'Forbidden: admin access required' }, { status: 403 });
   }
 
   const jobId = req.nextUrl.searchParams.get('jobId');
 
   if (jobId) {
     try {
-      const token = req.cookies.get('sb-access-token')?.value;
-      const response = await fetch(`${BACKEND_URL}/api/scan/${jobId}`, {
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
+      const response = await fetch(`${BACKEND_URL}/api/scan/${jobId}`);
 
       if (!response.ok) {
         return NextResponse.json({ error: 'Job not found' }, { status: 404 });
@@ -97,13 +81,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const user = await getUser();
-  if (!user) {
+  try {
+    await requireAdmin();
+  } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  if (!(await isAdmin())) {
-    return NextResponse.json({ error: 'Forbidden: admin access required' }, { status: 403 });
   }
 
   const body = await req.json();
@@ -114,13 +95,9 @@ export async function DELETE(req: NextRequest) {
   }
 
   try {
-    const token = req.cookies.get('sb-access-token')?.value;
     const response = await fetch(`${BACKEND_URL}/api/scan/${jobId}/cancel`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
+      headers: { 'Content-Type': 'application/json' },
     });
 
     if (!response.ok) {
