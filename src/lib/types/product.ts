@@ -19,7 +19,7 @@ export type ProductChannel =
   | "physical_affiliate";
 
 export type TrendStage = "emerging" | "rising" | "exploding" | "saturated";
-export type TierBadge = "hot" | "warm" | "watch" | "cold";
+export type TierBadge = "HOT" | "WARM" | "WATCH" | "COLD";
 
 export interface Product {
   id: string;
@@ -84,17 +84,17 @@ export interface ProductInsert {
 
 /** Get tier badge from Final Opportunity Score */
 export function getTierBadge(score: number): TierBadge {
-  if (score >= 80) return "hot";
-  if (score >= 60) return "warm";
-  if (score >= 40) return "watch";
-  return "cold";
+  if (score >= 80) return "HOT";
+  if (score >= 60) return "WARM";
+  if (score >= 40) return "WATCH";
+  return "COLD";
 }
 
 /** Get trend stage from Early Viral Score per build brief Section 5 */
 export function getTrendStage(viralScore: number, declining?: boolean): TrendStage {
   if (declining) return "saturated";
-  if (viralScore >= 85) return "exploding";
-  if (viralScore >= 70) return "rising";
+  if (viralScore >= 80) return "exploding";
+  if (viralScore >= 60) return "rising";
   if (viralScore >= 40) return "emerging";
   return "saturated";
 }

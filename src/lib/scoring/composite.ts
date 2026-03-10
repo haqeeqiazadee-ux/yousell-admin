@@ -119,18 +119,18 @@ export function calculateFinalScore(trend: number, viral: number, profit: number
 
 // --- Badge classification (Section 6) ---
 
-export function getTierFromScore(score: number): 'HOT' | 'RISING' | 'EMERGING' | 'SATURATED' {
-  if (score >= 85) return 'HOT';
-  if (score >= 70) return 'RISING';
-  if (score >= 40) return 'EMERGING';
-  return 'SATURATED';
+export function getTierFromScore(score: number): 'HOT' | 'WARM' | 'WATCH' | 'COLD' {
+  if (score >= 80) return 'HOT';
+  if (score >= 60) return 'WARM';
+  if (score >= 40) return 'WATCH';
+  return 'COLD';
 }
 
 // --- Trend lifecycle stage (Section 1 of build brief) ---
 
 export function getStageFromViralScore(viralScore: number): 'emerging' | 'rising' | 'exploding' | 'saturated' {
-  if (viralScore >= 85) return 'exploding';
-  if (viralScore >= 70) return 'rising';
+  if (viralScore >= 80) return 'exploding';
+  if (viralScore >= 60) return 'rising';
   if (viralScore >= 40) return 'emerging';
   return 'saturated';
 }

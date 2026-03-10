@@ -151,7 +151,7 @@ export function PlatformProducts({
                         : "\u2014"}
                     </TableCell>
                     <TableCell className="text-center">
-                      <ScoreBadge score={product.score_overall} />
+                      <ScoreBadge score={product.final_score ?? product.score_overall} />
                     </TableCell>
                     <TableCell>
                       {product.external_url && (

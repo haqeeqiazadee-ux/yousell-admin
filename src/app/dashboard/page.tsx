@@ -29,10 +29,10 @@ interface DashboardStats {
 
 function getBadge(score: number | null) {
   if (!score) return { label: 'N/A', color: 'bg-gray-100 text-gray-600' };
-  if (score >= 85) return { label: 'HOT', color: 'bg-red-100 text-red-700' };
-  if (score >= 70) return { label: 'RISING', color: 'bg-orange-100 text-orange-700' };
-  if (score >= 40) return { label: 'EMERGING', color: 'bg-yellow-100 text-yellow-700' };
-  return { label: 'SATURATED', color: 'bg-blue-100 text-blue-700' };
+  if (score >= 80) return { label: 'HOT', color: 'bg-red-100 text-red-700' };
+  if (score >= 60) return { label: 'WARM', color: 'bg-orange-100 text-orange-700' };
+  if (score >= 40) return { label: 'WATCH', color: 'bg-yellow-100 text-yellow-700' };
+  return { label: 'COLD', color: 'bg-gray-100 text-gray-600' };
 }
 
 export default function DashboardPage() {

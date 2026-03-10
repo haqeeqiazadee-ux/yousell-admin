@@ -6,11 +6,7 @@ interface Product {
   source: string;
 }
 
-interface CompositeScore {
-  viral_score: number;
-  profitability_score: number;
-  overall_score: number;
-}
+// --- Simple profitability heuristic for discovery scoring ---
 
 function calculateProfitability(product: Product): number {
   let score = 0;
@@ -35,9 +31,9 @@ function calculateProfitability(product: Product): number {
   return Math.min(100, score);
 }
 
-export function calculateCompositeScore(product: Product): CompositeScore {
-  const profitability_score = calculateProfitability(product);
+// --- Viral score heuristic for discovery (proxy for 6 pre-viral signals) ---
 
+function calculateViralHeuristic(product: Product): number {
   let viral_score = 0;
 
   if (product.sales_count > 5000) viral_score += 40;
@@ -55,27 +51,77 @@ export function calculateCompositeScore(product: Product): CompositeScore {
   if (product.review_count > 1000) viral_score += 20;
   else if (product.review_count > 100) viral_score += 10;
 
-  viral_score = Math.min(100, viral_score);
-
-  // Final Score = Trend(0.40) + Viral(0.35) + Profit(0.25) per spec
-  // For discovery scoring, we use viral as a proxy for trend+viral
-  const overall_score = Math.round(viral_score * 0.60 + profitability_score * 0.40);
-
-  return { viral_score, profitability_score, overall_score };
+  return Math.min(100, viral_score);
 }
 
-// Badge classification per spec: 85+=HOT, 70+=RISING, 40+=EMERGING, <40=SATURATED
-export function getTierFromScore(score: number): 'HOT' | 'RISING' | 'EMERGING' | 'SATURATED' {
-  if (score >= 85) return 'HOT';
-  if (score >= 70) return 'RISING';
-  if (score >= 40) return 'EMERGING';
-  return 'SATURATED';
+// --- Trend score heuristic (proxy when real trend data unavailable) ---
+
+function calculateTrendHeuristic(product: Product): number {
+  let trend_score = 0;
+
+  // Sales velocity as trend proxy
+  if (product.sales_count > 5000) trend_score += 35;
+  else if (product.sales_count > 1000) trend_score += 25;
+  else if (product.sales_count > 500) trend_score += 15;
+
+  // Platform signal
+  if (product.source === 'tiktok') trend_score += 25;
+  else if (product.source === 'pinterest') trend_score += 15;
+  else if (product.source === 'amazon') trend_score += 10;
+
+  // Review momentum as demand proxy
+  if (product.review_count > 1000) trend_score += 20;
+  else if (product.review_count > 100) trend_score += 10;
+
+  // Rating signal
+  if (product.rating >= 4.5) trend_score += 20;
+  else if (product.rating >= 4.0) trend_score += 10;
+
+  return Math.min(100, trend_score);
+}
+
+// --- 3-Pillar Composite Score: Final = Trend(0.40) + Viral(0.35) + Profit(0.25) ---
+
+export interface ScoringResult {
+  trend_score: number;
+  viral_score: number;
+  profit_score: number;
+  final_score: number;
+  overall_score: number; // backwards compat alias for final_score
+}
+
+export function calculateCompositeScore(product: Product): ScoringResult {
+  const trend_score = calculateTrendHeuristic(product);
+  const viral_score = calculateViralHeuristic(product);
+  const profit_score = calculateProfitability(product);
+
+  const final_score = Math.min(100, Math.max(0, Math.round(
+    trend_score * 0.40 +
+    viral_score * 0.35 +
+    profit_score * 0.25
+  )));
+
+  return {
+    trend_score,
+    viral_score,
+    profit_score,
+    final_score,
+    overall_score: final_score,
+  };
+}
+
+// Badge classification per spec: 80+=HOT, 60+=WARM, 40+=WATCH, <40=COLD
+export function getTierFromScore(score: number): 'HOT' | 'WARM' | 'WATCH' | 'COLD' {
+  if (score >= 80) return 'HOT';
+  if (score >= 60) return 'WARM';
+  if (score >= 40) return 'WATCH';
+  return 'COLD';
 }
 
 // Trend lifecycle stage per spec
 export function getStageFromScore(viralScore: number): 'emerging' | 'rising' | 'exploding' | 'saturated' {
-  if (viralScore >= 85) return 'exploding';
-  if (viralScore >= 70) return 'rising';
+  if (viralScore >= 80) return 'exploding';
+  if (viralScore >= 60) return 'rising';
   if (viralScore >= 40) return 'emerging';
   return 'saturated';
 }

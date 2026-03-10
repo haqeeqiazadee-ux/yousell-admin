@@ -2,7 +2,7 @@ import { Worker, Job } from 'bullmq';
 import { connection } from './lib/queue';
 import { supabase } from './lib/supabase';
 import { scrapePlatform, fetchTrends } from './lib/providers';
-import { calculateCompositeScore } from './lib/scoring';
+import { calculateCompositeScore, getStageFromScore } from './lib/scoring';
 import { sendScanCompleteAlert, sendProductAlert } from './lib/email';
 
 interface ScanJobData {
@@ -55,6 +55,7 @@ const worker = new Worker(
 
     const startTime = Date.now();
     let totalProgress = 0;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const allProducts: any[] = [];
 
     try {
@@ -105,9 +106,12 @@ const worker = new Worker(
               review_count: p.review_count,
               rating: p.rating,
               source: p.source,
+              final_score: p.final_score,
+              trend_score: p.trend_score,
               viral_score: p.viral_score,
-              profitability_score: p.profitability_score,
-              overall_score: p.overall_score,
+              profit_score: p.profit_score,
+              score_overall: p.overall_score,
+              trend_stage: getStageFromScore(p.viral_score as number),
               scan_id: scan.id,
             })),
             { onConflict: 'source,external_id' }
@@ -118,7 +122,7 @@ const worker = new Worker(
         }
 
         for (const p of allProducts) {
-          if (p.viral_score >= 80) {
+          if (p.final_score >= 80) {
             await sendProductAlert({
               title: p.title,
               price: p.price,
