@@ -3,20 +3,19 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ScoreBadge, TierBadge } from "@/components/score-badge";
+import { TierBadge } from "@/components/score-badge";
 import {
   Package,
   Eye,
   UserPlus,
   Archive,
-  Users,
   Truck,
   Swords,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
 import { useState } from "react";
-import type { Product, TrendStage } from "@/lib/types/product";
+import type { Product } from "@/lib/types/product";
 
 const platformColors: Record<string, string> = {
   tiktok: "bg-pink-100 text-pink-700 border-pink-200",

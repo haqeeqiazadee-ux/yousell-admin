@@ -5,8 +5,8 @@ import { createBrowserClient } from '@supabase/ssr'
 import Link from 'next/link'
 import {
   Zap, TrendingUp, Users, Package, ShoppingBag, Activity,
-  ArrowRight, Clock, AlertTriangle, CheckCircle, XCircle,
-  BarChart2, Scan, Settings, Bell, ChevronRight, Flame,
+  ArrowRight, Clock,
+  BarChart2, Scan, Settings, ChevronRight, Flame,
   Target, DollarSign, Eye
 } from 'lucide-react'
 

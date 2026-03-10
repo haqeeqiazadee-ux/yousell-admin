@@ -64,7 +64,7 @@ async function fetchFromPytrends(keywords: string[]): Promise<TrendResult[]> {
   }));
 }
 
-async function fetchFromSerpApi(keywords: string[]): Promise<TrendResult[]> {
+async function fetchFromSerpApi(_keywords: string[]): Promise<TrendResult[]> {
   const apiKey = process.env.SERPAPI_KEY;
   if (!apiKey) {
     console.warn('SERPAPI_KEY not set');

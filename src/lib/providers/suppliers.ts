@@ -93,7 +93,7 @@ async function fetchFromApify(category: string): Promise<Supplier[]> {
   }
 }
 
-async function fetchFromCJDropshipping(category: string): Promise<Supplier[]> {
+async function fetchFromCJDropshipping(_category: string): Promise<Supplier[]> {
   const apiKey = process.env.CJ_DROPSHIPPING_API_KEY;
   if (!apiKey) {
     console.warn('CJ_DROPSHIPPING_API_KEY not set');

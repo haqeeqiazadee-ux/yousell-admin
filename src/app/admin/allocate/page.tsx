@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Package, AlertTriangle, Zap, Eye, EyeOff } from "lucide-react";
+import { Package, Zap, Eye, EyeOff } from "lucide-react";
 
 interface AllocationRequest {
   id: string;

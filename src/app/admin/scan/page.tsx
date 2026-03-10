@@ -4,8 +4,8 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import {
-  Scan, X, ChevronDown, Clock, Package, AlertTriangle,
-  CheckCircle, Loader2, ArrowLeft, BarChart2, Zap, TrendingUp
+  Scan, X, Clock, AlertTriangle,
+  CheckCircle, Loader2, BarChart2, Zap, TrendingUp
 } from 'lucide-react'
 import Link from 'next/link'
 

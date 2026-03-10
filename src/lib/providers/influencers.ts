@@ -79,7 +79,7 @@ export async function discoverInfluencers(productCategory: string): Promise<Infl
   }
 }
 
-async function fetchFromAInfluencer(category: string): Promise<Influencer[]> {
+async function fetchFromAInfluencer(_category: string): Promise<Influencer[]> {
   const apiKey = process.env.AINFLUENCER_API_KEY;
   if (!apiKey) {
     console.warn('AINFLUENCER_API_KEY not set');
@@ -89,7 +89,7 @@ async function fetchFromAInfluencer(category: string): Promise<Influencer[]> {
   return [];
 }
 
-async function fetchFromModash(category: string): Promise<Influencer[]> {
+async function fetchFromModash(_category: string): Promise<Influencer[]> {
   const apiKey = process.env.MODASH_API_KEY;
   if (!apiKey) {
     console.warn('MODASH_API_KEY not set');
