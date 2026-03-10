@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/auth/roles";
 
 // GET /api/admin/financial?product_id=xxx — get financial model for a product
 export async function GET(request: Request) {
+  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -40,6 +42,7 @@ export async function GET(request: Request) {
 
 // POST /api/admin/financial — calculate and store financial model
 export async function POST(request: Request) {
+  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();

@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/auth/roles";
 
 export async function GET() {
+  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -21,6 +23,7 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
+  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();

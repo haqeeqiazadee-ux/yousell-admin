@@ -1,16 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/auth/roles";
 
 // GET /api/admin/products — list products with filtering
 export async function GET(request: Request) {
-  const supabase = await createClient();
+  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const supabase = await createClient();
 
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status");
@@ -44,6 +40,8 @@ export async function GET(request: Request) {
 
 // POST /api/admin/products — create a product
 export async function POST(request: Request) {
+  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+
   const supabase = await createClient();
 
   const {

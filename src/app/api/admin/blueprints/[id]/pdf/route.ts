@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { requireAdmin } from "@/lib/auth/roles";
 
 function escapeHtml(str: string): string {
   return str
@@ -71,6 +72,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
