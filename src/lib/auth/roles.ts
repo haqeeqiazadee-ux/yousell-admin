@@ -15,6 +15,8 @@ export async function requireAdmin(): Promise<User> {
   if (!user) {
     throw new Error('Unauthorized');
   }
-  // Single-tenant admin panel: any authenticated user is admin
+  if (user.role !== 'admin') {
+    throw new Error('Forbidden: admin role required');
+  }
   return user;
 }

@@ -18,12 +18,10 @@ export async function getUser(): Promise<User | null> {
       .eq('id', user.id)
       .single();
 
-    // Default to 'admin' for authenticated users — single-tenant admin panel.
-    // The profiles row may not exist yet or may default to 'viewer'/'client'.
     return {
       id: user.id,
       email: user.email || '',
-      role: (profile?.role as User['role']) || 'admin',
+      role: (profile?.role as User['role']) || 'viewer',
     };
   } catch {
     return null;

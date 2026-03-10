@@ -53,6 +53,8 @@ function generateBlueprintHtml(blueprint: Record<string, unknown>): string {
     .meta .label { font-weight: bold; color: #6b7280; font-size: 12px; text-transform: uppercase; }
     .meta .val { margin-top: 4px; font-size: 16px; font-weight: bold; }
     .footer { margin-top: 40px; font-size: 11px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 10px; }
+    @media print { body { margin: 20px; } .section { break-inside: avoid; } }
+    @page { margin: 1.5cm; }
   </style>
 </head>
 <body>
@@ -96,7 +98,7 @@ export async function GET(
   return new NextResponse(html, {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
-      'Content-Disposition': `attachment; filename="blueprint-${id}.html"`,
+      'Content-Disposition': `inline; filename="blueprint-${id}.html"`,
     },
   });
 }

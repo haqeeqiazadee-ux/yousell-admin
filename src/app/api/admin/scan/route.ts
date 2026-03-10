@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/lib/auth/roles';
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:4000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || '';
 
 export async function POST(req: NextRequest) {
   let user;
@@ -10,6 +10,13 @@ export async function POST(req: NextRequest) {
     user = await requireAdmin();
   } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  if (!BACKEND_URL) {
+    return NextResponse.json(
+      { error: 'Scan backend not configured. Set NEXT_PUBLIC_BACKEND_URL in environment.' },
+      { status: 503 }
+    );
   }
 
   const body = await req.json();
@@ -39,7 +46,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(data);
   } catch (error) {
     console.error('Failed to dispatch scan to backend:', error);
-    return NextResponse.json({ error: 'Failed to connect to scan backend' }, { status: 502 });
+    return NextResponse.json({ error: 'Failed to connect to scan backend. Check NEXT_PUBLIC_BACKEND_URL.' }, { status: 502 });
   }
 }
 
@@ -52,7 +59,7 @@ export async function GET(req: NextRequest) {
 
   const jobId = req.nextUrl.searchParams.get('jobId');
 
-  if (jobId) {
+  if (jobId && BACKEND_URL) {
     try {
       const response = await fetch(`${BACKEND_URL}/api/scan/${jobId}`);
 
@@ -67,14 +74,16 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const { data: scans, error } = await supabaseAdmin
-    .from('scans')
+  // Bug #22: table name was 'scans' but migration creates 'scan_history'
+  const supabase = await createClient();
+  const { data: scans, error } = await supabase
+    .from('scan_history')
     .select('*')
     .order('created_at', { ascending: false })
     .limit(50);
 
   if (error) {
-    return NextResponse.json({ error: 'Failed to fetch scans' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch scan history' }, { status: 500 });
   }
 
   return NextResponse.json({ scans });
@@ -87,11 +96,15 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const body = await req.json();
-  const { jobId } = body;
+  // Bug #5: client sends jobId as query param, not in body
+  const jobId = req.nextUrl.searchParams.get('jobId');
 
   if (!jobId) {
     return NextResponse.json({ error: 'jobId is required' }, { status: 400 });
+  }
+
+  if (!BACKEND_URL) {
+    return NextResponse.json({ error: 'Scan backend not configured' }, { status: 503 });
   }
 
   try {

@@ -37,7 +37,7 @@ interface ScanHistory {
 
 interface PreViralProduct {
   id: string
-  name: string
+  title: string
   viral_score: number
   trend_stage: string
   platform: string
@@ -63,10 +63,15 @@ export default function AdminDashboard() {
   const [serviceStatus, setServiceStatus] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
-    // Fetch service status from server-side API (never expose keys in client bundle)
+    // Fetch service status and KPIs from server-side API (never expose keys in client bundle)
     fetch('/api/admin/dashboard')
       .then(r => r.json())
-      .then(d => { if (d.services) setServiceStatus(d.services) })
+      .then(d => {
+        if (d.services) setServiceStatus(d.services)
+        if (d.competitors !== undefined) {
+          setStats(prev => ({ ...prev, competitors: d.competitors }))
+        }
+      })
       .catch(() => {})
   }, [])
 
@@ -84,20 +89,20 @@ export default function AdminDashboard() {
       try {
         const sb = getSupabase()
         const [products, scans] = await Promise.all([
-          sb.from('products').select('id, name, viral_score, trend_stage, platform, final_score, channel').order('final_score', { ascending: false }),
+          sb.from('products').select('id, title, viral_score, trend_stage, platform, final_score, channel').order('final_score', { ascending: false }),
           sb.from('scan_history').select('*').order('created_at', { ascending: false }).limit(5),
         ])
 
         if (products.data) {
           const all = products.data
-          setStats({
+          setStats(prev => ({
+            ...prev,
             productsTracked: all.length,
             activeTrends: all.filter(p => ['emerging', 'rising'].includes(p.trend_stage)).length,
-            competitors: 0,
             tiktokProducts: all.filter(p => p.platform === 'tiktok').length,
             amazonListings: all.filter(p => p.platform === 'amazon').length,
             hotProducts: all.filter(p => (p.viral_score ?? 0) >= 80).length,
-          })
+          }))
           setPreViralProducts(all.filter(p => (p.viral_score ?? 0) >= 70).slice(0, 5))
         }
 
@@ -113,22 +118,30 @@ export default function AdminDashboard() {
     }
     fetchData()
 
-    // Supabase Realtime — live updates without polling
+    // Supabase Realtime — live updates with debouncing
     const sb = getSupabase()
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null
+    const debouncedFetch = () => {
+      if (debounceTimer) clearTimeout(debounceTimer)
+      debounceTimer = setTimeout(() => { fetchData() }, 2000)
+    }
     const channel = sb.channel('dashboard-realtime')
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'products'
-      }, () => { fetchData() })
+      }, debouncedFetch)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'scan_history'
-      }, () => { fetchData() })
+      }, debouncedFetch)
       .subscribe()
 
-    return () => { sb.removeChannel(channel) }
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer)
+      sb.removeChannel(channel)
+    }
   }, [])
 
   function formatTime(iso: string) {
@@ -190,7 +203,7 @@ export default function AdminDashboard() {
                     <span className="text-xs font-bold text-amber-700">{Math.round(p.viral_score)}</span>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-gray-900 max-w-[120px] truncate">{p.name}</p>
+                    <p className="text-xs font-medium text-gray-900 max-w-[120px] truncate">{p.title}</p>
                     <p className="text-xs text-gray-400 capitalize">{p.trend_stage} · {p.platform}</p>
                   </div>
                 </div>
@@ -387,7 +400,7 @@ export default function AdminDashboard() {
                       {Math.round(p.final_score ?? 0)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{p.name}</p>
+                      <p className="text-sm font-medium text-gray-800 truncate">{p.title}</p>
                       <p className="text-xs text-gray-400 capitalize">{p.trend_stage} · {p.platform}</p>
                     </div>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${

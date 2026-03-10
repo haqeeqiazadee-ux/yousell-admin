@@ -7,7 +7,7 @@ export function getPinterestConfig(): ProviderConfig {
     name: PROVIDER,
     isConfigured: PROVIDER === "apify"
       ? !!process.env.APIFY_API_TOKEN
-      : !!(process.env.PINTEREST_APP_ID && process.env.PINTEREST_APP_SECRET),
+      : !!process.env.PINTEREST_API_KEY,
   };
 }
 

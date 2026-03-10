@@ -11,7 +11,7 @@ export default function DigitalProductsPage() {
       emptyIcon={FileText}
       emptyMessage="No products discovered"
       emptyDescription="Add your digital products to start selling downloads, courses, and other digital goods."
-      statusBadge={{ label: "Digital Products", configured: false }}
+      statusBadge={{ label: "Digital Products", serviceKey: "apify" }}
     />
   );
 }

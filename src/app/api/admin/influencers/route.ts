@@ -13,11 +13,17 @@ export async function GET(request: Request) {
     const platform = searchParams.get("platform");
     const limit = parseInt(searchParams.get("limit") || "50");
     const offset = parseInt(searchParams.get("offset") || "0");
+    const sortBy = searchParams.get("sort") || "conversion_score";
+    const order = searchParams.get("order") || "desc";
+
+    // Whitelist allowed sort fields to prevent injection
+    const allowedSortFields = ["followers", "engagement_rate", "conversion_score", "created_at"];
+    const safeSortField = allowedSortFields.includes(sortBy) ? sortBy : "conversion_score";
 
     let query = supabase
       .from("influencers")
       .select("*", { count: "exact" })
-      .order("conversion_score", { ascending: false })
+      .order(safeSortField, { ascending: order === "asc" })
       .range(offset, offset + limit - 1);
 
     if (platform) query = query.eq("platform", platform);

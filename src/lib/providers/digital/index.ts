@@ -3,7 +3,7 @@ import type { ProductResult, ProviderConfig } from "../types";
 export function getDigitalConfig(): ProviderConfig {
   return {
     name: "digital",
-    isConfigured: !!(process.env.PRODUCT_HUNT_TOKEN || process.env.APIFY_API_TOKEN),
+    isConfigured: !!(process.env.PRODUCT_HUNT_API_KEY || process.env.APIFY_API_TOKEN),
   };
 }
 

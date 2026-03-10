@@ -53,10 +53,23 @@ export async function POST(request: Request) {
 
   const body = await request.json();
 
+  // Whitelist allowed fields to prevent arbitrary field injection
+  const allowedFields = [
+    'title', 'platform', 'status', 'price', 'external_url', 'image_url',
+    'category', 'description', 'trend_stage', 'viral_score', 'final_score',
+    'channel', 'source_url', 'supplier_url', 'tags',
+  ] as const;
+  const sanitized: Record<string, unknown> = {};
+  for (const key of allowedFields) {
+    if (key in body && body[key] !== undefined) {
+      sanitized[key] = body[key];
+    }
+  }
+
   const { data, error } = await supabase
     .from("products")
     .insert({
-      ...body,
+      ...sanitized,
       created_by: user.id,
       updated_by: user.id,
     })
@@ -83,10 +96,23 @@ export async function PATCH(request: Request) {
   }
 
   const body = await request.json();
-  const { id, ...updates } = body;
+  const { id } = body;
 
   if (!id) {
     return NextResponse.json({ error: "Product id is required" }, { status: 400 });
+  }
+
+  // Whitelist allowed update fields
+  const allowedFields = [
+    'title', 'platform', 'status', 'price', 'external_url', 'image_url',
+    'category', 'description', 'trend_stage', 'viral_score', 'final_score',
+    'channel', 'source_url', 'supplier_url', 'tags',
+  ] as const;
+  const updates: Record<string, unknown> = {};
+  for (const key of allowedFields) {
+    if (key in body && body[key] !== undefined) {
+      updates[key] = body[key];
+    }
   }
 
   const { data, error } = await supabase

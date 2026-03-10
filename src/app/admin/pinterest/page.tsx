@@ -11,7 +11,7 @@ export default function PinterestPage() {
       emptyIcon={PinIcon}
       emptyMessage="No products discovered"
       emptyDescription="Connect your Pinterest Commerce account to start discovering and managing products."
-      statusBadge={{ label: "Pinterest", configured: false }}
+      statusBadge={{ label: "Pinterest Provider", serviceKey: "apify" }}
     />
   );
 }
