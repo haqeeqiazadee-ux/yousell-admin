@@ -53,11 +53,23 @@ export default function DashboardPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Look up client record by email (client_id != auth user id)
+      const { data: client } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('email', user.email)
+        .single();
+
+      if (!client) {
+        setLoading(false);
+        return; // No client profile found
+      }
+
       // Fetch allocated products for this client
       const { data: allocations } = await supabase
         .from('product_allocations')
         .select('*, products(id, title, platform, final_score, trend_stage, image_url)')
-        .eq('client_id', user.id)
+        .eq('client_id', client.id)
         .eq('status', 'active')
         .order('allocated_at', { ascending: false });
 
@@ -82,7 +94,7 @@ export default function DashboardPage() {
       const { count: pendingCount } = await supabase
         .from('product_requests')
         .select('*', { count: 'exact', head: true })
-        .eq('client_id', user.id)
+        .eq('client_id', client.id)
         .eq('status', 'pending');
 
       setStats({
@@ -107,8 +119,16 @@ export default function DashboardPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Look up client record by email
+      const { data: client } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('email', user.email)
+        .single();
+      if (!client) return;
+
       await supabase.from('product_requests').insert({
-        client_id: user.id,
+        client_id: client.id,
         note: requestNote || 'Requesting more products',
         status: 'pending',
       });
