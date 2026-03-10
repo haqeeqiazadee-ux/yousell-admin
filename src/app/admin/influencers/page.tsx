@@ -22,7 +22,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { UserSearch, Plus } from "lucide-react";
+import { UserSearch, Plus, AlertTriangle, ArrowUpDown } from "lucide-react";
 
 interface Influencer {
   id: string;
@@ -56,12 +56,36 @@ function formatFollowers(count: number): string {
   return count.toString();
 }
 
+function getScoreBadge(score: number | undefined | null) {
+  if (score == null) return { label: "N/A", color: "bg-gray-100 text-gray-500" };
+  if (score >= 80) return { label: "HOT", color: "bg-red-100 text-red-700" };
+  if (score >= 60) return { label: "WARM", color: "bg-orange-100 text-orange-700" };
+  if (score >= 40) return { label: "WATCH", color: "bg-yellow-100 text-yellow-700" };
+  return { label: "COLD", color: "bg-gray-100 text-gray-500" };
+}
+
+function hasSuspiciousEngagement(influencer: Influencer): boolean {
+  if (!influencer.engagement_rate || !influencer.followers) return false;
+  // Macro influencers (100k+) with >10% engagement rate is suspicious
+  // Mid-tier (50k+) with >15% is suspicious
+  // Any with >20% is suspicious
+  if (influencer.engagement_rate > 20) return true;
+  if (influencer.followers >= 100_000 && influencer.engagement_rate > 10) return true;
+  if (influencer.followers >= 50_000 && influencer.engagement_rate > 15) return true;
+  return false;
+}
+
+type SortField = "followers" | "engagement_rate" | "conversion_score";
+type SortOrder = "asc" | "desc";
+
 export default function InfluencersPage() {
   const [influencers, setInfluencers] = useState<Influencer[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [platformFilter, setPlatformFilter] = useState<string>("all");
+  const [sortField, setSortField] = useState<SortField>("followers");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   const [newUsername, setNewUsername] = useState("");
   const [newPlatform, setNewPlatform] = useState("tiktok");
@@ -84,6 +108,21 @@ export default function InfluencersPage() {
   useEffect(() => {
     fetchInfluencers();
   }, [fetchInfluencers]);
+
+  function toggleSort(field: SortField) {
+    if (sortField === field) {
+      setSortOrder(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("desc");
+    }
+  }
+
+  const sortedInfluencers = [...influencers].sort((a, b) => {
+    const aVal = a[sortField] ?? 0;
+    const bVal = b[sortField] ?? 0;
+    return sortOrder === "asc" ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
+  });
 
   const handleAddInfluencer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -236,59 +275,80 @@ export default function InfluencersPage() {
                 <TableRow>
                   <TableHead>Username</TableHead>
                   <TableHead>Platform</TableHead>
-                  <TableHead>Followers</TableHead>
+                  <TableHead>
+                    <button onClick={() => toggleSort("followers")} className="flex items-center gap-1 hover:text-foreground">
+                      Followers <ArrowUpDown className="h-3 w-3" />
+                    </button>
+                  </TableHead>
                   <TableHead>Tier</TableHead>
-                  <TableHead>Engagement Rate</TableHead>
-                  <TableHead>Conversion Score</TableHead>
+                  <TableHead>
+                    <button onClick={() => toggleSort("engagement_rate")} className="flex items-center gap-1 hover:text-foreground">
+                      Engagement Rate <ArrowUpDown className="h-3 w-3" />
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button onClick={() => toggleSort("conversion_score")} className="flex items-center gap-1 hover:text-foreground">
+                      Score <ArrowUpDown className="h-3 w-3" />
+                    </button>
+                  </TableHead>
                   <TableHead>Email</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {influencers.map((influencer) => (
-                  <TableRow key={influencer.id}>
-                    <TableCell className="font-medium">
-                      {influencer.username}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={
-                          platformColors[influencer.platform] ||
-                          "text-gray-500 border-gray-500/30"
-                        }
-                      >
-                        {influencer.platform}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {formatFollowers(influencer.followers)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={
-                          tierColors[influencer.tier] ||
-                          "text-gray-500 border-gray-500/30"
-                        }
-                      >
-                        {influencer.tier}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {influencer.engagement_rate != null
-                        ? `${influencer.engagement_rate.toFixed(1)}%`
-                        : "\u2014"}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {influencer.conversion_score != null
-                        ? influencer.conversion_score.toFixed(1)
-                        : "\u2014"}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {influencer.email || "\u2014"}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {sortedInfluencers.map((influencer) => {
+                  const badge = getScoreBadge(influencer.conversion_score);
+                  const suspicious = hasSuspiciousEngagement(influencer);
+                  return (
+                    <TableRow key={influencer.id}>
+                      <TableCell className="font-medium">
+                        {influencer.username}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={
+                            platformColors[influencer.platform] ||
+                            "text-gray-500 border-gray-500/30"
+                          }
+                        >
+                          {influencer.platform}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {formatFollowers(influencer.followers)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={
+                            tierColors[influencer.tier] ||
+                            "text-gray-500 border-gray-500/30"
+                          }
+                        >
+                          {influencer.tier}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          {influencer.engagement_rate != null
+                            ? `${influencer.engagement_rate.toFixed(1)}%`
+                            : "\u2014"}
+                          {suspicious && (
+                            <span title="Suspiciously high engagement — possible fake followers"><AlertTriangle className="h-3.5 w-3.5 text-amber-500" /></span>
+                          )}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${badge.color}`}>
+                          {influencer.conversion_score != null ? `${influencer.conversion_score.toFixed(0)} ${badge.label}` : badge.label}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {influencer.email || "\u2014"}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
