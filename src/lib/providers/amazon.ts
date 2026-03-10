@@ -15,7 +15,7 @@ export interface AmazonProduct {
 
 export async function scrapeAmazonProducts(query?: string): Promise<AmazonProduct[]> {
   const cached = await getCachedProducts('amazon', query || '');
-  if (cached) return cached as AmazonProduct[];
+  if (cached) return cached as unknown as AmazonProduct[];
 
   const apiKey = process.env.AMAZON_API_KEY;
   if (!apiKey) {
@@ -35,17 +35,18 @@ export async function scrapeAmazonProducts(query?: string): Promise<AmazonProduc
 
     const data = await response.json();
 
-    return (data.search_results || []).map((p: any) => ({
-      external_id: p.asin,
-      title: p.title,
-      price: p.price?.value || 0,
-      url: p.link,
-      image_url: p.image || '',
-      sales_count: p.sales_volume?.value || 0,
-      review_count: p.ratings_total || 0,
-      rating: p.rating || 0,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- external API response
+    return ((data.search_results || []) as Record<string, any>[]).map((p) => ({
+      external_id: String(p.asin || ''),
+      title: String(p.title || ''),
+      price: Number(p.price?.value || 0),
+      url: String(p.link || ''),
+      image_url: String(p.image || ''),
+      sales_count: Number(p.sales_volume?.value || 0),
+      review_count: Number(p.ratings_total || 0),
+      rating: Number(p.rating || 0),
       source: 'amazon' as const,
-      bsr_rank: p.bestsellers_rank?.[0]?.rank,
+      bsr_rank: p.bestsellers_rank?.[0]?.rank as number | undefined,
     }));
   } catch (error) {
     console.error('Amazon scrape error:', error);

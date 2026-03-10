@@ -2,7 +2,7 @@ import { supabaseAdmin } from '../supabase';
 
 const CACHE_TTL_HOURS = 24;
 
-export async function getCachedProducts(source: string, query: string): Promise<any[] | null> {
+export async function getCachedProducts(source: string, _query: string): Promise<Record<string, unknown>[] | null> {
   const cutoff = new Date(Date.now() - CACHE_TTL_HOURS * 60 * 60 * 1000).toISOString();
 
   const { data, error } = await supabaseAdmin
@@ -20,7 +20,7 @@ export async function getCachedProducts(source: string, query: string): Promise<
   return data;
 }
 
-export async function getCachedTrends(query: string): Promise<any[] | null> {
+export async function getCachedTrends(_query: string): Promise<Record<string, unknown>[] | null> {
   const cutoff = new Date(Date.now() - CACHE_TTL_HOURS * 60 * 60 * 1000).toISOString();
 
   const { data, error } = await supabaseAdmin

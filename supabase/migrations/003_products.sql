@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS products (
   -- Pricing
   price DECIMAL(10, 2),
   cost DECIMAL(10, 2),
-  currency TEXT NOT NULL DEFAULT 'GBP',
+  currency TEXT NOT NULL DEFAULT 'USD',
   margin_percent DECIMAL(5, 2),
 
   -- Scoring (0-100)

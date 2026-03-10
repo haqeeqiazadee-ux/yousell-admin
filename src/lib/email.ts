@@ -2,6 +2,25 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@yousell.online';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@yousell.online';
 
+// --- Notification batching: max 3 alert emails per day ---
+const MAX_ALERTS_PER_DAY = 3;
+let alertsSentToday = 0;
+let alertResetDate = new Date().toDateString();
+
+function canSendAlert(): boolean {
+  const today = new Date().toDateString();
+  if (today !== alertResetDate) {
+    alertsSentToday = 0;
+    alertResetDate = today;
+  }
+  if (alertsSentToday >= MAX_ALERTS_PER_DAY) {
+    console.warn(`Daily alert limit reached (${MAX_ALERTS_PER_DAY}/day). Skipping email.`);
+    return false;
+  }
+  alertsSentToday++;
+  return true;
+}
+
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, '&amp;')
@@ -64,6 +83,8 @@ export async function sendProductAlert(product: ProductAlertData): Promise<void>
     console.warn('RESEND_API_KEY not set, skipping product alert');
     return;
   }
+
+  if (!canSendAlert()) return;
 
   try {
     await fetch('https://api.resend.com/emails', {

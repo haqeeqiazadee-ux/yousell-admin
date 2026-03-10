@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/auth/roles";
 
 export async function GET() {
+  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -13,19 +15,39 @@ export async function GET() {
       .order("job_name", { ascending: true });
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ jobs: data || [] });
+    return NextResponse.json(data || []);
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
 export async function PATCH(request: Request) {
+  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await request.json();
+
+    // Master kill switch — disable ALL jobs at once
+    if (body.killSwitch === true) {
+      const { error } = await supabase
+        .from("automation_jobs")
+        .update({ status: "disabled" })
+        .neq("status", "disabled");
+
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+      const { data: allJobs } = await supabase
+        .from("automation_jobs")
+        .select("*")
+        .order("job_name", { ascending: true });
+
+      return NextResponse.json(allJobs || []);
+    }
+
+    // Single job toggle
     const { job_name, status } = body;
 
     if (!job_name || !status) {
@@ -40,7 +62,7 @@ export async function PATCH(request: Request) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ job: data });
+    return NextResponse.json(data);
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/auth/roles";
 
 export async function GET() {
+  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -42,10 +44,10 @@ export async function GET() {
     services: {
       supabase: true,
       auth: true,
-      ai: !!process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_API_KEY.includes("your-"),
-      email: !!process.env.RESEND_API_KEY && !process.env.RESEND_API_KEY.includes("your-"),
-      apify: !!process.env.APIFY_API_TOKEN && !process.env.APIFY_API_TOKEN.includes("your-"),
-      rapidapi: !!process.env.RAPIDAPI_KEY && !process.env.RAPIDAPI_KEY.includes("your-"),
+      ai: !!(process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY),
+      email: !!(process.env.RESEND_API_KEY || process.env.RESEND_KEY),
+      apify: !!(process.env.APIFY_API_TOKEN || process.env.APIFY_TOKEN),
+      rapidapi: !!(process.env.RAPIDAPI_KEY || process.env.RAPID_API_KEY),
     },
   });
 }

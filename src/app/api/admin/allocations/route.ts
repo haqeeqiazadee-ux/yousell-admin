@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getUser } from '@/lib/auth/get-user';
+import { requireAdmin } from '@/lib/auth/roles';
 
 export async function POST(req: NextRequest) {
+  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
   const user = await getUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const body = await req.json();
-  const { clientId, productIds } = body;
+  const { clientId, productIds, visible_to_client } = body;
 
   if (!clientId || !productIds?.length) {
     return NextResponse.json({ error: 'clientId and productIds are required' }, { status: 400 });
@@ -27,7 +29,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { count: activeCount, error: countError } = await supabaseAdmin
-      .from('allocations')
+      .from('product_allocations')
       .select('*', { count: 'exact', head: true })
       .eq('client_id', clientId)
       .eq('status', 'active');
@@ -47,13 +49,14 @@ export async function POST(req: NextRequest) {
     }
 
     const { error } = await supabaseAdmin
-      .from('allocations')
+      .from('product_allocations')
       .insert(
         productIds.map((productId: string) => ({
           client_id: clientId,
           product_id: productId,
           allocated_by: user.id,
           status: 'active',
+          visible_to_client: visible_to_client !== false,
           allocated_at: new Date().toISOString(),
         }))
       );
@@ -69,6 +72,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
+  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
   const user = await getUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -77,7 +81,7 @@ export async function GET(req: NextRequest) {
   const clientId = req.nextUrl.searchParams.get('clientId');
 
   let query = supabaseAdmin
-    .from('allocations')
+    .from('product_allocations')
     .select('*, products(*), clients(*)')
     .order('allocated_at', { ascending: false });
 

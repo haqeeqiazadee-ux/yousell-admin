@@ -14,7 +14,7 @@ export interface ShopifyProduct {
 
 export async function scrapeShopifyProducts(query?: string): Promise<ShopifyProduct[]> {
   const cached = await getCachedProducts('shopify', query || '');
-  if (cached) return cached as ShopifyProduct[];
+  if (cached) return cached as unknown as ShopifyProduct[];
 
   const apiKey = process.env.SHOPIFY_SCRAPER_KEY;
   if (!apiKey) {
@@ -36,15 +36,16 @@ export async function scrapeShopifyProducts(query?: string): Promise<ShopifyProd
 
     const data = await response.json();
 
-    return (data.products || []).map((p: any) => ({
-      external_id: p.id?.toString(),
-      title: p.title,
-      price: parseFloat(p.price) || 0,
-      url: p.url,
-      image_url: p.image?.src || '',
-      sales_count: p.sales_count || 0,
-      review_count: p.reviews_count || 0,
-      rating: p.rating || 0,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- external API response
+    return ((data.products || []) as Record<string, any>[]).map((p) => ({
+      external_id: String(p.id || ''),
+      title: String(p.title || ''),
+      price: parseFloat(String(p.price || '0')) || 0,
+      url: String(p.url || ''),
+      image_url: String(p.image?.src || ''),
+      sales_count: Number(p.sales_count || 0),
+      review_count: Number(p.reviews_count || 0),
+      rating: Number(p.rating || 0),
       source: 'shopify' as const,
     }));
   } catch (error) {

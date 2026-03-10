@@ -15,7 +15,7 @@ export interface TikTokProduct {
 
 export async function scrapeTikTokProducts(query?: string): Promise<TikTokProduct[]> {
   const cached = await getCachedProducts('tiktok', query || '');
-  if (cached) return cached as TikTokProduct[];
+  if (cached) return cached as unknown as TikTokProduct[];
 
   const apiKey = process.env.TIKTOK_API_KEY;
   if (!apiKey) {
@@ -37,15 +37,16 @@ export async function scrapeTikTokProducts(query?: string): Promise<TikTokProduc
 
     const data = await response.json();
 
-    return (data.products || []).map((p: any) => ({
-      external_id: p.id,
-      title: p.title,
-      price: p.price / 100,
-      url: p.url,
-      image_url: p.image_url || '',
-      sales_count: p.sales_count || 0,
-      review_count: p.review_count || 0,
-      rating: p.rating || 0,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- external API response
+    return ((data.products || []) as Record<string, any>[]).map((p) => ({
+      external_id: String(p.id || ''),
+      title: String(p.title || ''),
+      price: Number(p.price || 0) / 100,
+      url: String(p.url || ''),
+      image_url: String(p.image_url || ''),
+      sales_count: Number(p.sales_count || 0),
+      review_count: Number(p.review_count || 0),
+      rating: Number(p.rating || 0),
       source: 'tiktok' as const,
     }));
   } catch (error) {
@@ -57,10 +58,11 @@ export async function scrapeTikTokProducts(query?: string): Promise<TikTokProduc
 export async function searchTrends(query?: string): Promise<{ keyword: string; volume: number; growth: number }[]> {
   const cached = await getCachedTrends(query || '');
   if (cached) {
-    return cached.map((t: any) => ({
-      keyword: t.keyword,
-      volume: t.volume,
-      growth: t.growth,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- cached Supabase response
+    return (cached as Record<string, any>[]).map((t) => ({
+      keyword: String(t.keyword || ''),
+      volume: Number(t.volume || 0),
+      growth: Number(t.growth || 0),
     }));
   }
 
@@ -78,10 +80,11 @@ export async function searchTrends(query?: string): Promise<{ keyword: string; v
     if (!response.ok) return [];
     const data = await response.json();
 
-    return (data.trends || []).map((t: any) => ({
-      keyword: t.keyword,
-      volume: t.volume || 0,
-      growth: t.growth_rate || 0,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- external API response
+    return ((data.trends || []) as Record<string, any>[]).map((t) => ({
+      keyword: String(t.keyword || ''),
+      volume: Number(t.volume || 0),
+      growth: Number(t.growth_rate || 0),
     }));
   } catch {
     return [];

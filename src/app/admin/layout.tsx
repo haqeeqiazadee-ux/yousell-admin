@@ -1,12 +1,14 @@
 import { getUser } from '@/lib/auth/get-user';
+import { UserProvider } from '@/components/user-context';
+import { AdminSidebar } from '@/components/admin-sidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import type { Profile } from '@/lib/types/database';
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Auth check is handled by middleware - layout just provides the chrome.
-  // Login/unauthorized pages render without the nav wrapper via their own markup.
   const user = await getUser().catch(() => null);
 
   // If no user, just render children (login page, unauthorized, etc.)
@@ -14,20 +16,28 @@ export default async function AdminLayout({
     return <>{children}</>;
   }
 
+  // Map getUser() result to Profile shape for UserProvider
+  const profile: Profile = {
+    id: user.id,
+    email: user.email,
+    full_name: null,
+    role: user.role as Profile['role'],
+    avatar_url: null,
+    push_token: null,
+    created_at: '',
+    updated_at: '',
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-          <h1 className="text-xl font-bold">YouSell Admin</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user.email}</span>
-            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-              {user.role}
-            </span>
-          </div>
+    <UserProvider user={profile}>
+      <SidebarProvider>
+        <div className="flex min-h-screen w-full">
+          <AdminSidebar />
+          <main className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-950">
+            <div className="p-6">{children}</div>
+          </main>
         </div>
-      </nav>
-      <main className="max-w-7xl mx-auto py-6 px-4">{children}</main>
-    </div>
+      </SidebarProvider>
+    </UserProvider>
   );
 }

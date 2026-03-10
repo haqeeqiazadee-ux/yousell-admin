@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/auth/roles";
 
 // GET /api/admin/financial?product_id=xxx — get financial model for a product
 export async function GET(request: Request) {
+  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -40,6 +42,7 @@ export async function GET(request: Request) {
 
 // POST /api/admin/financial — calculate and store financial model
 export async function POST(request: Request) {
+  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -66,10 +69,29 @@ export async function POST(request: Request) {
     if (!hasUsSupplier) riskFlags.push("no_us_supplier");
     if ((supplierLeadTime ?? 30) > 45) riskFlags.push("long_lead_time");
 
-    const autoRejected = grossMargin < 0.15 || riskFlags.length >= 3;
+    // 5 Auto-rejection rules per build brief Section 6
     const rejectionReasons: string[] = [];
-    if (grossMargin < 0.15) rejectionReasons.push("Margin below 15%");
-    if (riskFlags.length >= 3) rejectionReasons.push("Too many risk flags");
+    // Rule 1: Margin < 40%
+    if (grossMargin < 0.40) rejectionReasons.push("Margin below 40%");
+    // Rule 2: Shipping > 30% of retail price
+    const shippingCost = (costs as Record<string, number>)?.shipping || 0;
+    if (retailPrice > 0 && shippingCost / retailPrice > 0.30) {
+      rejectionReasons.push("Shipping exceeds 30% of retail price");
+    }
+    // Rule 3: Break-even > 2 months
+    const breakEvenMonths = velocity > 0 && grossMargin > 0
+      ? breakEvenUnits / velocity
+      : Infinity;
+    if (breakEvenMonths > 2) rejectionReasons.push("Break-even exceeds 2 months");
+    // Rule 4: Fragile or hazmat without certification
+    if ((isFragile || isHazardous) && !requiresSpecialCert) {
+      rejectionReasons.push("Fragile/hazmat product without required certification");
+    }
+    // Rule 5: No US delivery within 15 days
+    if (!hasUsSupplier && (supplierLeadTime ?? 30) > 15) {
+      rejectionReasons.push("No US delivery within 15 days");
+    }
+    const autoRejected = rejectionReasons.length > 0;
 
     // Store financial model
     const { data, error } = await supabase

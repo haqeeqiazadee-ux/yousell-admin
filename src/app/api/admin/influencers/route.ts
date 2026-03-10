@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/auth/roles";
 
 export async function GET(request: Request) {
+  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -9,11 +11,14 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const platform = searchParams.get("platform");
+    const limit = parseInt(searchParams.get("limit") || "50");
+    const offset = parseInt(searchParams.get("offset") || "0");
 
     let query = supabase
       .from("influencers")
       .select("*", { count: "exact" })
-      .order("conversion_score", { ascending: false });
+      .order("conversion_score", { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (platform) query = query.eq("platform", platform);
 
@@ -26,6 +31,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();

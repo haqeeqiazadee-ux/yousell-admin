@@ -9,7 +9,7 @@ const tierConfig = {
   cold: { label: "COLD", color: "text-gray-500 border-gray-500/30 bg-gray-500/10" },
 };
 
-function getTier(score: number) {
+function getTier(score: number): keyof typeof tierConfig {
   if (score >= 80) return "hot";
   if (score >= 60) return "warm";
   if (score >= 40) return "watch";

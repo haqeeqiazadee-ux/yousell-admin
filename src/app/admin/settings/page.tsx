@@ -206,6 +206,21 @@ export default function SettingsPage() {
     fetchJobs();
   }, [fetchJobs]);
 
+  /* Master kill switch — disable ALL jobs */
+  const killAllJobs = async () => {
+    try {
+      const res = await fetch("/api/admin/automation", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ killSwitch: true }),
+      });
+      if (res.ok) {
+        const updated: AutomationJob[] = await res.json();
+        setJobs(Array.isArray(updated) ? updated : []);
+      }
+    } catch {}
+  };
+
   /* Toggle a job */
   const toggleJob = async (jobName: string, currentStatus: string) => {
     const newStatus = currentStatus === "enabled" ? "disabled" : "enabled";
@@ -408,7 +423,7 @@ export default function SettingsPage() {
                   Automation Jobs
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">
+              <CardContent className="text-sm text-muted-foreground space-y-3">
                 <p>
                   All jobs are{" "}
                   <span className="font-semibold text-foreground">
@@ -416,6 +431,14 @@ export default function SettingsPage() {
                   </span>{" "}
                   by default. Enable them individually.
                 </p>
+                {jobs.some((j) => j.status === "enabled" || j.status === "running") && (
+                  <button
+                    onClick={killAllJobs}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                  >
+                    Master Kill Switch — Disable All Jobs
+                  </button>
+                )}
               </CardContent>
             </Card>
 

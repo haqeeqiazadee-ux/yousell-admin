@@ -5,15 +5,17 @@ import { createBrowserClient } from '@supabase/ssr'
 import Link from 'next/link'
 import {
   Zap, TrendingUp, Users, Package, ShoppingBag, Activity,
-  ArrowRight, Clock, AlertTriangle, CheckCircle, XCircle,
-  BarChart2, Scan, Settings, Bell, ChevronRight, Flame,
+  ArrowRight, Clock,
+  BarChart2, Scan, Settings, ChevronRight, Flame,
   Target, DollarSign, Eye
 } from 'lucide-react'
 
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getSupabase() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  )
+}
 
 interface Stats {
   productsTracked: number
@@ -58,21 +60,32 @@ export default function AdminDashboard() {
   const [lastScan, setLastScan] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const [serviceStatus, setServiceStatus] = useState<Record<string, boolean>>({})
+
+  useEffect(() => {
+    // Fetch service status from server-side API (never expose keys in client bundle)
+    fetch('/api/admin/dashboard')
+      .then(r => r.json())
+      .then(d => { if (d.services) setServiceStatus(d.services) })
+      .catch(() => {})
+  }, [])
+
   const systemStatus: SystemStatus[] = [
-    { label: 'Supabase', status: 'connected', detail: 'Connected' },
-    { label: 'Auth + RBAC', status: 'connected', detail: 'Connected' },
-    { label: 'AI Engine (Claude)', status: process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY ? 'connected' : 'warning', detail: process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY ? 'Active' : 'Not Configured' },
-    { label: 'Resend Email', status: process.env.NEXT_PUBLIC_RESEND_API_KEY ? 'connected' : 'warning', detail: process.env.NEXT_PUBLIC_RESEND_API_KEY ? 'Active' : 'Not Configured' },
-    { label: 'Apify Scrapers', status: 'warning', detail: 'Not Configured' },
-    { label: 'RapidAPI', status: 'warning', detail: 'Not Configured' },
+    { label: 'Supabase', status: serviceStatus.supabase ? 'connected' : 'warning', detail: serviceStatus.supabase ? 'Connected' : 'Check Config' },
+    { label: 'Auth + RBAC', status: serviceStatus.auth ? 'connected' : 'warning', detail: serviceStatus.auth ? 'Connected' : 'Check Config' },
+    { label: 'AI Engine (Claude)', status: serviceStatus.ai ? 'connected' : 'warning', detail: serviceStatus.ai ? 'Active' : 'Not Configured' },
+    { label: 'Resend Email', status: serviceStatus.email ? 'connected' : 'warning', detail: serviceStatus.email ? 'Active' : 'Not Configured' },
+    { label: 'Apify Scrapers', status: serviceStatus.apify ? 'connected' : 'warning', detail: serviceStatus.apify ? 'Active' : 'Not Configured' },
+    { label: 'RapidAPI', status: serviceStatus.rapidapi ? 'connected' : 'warning', detail: serviceStatus.rapidapi ? 'Active' : 'Not Configured' },
   ]
 
   useEffect(() => {
     async function fetchData() {
       try {
+        const sb = getSupabase()
         const [products, scans] = await Promise.all([
-          supabase.from('products').select('id, name, viral_score, trend_stage, platform, final_score, channel').order('final_score', { ascending: false }),
-          supabase.from('scan_history').select('*').order('created_at', { ascending: false }).limit(5),
+          sb.from('products').select('id, name, viral_score, trend_stage, platform, final_score, channel').order('final_score', { ascending: false }),
+          sb.from('scan_history').select('*').order('created_at', { ascending: false }).limit(5),
         ])
 
         if (products.data) {
@@ -99,6 +112,23 @@ export default function AdminDashboard() {
       }
     }
     fetchData()
+
+    // Supabase Realtime — live updates without polling
+    const sb = getSupabase()
+    const channel = sb.channel('dashboard-realtime')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'products'
+      }, () => { fetchData() })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'scan_history'
+      }, () => { fetchData() })
+      .subscribe()
+
+    return () => { sb.removeChannel(channel) }
   }, [])
 
   function formatTime(iso: string) {
@@ -120,12 +150,12 @@ export default function AdminDashboard() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top bar */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-0.5">YouSell Admin Intelligence Platform</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">YouSell Admin Intelligence Platform</p>
         </div>
         <div className="flex items-center gap-3">
           {lastScan && (
@@ -138,8 +168,6 @@ export default function AdminDashboard() {
           </span>
         </div>
       </div>
-
-      <div className="p-6 space-y-6">
 
         {/* Pre-Viral Alert Strip */}
         {preViralProducts.length > 0 && (
@@ -188,11 +216,11 @@ export default function AdminDashboard() {
         {/* KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {kpis.map(kpi => (
-            <div key={kpi.label} className="bg-white rounded-xl border border-gray-200 p-4">
+            <div key={kpi.label} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4">
               <div className={`w-9 h-9 rounded-lg ${kpi.bg} flex items-center justify-center mb-3`}>
                 <kpi.icon size={18} className={kpi.color} />
               </div>
-              <p className="text-2xl font-bold text-gray-900">{loading ? '—' : kpi.value}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{loading ? '—' : kpi.value}</p>
               <p className="text-xs text-gray-500 mt-0.5">{kpi.label}</p>
             </div>
           ))}
@@ -202,10 +230,10 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* Scan Control Panel */}
-          <div className="lg:col-span-1 bg-white rounded-xl border border-gray-200 p-5">
+          <div className="lg:col-span-1 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
             <div className="flex items-center gap-2 mb-4">
               <Scan size={16} className="text-gray-700" />
-              <h2 className="font-semibold text-gray-900">Scan Control Panel</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Scan Control Panel</h2>
             </div>
             <div className="space-y-3">
               <Link href="/admin/scan?mode=quick" className="block w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-3 transition-colors">
@@ -239,10 +267,10 @@ export default function AdminDashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div className="lg:col-span-1 bg-white rounded-xl border border-gray-200 p-5">
+          <div className="lg:col-span-1 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
             <div className="flex items-center gap-2 mb-4">
               <Zap size={16} className="text-gray-700" />
-              <h2 className="font-semibold text-gray-900">Quick Actions</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Quick Actions</h2>
             </div>
             <div className="space-y-2">
               {[
@@ -265,10 +293,10 @@ export default function AdminDashboard() {
           </div>
 
           {/* System Status */}
-          <div className="lg:col-span-1 bg-white rounded-xl border border-gray-200 p-5">
+          <div className="lg:col-span-1 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
             <div className="flex items-center gap-2 mb-4">
               <Activity size={16} className="text-gray-700" />
-              <h2 className="font-semibold text-gray-900">System Status</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">System Status</h2>
             </div>
             <div className="space-y-2.5">
               {systemStatus.map(s => (
@@ -294,11 +322,11 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
           {/* Scan History */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Clock size={16} className="text-gray-700" />
-                <h2 className="font-semibold text-gray-900">Scan History</h2>
+                <h2 className="font-semibold text-gray-900 dark:text-gray-100">Scan History</h2>
               </div>
               <Link href="/admin/scan" className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
                 View all <ChevronRight size={12} />
@@ -335,10 +363,10 @@ export default function AdminDashboard() {
           </div>
 
           {/* Live Trend Feed */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
             <div className="flex items-center gap-2 mb-4">
               <BarChart2 size={16} className="text-gray-700" />
-              <h2 className="font-semibold text-gray-900">Live Trend Feed</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Live Trend Feed</h2>
               <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full ml-auto">Realtime</span>
             </div>
             {stats.productsTracked === 0 ? (
@@ -375,8 +403,6 @@ export default function AdminDashboard() {
             )}
           </div>
         </div>
-
-      </div>
     </div>
   )
 }

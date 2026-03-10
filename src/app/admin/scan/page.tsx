@@ -4,18 +4,26 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import {
-  Scan, X, ChevronDown, Clock, Package, AlertTriangle,
-  CheckCircle, Loader2, ArrowLeft, BarChart2, Zap, TrendingUp
+  Scan, X, Clock, AlertTriangle,
+  CheckCircle, Loader2, BarChart2, Zap, TrendingUp
 } from 'lucide-react'
 import Link from 'next/link'
 
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getSupabase() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  )
+}
 
 type ScanMode = 'quick' | 'full' | 'client'
 type ScanStatus = 'idle' | 'confirming' | 'running' | 'completed' | 'failed' | 'cancelled'
+
+interface ClientOption {
+  id: string
+  name: string
+  plan_tier: string
+}
 
 interface ScanConfig {
   mode: ScanMode
@@ -83,17 +91,33 @@ function ScanPageContent() {
   const [error, setError] = useState<string | null>(null)
   const [history, setHistory] = useState<ScanHistory[]>([])
   const [productsFound, setProductsFound] = useState(0)
+  const [clients, setClients] = useState<ClientOption[]>([])
+  const [selectedClientId, setSelectedClientId] = useState<string>('')
   const pollRef = useRef<NodeJS.Timeout | null>(null)
 
   const config = SCAN_CONFIGS.find(c => c.mode === selectedMode)!
 
   useEffect(() => {
     fetchHistory()
+    fetchClients()
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
   }, [])
 
+  async function fetchClients() {
+    try {
+      const res = await fetch('/api/admin/clients')
+      if (!res.ok) return
+      const data = await res.json()
+      setClients((data.clients || []).map((c: Record<string, unknown>) => ({
+        id: c.id as string,
+        name: (c.name as string) || (c.email as string) || 'Unnamed',
+        plan_tier: (c.plan_tier as string) || 'standard',
+      })))
+    } catch {}
+  }
+
   async function fetchHistory() {
-    const { data } = await supabase
+    const { data } = await getSupabase()
       .from('scan_history')
       .select('*')
       .order('created_at', { ascending: false })
@@ -113,14 +137,14 @@ function ScanPageContent() {
     setError(null)
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
+      const { data: { session } } = await getSupabase().auth.getSession()
       const res = await fetch('/api/admin/scan', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
         },
-        body: JSON.stringify({ mode: selectedMode, query }),
+        body: JSON.stringify({ mode: selectedMode, query, ...(selectedClientId ? { clientId: selectedClientId } : {}) }),
       })
 
       if (!res.ok) {
@@ -131,16 +155,16 @@ function ScanPageContent() {
       const { jobId: id } = await res.json()
       setJobId(id)
       pollJobStatus(id)
-    } catch (e: any) {
+    } catch (e: unknown) {
       setStatus('failed')
-      setError(e.message || 'Failed to start scan. Please try again.')
+      setError(e instanceof Error ? e.message : 'Failed to start scan. Please try again.')
     }
   }
 
   function pollJobStatus(id: string) {
     pollRef.current = setInterval(async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        const { data: { session } } = await getSupabase().auth.getSession()
         const res = await fetch(`/api/admin/scan?jobId=${id}`, {
           headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
         })
@@ -170,7 +194,7 @@ function ScanPageContent() {
     if (!jobId) { setStatus('idle'); return }
     if (pollRef.current) clearInterval(pollRef.current)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
+      const { data: { session } } = await getSupabase().auth.getSession()
       await fetch(`/api/admin/scan?jobId=${jobId}`, {
         method: 'DELETE',
         headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
@@ -200,21 +224,16 @@ function ScanPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4">
-        <Link href="/admin" className="text-gray-400 hover:text-gray-600 transition-colors">
-          <ArrowLeft size={20} />
-        </Link>
-        <div>
-          <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <Scan size={20} className="text-blue-600" /> Product Scanner
-          </h1>
-          <p className="text-sm text-gray-500">Discover trending products across all channels</p>
-        </div>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          <Scan size={20} className="text-blue-600" /> Product Scanner
+        </h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Discover trending products across all channels</p>
       </div>
 
-      <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Left: Scan Controls */}
         <div className="lg:col-span-2 space-y-5">
@@ -252,6 +271,25 @@ function ScanPageContent() {
                 ))}
               </div>
 
+              {/* Client selector for Client Scan mode */}
+              {selectedMode === 'client' && (
+                <div className="mt-4">
+                  <label className="text-xs font-medium text-gray-600 block mb-1.5">Select Client</label>
+                  <select
+                    value={selectedClientId}
+                    onChange={e => setSelectedClientId(e.target.value)}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                  >
+                    <option value="">— Select a client —</option>
+                    {clients.map(c => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} ({c.plan_tier})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               {/* Query input */}
               <div className="mt-4">
                 <label className="text-xs font-medium text-gray-600 block mb-1.5">Search Query (optional)</label>
@@ -266,9 +304,10 @@ function ScanPageContent() {
 
               <button
                 onClick={startConfirm}
-                className={`mt-4 w-full ${config.bg} text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity`}
+                disabled={selectedMode === 'client' && !selectedClientId}
+                className={`mt-4 w-full ${config.bg} text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                <Scan size={16} /> Start Scan
+                <Scan size={16} /> {selectedMode === 'client' && !selectedClientId ? 'Select a client first' : 'Start Scan'}
               </button>
             </div>
           )}
@@ -460,6 +499,7 @@ function ScanPageContent() {
 }
 
 export default function ScanPage() {
+
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
