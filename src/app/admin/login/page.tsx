@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 
@@ -16,7 +16,23 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [checking, setChecking] = useState(true)
   const router = useRouter()
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    getSupabase().auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        router.replace('/admin')
+      } else {
+        setChecking(false)
+      }
+    })
+  }, [router])
+
+  if (checking) {
+    return null
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
