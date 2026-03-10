@@ -11,24 +11,17 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
 
-  // Admin routes: require authenticated user with admin role
+  // Admin routes: require authenticated user
   if (pathname.startsWith('/admin') && pathname !== '/admin/login' && pathname !== '/admin/unauthorized') {
     if (!user) {
       return NextResponse.redirect(new URL('/admin/login', request.url))
     }
-    // Check admin role from user metadata
-    const role = user.user_metadata?.role || user.app_metadata?.role
-    if (role !== 'admin' && role !== 'super_admin') {
-      return NextResponse.redirect(new URL('/admin/unauthorized', request.url))
-    }
+    // Role check happens in admin layout via profiles table query
   }
 
-  // Redirect logged-in admin users away from login page
+  // Redirect logged-in users away from login page
   if (pathname === '/admin/login' && user) {
-    const role = user.user_metadata?.role || user.app_metadata?.role
-    if (role === 'admin' || role === 'super_admin') {
-      return NextResponse.redirect(new URL('/admin', request.url))
-    }
+    return NextResponse.redirect(new URL('/admin', request.url))
   }
 
   // Client dashboard routes: require authenticated user
