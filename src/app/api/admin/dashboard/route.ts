@@ -26,7 +26,7 @@ export async function GET() {
     safeCount("products", { column: "platform", value: "tiktok" }),
     safeCount("products", { column: "platform", value: "amazon" }),
     safeCount("trend_keywords"),
-    safeCount("competitors"),
+    safeCount("competitor_stores"),
     safeCount("clients"),
     safeCount("influencers"),
     safeCount("suppliers"),

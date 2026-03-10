@@ -2,7 +2,6 @@
 const nextConfig = {
   images: {
     remotePatterns: [
-      { protocol: 'https', hostname: 'picsum.photos' },
       { protocol: 'https', hostname: '*.alicdn.com' },
       { protocol: 'https', hostname: '*.tiktokcdn.com' },
       { protocol: 'https', hostname: '*.shopify.com' },

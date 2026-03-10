@@ -11,7 +11,7 @@ export default function TikTokPage() {
       emptyIcon={Music2}
       emptyMessage="No TikTok products discovered"
       emptyDescription="Configure your TikTok/Apify API key in Settings to start discovering trending TikTok Shop products."
-      statusBadge={{ label: "Apify Provider", configured: false }}
+      statusBadge={{ label: "Apify Provider", serviceKey: "apify" }}
     />
   );
 }

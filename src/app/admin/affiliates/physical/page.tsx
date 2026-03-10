@@ -11,7 +11,7 @@ export default function PhysicalAffiliatesPage() {
       emptyIcon={HandCoins}
       emptyMessage="No products discovered"
       emptyDescription="Connect to physical product affiliate programs to start promoting tangible goods."
-      statusBadge={{ label: "Physical Affiliates", configured: false }}
+      statusBadge={{ label: "Physical Affiliates", serviceKey: "apify" }}
     />
   );
 }

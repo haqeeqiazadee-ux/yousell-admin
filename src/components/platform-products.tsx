@@ -24,7 +24,7 @@ interface PlatformProductsProps {
   emptyIcon: LucideIcon;
   emptyMessage: string;
   emptyDescription: string;
-  statusBadge?: { label: string; configured: boolean };
+  statusBadge?: { label: string; configured?: boolean; serviceKey?: string };
 }
 
 export function PlatformProducts({
@@ -39,6 +39,21 @@ export function PlatformProducts({
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
+  const [isConfigured, setIsConfigured] = useState(statusBadge?.configured ?? false);
+
+  // Fetch real provider status from dashboard API
+  useEffect(() => {
+    if (statusBadge?.serviceKey) {
+      fetch('/api/admin/dashboard')
+        .then(r => r.json())
+        .then(d => {
+          if (d.services && d.services[statusBadge.serviceKey!] !== undefined) {
+            setIsConfigured(d.services[statusBadge.serviceKey!]);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [statusBadge?.serviceKey]);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -70,12 +85,12 @@ export function PlatformProducts({
           <Badge
             variant="outline"
             className={
-              statusBadge.configured
+              isConfigured
                 ? "text-green-500 border-green-500/30"
                 : "text-yellow-500 border-yellow-500/30"
             }
           >
-            {statusBadge.label}
+            {isConfigured ? `${statusBadge.label} Connected` : statusBadge.label}
           </Badge>
         )}
       </div>

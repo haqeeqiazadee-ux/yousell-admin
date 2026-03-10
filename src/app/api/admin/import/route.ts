@@ -2,6 +2,40 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/roles";
 
+// RFC 4180-compatible CSV row parser that handles quoted fields with commas
+function parseCSVRow(line: string): string[] {
+  const fields: string[] = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (i + 1 < line.length && line[i + 1] === '"') {
+          current += '"';
+          i++; // skip escaped quote
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        current += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ',') {
+        fields.push(current.trim());
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+  }
+  fields.push(current.trim());
+  return fields;
+}
+
 export async function POST(request: Request) {
   try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
   try {
@@ -23,7 +57,7 @@ export async function POST(request: Request) {
 
     if (!isCSV && !isExcel) {
       return NextResponse.json(
-        { error: "Unsupported file type. Please upload a CSV or Excel file." },
+        { error: "Unsupported file type. Please upload a CSV file." },
         { status: 400 }
       );
     }
@@ -36,8 +70,8 @@ export async function POST(request: Request) {
           errors: 1,
           status: "failed",
         },
-        message: "Excel parsing requires the xlsx library. Use CSV format instead.",
-      });
+        message: "Excel files are not supported. Please convert to CSV and re-upload.",
+      }, { status: 400 });
     }
 
     const text = await file.text();
@@ -55,7 +89,7 @@ export async function POST(request: Request) {
       });
     }
 
-    const headers = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, "").toLowerCase());
+    const headers = parseCSVRow(lines[0]).map((h) => h.replace(/^"|"$/g, "").toLowerCase());
 
     // Map CSV columns to product fields
     const titleCol = headers.findIndex((h) => ["title", "name", "product", "product_name", "product_title"].includes(h));
@@ -81,7 +115,7 @@ export async function POST(request: Request) {
     const products: Record<string, unknown>[] = [];
 
     for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
+      const values = parseCSVRow(lines[i]);
       const title = values[titleCol];
       if (!title) { errors++; continue; }
 

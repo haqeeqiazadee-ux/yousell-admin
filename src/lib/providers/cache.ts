@@ -8,7 +8,7 @@ export async function getCachedProducts(source: string, _query: string): Promise
   const { data, error } = await supabaseAdmin
     .from('products')
     .select('*')
-    .eq('source', source)
+    .eq('platform', source)
     .gte('created_at', cutoff)
     .order('created_at', { ascending: false })
     .limit(50);

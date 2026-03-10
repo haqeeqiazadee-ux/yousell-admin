@@ -11,7 +11,7 @@ export default function ShopifyPage() {
       emptyIcon={Store}
       emptyMessage="No Shopify products connected"
       emptyDescription="Connect your Shopify store in Settings to sync and analyze your product catalog."
-      statusBadge={{ label: "Not Connected", configured: false }}
+      statusBadge={{ label: "Shopify Provider", serviceKey: "apify" }}
     />
   );
 }

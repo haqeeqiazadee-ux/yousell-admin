@@ -11,7 +11,7 @@ export default function AmazonPage() {
       emptyIcon={ShoppingCart}
       emptyMessage="No Amazon products discovered"
       emptyDescription="Configure your Amazon/RapidAPI key in Settings to start discovering Amazon product opportunities."
-      statusBadge={{ label: "RapidAPI Provider", configured: false }}
+      statusBadge={{ label: "RapidAPI Provider", serviceKey: "rapidapi" }}
     />
   );
 }

@@ -102,12 +102,14 @@ export default function InfluencersPage() {
     if (platformFilter !== "all") params.set("platform", platformFilter);
     params.set("limit", String(pageSize));
     params.set("offset", String((page - 1) * pageSize));
+    params.set("sort", sortField);
+    params.set("order", sortOrder);
     const res = await fetch(`/api/admin/influencers?${params}`);
     const data = await res.json();
     setInfluencers(data.influencers || []);
     setTotal(data.total || 0);
     setLoading(false);
-  }, [platformFilter, page]);
+  }, [platformFilter, page, sortField, sortOrder]);
 
   useEffect(() => {
     fetchInfluencers();
@@ -122,11 +124,8 @@ export default function InfluencersPage() {
     }
   }
 
-  const sortedInfluencers = [...influencers].sort((a, b) => {
-    const aVal = a[sortField] ?? 0;
-    const bVal = b[sortField] ?? 0;
-    return sortOrder === "asc" ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
-  });
+  // Sorting is done server-side via API params
+  const sortedInfluencers = influencers;
 
   const handleAddInfluencer = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -11,7 +11,7 @@ export default function AIAffiliatesPage() {
       emptyIcon={Bot}
       emptyMessage="No products discovered"
       emptyDescription="Connect to AI affiliate programs to start promoting AI tools and services."
-      statusBadge={{ label: "AI Affiliates", configured: false }}
+      statusBadge={{ label: "AI Affiliates", serviceKey: "apify" }}
     />
   );
 }
