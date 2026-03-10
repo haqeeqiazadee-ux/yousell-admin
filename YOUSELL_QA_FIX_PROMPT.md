@@ -368,6 +368,59 @@ For each of the 18 build phases:
 
 ---
 
+## KNOWN BUGS FROM CODEBASE AUDIT (FIX THESE FIRST)
+
+These were found by a full audit on 10 March 2026. Fix each one.
+
+### SECURITY — P0 CRITICAL
+1. **`requireAdmin()` in `src/lib/auth/roles.ts` does NOT check roles** — it just returns any authenticated user. Must check `user.role === 'admin'`.
+2. **`getUser()` in `src/lib/auth/get-user.ts` defaults missing profiles to `role: 'admin'`** — any new Supabase user without a profiles row becomes admin. Must default to `'viewer'` or `'client'`, then check role properly.
+3. **Products POST route** in `src/app/api/admin/products/route.ts` uses `...body` spread directly into Supabase insert — allows arbitrary field injection. Must whitelist allowed fields.
+
+### BROKEN FEATURES — P0/P1
+4. **Scan system is completely broken**: `src/app/api/admin/scan/route.ts` proxies to `BACKEND_URL` which defaults to `http://localhost:4000`. In production on Netlify, there is no backend at localhost. Must either:
+   - Use `NEXT_PUBLIC_BACKEND_URL` env var pointing to Railway backend, OR
+   - Implement scan logic directly in the Next.js API route if no Railway backend exists
+5. **Scan cancel (DELETE) handler** reads `req.json()` for body, but the client sends jobId as query parameter. Cancel will always throw. Fix: read from `req.nextUrl.searchParams`.
+6. **Allocate page (`src/app/admin/allocate/page.tsx`)** expects API response `{ pending, recent }` but the allocations API route returns `{ allocations }`. Frontend and backend shapes don't match. Fix the API to return the expected shape, or fix the page.
+7. **Excel import always fails**: The import page accepts `.xlsx` files but there's no `xlsx` library in `package.json`. Either install `xlsx` or remove Excel upload from the UI.
+8. **CSV parser in import route** naively splits on commas, breaking any CSV with quoted fields containing commas. Use a proper CSV parser like `csv-parse` or `papaparse`.
+9. **Blueprint "PDF export"** actually generates HTML, not PDF. The route `blueprints/[id]/pdf/route.ts` returns HTML with `.html` extension. Either rename it or generate actual PDF.
+
+### ENV VARIABLE MISMATCHES — P1
+10. **`BACKEND_URL`** used in scan route but env example says `NEXT_PUBLIC_BACKEND_URL`
+11. **`PRODUCT_HUNT_TOKEN`** in provider config but env example says `PRODUCT_HUNT_API_KEY`
+12. **`PINTEREST_API_KEY`** in env example but provider config reads `PINTEREST_APP_ID` + `PINTEREST_APP_SECRET`
+13. **`SHOPIFY_SCRAPER_KEY`** referenced in code but not listed in `.env.local.example`
+
+### HARDCODED VALUES — P1
+14. All platform pages (`tiktok/`, `amazon/`, etc.) have `statusBadge={{ configured: false }}` **hardcoded**. Should read actual provider status from settings API.
+15. Dashboard `competitors` KPI count is **hardcoded to `0`** instead of querying `competitor_stores` table.
+16. `BACKEND_URL` defaults to `http://localhost:4000` — must default to empty string and show config error if unset.
+
+### DEAD CODE — P2
+17. `src/lib/email.ts` — never imported anywhere. Wire it up or remove.
+18. `src/components/product-card.tsx` — Universal Product Card exists but is never used in any page.
+19. Legacy provider files (`providers/tiktok.ts`, `providers/shopify.ts`, `providers/pinterest.ts`) — call fictitious URLs, never imported. Remove or replace with real implementations.
+20. `src/lib/supabase/admin.ts` defines `createAdminClient()` but nothing imports it. Routes use the legacy `supabaseAdmin` singleton from `src/lib/supabase.ts` instead.
+21. Setup page `check()` functions in each step are defined but never called — `useEffect` does its own inline checks instead.
+
+### DATA MODEL INCONSISTENCIES — P2
+22. **Table name mismatch**: scan route GET queries `scans` table, but the migration creates `scan_history`. Fix to use `scan_history` consistently.
+23. **Column name mismatch**: `providers/cache.ts` queries `source` column on products but the schema uses `platform`.
+24. **Field name mismatch**: Dashboard `PreViralProduct` interface uses `name`, but some DB queries may use `title`. Verify and standardize.
+25. **Two Supabase client patterns**: Some routes use the legacy `supabaseAdmin` singleton from `src/lib/supabase.ts`, others use `createClient()` from `src/lib/supabase/server.ts`. Standardize on the SSR-aware server client.
+
+### STUB PAGES — P2
+26. `analytics/page.tsx` — shows "Coming Soon" only. Either build it or remove from sidebar nav.
+
+### UI ISSUES — P3
+27. Influencer page sorting only sorts the current page, not the full dataset from Supabase.
+28. Dashboard Realtime channels refetch entire dataset on every change with no debouncing.
+29. `next.config.mjs` lists `picsum.photos` as image domain (placeholder, not production).
+
+---
+
 ## BEGIN
 
-Start by reading ALL files listed above. Build your status matrix. Then fix everything in priority order. Go.
+Start by reading ALL files listed above. Build your status matrix. Then fix everything in priority order, starting with the KNOWN BUGS section above. Go.
