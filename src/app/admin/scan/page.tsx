@@ -202,21 +202,16 @@ function ScanPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4">
-        <Link href="/admin" className="text-gray-400 hover:text-gray-600 transition-colors">
-          <ArrowLeft size={20} />
-        </Link>
-        <div>
-          <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <Scan size={20} className="text-blue-600" /> Product Scanner
-          </h1>
-          <p className="text-sm text-gray-500">Discover trending products across all channels</p>
-        </div>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          <Scan size={20} className="text-blue-600" /> Product Scanner
+        </h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Discover trending products across all channels</p>
       </div>
 
-      <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Left: Scan Controls */}
         <div className="lg:col-span-2 space-y-5">
@@ -462,6 +457,7 @@ function ScanPageContent() {
 }
 
 export default function ScanPage() {
+
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

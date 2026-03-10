@@ -12,14 +12,14 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Admin routes: require authenticated user with admin role
-  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+  if (pathname.startsWith('/admin') && pathname !== '/admin/login' && pathname !== '/admin/unauthorized') {
     if (!user) {
       return NextResponse.redirect(new URL('/admin/login', request.url))
     }
     // Check admin role from user metadata
     const role = user.user_metadata?.role || user.app_metadata?.role
     if (role !== 'admin' && role !== 'super_admin') {
-      return NextResponse.redirect(new URL('/admin/login', request.url))
+      return NextResponse.redirect(new URL('/admin/unauthorized', request.url))
     }
   }
 
