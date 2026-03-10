@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS products (
   category TEXT,
   price DECIMAL(10, 2),
   cost DECIMAL(10, 2),
-  currency TEXT NOT NULL DEFAULT 'GBP',
+  currency TEXT NOT NULL DEFAULT 'USD',
   margin_percent DECIMAL(5, 2),
   score_overall INTEGER DEFAULT 0,
   score_demand INTEGER DEFAULT 0,
