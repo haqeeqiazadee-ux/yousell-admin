@@ -28,6 +28,10 @@ import {
   Plus,
   Search,
   ExternalLink,
+  Pencil,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import type { Product } from "@/lib/types/product";
 
@@ -49,12 +53,28 @@ const statusColors: Record<string, string> = {
   enriching: "text-yellow-500 border-yellow-500/30",
 };
 
+const PAGE_SIZE = 25;
+
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [page, setPage] = useState(1);
+
+  // Edit state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editProduct, setEditProduct] = useState<Product | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+  const [editPrice, setEditPrice] = useState("");
+  const [editCost, setEditCost] = useState("");
+  const [editUrl, setEditUrl] = useState("");
+
+  // Delete state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteProduct, setDeleteProduct] = useState<Product | null>(null);
 
   const [newTitle, setNewTitle] = useState("");
   const [newCategory, setNewCategory] = useState("");
@@ -67,12 +87,14 @@ export default function ProductsPage() {
     setLoading(true);
     const params = new URLSearchParams();
     if (search) params.set("search", search);
+    params.set("limit", String(PAGE_SIZE));
+    params.set("offset", String((page - 1) * PAGE_SIZE));
     const res = await fetch(`/api/admin/products?${params}`);
     const data = await res.json();
     setProducts(data.products || []);
     setTotal(data.total || 0);
     setLoading(false);
-  }, [search]);
+  }, [search, page]);
 
   useEffect(() => {
     fetchProducts();
@@ -107,6 +129,55 @@ export default function ProductsPage() {
     }
     setSubmitting(false);
   };
+
+  const openEdit = (product: Product) => {
+    setEditProduct(product);
+    setEditTitle(product.title);
+    setEditCategory(product.category || "");
+    setEditPrice(product.price ? String(product.price) : "");
+    setEditCost(product.cost ? String(product.cost) : "");
+    setEditUrl(product.external_url || "");
+    setEditDialogOpen(true);
+  };
+
+  const handleEditProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editProduct) return;
+    setSubmitting(true);
+    const res = await fetch("/api/admin/products", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: editProduct.id,
+        title: editTitle,
+        category: editCategory || undefined,
+        price: editPrice ? parseFloat(editPrice) : undefined,
+        cost: editCost ? parseFloat(editCost) : undefined,
+        external_url: editUrl || undefined,
+      }),
+    });
+    if (res.ok) {
+      setEditDialogOpen(false);
+      fetchProducts();
+    }
+    setSubmitting(false);
+  };
+
+  const handleDeleteProduct = async () => {
+    if (!deleteProduct) return;
+    setSubmitting(true);
+    const res = await fetch(`/api/admin/products?id=${deleteProduct.id}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      setDeleteDialogOpen(false);
+      setDeleteProduct(null);
+      fetchProducts();
+    }
+    setSubmitting(false);
+  };
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -227,7 +298,7 @@ export default function ProductsPage() {
                   <TableHead>Category</TableHead>
                   <TableHead className="text-right">Price</TableHead>
                   <TableHead className="text-center">Score</TableHead>
-                  <TableHead className="w-10"></TableHead>
+                  <TableHead className="w-28">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -284,24 +355,120 @@ export default function ProductsPage() {
                       <ScoreBadge score={product.score_overall} />
                     </TableCell>
                     <TableCell>
-                      {product.external_url && (
-                        <a
-                          href={product.external_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-muted-foreground hover:text-foreground"
+                      <div className="flex items-center gap-1">
+                        {product.external_url && (
+                          <a
+                            href={product.external_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-foreground p-1"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        )}
+                        <button
+                          onClick={() => openEdit(product)}
+                          className="text-muted-foreground hover:text-foreground p-1"
                         >
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      )}
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => { setDeleteProduct(product); setDeleteDialogOpen(true); }}
+                          className="text-muted-foreground hover:text-red-600 p-1"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           )}
+          {/* Pagination */}
+          {!loading && totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4">
+              <p className="text-sm text-muted-foreground">
+                Page {page} of {totalPages}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage(p => p - 1)}
+                >
+                  <ChevronLeft className="h-4 w-4" /> Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage(p => p + 1)}
+                >
+                  Next <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Product</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditProduct} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-title">Product Title</Label>
+              <Input id="edit-title" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-category">Category</Label>
+              <Input id="edit-category" value={editCategory} onChange={(e) => setEditCategory(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-price">Sell Price</Label>
+                <Input id="edit-price" type="number" step="0.01" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-cost">Cost Price</Label>
+                <Input id="edit-cost" type="number" step="0.01" value={editCost} onChange={(e) => setEditCost(e.target.value)} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-url">Product URL</Label>
+              <Input id="edit-url" type="url" value={editUrl} onChange={(e) => setEditUrl(e.target.value)} />
+            </div>
+            <Button type="submit" className="w-full" disabled={submitting}>
+              {submitting ? "Saving..." : "Save Changes"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Product</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Are you sure you want to delete <strong>{deleteProduct?.title}</strong>? This action cannot be undone.
+          </p>
+          <div className="flex gap-3 pt-4">
+            <Button variant="outline" className="flex-1" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" className="flex-1" onClick={handleDeleteProduct} disabled={submitting}>
+              {submitting ? "Deleting..." : "Delete"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

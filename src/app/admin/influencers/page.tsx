@@ -22,7 +22,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { UserSearch, Plus, AlertTriangle, ArrowUpDown } from "lucide-react";
+import { UserSearch, Plus, AlertTriangle, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Influencer {
   id: string;
@@ -93,17 +93,21 @@ export default function InfluencersPage() {
   const [newEmail, setNewEmail] = useState("");
   const [newNiche, setNewNiche] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 25;
 
   const fetchInfluencers = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     if (platformFilter !== "all") params.set("platform", platformFilter);
+    params.set("limit", String(pageSize));
+    params.set("offset", String((page - 1) * pageSize));
     const res = await fetch(`/api/admin/influencers?${params}`);
     const data = await res.json();
     setInfluencers(data.influencers || []);
     setTotal(data.total || 0);
     setLoading(false);
-  }, [platformFilter]);
+  }, [platformFilter, page]);
 
   useEffect(() => {
     fetchInfluencers();
@@ -351,6 +355,33 @@ export default function InfluencersPage() {
                 })}
               </TableBody>
             </Table>
+          )}
+
+          {/* Pagination */}
+          {!loading && total > pageSize && (
+            <div className="flex items-center justify-between pt-4">
+              <p className="text-sm text-muted-foreground">
+                Page {page} of {Math.ceil(total / pageSize)}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage(p => p - 1)}
+                >
+                  <ChevronLeft className="h-4 w-4" /> Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= Math.ceil(total / pageSize)}
+                  onClick={() => setPage(p => p + 1)}
+                >
+                  Next <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

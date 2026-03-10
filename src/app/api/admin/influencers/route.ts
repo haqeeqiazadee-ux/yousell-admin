@@ -11,11 +11,14 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const platform = searchParams.get("platform");
+    const limit = parseInt(searchParams.get("limit") || "50");
+    const offset = parseInt(searchParams.get("offset") || "0");
 
     let query = supabase
       .from("influencers")
       .select("*", { count: "exact" })
-      .order("conversion_score", { ascending: false });
+      .order("conversion_score", { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (platform) query = query.eq("platform", platform);
 
