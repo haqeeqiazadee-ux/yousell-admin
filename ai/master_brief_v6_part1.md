@@ -1969,5 +1969,233 @@ Accessible to `agency_owner` and `super_admin` roles.
 **Source**: `api_usage_log` table with user-friendly UI layer.
 
 ---
-<!-- Section 9: Platform Sections — PENDING -->
+## Section 9 — Three Platform Sections (TikTok / Amazon / Shopify)
+
+### 9.1 — Platform Access by Plan
+
+| Platform | Starter ($49) | Pro ($149) | Agency ($349) | Enterprise |
+|----------|:------------:|:----------:|:------------:|:----------:|
+| TikTok | Yes | Yes | Yes | Yes |
+| Amazon | — | Yes | Yes | Yes |
+| Shopify | — | — | Yes | Yes |
+| Facebook/Instagram Ads | — | — | Yes | Yes |
+| Reddit / Pinterest / Google Trends / YouTube | — | — | Yes | Yes |
+
+Plan-locked sections show: lock icon + "Upgrade to [plan] to access [platform] intelligence" + [View Plans] button.
+
+### 9.2 — TikTok Intelligence (FastMoss-equivalent depth)
+
+**6 sub-pages**, all following demand-driven scraping rules.
+
+#### TikTok Products
+
+| Field | Description | Worker |
+|-------|------------|--------|
+| Product title + image | Top products by GMV | tiktok_discovery_worker |
+| Estimated GMV | Gross merchandise value | tiktok_discovery_worker |
+| Units sold | Total units sold estimate | tiktok_discovery_worker |
+| Trend Score | 0–100 viral momentum | trend_scoring_worker |
+| Lifecycle Stage | Emerging → Peak → Saturated | trend_scoring_worker |
+| Creator count | Unique creators promoting | tiktok_discovery_worker |
+| Category / Niche | Product classification | product_extractor_worker |
+| Country filter | Filter by TikTok region | tiktok_discovery_worker |
+
+**Scrapes on**: Section open (P0 if stale) / Refresh click (P0)
+**Filters**: Niche, country, trend score range, lifecycle stage, date range
+**Sort**: Trend Score, GMV, Units Sold, Newest, Creator Count
+
+#### TikTok Creators
+
+| Field | Description | Worker |
+|-------|------------|--------|
+| Username + avatar | Creator profile | creator_monitor_worker |
+| Follower count | Total followers | creator_monitor_worker |
+| Engagement rate | (likes+comments)/followers × 100 | Computed |
+| Niche | Creator's primary niche | creator_monitor_worker |
+| Est. GMV generated | Total GMV from promoted products | creator_monitor_worker |
+| Top products | Products this creator promotes | creator_product_links |
+| Match Score | Creator-Product Match (for selected product) | Section 10 algorithm |
+
+**Scrapes on**: Section open / Refresh click
+**Filters**: Niche, follower range, engagement rate range, GMV range
+**Sort**: Followers, Engagement Rate, GMV, Match Score
+
+#### TikTok Videos
+
+| Field | Description | Worker |
+|-------|------------|--------|
+| Thumbnail | Video preview image | video_scraper_worker |
+| Creator | Username (linked to creator page) | video_scraper_worker |
+| Views | Total view count | video_scraper_worker |
+| Engagement | Likes + shares + comments | video_scraper_worker |
+| View velocity | Views per hour (current rate) | Computed |
+| Product links | Products detected in video | video_scraper_worker |
+| Organic/Ad | Classification | AI or is_ad flag |
+
+**Scrapes on**: Section open / Refresh click
+**Filters**: View count range, engagement range, organic/ad, date range
+**Sort**: Views, View Velocity, Engagement, Newest
+
+#### TikTok Shops
+
+| Field | Description | Worker |
+|-------|------------|--------|
+| Shop name + logo | TikTok Shop profile | tiktok_discovery_worker |
+| TikTok followers | Shop follower count | tiktok_discovery_worker |
+| Est. GMV/month | Monthly gross merchandise value | tiktok_discovery_worker |
+| Units sold | Total units | tiktok_discovery_worker |
+| Active creator count | Creators promoting for this shop | tiktok_discovery_worker |
+| Product count | Products listed | tiktok_discovery_worker |
+| Growth rate % | Month-over-month | Computed from time-series |
+
+**Scrapes on**: Section open / Refresh click
+**Sort**: GMV, Growth Rate, Creator Count, Followers
+
+#### TikTok Live
+
+| Field | Description | Worker |
+|-------|------------|--------|
+| Stream title | Live stream title | tiktok_live_worker |
+| Creator | Streamer username | tiktok_live_worker |
+| Cumulative viewers | Total unique viewers | tiktok_live_worker |
+| Units sold (live) | Products sold during stream | tiktok_live_worker |
+| Products featured | Products shown/linked | tiktok_live_worker |
+| Duration | Stream length | tiktok_live_worker |
+
+**Scrapes on**: Section open / Refresh click
+**Sort**: Viewers, Units Sold, Duration
+
+#### TikTok Ads
+
+| Field | Description | Worker |
+|-------|------------|--------|
+| Ad creative | Thumbnail/preview | tiktok_ads_worker |
+| Advertiser | Brand/seller name | tiktok_ads_worker |
+| Est. spend | Estimated ad budget | tiktok_ads_worker |
+| Duplication count | Same creative on N accounts | tiktok_ads_worker |
+| Ad run duration | How long active | tiktok_ads_worker |
+| Product linked | Associated product | tiktok_ads_worker |
+| Engagement | Likes + comments on ad | tiktok_ads_worker |
+
+**Scrapes on**: Section open / Refresh click
+**Sort**: Spend, Duplication Count, Duration, Engagement
+
+---
+
+### 9.3 — Amazon Intelligence (JungleScout/Keepa-equivalent depth)
+
+**3 sub-pages.**
+
+#### Amazon Products
+
+| Field | Description | Worker |
+|-------|------------|--------|
+| Product title + image | Amazon product listing | amazon_bsr_scanner_worker |
+| ASIN | Amazon Standard ID | amazon_bsr_scanner_worker |
+| BSR Rank | Best Sellers Rank in category | amazon_bsr_scanner_worker |
+| BSR movement | Rank change over 7d/30d | Computed from time-series |
+| Price | Current price | amazon_bsr_scanner_worker |
+| Review count | Total reviews | amazon_bsr_scanner_worker |
+| Review velocity | New reviews per week | Computed |
+| Est. monthly sales | Estimated units/month | amazon_bsr_scanner_worker |
+| Est. monthly revenue | sales × price | Computed |
+| Trend Score | 0–100 viral momentum | trend_scoring_worker |
+| TikTok cross-signal | Is this product trending on TikTok? | cross_platform_match_worker |
+| Lifecycle Stage | Emerging → Saturated | trend_scoring_worker |
+
+**Scrapes on**: Section open (P0 if stale) / Refresh click (P0)
+**Filters**: Category, BSR range, price range, review count, trend score, lifecycle stage
+**Sort**: BSR Rank, BSR Movement, Revenue, Trend Score, Review Velocity
+
+#### Amazon Rankings
+
+| Field | Description | Worker |
+|-------|------------|--------|
+| Category | Amazon product category | amazon_bsr_scanner_worker |
+| BSR movement chart | Fastest climbing products per category | amazon_bsr_scanner_worker |
+| Top movers | Products with biggest BSR improvement in 7d | Computed |
+| New entrants | Products appearing in BSR top 100 for first time | Computed |
+
+**Scrapes on**: Section open / Refresh click
+**Sort**: BSR Movement (biggest jump), Category
+
+#### Amazon vs TikTok Cross-Signal
+
+| Field | Description | Worker |
+|-------|------------|--------|
+| TikTok product | Product trending on TikTok | cross_platform_match_worker |
+| Amazon ASIN match | Matched Amazon listing | cross_platform_match_worker |
+| Match confidence | How confident the match is | cross_platform_match_worker |
+| TikTok stats | Views, creators, trend score | tiktok_discovery_worker |
+| Amazon stats | BSR, price, reviews, sales | amazon_bsr_scanner_worker |
+| Opportunity signal | TikTok viral but Amazon BSR not yet climbing = opportunity | Computed |
+
+**Scrapes on**: Section open / Refresh click
+
+---
+
+### 9.4 — Shopify Intelligence (PPSPY-equivalent depth)
+
+**3 sub-pages.**
+
+#### Shopify Stores
+
+| Field | Description | Worker |
+|-------|------------|--------|
+| Store name + URL | Shopify store identity | shopify_store_discovery_worker |
+| Niche | Store's primary category | shopify_store_discovery_worker |
+| Est. monthly revenue | Revenue estimate | shopify_growth_monitor_worker |
+| Traffic estimate | Monthly visitors | shopify_growth_monitor_worker |
+| Product count | Total products | shopify_store_discovery_worker |
+| Ad spend signal | Detected advertising activity | shopify_growth_monitor_worker |
+| Growth rate % | Month-over-month revenue growth | Computed |
+| Creator partnerships | Detected creator relationships | cross_platform_match_worker |
+| Tech stack | Detected Shopify apps/themes | shopify_store_discovery_worker |
+
+**Scrapes on**: Section open (P0 if stale) / Refresh click (P0)
+**Filters**: Niche, revenue range, traffic range, growth rate, ad spend
+**Sort**: Revenue, Growth Rate, Traffic, Product Count
+
+#### Store Intelligence (Deep Dive)
+
+Triggered when user clicks a store card.
+
+| Field | Description | Worker |
+|-------|------------|--------|
+| Top products | Best-selling products in store | shopify_store_discovery_worker |
+| Ad analysis | Active ad campaigns detected | facebook_ads_worker |
+| Traffic sources | Organic vs paid vs social estimate | shopify_growth_monitor_worker |
+| Creator partnerships | Linked creator profiles | cross_platform_match_worker |
+| Revenue timeline | 30/60/90 day revenue chart | shopify_growth_monitor_worker |
+| Competitor stores | Similar stores in same niche | Computed (niche match) |
+
+#### Niche Scanner
+
+| Field | Description | Worker |
+|-------|------------|--------|
+| Niche name | Product category / niche | Aggregated from products |
+| New store count | Shopify stores launched this week in niche | shopify_store_discovery_worker |
+| Avg revenue | Average revenue of stores in niche | Computed |
+| Growth trend | Niche growth over 30d | Computed |
+| Saturation signal | How crowded is this niche | saturation_score aggregated |
+| Top stores | Highest revenue stores in niche | Computed |
+
+**Scrapes on**: Section open / Refresh click
+**Sort**: New Store Count, Growth Trend, Avg Revenue
+
+---
+
+### 9.5 — Additional Platform Data Sources
+
+These platforms provide supplementary intelligence and feed into the cross-platform graph. They do not have dedicated dashboard sections but their data appears in product detail (Row 5, Row 6) and niche intelligence.
+
+| Platform | Workers | Data Type | Refresh |
+|----------|---------|-----------|---------|
+| Facebook/Instagram | facebook_ads_worker | Ad creatives, spend estimates, duplication patterns | On demand + idle rotation |
+| Reddit | reddit_trend_worker | Trend signals, product mentions, buying intent threads | Idle rotation only (P2) |
+| Pinterest | pinterest_trend_worker | Trend boards, product saves, traffic signals | Idle rotation only (P2) |
+| Google Trends | google_trends_worker (✓ FIXED: D-1) | Search volume trends, keyword velocity, rising queries | On demand + idle rotation |
+| YouTube | youtube_worker (✓ FIXED: D-1) | Product review videos, affiliate links, channel data | On demand only |
+
+---
 <!-- Section 10: Algorithms — PENDING -->
