@@ -19,32 +19,40 @@
 
 | Platform | Monthly Cost | API? | Per-Query Cost | Product Count | n8n Integration | Verdict |
 |----------|-------------|------|---------------|---------------|----------------|---------|
-| **CJDropshipping** | **$0** | **Yes (REST, documented)** | **Free** | 400K+ | HTTP Request | **PRIMARY** |
-| AliExpress (Apify) | $0 (Apify free tier) + ~$0.004-0.006/result | Via Apify | ~$4-6/1000 products | Millions | Via Apify node | SECONDARY |
+| **CJDropshipping** | **$0** | **Yes (REST, documented)** | **Free (1K req/day)** | Millions | HTTP Request | **PRIMARY** |
+| **AliExpress (Official Affiliate API)** | **$0** | **Yes (REST, free)** | **Free (rate-limited ~5K/day)** | **100M+** | HTTP Request | **CO-PRIMARY** |
+| AliExpress (Apify fallback) | $0 (free tier) + ~$0.004/result | Via Apify | ~$4/1000 products | 100M+ | Via Apify node | FALLBACK |
 | TopDawg | $35/mo (Premier for API) | Yes (gated) | Included | 500K+ US | HTTP Request | REJECTED |
 | Alibaba (Apify) | Apify compute costs | Via Apify | ~$3-5/1000 | Millions (wholesale) | Via Apify node | OPTIONAL (P2) |
 | Spocket | $39/mo+ | Limited | N/A | 100K+ | None | REJECTED |
 | Zendrop | $49/mo+ | Limited | N/A | Unknown | None | REJECTED |
 
-### My Recommendation: CJDropshipping (Primary) + AliExpress via Apify (Secondary)
+### My Recommendation: CJDropshipping + AliExpress Official API (Dual Primary) + Apify Fallback
 
-**Why CJDropshipping wins as primary:**
+**Why CJDropshipping as co-primary:**
 1. **FREE API** with full product search, pricing, and supplier data — no monthly fee
-2. **Well-documented REST API** at developers.cjdropshipping.com with Elasticsearch-powered product search
+2. **Well-documented REST API** at developers.cjdropshipping.com with Elasticsearch-powered product search (v2)
 3. Supports keyword search with filters (price range, category, country)
 4. Returns: product price, shipping costs by destination, supplier info, images, variants
 5. Global warehouses (CN, US, Thailand, Germany, Indonesia) — reduces shipping time estimates
 6. No MOQ — perfect for dropshipping validation
-7. Direct integration via n8n HTTP Request node
+7. Rate limit: 1,000 requests/day (sufficient for ~30-50 product lookups/day)
 
-**Why AliExpress via Apify as secondary:**
-1. Largest product catalog (millions of products)
-2. Apify's free tier ($5/mo credits) covers ~800-1000 product lookups/month
-3. Provides pricing comparison data to validate CJ prices
-4. Multiple scrapers available (sovereigntaylor, epctex, logical_scrapers)
+**Why AliExpress Official Affiliate API as co-primary:**
+1. **FREE API** — still available at portals.aliexpress.com, no subscription fee
+2. Largest product catalog (100M+ products)
+3. Returns: product ID, title, images, variants, prices, discounts, ratings, reviews, shipping info, store info, sales volume
+4. Rate limit: ~5,000 requests/day — generous for automated lookups
+5. Endpoints: `aliexpress.affiliate.productdetail.get`, product search, hot products
+6. Provides pricing comparison data to cross-validate CJ prices
+
+**Apify as fallback (when official APIs fail or for edge cases):**
+1. AliExpress Product Scraper (sovereigntaylor): $0.004/result
+2. Covers scenarios where official API rate limits are hit
+3. Free tier ($5/mo credits) covers ~1,000 product lookups/month
 
 **What I explicitly rejected and why:**
-- **TopDawg ($35/mo):** API gated behind Premier membership. For $35/mo you get API access but limited documentation. CJDropshipping provides the same data for free.
+- **TopDawg ($35-140/mo):** API gated behind Scale/Premier membership ($35-140/mo). While it returns a useful `cost` (wholesale price) field, CJDropshipping + AliExpress provide the same data for free.
 - **Spocket ($39/mo):** No proper API, expensive, smaller catalog. Not worth the cost for approximate price lookups.
 - **Zendrop ($49/mo):** Same issues as Spocket. Premium pricing without premium API access.
 - **Alibaba/1688:** Good for wholesale/MOQ research but not needed for initial cost estimation. Added as optional P2 expansion. Most products found on AliExpress also exist on Alibaba.
@@ -333,9 +341,12 @@ platform weighting, scoring model adjustment
 ```
 Trigger: Webhook from Express backend (product scored >= 60)
 → Extract product title, category, price range
-→ CJDropshipping API: Search by keyword
-  → If found: extract price, shipping, variants
-  → If not found: fallback to Apify AliExpress scraper
+→ PARALLEL:
+  → CJDropshipping API: Search by keyword → extract price, shipping, variants
+  → AliExpress Affiliate API: Search by keyword → extract price, ratings, sales volume
+→ IF both found: use lowest price, cross-reference data
+→ IF only one found: use available source
+→ IF neither found: fallback to Apify AliExpress scraper
 → Store results in product_costs table via Supabase
 → Trigger W2 via webhook
 ```
