@@ -1353,3 +1353,82 @@ app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), asyn
 4. Excess team members: admin must remove to reach new limit before downgrade takes effect
 
 ---
+
+## Section 15 — Missing SaaS Features (Now Added)
+
+This section provides a consolidated index of all 18 missing SaaS features from Phase 3, showing where each is fully specified in v6.0.
+
+### 15.1 — Feature Resolution Index
+
+| ID | Feature | Priority | Primary Section | Supporting Sections | Status |
+|----|---------|----------|----------------|--------------------|---------|
+| S-1 | Onboarding empty states / time-to-value | P0 | Section 6.7 (Onboarding Flow) | Section 8.5 (Loading & Empty States) | RESOLVED |
+| S-2 | Loading skeleton states | P1 | Section 8.5 (Loading & Empty States) | — | RESOLVED |
+| S-3 | WCAG accessibility | P1 | Section 8.11 (Accessibility) | Section 4.5 (badge hex values) | RESOLVED |
+| S-4 | Notification preferences | P1 | Section 8.7 (Notification Centre) | Section 11.5 (notification_preferences table) | RESOLVED |
+| S-5 | Bulk actions on product lists | P1 | Section 8.8 (Bulk Actions) | Section 13.3 (POST /api/products/bulk-action) | RESOLVED |
+| S-6 | Saved views / custom filters | P2 | Section 8.10 (Saved Views) | Section 11.4 (saved_views table), Section 13.6 | RESOLVED |
+| S-7 | Help centre / contextual tooltips | P0 | Section 8.14 (Help & Tooltips) | — | RESOLVED |
+| S-8 | Data retention visibility | P1 | Section 6.11 (GDPR: Data Retention) | — | RESOLVED |
+| S-9 | Team invitation / multi-user | P0 | Section 6.3 (Team Invitation Flow) | Section 11.1 (invitations table), Section 13.9 | RESOLVED |
+| S-10 | Activity log for team admins | P2 | Section 8.15 (Activity Log) | Section 13.9 (GET /api/team/activity) | RESOLVED |
+| S-11 | External client sharing / portal | P2 | Section 6.12 (Client Sharing) | Section 13.12 (sharing routes) | RESOLVED |
+| S-12 | Failed payment / dunning flow | P0 | Section 14.6 (Dunning Flow) | Section 6.8 (Stripe Webhooks) | RESOLVED |
+| S-13 | Plan upgrade/downgrade proration | P1 | Section 14.7 (Upgrade/Downgrade Logic) | — | RESOLVED |
+| S-14 | Annual plan option | P2 | Section 1.4 (Revenue Model) | Section 14.2 (Pricing Structure) | RESOLVED |
+| S-15 | Referral programme | P3 | Section 6.8 (mentioned) | Section 11.6 (referrals table) | RESOLVED |
+| S-16 | Product archiving / dismissal | P1 | Section 8.9 (Archiving & Dismissal) | Section 11.4 (product_user_status table) | RESOLVED |
+| S-17 | Changelog / "What's New" | P3 | Section 8.13 (What's New) | — | RESOLVED |
+| S-18 | Keyboard shortcuts | P3 | Section 8.12 (Keyboard Shortcuts) | — | RESOLVED |
+
+### 15.2 — Additional SaaS Features (from v5, now enhanced)
+
+| Feature | v5 Definition | v6 Enhancement |
+|---------|--------------|----------------|
+| Global Search (Cmd+K) | "Supabase full-text search (pg_trgm)" | tsvector columns, GIN indexes, debounce, grouped results, Typesense fallback (Section 8.6) |
+| Audit Log | "Enterprise/Agency — api_usage_log table" | Expanded to team activity feed with filters (Section 8.15) |
+| Notification Centre | "Bell icon, in-app" | Per-category preferences, digest frequency, global mute, webhook delivery (Section 8.7) |
+| Data Export | "CSV, Excel, PDF" | Per-plan export limits, bulk export, agency branded PDF reports (Sections 13.11, Section 3 Moat 6) |
+| Comparison Mode | "Select 2-4 products, compare side-by-side" | POST /api/products/compare route defined (Section 13.3) |
+| Trend History Charts | "90-day trend score history chart" | GET /api/products/:id/trend-history route, trend_scores time-series (Section 13.3) |
+| Competitor Niche Map | "Bubble chart: demand × competition × creator adoption" | Extended by Niche Intelligence Engine (★ NEW: MN-2, Section 3.3) |
+| Creator Outreach CRM | "Identified → Email Sent → Replied → Deal Closed" | Full 3-email sequence, Resend webhooks, anti-spam, analytics dashboard (Section 3, Moat 5) |
+| Webhook Integration | "User-configured webhook → external automations" | webhook_configs table, HMAC signatures, test endpoint (Sections 11.7, 13.14) |
+| Mobile Responsive | "Fully usable on tablet and mobile" | Tailwind responsive utilities, mobile-first Opportunity Feed, touch targets (unchanged from v5) |
+
+### 15.3 — Implementation Priority Matrix
+
+**Phase 1 Build** (P0 features — launch blockers):
+
+| Feature | Effort | Dependency |
+|---------|--------|-----------|
+| S-1: Onboarding empty states | Small | Requires skeleton components |
+| S-7: Contextual tooltips | Small | No dependencies |
+| S-9: Team invitations | Medium | Requires auth + invitations table |
+| S-12: Dunning flow | Medium | Requires Stripe webhooks |
+
+**Phase 2 Build** (P1 features — within 30 days of launch):
+
+| Feature | Effort | Dependency |
+|---------|--------|-----------|
+| S-2: Skeleton loading | Small | No dependencies |
+| S-3: WCAG accessibility | Medium | Applies to all UI components |
+| S-4: Notification preferences | Small | Requires notification_preferences table |
+| S-5: Bulk actions | Medium | Requires product list component |
+| S-8: Data retention visibility | Small | Settings page |
+| S-13: Proration logic | Medium | Requires Stripe integration |
+| S-16: Product archiving | Small | Requires product_user_status table |
+
+**Phase 3+ Build** (P2/P3 features):
+
+| Feature | Effort | Notes |
+|---------|--------|-------|
+| S-6: Saved views | Medium | After core product list is stable |
+| S-10: Activity log | Small | Uses existing api_usage_log |
+| S-11: Client sharing | Medium | Agency-only feature |
+| S-14: Annual plans | Small | Stripe configuration only |
+| S-15: Referral programme | Medium | Tracking + reward logic |
+| S-17: Changelog | Small | External content + modal |
+| S-18: Keyboard shortcuts | Small | react-hotkeys or similar |
+
+---
