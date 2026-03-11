@@ -560,7 +560,283 @@ Shows users historical trends they would have caught with YouSell.
 `★ NEW: MN-5 — historical proof of value, gets better over time`
 
 ---
-<!-- Section 4: Smart Scraping — PENDING -->
+## Section 4 — Smart Scraping Engine
+
+### 4.1 — Core Principle: Demand-Driven Architecture
+
+YouSell NEVER scrapes on fixed schedules (with one documented exception — the Predictive Engine). All scraping is triggered by user actions or system events.
+
+**Why**: Always-on scraping costs $800–$2,000/month before a single user signs up. Demand-driven scraping reduces costs by ~85% and ensures budget is spent on data users actually view.
+
+### 4.2 — Three Scraping Triggers
+
+| Trigger | When It Fires | Priority | Cost Impact |
+|---------|--------------|----------|-------------|
+| 1. User Click (On-Demand) | User opens a section, clicks a product, or clicks Refresh button | Immediate — P0 | Minimal: only what user viewed |
+| 2. Alert Threshold Breach | A product's trend_score or predictive_score crosses a configured alert threshold | Immediate — P1 | Targeted: only the triggered product |
+| 3. Idle Background Refresh | No user has clicked anything in the last 3 hours | Low priority — P2 | Controlled: one platform per cycle |
+
+**Exception — Proactive Intelligence Workers** (`✓ FIXED: D-10`):
+
+The `predictive_discovery_worker` runs on a 2-hour schedule because pre-trend detection requires proactive analysis — you can't wait for a user to click on a product that hasn't trended yet. This is the **only** scheduled worker that makes external API calls. It is classified as a "Proactive Intelligence Worker" — a named exception to the demand-driven model.
+
+The `daily_briefing_worker` (★ NEW: MN-3) runs once daily per tenant. It reads internal data only (no external API calls) and sends one Anthropic call per tenant.
+
+### 4.3 — On-Demand Scraping Flow
+
+```
+User opens section → Frontend calls GET /api/{platform}/products?trigger=view
+→ API checks Redis: data_freshness:{platform}:products:{tenant_id}
+→ IF age < 3h: return cached DB data (LIVE badge)
+→ IF age ≥ 3h: enqueue SCRAPE job (P0), return stale data + freshness badge
+→ Worker runs in background
+→ Worker calls checkBudget() → if budget OK → calls external API
+→ Raw data → validation layer → raw_listings → transformation → products table
+→ Scoring engine runs
+→ Supabase Realtime pushes fresh data to page when done
+→ Page updates: stale rows replaced, freshness badge updated to LIVE
+```
+
+When user clicks a product card:
+```
+→ Frontend calls GET /api/products/:id?trigger=click
+→ API checks freshness of ALL 7 intelligence chain rows for this product
+→ Each stale row → enqueue targeted scrape job for that row only
+→ Fresh rows → return from DB immediately
+→ Page renders with mix of fresh + stale data
+→ Stale rows show [Updating...] spinner
+→ Supabase Realtime updates each row as workers complete
+```
+
+### 4.4 — Idle Background Refresh (3-Hour Cycle)
+
+```
+Scheduler runs every 15 minutes, checks if refresh is due:
+IF last_user_activity > 3 hours ago:
+    SELECT platform FROM scrape_schedule
+    WHERE tenant_id = :tenant_id
+    ORDER BY last_scraped_at ASC LIMIT 1
+    → Enqueue ONE platform refresh job at LOW priority (P2)
+    → Log to scrape_log: { platform, trigger: 'idle_3h', cost_estimate }
+```
+
+**Rotation order** (`✓ FIXED: D-8`): TikTok → Amazon → Shopify → Facebook/Instagram → Reddit → Pinterest → Google Trends → repeat
+
+- Each idle refresh scrapes only **top-50 products** per platform (not full catalogue)
+- Google Trends and YouTube are **excluded** from idle rotation (low-frequency data; refreshed on user demand only)
+- Max data staleness: 3h × 7 platforms = ~21h without user interaction (in practice, user clicks refresh much sooner)
+
+### 4.5 — Data Freshness System
+
+| Age | Badge | Colour | Hex | User Action |
+|-----|-------|--------|-----|-------------|
+| < 3 hours | LIVE | Green | #22C55E | None needed |
+| 3–6 hours | RECENT | Blue | #3B82F6 | Optional: click Refresh |
+| 6–24 hours | STALE | Amber | #F59E0B | Refresh recommended |
+| > 24 hours | OUTDATED | Red | #EF4444 | Refresh required badge shown |
+| Refreshing now | UPDATING | Pulsing blue | #3B82F6 pulse | Spinner shown, data loads live via Realtime |
+
+`★ NEW: Hex colour values added for developer implementation. All colours pass WCAG AA contrast on white background (✓ FIXED: S-3 partial).`
+
+### 4.6 — Three-Queue Architecture
+
+`✓ FIXED: D-14 — priority-based queues are canonical. CLAUDE.md's functional queue names (scan_jobs, transform_jobs, scoring_jobs) are retired.`
+
+| Queue | BullMQ Priority | Concurrency | Max Wait Target | Use Case |
+|-------|----------------|-------------|-----------------|----------|
+| P0_queue | priority: 10 | 5 workers simultaneously | < 30 seconds | User-triggered scrapes (section open, product click, refresh) |
+| P1_queue | priority: 5 | 3 workers simultaneously | < 2 minutes | Alert threshold breaches, predictive engine |
+| P2_queue | priority: 1 | 1 worker at a time | Can take hours | Idle background refresh, low-priority enrichment |
+| dead_letter_queue | — | — | — | Failed jobs after 3 retries. Logged + admin alerted. Never silently dropped. |
+
+**Job Deduplication** (`✓ FIXED: T-7`):
+
+```typescript
+// Deterministic job IDs prevent duplicate scrapes
+const jobId = `scrape:${platform}:${resource}:${tenantId}`
+
+await queue.add('scrape', jobData, {
+    jobId,           // BullMQ skips if job with same ID is queued/active
+    priority,
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 2000 }
+})
+
+// If a higher-priority job arrives for same resource,
+// promote the existing job:
+const existingJob = await queue.getJob(jobId)
+if (existingJob && existingJob.opts.priority < newPriority) {
+    await existingJob.promote()
+}
+```
+
+### 4.7 — Cost Budget System
+
+Every worker making external API calls MUST call `checkBudget()` before each request.
+
+```typescript
+async function checkBudget(workerName: string): Promise<boolean> {
+    const key = `budget:${workerName}:${today()}`
+    const used = await redis.get(key) || 0
+    const limit = WORKER_BUDGETS[workerName]
+    if (used >= limit) {
+        await sendAlert(`Worker ${workerName} hit daily budget limit`)
+        return false // worker pauses, job → dead_letter_queue
+    }
+    await redis.incr(key)
+    await redis.expire(key, 86400) // reset daily
+    return true
+}
+```
+
+**Complete Worker Budget Table** (`✓ FIXED: D-7 — expanded from 6 to all external-calling workers`):
+
+| # | Worker | Daily Budget | API | Est. Daily Cost |
+|---|--------|-------------|-----|-----------------|
+| 1 | tiktok_discovery_worker | 500 calls | Apify / RapidAPI | ~$2.50 |
+| 2 | hashtag_scanner_worker | 200 calls | TikTok unofficial API | ~$1.00 |
+| 3 | creator_monitor_worker | 200 calls | Apify | ~$1.00 |
+| 4 | video_scraper_worker | 300 calls | Apify | ~$1.50 |
+| 5 | tiktok_live_worker | 100 calls | RapidAPI | ~$0.50 |
+| 6 | tiktok_ads_worker | 150 calls | TikTok Ads API | ~$0.75 |
+| 7 | amazon_bsr_scanner_worker | 150 calls | Amazon PA API | ~$0.75 |
+| 8 | shopify_store_discovery_worker | 100 calls | Apify | ~$0.50 |
+| 9 | shopify_growth_monitor_worker | 80 calls | Apify | ~$0.40 |
+| 10 | facebook_ads_worker | 200 calls | Apify | ~$1.00 |
+| 11 | reddit_trend_worker | 100 calls | Reddit API | Free (API) |
+| 12 | pinterest_trend_worker | 100 calls | Pinterest API | Free (API) |
+| 13 | google_trends_worker | 50 calls | SerpAPI | ~$0.50 |
+| 14 | youtube_worker | 100 calls | YouTube Data API | Free (quota) |
+| 15 | predictive_discovery_worker | 50 calls | Anthropic API | ~$1.50 |
+| 16 | platform_profitability_scorer | 30 calls | Anthropic API | ~$0.90 |
+| 17 | daily_briefing_worker | 100 calls (1/tenant) | Anthropic API | ~$3.00 |
+| | **TOTAL** | | | **~$15.80/day** |
+
+`★ NEW: Workers #13, #14, #17 added. All workers now have budgets. (✓ FIXED: D-1, D-7)`
+
+**Monthly Anthropic Spend Cap** (`✓ FIXED: T-15`):
+- Global cap: $500/month (configurable)
+- Per-feature caps: outreach email generation = plan limit (5/mo Pro, 50/mo Agency), AI summaries = 100/day, AI rationales cached (regenerate only when inputs change by >5 points)
+- Circuit breaker: at 90% of monthly cap, all non-P0 Anthropic calls paused. Admin alerted.
+
+### 4.8 — Canonical Worker Registry
+
+`✓ FIXED: D-2 — definitive worker count with clear categorisation`
+
+**Total workers: 21** (14 scraping + 5 intelligence + 2 system)
+
+| # | Worker | Category | Trigger | Priority | External API |
+|---|--------|----------|---------|----------|-------------|
+| 1 | tiktok_discovery_worker | Scraping | User opens TikTok section / idle 3h | P0 or P2 | Apify / RapidAPI |
+| 2 | hashtag_scanner_worker | Scraping | Fires with discovery worker | P0 or P2 | TikTok unofficial API |
+| 3 | creator_monitor_worker | Scraping | User expands Influencers row | P0 or P2 | Apify |
+| 4 | video_scraper_worker | Scraping | User opens Videos page / product click | P0 | Apify |
+| 5 | tiktok_live_worker | Scraping | User opens Live page | P0 | RapidAPI |
+| 6 | tiktok_ads_worker | Scraping | User opens Ads page | P0 or P2 | TikTok Ads API |
+| 7 | amazon_bsr_scanner_worker | Scraping | User opens Amazon section / idle 3h | P0 or P2 | Amazon PA API |
+| 8 | shopify_store_discovery_worker | Scraping | User opens Shopify section / idle 3h | P0 or P2 | Apify |
+| 9 | shopify_growth_monitor_worker | Scraping | Fires with store discovery | P0 or P2 | Apify |
+| 10 | facebook_ads_worker | Scraping | User opens Ads Intelligence page / idle 3h | P0 or P2 | Apify |
+| 11 | reddit_trend_worker | Scraping | Idle refresh rotation only | P2 | Reddit API |
+| 12 | pinterest_trend_worker | Scraping | Idle refresh rotation only | P2 | Pinterest API |
+| 13 | google_trends_worker | Scraping | User views demand data / idle refresh | P0 or P2 | SerpAPI |
+| 14 | youtube_worker | Scraping | User views YouTube data on product | P0 | YouTube Data API |
+| 15 | product_extractor_worker | Intelligence | Fires after any scrape completes | P0 or P1 | Internal only |
+| 16 | amazon_tiktok_match_worker | Intelligence | Fires after product_extractor completes | P1 | Internal only |
+| 17 | cross_platform_match_worker | Intelligence | Fires after any product scrape completes | P1 | Internal only |
+| 18 | trend_scoring_worker | Intelligence | Fires after any data scrape completes | P1 | Internal only |
+| 19 | predictive_discovery_worker | Intelligence (Proactive) | Every 2h via scheduler | P1 | Anthropic API |
+| 20 | platform_profitability_scorer | Intelligence | User views Best Platform row | P0 | Anthropic API |
+| 21 | system_health_monitor_worker | System | Always-on (lightweight) | Always | Internal only |
+
+`★ NEW: Workers #13 (google_trends), #14 (youtube), #17 (cross_platform_match) added (✓ FIXED: D-1, D-15)`
+
+### 4.9 — External API Error Handling
+
+`✓ FIXED: T-1, T-2 — error handling was entirely absent for external APIs`
+
+#### Apify Error Handling
+
+| Failure Mode | Detection | Response | Recovery |
+|-------------|-----------|----------|----------|
+| Actor run timeout | Apify status: TIMED_OUT | Log to scrape_log, retry with 2× timeout | 3 retries → dead_letter_queue |
+| Apify service down | HTTP 5xx or connection refused | Circuit breaker opens (5 failures in 5 min) | Surface stale data + "Service temporarily unavailable" badge. Retry after 15 min. |
+| Partial data returned | Dataset item count < expected minimum | Accept with `quality: 'partial'` flag in raw_listings | Process available data, log warning, schedule retry at P2 |
+| Empty dataset | Dataset item count = 0 | Log as anomaly, do NOT overwrite existing data | Retry once at P1, then dead_letter_queue |
+| Rate limited | HTTP 429 | Exponential backoff: 2s, 4s, 8s, 16s | Decrement budget counter (rate limit still costs a call) |
+| Actor deprecated | Apify returns deprecation warning | Alert admin immediately | Manual intervention required — swap actor ID |
+
+#### RapidAPI Error Handling
+
+| Failure Mode | Detection | Response | Recovery |
+|-------------|-----------|----------|----------|
+| Rate limited (429) | HTTP 429 | Backoff + budget decrement | Wait for rate limit window reset |
+| Quota exceeded | HTTP 429 + quota header | Halt worker for rest of day | Alert admin, resume next day |
+| Response format change | Zod validation failure | Quarantine raw data, don't write to products | Alert admin — API schema may have changed |
+| Service outage | HTTP 5xx | Circuit breaker (same as Apify) | Stale data + badge |
+
+#### Redis Failure Handling (`✓ FIXED: T-4`)
+
+| Component | Failure Mode | Response |
+|-----------|-------------|----------|
+| Freshness check | Redis unreachable | Treat data as stale → return DB data with STALE badge |
+| Budget check | Redis unreachable | **Fail-safe: REFUSE the API call** (never fail-open on budget) |
+| BullMQ job enqueue | Redis unreachable | Return stale data from DB + "Background refresh unavailable" message. Retry connection with backoff. |
+
+#### Supabase Failure Handling (`✓ FIXED: T-5`)
+
+| Component | Failure Mode | Response |
+|-----------|-------------|----------|
+| Database | Unreachable | Show cached data if any available in Redis/local cache. Disable write operations. Surface clear error. |
+| Auth | Unreachable | Existing JWT tokens remain valid until expiry. Show maintenance banner. |
+| Realtime | Disconnected | Fall back to polling every 30 seconds. Show "Live updates unavailable" indicator. |
+
+### 4.10 — Data Validation Layer
+
+`✓ FIXED: T-8 — no validation existed between raw scrape and DB`
+
+```
+Raw API Response
+    ↓
+Step 1: Schema Validation (Zod)
+    → Validate required fields present
+    → Validate field types (string, number, date)
+    → Reject records with missing required fields → quarantine table
+    ↓
+Step 2: Data Sanitisation
+    → HTML strip all text fields (prevent XSS)
+    → Normalise currencies to USD (if price field present)
+    → Trim whitespace, normalise unicode
+    ↓
+Step 3: Range Checks
+    → Prices: > 0 and < 100,000
+    → Scores: 0–100
+    → Counts: >= 0
+    → Dates: not in future, not before 2020
+    → Out-of-range → quarantine with reason
+    ↓
+Step 4: Write to raw_listings (preserves original)
+    ↓
+Step 5: Transform to product/creator/video schema
+    ↓
+Step 6: Upsert to target table
+```
+
+**Quarantine table**:
+```sql
+data_quarantine (
+    id uuid PK,
+    tenant_id uuid NOT NULL,
+    source_worker text NOT NULL,
+    raw_data jsonb NOT NULL,
+    failure_reason text NOT NULL,
+    failure_step text NOT NULL,  -- 'schema', 'sanitise', 'range', 'transform'
+    created_at timestamptz DEFAULT now(),
+    resolved_at timestamptz      -- null until manually reviewed
+)
+```
+
+---
 <!-- Section 5: Tech Stack — PENDING -->
 <!-- Section 6: Auth & Compliance — PENDING -->
 <!-- Section 7: Intelligence Chain — PENDING -->
