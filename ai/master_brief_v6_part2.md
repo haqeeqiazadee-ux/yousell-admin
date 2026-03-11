@@ -1761,3 +1761,258 @@ async function nightlyCleanup(tenantId: string) {
 | 4 | 66–85 | Agency/enterprise + launch | M-6, MN-5, T-10, S-11, S-15 |
 
 ---
+
+## Section 18 — Development Guardrails (Updated)
+
+Original 14 guardrails from v5, plus 8 new guardrails from Phase 2/3 findings.
+
+### Original Guardrails (1–14)
+
+| # | Rule | Requirement |
+|---|------|------------|
+| 1 | No scraping in API routes | API endpoints NEVER scrape. Worker → DB → API reads DB. Always. |
+| 2 | No always-on scraping | Workers fire on P0/P1/P2 queue jobs only. Exception: predictive_discovery_worker (documented proactive worker — Section 4.2). |
+| 3 | Budget check before every external call | Every worker must call `checkBudget()` before any Apify/RapidAPI/Anthropic/SerpAPI request. No exceptions. |
+| 4 | Freshness badge on every data view | Every page and every product card must show 'Last updated: X ago'. No exceptions. Include hex colours from Section 4.5. |
+| 5 | Audit before modify | Read every file completely before modifying it. Never overwrite blindly. |
+| 6 | No duplicate workers | Check `/system/worker_map.md` before creating any worker. Canonical registry: Section 12.1 (21 workers). |
+| 7 | `tenant_id` on all tables | Every data table must include `tenant_id`. Supabase RLS must enforce isolation. Application middleware must also enforce (belt-and-suspenders — Section 6.4). |
+| 8 | Update STATUS.json after every task | STATUS.json is the session recovery anchor. See Section 19 for format. |
+| 9 | Commit after every task | `git add -A && git commit -m 'feat(phaseX): [task]'` after every completed task. |
+| 10 | No .env commits | `.env` and `.env.local` stay in `.gitignore`. Never commit secrets. |
+| 11 | Chain parity | TikTok, Amazon, and Shopify product pages must always have identical 7-row chain depth. Row 4 adapts per platform (Section 7). |
+| 12 | Predictive engine is always P1 | `predictive_discovery_worker` is the moat. Never downgrade to P2 or skip. |
+| 13 | Dead-letter queue required | Failed jobs after 3 retries go to `dead_letter_queue` and trigger admin alert. Never silently drop. |
+| 14 | Existing stack only | Do not introduce new infrastructure without explicit instruction from project owner. |
+
+### New Guardrails (15–22) — Added in v6.0
+
+| # | Rule | Requirement | Source Finding |
+|---|------|------------|----------------|
+| 15 | Handle ALL external API failures | Every worker calling an external API must implement: timeout handling, retry with backoff, circuit breaker, dead-letter on exhaustion. See Section 16.1 for the complete error matrix. Never allow a worker to crash silently. | T-1, T-2 |
+| 16 | Validate before write | ALL data entering the database must pass through the Zod validation layer (Section 4.10). Raw data → schema validation → sanitisation → range check → write. Failed validation → quarantine table. | T-8 |
+| 17 | Budget fail-safe on Redis failure | If Redis is unreachable and budget cannot be checked, REFUSE the external API call. Never fail-open on budget. Freshness check can fail-open (treat as stale). | T-4 |
+| 18 | Rate limit all API routes | All Express routes must pass through rate limiting middleware. Limits defined in Section 6.6. Auth routes: 5/15min per IP. Scrape triggers: 10/min per user. | T-12 |
+| 19 | Defence in depth for tenant isolation | RLS is necessary but not sufficient. Application middleware must also check tenant_id on every request. Cross-tenant access attempts must be logged as security events. | T-11 |
+| 20 | Anthropic API spend control | All Anthropic calls must check monthly spend cap before executing. Cache AI rationales — regenerate only when inputs change by >5 points. Monthly cap: $500 with circuit breaker at 90%. | T-15 |
+| 21 | GDPR-compliant data handling | Creator outreach: publicly listed emails only + unsubscribe link. User deletion: cascade across all 32 tables. Data retention: enforce nightly cleanup per Section 16.7. | T-16 |
+| 22 | Canonical worker count is 21 | The worker registry in Section 12.1 is the source of truth. 14 scraping + 5 intelligence + 2 system = 21 total. Do not create new workers without updating Section 12.1 and `/system/worker_map.md`. | D-2 |
+
+---
+
+## Section 19 — Session Continuity Protocol & STATUS.json
+
+### 19.1 — Context Files (read on every session start)
+
+| Order | File | Purpose | Critical? |
+|-------|------|---------|-----------|
+| 1 | `system/STATUS.json` | Machine-readable state — read FIRST | YES |
+| 2 | `system/development_log.md` (tail -50) | Human-readable progress log | YES |
+| 3 | `system/system_architecture.md` | Full architecture reference | YES |
+| 4 | `system/database_schema.md` | DB structure including tenant_id and RLS | YES |
+| 5 | `system/worker_map.md` | All 21 workers: existing vs planned vs triggered-how | YES |
+| 6 | `system/ai_logic.md` | Scoring algorithms and Anthropic API usage | YES |
+| 7 | `system/scrape_schedule.md` | Current scraping trigger config and budget status | YES |
+| 8 | `ai/YOUSELL_MASTER_BUILD_BRIEF_v6.md` | Complete build spec reference | Reference |
+
+### 19.2 — STATUS.json Schema (v6.0)
+
+```json
+{
+    "last_updated": "2026-03-11T10:00:00Z",
+    "schema_version": "6.0",
+    "current_phase": 0,
+    "current_phase_name": "Infrastructure & Auth",
+    "last_completed_task": "description of last completed task",
+    "next_task": "description of next task to do",
+    "phase_progress": {
+        "0": "IN_PROGRESS",
+        "1": "NOT_STARTED",
+        "2": "NOT_STARTED",
+        "3": "NOT_STARTED",
+        "4": "NOT_STARTED"
+    },
+    "workers_implemented": [],
+    "tables_migrated": [],
+    "routes_implemented": [],
+    "blockers": [],
+    "infrastructure": {
+        "redis_connected": false,
+        "bullmq_configured": false,
+        "supabase_schema_migrated": false,
+        "auth_configured": false,
+        "stripe_configured": false,
+        "resend_configured": false
+    },
+    "smart_scraping_implemented": false,
+    "auth_implemented": false,
+    "billing_implemented": false,
+    "notes": "Phase 0 starting. Read YOUSELL_MASTER_BUILD_BRIEF_v6.md for full specs."
+}
+```
+
+### 19.3 — Session Start Protocol
+
+Every new Claude Code session must execute:
+
+```bash
+# 1. Read state
+cat system/STATUS.json
+
+# 2. Read recent progress
+tail -50 system/development_log.md
+
+# 3. Read architecture
+cat system/system_architecture.md
+
+# 4. Read schema
+cat system/database_schema.md
+
+# 5. Read worker map
+cat system/worker_map.md
+
+# 6. Read AI logic
+cat system/ai_logic.md
+
+# 7. Read scrape schedule
+cat system/scrape_schedule.md
+```
+
+Then print a recovery summary:
+
+```
+=== YOUSELL SESSION RECOVERY ===
+Phase: [current_phase] — [current_phase_name]
+Last completed: [last_completed_task]
+Next task: [next_task]
+Workers: [X/21] implemented
+Tables: [X/32] migrated
+Routes: [X/91] implemented
+Blockers: [list or "none"]
+================================
+```
+
+### 19.4 — Task Completion Ritual
+
+After completing any task:
+
+```bash
+# 1. Update STATUS.json
+# - Set last_completed_task
+# - Set next_task
+# - Update arrays (workers_implemented, tables_migrated, etc.)
+# - Update phase_progress if phase changed
+
+# 2. Append to development log
+echo "[$(date)] feat(phase${PHASE}): ${TASK_DESCRIPTION}" >> system/development_log.md
+
+# 3. Commit
+git add -A && git commit -m "feat(phase${PHASE}): ${TASK_DESCRIPTION}"
+```
+
+---
+
+## Section 20 — Claude Code Master Execution Prompt v6.0
+
+This prompt is **completely self-contained**. When pasted cold into Claude Code with no other context, it provides enough information to start or resume development.
+
+---
+
+```
+You are building the YOUSELL Intelligence Platform — a multi-tenant SaaS that provides cross-platform ecommerce product intelligence across TikTok, Amazon, and Shopify.
+
+## What You're Building
+
+A platform that replaces 5+ tools (FastMoss, JungleScout, PPSPY, Minea, Helium 10) with:
+- Cross-platform product discovery + AI-powered scoring
+- Pre-trend predictive engine (detects products 3-7 days before viral breakout)
+- Creator-product matching + automated outreach
+- Agency intelligence reports
+- Product lifecycle prediction
+
+## Tech Stack
+
+- Frontend: Next.js 14 (App Router) + Tailwind + shadcn/ui → Netlify (frontend only)
+- Backend: Node.js + Express → Railway (ALL API routes, workers, Redis)
+- Database: Supabase PostgreSQL (32 tables + 1 MV, RLS on all)
+- Queue: Redis + BullMQ (P0/P1/P2 priority lanes)
+- Auth: Supabase Auth (JWT, 15-min expiry)
+- Scraping: Apify Actors + RapidAPI + SerpAPI + YouTube API
+- AI: Anthropic API (claude-sonnet-4-6)
+- Email: Resend
+- Billing: Stripe
+- Workers: 21 total (14 scraping + 5 intelligence + 2 system)
+
+## Architecture
+
+Smart Scraping = DEMAND-DRIVEN (never always-on):
+1. User clicks → P0 scrape if data stale (>3h)
+2. Alert breach → P1 targeted scrape
+3. Idle 3h → P2 one-platform refresh (rotation)
+Exception: predictive_discovery_worker runs every 2h (proactive, documented exception)
+
+Data flow: User Action → API → Redis freshness check → BullMQ job → Worker → checkBudget() → External API → Zod validation → raw_listings → Transform → products table → Scoring → Supabase Realtime → UI update
+
+Every product shows 7-row intelligence chain (identical across all platforms):
+Row 1: Identity | Row 2: Stats | Row 3: Influencers | Row 4: Marketplace Presence | Row 5: Other Channels | Row 6: Videos & Ads | Row 7: Best Platform Recommendation
+
+## Session Start Protocol
+
+Run these 7 commands first:
+1. cat system/STATUS.json
+2. tail -50 system/development_log.md
+3. cat system/system_architecture.md
+4. cat system/database_schema.md
+5. cat system/worker_map.md
+6. cat system/ai_logic.md
+7. cat system/scrape_schedule.md
+
+Print recovery summary, then continue with next_task from STATUS.json.
+
+## Immutable Rules
+
+1. API routes NEVER scrape. Workers scrape → DB → API reads DB.
+2. No always-on scraping. Workers fire via BullMQ only. Exception: predictive engine.
+3. checkBudget() before EVERY external API call. No exceptions.
+4. Freshness badge on EVERY data view. No exceptions.
+5. tenant_id on ALL tables. RLS + middleware enforcement.
+6. Validate ALL data (Zod) before DB write. Failed → quarantine table.
+7. Handle ALL external API failures: timeout → retry → circuit breaker → dead_letter.
+8. Redis budget check fail → REFUSE call (never fail-open).
+9. Rate limit ALL API routes.
+10. Predictive engine is ALWAYS P1. Never downgrade.
+11. Dead-letter failed jobs. Never silently drop.
+12. Chain parity: all platforms show identical 7-row depth.
+13. Update STATUS.json after every task. Commit after every task.
+14. 21 workers canonical. Check worker_map.md before creating new ones.
+15. No .env commits. No new infrastructure without explicit permission.
+
+## Current Development Phases
+
+Phase 0 (Days 1-5): Infrastructure + Auth
+Phase 1 (Days 6-25): TikTok MVP + Predictive Engine + Core UX
+Phase 2 (Days 26-45): Amazon + Shopify + Cross-Platform Graph
+Phase 3 (Days 46-65): AI Features + Outreach + Billing
+Phase 4 (Days 66-85): Agency/Enterprise + Launch
+
+## Full Spec Reference
+
+For detailed specs (DB schema, worker details, API routes, algorithms, error handling):
+→ Read: ai/YOUSELL_MASTER_BUILD_BRIEF_v6.md
+
+## API Keys Available
+
+ANTHROPIC_API_KEY, APIFY_API_TOKEN, RAPIDAPI_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY, REDIS_URL, RESEND_API_KEY, AMAZON_PA_API_KEY, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
+
+Still needed: SERPAPI_KEY, REDDIT_CLIENT_ID/SECRET, YOUTUBE_API_KEY
+
+## Execution Loop
+
+1. Run session start protocol (7 reads)
+2. Print recovery summary
+3. Execute next_task from STATUS.json
+4. After task: update STATUS.json + development_log.md + git commit
+5. Repeat step 3
+```
+
+---
