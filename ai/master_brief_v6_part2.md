@@ -782,3 +782,175 @@ CREATE POLICY "User scoped" ON {table_name}
 | **TOTAL** | **32** | + 1 materialised view |
 
 ---
+
+## Section 12 — Worker System
+
+`✓ FIXED: D-1 — Google Trends + YouTube workers now defined. D-2 — canonical count is 21. D-15 — cross_platform_match_worker now defined.`
+
+### 12.1 — Worker Registry (21 Workers)
+
+#### Scraping Workers (14) — Make External API Calls
+
+| # | Worker | Trigger | Queue | Daily Budget | External API | Input | Output Table |
+|---|--------|---------|-------|-------------|-------------|-------|-------------|
+| 1 | `tiktok_discovery_worker` | User opens TikTok section / idle 3h | P0 or P2 | 500 | Apify / RapidAPI | TikTok region, niche filters | products, shops |
+| 2 | `hashtag_scanner_worker` | Fires with discovery worker | P0 or P2 | 200 | TikTok unofficial API | Trending hashtag list | products (tags enrichment) |
+| 3 | `creator_monitor_worker` | User expands Influencers row / Row 3 | P0 or P2 | 200 | Apify | Product ID or niche | creators, creator_product_links |
+| 4 | `video_scraper_worker` | User opens Videos page / product click | P0 | 300 | Apify | Product ID, creator IDs | videos |
+| 5 | `tiktok_live_worker` | User opens TikTok Live page | P0 | 100 | RapidAPI | TikTok region | videos (is_live = true) |
+| 6 | `tiktok_ads_worker` | User opens TikTok Ads page / idle 3h | P0 or P2 | 150 | TikTok Ads API | Product keywords, category | ads |
+| 7 | `amazon_bsr_scanner_worker` | User opens Amazon section / idle 3h | P0 or P2 | 150 | Amazon PA API | Category, ASIN list | products, trend_scores |
+| 8 | `shopify_store_discovery_worker` | User opens Shopify section / idle 3h | P0 or P2 | 100 | Apify | Niche, keyword | shops, products |
+| 9 | `shopify_growth_monitor_worker` | Fires with store discovery | P0 or P2 | 80 | Apify | Shop IDs from discovery | shops (revenue, traffic updates) |
+| 10 | `facebook_ads_worker` | User opens Ads Intelligence / idle 3h | P0 or P2 | 200 | Apify | Product keywords, category | ads |
+| 11 | `reddit_trend_worker` | Idle refresh rotation only | P2 | 100 | Reddit API (free) | Subreddit list, keywords | products (trend signals) |
+| 12 | `pinterest_trend_worker` | Idle refresh rotation only | P2 | 100 | Pinterest API (free) | Trend categories | products (trend signals) |
+| 13 | `google_trends_worker` | User views demand data / idle refresh | P0 or P2 | 50 | SerpAPI | Product keywords | trend_scores (search volume) |
+| 14 | `youtube_worker` | User views YouTube data on product | P0 | 100 | YouTube Data API (free quota) | Product keywords, ASIN | videos (platform = 'youtube') |
+
+#### Intelligence Workers (5) — Internal Processing + AI API
+
+| # | Worker | Trigger | Queue | External API | Input | Output |
+|---|--------|---------|-------|-------------|-------|--------|
+| 15 | `product_extractor_worker` | After any scrape completes | P0 or P1 | None (internal) | raw_listings records | products (normalised), niche_tags |
+| 16 | `amazon_tiktok_match_worker` | After product_extractor completes | P1 | None (internal) | products with platform = 'tiktok' or 'amazon' | product_platform_matches |
+| 17 | `cross_platform_match_worker` | After any product scrape completes | P1 | None (internal) | All products across platforms | product_platform_matches |
+| 18 | `trend_scoring_worker` | After any data scrape completes | P1 | None (internal) | products, videos, shops, ads, creator_product_links | trend_scores, niches (aggregation) |
+| 19 | `predictive_discovery_worker` | Every 2h via scheduler (Proactive) | P1 | Anthropic API (50 calls/day) | trend_scores, predictive_signals, creator_product_links | predictive_signals |
+
+#### System Workers (2)
+
+| # | Worker | Trigger | Queue | External API | Purpose |
+|---|--------|---------|-------|-------------|---------|
+| 20 | `platform_profitability_scorer` | User views Best Platform row (Row 7) | P0 | Anthropic API (30 calls/day) | Generates platform_scores + AI rationale |
+| 21 | `system_health_monitor_worker` | Always-on (lightweight loop) | Always | None | Checks queue depth, worker status, Redis health. Fires alerts. |
+
+### 12.2 — Worker Execution Template
+
+Every worker follows this execution template:
+
+```typescript
+async function executeWorker(jobData: WorkerJobData): Promise<void> {
+    const { tenantId, platform, resource, trigger, priority } = jobData
+    const workerName = 'worker_name_here'
+
+    // Step 1: Log start
+    const logId = await logToScrapeLog({
+        tenant_id: tenantId, worker_name: workerName,
+        trigger_type: trigger, platform, status: 'started'
+    })
+
+    try {
+        // Step 2: Budget check (external workers only)
+        if (EXTERNAL_WORKERS.includes(workerName)) {
+            const budgetOk = await checkBudget(workerName)
+            if (!budgetOk) {
+                await updateScrapeLog(logId, { status: 'dead_lettered', error_message: 'Budget exhausted' })
+                throw new BudgetExhaustedError(workerName)
+            }
+        }
+
+        // Step 3: Fetch data from external API
+        const rawData = await fetchFromApi(jobData)
+
+        // Step 4: Validate (Zod schema)
+        const validated = WorkerSchema.parse(rawData)
+
+        // Step 5: Sanitise
+        const sanitised = sanitiseData(validated)
+
+        // Step 6: Store raw data
+        await supabase.from('raw_listings').insert({
+            tenant_id: tenantId, platform, worker_name: workerName,
+            raw_json: rawData, quality: rawData.length < EXPECTED_MIN ? 'partial' : 'full'
+        })
+
+        // Step 7: Transform + upsert
+        const records = transformToSchema(sanitised)
+        await upsertRecords(records, tenantId)
+
+        // Step 8: Update freshness
+        await redis.set(`data_freshness:${platform}:${resource}:${tenantId}`, Date.now(), 'EX', 86400)
+
+        // Step 9: Trigger downstream workers
+        await enqueueDownstream(workerName, tenantId, records)
+
+        // Step 10: Broadcast update via Supabase Realtime
+        await supabase.channel(`tenant:${tenantId}:dashboard`).send({
+            type: 'broadcast', event: 'data_updated',
+            payload: { table: resource, count: records.length }
+        })
+
+        // Step 11: Log success
+        await updateScrapeLog(logId, {
+            status: 'success', duration_ms: Date.now() - startTime,
+            records_processed: records.length
+        })
+
+    } catch (error) {
+        // Step 12: Error handling (see Section 16 for full error matrix)
+        await handleWorkerError(error, logId, jobData)
+    }
+}
+```
+
+### 12.3 — Worker Dependency Chain
+
+```
+User action triggers scrape
+    ↓
+[tiktok_discovery / amazon_bsr / shopify_store / etc.] (scraping worker)
+    ↓
+product_extractor_worker (normalise raw → products table)
+    ↓ (parallel)
+├── amazon_tiktok_match_worker (TikTok ↔ Amazon matching)
+├── cross_platform_match_worker (all-platform matching)
+├── trend_scoring_worker (compute scores + lifecycle + niche aggregation)
+│       ↓
+│   [IF predictive_score > 65 AND product_age < 7d]
+│       → Fire P1 alert job
+│       → Notify subscribed users
+│
+└── [IF user is viewing product detail]
+    └── platform_profitability_scorer (Row 7, Anthropic API)
+```
+
+### 12.4 — Downstream Worker Triggers
+
+| After Worker Completes | Trigger These Workers |
+|----------------------|---------------------|
+| Any scraping worker (#1–14) | product_extractor_worker (#15) |
+| product_extractor_worker (#15) | amazon_tiktok_match_worker (#16), cross_platform_match_worker (#17), trend_scoring_worker (#18) |
+| trend_scoring_worker (#18) | [Check alert thresholds → fire notifications if breached] |
+| platform_profitability_scorer (#20) | [None — terminal worker] |
+| predictive_discovery_worker (#19) | [Check pre-trend thresholds → fire P1 alerts] |
+
+### 12.5 — Worker Failure Handling
+
+| Failure Type | Detection | Response | Max Retries | Dead Letter? |
+|-------------|-----------|----------|-------------|-------------|
+| External API timeout | Request timeout > 30s | Retry with 2× timeout | 3 | Yes |
+| External API 429 | HTTP 429 response | Exponential backoff: 2s, 4s, 8s, 16s | 4 | Yes (if all retries fail) |
+| External API 5xx | HTTP 500-599 | Circuit breaker (5 failures in 5 min) | 3 | Yes |
+| Empty dataset | 0 records returned | Do NOT overwrite existing data. Log anomaly. | 1 retry | Yes |
+| Partial dataset | < expected_min records | Accept with quality='partial' flag | 0 (accept as-is) | No |
+| Zod validation failure | Schema parse throws | Quarantine to data_quarantine table | 0 | No (quarantined) |
+| Budget exhausted | checkBudget() returns false | Halt worker, log, alert admin | 0 | Yes |
+| Anthropic API error | HTTP error or malformed response | Retry with backoff, fall back to cached response | 2 | Yes |
+| Supabase write failure | DB error | Retry once, then dead-letter | 1 | Yes |
+
+**BullMQ retry configuration** (per worker):
+
+```typescript
+{
+    attempts: 3,
+    backoff: {
+        type: 'exponential',
+        delay: 2000  // 2s, 4s, 8s
+    },
+    removeOnComplete: { count: 1000 },  // keep last 1000 completed
+    removeOnFail: { count: 5000 }       // keep last 5000 failed (for debugging)
+}
+```
+
+---
