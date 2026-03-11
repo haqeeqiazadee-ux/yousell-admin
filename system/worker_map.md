@@ -4,10 +4,21 @@
 
 ---
 
+## Existing Infrastructure
+
+**Location:** `/backend/` directory
+**Server:** Express on port 4000 (`backend/src/index.ts`)
+**Queue:** BullMQ with Redis (`scan` queue) via `backend/src/lib/queue.ts`
+**Existing Worker:** `backend/src/worker.ts` — processes scan jobs for TikTok, Amazon, Shopify, Pinterest, Trends
+**Existing Libs:** `backend/src/lib/providers.ts`, `backend/src/lib/scoring.ts`, `backend/src/lib/email.ts`, `backend/src/lib/supabase.ts`
+
+**New workers MUST be added to `/backend/src/` — extend the existing BullMQ setup.**
+
 ## Worker Registry
 
 | Worker | Engine | Status | Queue Name | Schedule |
 |--------|--------|--------|------------|----------|
+| scan_worker (EXISTING) | Multi-platform Scan | BUILT | scan | On demand |
 | tiktok_discovery_worker | TikTok Discovery | NOT BUILT | tiktok:discovery | Every 10 min |
 | hashtag_scanner_worker | TikTok Discovery | NOT BUILT | tiktok:hashtags | Every 30 min |
 | video_scraper_worker | TikTok Discovery | NOT BUILT | tiktok:videos | Every 10 min |

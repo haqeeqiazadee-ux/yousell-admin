@@ -58,27 +58,35 @@ EXISTING TECH STACK (DO NOT CHANGE)
 =============================================================================
 
 Frontend:     Next.js 14 + React 18 + Tailwind CSS 3 → Netlify
-Backend:      Next.js API Routes (Node.js) → Netlify
+Backend API:  Next.js API Routes → Netlify (dashboard/CRUD endpoints)
+Backend Svc:  Express + BullMQ → Railway (scan/worker endpoints at /backend/)
 Database:     Supabase (PostgreSQL)
-Workers:      Railway (background services)
-Queue:        Redis + BullMQ (TO BE ADDED)
-Email:        Resend
+Queue:        Redis + BullMQ (ALREADY EXISTS in /backend/src/lib/queue.ts)
+Workers:      BullMQ Workers (EXISTING scan worker at /backend/src/worker.ts)
+Email:        Resend (ALREADY EXISTS in /backend/src/lib/email.ts)
 AI:           Anthropic (Claude) — cost-controlled
 Scraping:     Apify actors + ScrapeCreators + RapidAPI
 
+CRITICAL: The /backend/ directory already has Express + BullMQ + Redis.
+  - backend/src/index.ts — Express server (port 4000)
+  - backend/src/worker.ts — BullMQ scan worker
+  - backend/src/lib/ — queue, supabase, providers, scoring, email
+
+All new workers MUST be added to /backend/src/, NOT to the Next.js app.
+DO NOT rebuild the queue system — EXTEND the existing one.
 DO NOT reconnect services that are already connected.
-DO NOT change the tech stack unless a critical issue requires it.
 
 =============================================================================
 DEVELOPMENT PHASES (Execute in order)
 =============================================================================
 
-Phase 1: Infrastructure Foundation
-  → Redis + BullMQ queue system
+Phase 1: Infrastructure Enhancement (BullMQ already exists at /backend/)
+  → Add new queues for each engine (extend existing scan queue)
   → Worker base class with retry/heartbeat
   → Job scheduler with configurable intervals
   → Worker health monitoring
-  Files: src/lib/queue/*, src/lib/workers/base-worker.ts
+  → Create job_schedules and worker_health tables
+  Files: backend/src/lib/scheduler.ts, backend/src/lib/base-worker.ts, backend/src/workers/
 
 Phase 2: TikTok Intelligence Engine
   → tiktok_discovery_worker, video_scraper_worker, product_extractor_worker

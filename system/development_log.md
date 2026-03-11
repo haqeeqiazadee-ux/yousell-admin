@@ -31,12 +31,17 @@
 
 **Existing code audited:**
 - 22 admin pages (dashboard, products, tiktok, amazon, shopify, etc.)
-- 21 API routes
+- 27+ API routes (Next.js) + Express backend API routes
 - Scoring system (composite, viral, trend, profit, influencer)
 - Provider configuration (18 providers)
 - Auth middleware, Supabase client, components
+- **IMPORTANT DISCOVERY:** `/backend/` directory already has Express + BullMQ + Redis + scan worker
+  - `backend/src/index.ts` — Express server with auth, rate limiting
+  - `backend/src/worker.ts` — BullMQ scan worker (TikTok, Amazon, Shopify, Pinterest, Trends)
+  - `backend/src/lib/` — queue, supabase, providers, scoring, email utilities
+  - BullMQ and ioredis already installed as dependencies
 
-**Next step:** Phase 1 — Infrastructure Foundation (Redis/BullMQ queue system)
+**Next step:** Phase 1 — Infrastructure Enhancement (extend existing BullMQ with scheduled jobs + new worker types)
 
 ---
 

@@ -110,37 +110,47 @@ Into **one unified analytics dashboard** at `admin.yousell.online`.
 
 | Issue | Current | Required |
 |-------|---------|----------|
-| Scraping location | Inside API routes | Background workers via queue |
-| Job scheduling | None | Redis + BullMQ with configurable intervals |
-| Worker isolation | None | Separate Railway services per worker type |
+| Scraping location | Scan worker handles it via BullMQ | Expand with dedicated workers per engine |
+| Job scheduling | On-demand scan only | Add scheduled recurring jobs per engine |
+| Worker isolation | Single scan worker handles all platforms | Separate workers per intelligence engine |
 | Caching | None | Redis cache for repeated queries |
-| Rate limiting | None | Per-provider rate limit management |
-| Error handling | Basic | Retry logic with exponential backoff |
-| Data pipeline | Direct | Discovery → Scrape → Extract → Cluster → Score → Serve |
+| Rate limiting | Express rate limiter exists | Add per-provider rate limit management |
+| Error handling | Basic try/catch | Add retry logic with exponential backoff |
+| Data pipeline | Scan → Score → Store | Discovery → Scrape → Extract → Cluster → Score → Serve |
+
+**IMPORTANT:** The project already has a working Express + BullMQ + Redis backend at `/backend/`. This includes:
+- Express server with auth, rate limiting, CORS (`backend/src/index.ts`)
+- BullMQ scan worker that scrapes TikTok, Amazon, Shopify, Pinterest (`backend/src/worker.ts`)
+- Provider system, scoring, email, Supabase libs (`backend/src/lib/`)
+
+**New workers must extend the existing `/backend/` setup, NOT be built from scratch.**
 
 ---
 
 ## 3. EXECUTION PHASES
 
-### Phase 1: Infrastructure Foundation (Priority: CRITICAL)
-**Goal:** Set up the queue system and worker architecture
+### Phase 1: Infrastructure Enhancement (Priority: CRITICAL)
+**Goal:** Extend existing queue system with scheduled jobs and multiple worker types
 
-Tasks:
-1. Install Redis + BullMQ dependencies
-2. Create `src/lib/queue/` — queue connection, job definitions
-3. Create `src/lib/workers/` — worker base class with retry/error handling
-4. Set up Redis connection (Railway add-on or Upstash)
-5. Create job scheduler with configurable intervals
-6. Create `/admin/settings/scheduler` — UI to configure job timing
-7. Add worker health monitoring endpoint
+**Already exists (DO NOT REBUILD):**
+- BullMQ queue connection (`backend/src/lib/queue.ts`)
+- Scan worker (`backend/src/worker.ts`)
+- Express server with auth (`backend/src/index.ts`)
+- Provider system (`backend/src/lib/providers.ts`)
 
-**Files to create:**
+**Tasks:**
+1. Add new BullMQ queues for each intelligence engine (alongside existing `scan` queue)
+2. Create a job scheduler service that adds recurring jobs on configurable intervals
+3. Create `job_schedules` and `worker_health` tables in Supabase
+4. Create `/admin/settings/scheduler` — UI to configure job timing
+5. Add worker health monitoring endpoint to Express server
+6. Add base worker class with retry/heartbeat logic
+
+**Files to create (in /backend/src/):**
 ```
-src/lib/queue/connection.ts
-src/lib/queue/jobs.ts
-src/lib/queue/scheduler.ts
-src/lib/workers/base-worker.ts
-src/lib/workers/worker-registry.ts
+backend/src/lib/scheduler.ts        — recurring job scheduler
+backend/src/lib/base-worker.ts      — base class with retry/heartbeat
+backend/src/workers/                — new worker directory
 ```
 
 ### Phase 2: TikTok Intelligence Engine (Priority: HIGH)

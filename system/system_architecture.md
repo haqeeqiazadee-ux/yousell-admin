@@ -9,32 +9,52 @@
 ```
 User Browser
      ↓
-Admin Dashboard (Next.js on Netlify)
+Admin Dashboard (Next.js 14 on Netlify)
      ↓
-API Layer (Next.js API Routes)
-     ↓                    ↓
-Supabase (PostgreSQL)    Redis Queue (BullMQ)
-     ↑                    ↓
-     └──── Railway Workers ──→ External APIs
-                                  ├── Apify (TikTok, Amazon, Shopify scraping)
-                                  ├── ScrapeCreators (TikTok Shop)
-                                  ├── RapidAPI (Amazon fallback)
-                                  ├── Facebook Ad Library
-                                  ├── Ainfluencer / Modash / HypeAuditor
-                                  └── Alibaba / CJ Dropshipping / Faire
+┌──────────────────────────────────────────────┐
+│  Next.js API Routes        Express Backend   │
+│  (Netlify serverless)      (Railway :4000)   │
+│  - Dashboard endpoints     - POST /api/scan  │
+│  - CRUD operations         - GET /api/scan/* │
+│  - Auth routes             - Job queue mgmt  │
+└──────────┬──────────────────────┬────────────┘
+           ↓                      ↓
+    Supabase (PostgreSQL)    Redis Queue (BullMQ)
+           ↑                      ↓
+           └──── BullMQ Worker (Railway) ──→ External APIs
+                                               ├── Apify (TikTok, Amazon, Shopify, Pinterest)
+                                               ├── ScrapeCreators (TikTok Shop)
+                                               ├── RapidAPI (Amazon fallback)
+                                               ├── Facebook Ad Library
+                                               ├── Ainfluencer / Modash / HypeAuditor
+                                               └── Alibaba / CJ Dropshipping / Faire
 ```
+
+## EXISTING BACKEND (DO NOT REBUILD)
+
+The project has a **dedicated Express backend** at `/backend/` with:
+- **Express server** (`backend/src/index.ts`) — auth middleware, rate limiting, CORS, helmet
+- **BullMQ scan queue** (`scan` queue name) with Redis connection
+- **Scan worker** (`backend/src/worker.ts`) — processes scan jobs, scrapes platforms, scores products, sends alerts
+- **Provider system** (`backend/src/lib/providers`) — scrapePlatform(), fetchTrends()
+- **Scoring** (`backend/src/lib/scoring`) — composite score calculation
+- **Email** (`backend/src/lib/email`) — scan alerts, product alerts via Resend
+- **Supabase client** (`backend/src/lib/supabase`)
+- Deployed on **Railway** (port 4000)
+
+**New workers MUST be added to `/backend/`, NOT the Next.js app.**
 
 ## 10 Intelligence Engines
 
 | # | Engine | Status | Priority |
 |---|--------|--------|----------|
-| 1 | TikTok Discovery Engine | Partial (page exists, no workers) | HIGH |
-| 2 | Product Extraction Engine | Partial (scoring exists) | HIGH |
+| 1 | TikTok Discovery Engine | Partial (scan worker scrapes TikTok, page exists) | HIGH |
+| 2 | Product Extraction Engine | Partial (scoring exists, scan worker extracts) | HIGH |
 | 3 | Product Clustering Engine | Not started | HIGH |
-| 4 | Trend Detection Engine | Partial (algorithms exist) | HIGH |
-| 5 | Creator Matching Engine | Partial (scoring exists) | MEDIUM |
-| 6 | Amazon Intelligence Engine | Stub page only | MEDIUM |
-| 7 | Shopify Intelligence Engine | Stub page only | MEDIUM |
+| 4 | Trend Detection Engine | Partial (algorithms + trend fetcher exist) | HIGH |
+| 5 | Creator Matching Engine | Partial (scoring exists, no dedicated worker) | MEDIUM |
+| 6 | Amazon Intelligence Engine | Partial (scan worker scrapes Amazon, stub page) | MEDIUM |
+| 7 | Shopify Intelligence Engine | Partial (scan worker scrapes Shopify, stub page) | MEDIUM |
 | 8 | Ad Intelligence Engine | Not started | MEDIUM |
 | 9 | Opportunity Feed Engine | Not started | HIGH |
 | 10 | System Health Monitor | Not started | MEDIUM |
