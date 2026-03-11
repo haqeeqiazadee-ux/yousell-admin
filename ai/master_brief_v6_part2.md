@@ -1628,3 +1628,136 @@ async function nightlyCleanup(tenantId: string) {
 ```
 
 ---
+
+## Section 17 — Development Phases (Revised)
+
+`✓ FIXED: D-3 — phase ordering revised to respect moat priorities and dependencies`
+
+### Phase 0 — Infrastructure & Auth (Days 1–5)
+
+**Goal**: All infrastructure running, auth working, first API route returning data.
+
+| Task | Dependency | Complexity | Addresses |
+|------|-----------|-----------|-----------|
+| Set up Railway: Redis + BullMQ P0/P1/P2 queues | None | Medium | Core infrastructure |
+| Run Supabase schema migrations (all 32 tables + MV) | None | Medium | Section 11 |
+| Apply RLS policies to all tables | Schema migrations | Small | Section 11.9, T-11 |
+| Set up Supabase Auth: email, Google OAuth, magic links | Supabase | Small | Section 6.4 |
+| Express backend with JWT middleware + tenant enforcement | Auth | Medium | Section 6.4, T-11 |
+| Redis freshness tracking + budget enforcement middleware | Redis | Medium | Section 4.5, 4.7 |
+| API rate limiting middleware | Redis | Small | T-12 |
+| Health check endpoint (`/api/health`) | All services | Small | T-9 |
+| Data validation layer (Zod schemas per worker) | None | Medium | T-8 |
+| Create `/system/` context files + STATUS.json | None | Small | Section 19 |
+
+### Phase 1 — TikTok MVP + Predictive Engine + Core UX (Days 6–25)
+
+**Goal**: Working FastMoss-equivalent with pre-trend detection. Usable by first beta users.
+
+| Task | Dependency | Complexity | Addresses |
+|------|-----------|-----------|-----------|
+| Smart scraping trigger system | Phase 0 | High | Section 4 |
+| Workers: tiktok_discovery, hashtag_scanner, creator_monitor, video_scraper | Smart scraping | High | Section 12 |
+| Workers: product_extractor, trend_scoring | Scraping workers | Medium | Section 12 |
+| Worker: predictive_discovery (P1, every 2h) | trend_scoring | High | Section 3 (Moat 1), D-10 |
+| Home dashboard: MV + product cards + stats bar | product_extractor | High | Section 8 |
+| Data freshness badges on all cards/pages | Freshness middleware | Small | Section 4.5 |
+| Idle 3-hour background refresh scheduler | Redis | Medium | Section 4.4 |
+| TikTok section: Products, Creators, Videos, Live, Shops, Ads | Scraping workers | High | Section 9.2 |
+| Product Detail: all 7 chain rows with on-demand scraping | All workers | High | Section 7 |
+| Global search (Cmd+K) with tsvector | Products table | Medium | Section 8.6, T-21 |
+| Notification centre (in-app) | Notifications table | Medium | Section 8.7 |
+| Skeleton loading states | None | Small | S-2 |
+| Onboarding flow + empty states | Auth + first scrape | Medium | S-1, S-7 |
+| Contextual tooltips on scores/badges | None | Small | S-7 |
+| Product archiving / dismissal | product_user_status table | Small | S-16 |
+| Basic team invitations | Auth + invitations table | Medium | S-9 |
+| Cross-platform match worker (foundation) | Products table | Medium | D-15, Moat 2 foundation |
+| Supabase Realtime integration | Supabase | Medium | T-14, T-17 |
+| Error handling for all external APIs | Workers | Medium | T-1, T-2 |
+
+### Phase 2 — Amazon + Shopify + Advanced Intelligence (Days 26–45)
+
+**Goal**: All 3 platforms fully operational with cross-platform intelligence.
+
+| Task | Dependency | Complexity | Addresses |
+|------|-----------|-----------|-----------|
+| Workers: amazon_bsr_scanner, amazon_tiktok_match | Phase 1 workers | Medium | Section 12 |
+| Workers: shopify_store_discovery, shopify_growth_monitor | Phase 1 workers | Medium | Section 12 |
+| Workers: reddit_trend, pinterest_trend (P2 idle only) | Idle scheduler | Small | Section 12 |
+| Workers: google_trends, youtube | Phase 0 infra | Medium | D-1 |
+| Amazon section: Products, Rankings, Cross-Signal | Amazon workers | High | Section 9.3 |
+| Shopify section: Stores, Store Intelligence, Niche Scanner | Shopify workers | High | Section 9.4 |
+| Full cross-platform matching engine | All platform workers | High | M-2, D-15 |
+| Creator-Product Match Score algorithm | Creator data | Medium | M-3 |
+| Product Lifecycle badges (Emerging → Saturated) | Trend scoring + saturation | Medium | MN-1, D-11 |
+| Collaborative annotations (team notes) | annotations table | Medium | MN-4 |
+| Comparison Mode (2-4 products) | Product detail | Medium | v5 feature |
+| Trend history charts (90-day) | trend_scores time-series | Medium | v5 feature |
+| Competitor niche map (bubble chart) | Niche aggregation | Medium | v5 feature |
+| Saved views + custom filters | saved_views table | Medium | S-6 |
+| Bulk actions toolbar | Product list | Medium | S-5 |
+| WCAG accessibility pass | All UI | Medium | S-3 |
+| Notification preferences | notification_preferences table | Small | S-4 |
+| Keyboard shortcuts | UI framework | Small | S-18 |
+
+### Phase 3 — Intelligence Layer + Outreach + Monetisation (Days 46–65)
+
+**Goal**: AI-powered features, creator outreach, and billing live. Revenue-generating.
+
+| Task | Dependency | Complexity | Addresses |
+|------|-----------|-----------|-----------|
+| Worker: platform_profitability_scorer (Anthropic) | All platform data | High | M-4, Section 12 |
+| Workers: facebook_ads, tiktok_ads | Apify | Medium | Section 12 |
+| Best Platform Recommender (Row 7) | Platform profitability scorer | Medium | M-4 |
+| Creator Outreach Engine (3-email sequence) | Creator data + Resend | High | M-5 |
+| Outreach anti-spam compliance | Outreach engine | Small | T-16 |
+| Outreach analytics dashboard | outreach_sequences | Medium | M-5 |
+| Trend Alerts: email + in-app | Alert configs + Resend | Medium | v5 feature |
+| Affiliate Programs discovery | affiliate_programs table | Small | v5 feature |
+| Stripe billing: checkout, portal, metering | Stripe | High | Section 14, T-3 |
+| Free trial lifecycle (14 day) | Stripe + tenant model | Medium | T-18 |
+| Dunning flow (failed payments) | Stripe webhooks | Medium | S-12 |
+| Plan upgrade/downgrade proration | Stripe | Medium | S-13 |
+| Annual plan option | Stripe | Small | S-14 |
+| Data export: CSV, Excel | Products data | Medium | v5 feature |
+| Webhook & Zapier integration | webhook_configs table | Medium | v5 feature |
+| Niche Intelligence Engine | Niche aggregation data | Medium | MN-2 |
+| Daily AI Briefing | All data + Anthropic | Medium | MN-3 |
+| Activity log for team admins | api_usage_log | Small | S-10 |
+| Data retention visibility (settings page) | Retention policies | Small | S-8 |
+
+### Phase 4 — Agency/Enterprise + Launch Readiness (Days 66–85)
+
+**Goal**: Agency and enterprise features. Production-ready.
+
+| Task | Dependency | Complexity | Addresses |
+|------|-----------|-----------|-----------|
+| Agency Intelligence Reports (AI-generated PDF) | Anthropic + @react-pdf/renderer | High | M-6 |
+| Report scheduling (weekly/monthly) | Reports + Resend | Medium | M-6 |
+| Client sharing links (token-based) | Sharing routes | Medium | S-11 |
+| Client portal (enterprise) | Sharing + viewer accounts | Medium | S-11 |
+| White-label: logo, colours, custom domain | brand_config | Medium | v5 feature |
+| Public API: key management, rate limiting, docs | API routes + rate limiting | High | v5 feature |
+| Job Scheduler UI: per-worker control, budget sliders | Admin dashboard | Medium | v5 feature |
+| Trend Replay section | Historical predictive data | Medium | MN-5 |
+| Referral programme | referrals table | Medium | S-15 |
+| Changelog / "What's New" | External content | Small | S-17 |
+| Mobile responsive optimisation | All UI | Medium | v5 feature |
+| Monitoring dashboard (system health) | Health endpoint + logs | Medium | T-9 |
+| Disaster recovery runbook | Documentation | Small | T-10 |
+| Security audit | All code | Medium | T-11, T-16 |
+| Performance testing & optimisation | All systems | Medium | T-6 |
+| Launch: custom domain, Stripe live mode, monitoring | All | Medium | — |
+
+### Phase Summary
+
+| Phase | Days | Key Deliverable | Critical Findings Addressed |
+|-------|------|----------------|---------------------------|
+| 0 | 1–5 | Infrastructure + auth running | T-8, T-9, T-11, T-12 |
+| 1 | 6–25 | TikTok MVP + pre-trend + core UX | D-10, D-12, D-15, T-1, T-2, T-14, T-17, S-1, S-2, S-7, S-9, S-16 |
+| 2 | 26–45 | All platforms + cross-platform intelligence | D-1, D-11, M-2, M-3, MN-1, MN-4, S-3, S-5, S-6 |
+| 3 | 46–65 | AI features + outreach + billing | M-4, M-5, T-3, T-18, S-12, S-13, MN-2, MN-3 |
+| 4 | 66–85 | Agency/enterprise + launch | M-6, MN-5, T-10, S-11, S-15 |
+
+---
