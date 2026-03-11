@@ -2198,4 +2198,248 @@ These platforms provide supplementary intelligence and feed into the cross-platf
 | YouTube | youtube_worker (✓ FIXED: D-1) | Product review videos, affiliate links, channel data | On demand only |
 
 ---
-<!-- Section 10: Algorithms — PENDING -->
+## Section 10 — Intelligence Engine Algorithms
+
+### 10.1 — Overview
+
+YouSell uses 5 scoring algorithms (4 from v5 + 1 new) plus 1 composite score.
+
+| # | Algorithm | Purpose | Computed By | Frequency |
+|---|----------|---------|-------------|-----------|
+| 1 | Trend Score | Measures current viral momentum | trend_scoring_worker | After every data scrape |
+| 2 | Predictive Discovery Score | Detects pre-trend products 3–7 days early | predictive_discovery_worker | Every 2 hours |
+| 3 | Saturation Score (★ NEW) | Measures market saturation level | trend_scoring_worker | After every data scrape |
+| 4 | Creator-Product Match Score | Ranks creator fit for a product | On-demand (Row 3 expand) | On row expand |
+| 5 | Platform Profitability Score | Recommends best selling platform | platform_profitability_scorer | On product click |
+| 6 | Overall Score (composite) | Single ranking score for product cards | Computed in materialised view | On MV refresh |
+
+`✓ FIXED: D-4 — CLAUDE.md's 3-pillar model deprecated. v5's 4-algorithm system is canonical. Saturation Score added (D-11). Overall Score replaces CLAUDE.md's final_score.`
+
+---
+
+### 10.2 — Algorithm 1: Trend Score
+
+**Purpose**: Measures how much viral momentum a product currently has across platforms.
+
+```
+trend_score = CLAMP(0, 100,
+    (view_velocity         × 0.30)
+  + (creator_adoption_rate × 0.25)
+  + (store_adoption_rate   × 0.20)
+  + (engagement_ratio      × 0.15)
+  + (ad_duplication_rate   × 0.10)
+)
+```
+
+**Input Variables**:
+
+| Variable | Definition | Source Table | Computation |
+|----------|-----------|-------------|-------------|
+| view_velocity | Views-per-hour growth rate vs 7-day baseline | `videos` | `(current_hourly_views / avg_hourly_views_7d) × normalisation_factor`. Normalised to 0–100 scale. |
+| creator_adoption_rate | New unique creators posting about product per week | `creator_product_links` | `COUNT(DISTINCT creator_id WHERE created_at > now() - 7d)`. Normalised: 0 = 0, 10+ = 100. |
+| store_adoption_rate | New shops listing same product per week | `shops` + `product_platform_matches` | `COUNT(new_shops_7d)`. Normalised: 0 = 0, 5+ = 100. |
+| engagement_ratio | Engagement quality relative to views | `videos` | `(SUM(likes + comments + shares) / SUM(views)) × 100`. Normalised: 0% = 0, 10%+ = 100. |
+| ad_duplication_rate | Same ad creative appearing across multiple accounts | `ads` | `MAX(duplication_count)`. Normalised: 1 = 0, 5+ = 100. |
+
+**Score Tiers**:
+
+| Tier | Range | Badge | Meaning |
+|------|-------|-------|---------|
+| HOT | >= 75 | Trending | Product has strong viral momentum. High priority opportunity. |
+| WARM | 50–74 | Gaining traction | Moderate momentum. Worth monitoring. |
+| COOL | 25–49 | Low activity | Limited viral signals. Early stage or niche. |
+| COLD | 0–24 | Minimal | No significant viral activity detected. |
+
+**Alert trigger**: trend_score > 75 → fire P1 job to refresh full product chain.
+
+---
+
+### 10.3 — Algorithm 2: Predictive Discovery Score (Pre-Trend)
+
+**Purpose**: Detects products likely to trend in 3–7 days by identifying early signals before mainstream adoption.
+
+```
+predictive_score = CLAMP(0, 100,
+    (creator_burst_signal     × 0.35)
+  + (engagement_velocity      × 0.25)
+  + (store_adoption_velocity  × 0.20)
+  + (ad_creative_replication  × 0.20)
+)
+```
+
+**Input Variables**:
+
+| Variable | Definition | Source Table | Computation |
+|----------|-----------|-------------|-------------|
+| creator_burst_signal | Rapid creator adoption of an unknown product | `creator_product_links` | 3+ new creators post same product in 48h window. Binary → weighted: 3 creators = 60, 5 = 80, 10+ = 100. |
+| engagement_velocity | View rate acceleration beyond normal growth | `videos` (time-series) | Hourly view rate vs 7-day hourly average. Doubling = 80, tripling = 100. Requires baseline data (min 7 days of history). |
+| store_adoption_velocity | Rapid store listings of a product | `shops` + `product_platform_matches` | New stores listing product within 72h. 2 stores = 50, 5+ = 100. |
+| ad_creative_replication | Same ad format appearing across multiple accounts | `ads` | 3+ accounts running same creative format in 72h. 3 = 60, 5 = 80, 10+ = 100. |
+
+**Cold-Start Handling**: Products with < 7 days of history have no baseline for `engagement_velocity`. In this case, velocity weight is redistributed: `creator_burst_signal × 0.45, store_adoption_velocity × 0.30, ad_creative_replication × 0.25`.
+
+**Pre-trend alert fires when**: `predictive_score > 65 AND product_age_days < 7`
+
+**Badge**: "Pre-Trend" (shown on product cards)
+
+**Priority**: ALWAYS run predictive worker at P1. This is the core moat feature. Never downgrade to P2.
+
+**Anthropic API Integration** (see Section 3 for detail):
+- Batch classification of top-scoring products
+- 50 calls/day budget → ~600 product evaluations via batching
+- Anthropic classifies: confidence level, predicted trend timeline, recommended action
+- Results stored in `predictive_signals` table
+
+---
+
+### 10.4 — Algorithm 3: Saturation Score (★ NEW)
+
+`✓ FIXED: D-11 — Saturation Score was in UI and DB but had no algorithm defined`
+
+**Purpose**: Measures how saturated the market is for a given product. High saturation = high competition = lower opportunity.
+
+```
+saturation_score = CLAMP(0, 100,
+    (seller_density         × 0.30)
+  + (new_entrant_rate       × 0.25)
+  + (price_compression      × 0.25)
+  + (ad_density             × 0.20)
+)
+```
+
+**Input Variables**:
+
+| Variable | Definition | Source Table | Computation |
+|----------|-----------|-------------|-------------|
+| seller_density | Number of active sellers relative to market threshold | `shops` + `product_platform_matches` | `(active_seller_count / category_threshold) × 100`. Category thresholds: TikTok Shop = 50, Amazon = 200, Shopify = 100. |
+| new_entrant_rate | Rate of new sellers entering in last 30 days | `shops` (time-series) | `COUNT(new_sellers_30d) / active_seller_count × 100`. Normalised: 0% = 0, 20%+ = 100. |
+| price_compression | Price decrease trend indicating race-to-bottom | `trend_scores` (price time-series) | `MAX(0, (avg_price_30d_ago - avg_price_now) / avg_price_30d_ago × 100)`. Normalised: 0% = 0, 30%+ = 100. |
+| ad_density | Ad creative volume relative to organic content | `ads` + `videos` | `COUNT(ads_30d) / COUNT(total_content_30d) × 100`. Normalised: 0% = 0, 50%+ = 100. |
+
+**Score Tiers**:
+
+| Tier | Range | Meaning |
+|------|-------|---------|
+| Low saturation | 0–30 | Market is wide open. First-mover opportunity. |
+| Moderate | 31–60 | Growing competition. Still viable with differentiation. |
+| High | 61–80 | Crowded market. Margins under pressure. |
+| Oversaturated | 81–100 | Market is flooded. Avoid unless you have a strong moat. |
+
+**Integration with Lifecycle** (★ NEW: MN-1): Saturation score is a key input to the Product Lifecycle Stage badge:
+- Emerging: saturation_score < 30 + product_age < 14d
+- Peak: trend_score > 75 + saturation_score 50–80
+- Saturated: saturation_score > 80
+
+---
+
+### 10.5 — Algorithm 4: Creator-Product Match Score
+
+**Purpose**: Ranks how well a creator fits a specific product for outreach/partnership.
+
+```
+match_score = CLAMP(0, 100,
+    (niche_alignment         × 0.35)
+  + (historical_conversion   × 0.30)
+  + (engagement_rate         × 0.20)
+  + (demographics_fit        × 0.15)
+)
+```
+
+**Input Variables** (`✓ FIXED: M-3 — cold-start and data source gaps resolved`):
+
+| Variable | Definition | Source | Cold-Start Fallback |
+|----------|-----------|--------|-------------------|
+| niche_alignment | Keyword tag overlap between creator bio and product category | `creators.niche_tags` vs `products.category_tags` (keyword matching, not embeddings) | If creator has no tags → score 50 (neutral) |
+| historical_conversion | Past sales generated for similar product categories | `creator_product_links.estimated_sales` | If no history → use category-average conversion rate. New creators default to 50th percentile. |
+| engagement_rate | (likes + comments) / followers × 100 | `creators.engagement_rate` | If unknown → score 50 |
+| demographics_fit | Audience overlap with product target demographic | Apify creator profile scrapes (when publicly available) | If unavailable → weight redistributed: niche_alignment gets 0.45, engagement_rate gets 0.25. demographics_fit = 0 with 0 weight. |
+
+**Outreach threshold**: match_score > 70 → creator appears in outreach recommendation list
+
+---
+
+### 10.6 — Algorithm 5: Platform Profitability Score
+
+**Purpose**: Recommends which platform a product should be sold on, based on margin, demand, and competition.
+
+```
+platform_score[platform] = CLAMP(0, 100,
+    (estimated_margin      × 0.40)
+  + (demand_velocity       × 0.30)
+  + (competition_inverse   × 0.30)
+)
+```
+
+Computed for: TikTok Shop, Amazon, Shopify, Instagram, eBay (when data available).
+
+**Input Variables** (`✓ FIXED: M-4 — all data sources now mapped`):
+
+| Variable | Definition | Data Source Per Platform |
+|----------|-----------|------------------------|
+| estimated_margin | Gross margin estimate | **Cost**: manual input OR AliExpress Apify scrape (Phase 3). **Selling price**: from platform scrape. Margin = (price - cost) / price × 100. If cost unknown → use category average margin. |
+| demand_velocity | Platform-specific demand signal | **TikTok**: view velocity from `videos`. **Amazon**: BSR movement (lower rank = higher demand). **Shopify**: traffic estimate from `shops`. **Google Trends**: search volume from `google_trends_worker`. |
+| competition_inverse | Inverse of competition level | **TikTok**: 100 - (shop_count / threshold × 100). **Amazon**: 100 - (active_sellers / threshold × 100). From BSR data. **Shopify**: 100 - (stores_in_niche / threshold × 100). |
+
+**Anthropic API usage**: 30 calls/day. Generates one-line rationale per product per platform recommendation.
+
+**Caching** (`✓ FIXED: T-15`): AI rationale cached per product. Only regenerated when any input score changes by > 5 points. Eliminates redundant Anthropic calls.
+
+**Output**: Top-ranked platform = recommended platform shown on every product card with badge.
+
+---
+
+### 10.7 — Composite: Overall Score
+
+`✓ FIXED: D-4 — replaces CLAUDE.md's deprecated final_score formula`
+
+**Purpose**: Single ranking score used for sorting product cards on the dashboard and in materialised view.
+
+```
+overall_score = CLAMP(0, 100,
+    (trend_score       × 0.35)
+  + (predictive_score  × 0.25)
+  + (platform_score    × 0.20)   // best platform score
+  + (100 - saturation_score) × 0.20  // inverse: low saturation = higher overall
+)
+```
+
+**Note**: This replaces CLAUDE.md's `final_score = trend_score × 0.40 + viral_score × 0.35 + profit_score × 0.25`. The old formula used undefined variables (`viral_score`, `profit_score`). The new formula uses the actual algorithm outputs defined above.
+
+**CLAUDE.md Update Required**: After v6 is adopted, CLAUDE.md's scoring section must be updated to reference this formula.
+
+**Score Tiers** (for dashboard badges):
+
+| Tier | Range | Badge |
+|------|-------|-------|
+| HOT | >= 80 | Hot Opportunity |
+| WARM | 60–79 | Worth Watching |
+| COOL | 40–59 | Low Priority |
+| COLD | < 40 | Not Recommended |
+
+---
+
+### 10.8 — Anthropic API Budget Summary
+
+`✓ FIXED: T-15 — per-feature Anthropic budget defined`
+
+| Feature | Worker/Trigger | Calls/Day | Est. Cost/Day |
+|---------|---------------|-----------|---------------|
+| Predictive classification | predictive_discovery_worker (every 2h) | 50 | ~$1.50 |
+| Platform recommendation rationale | platform_profitability_scorer (on product click) | 30 | ~$0.90 |
+| Daily intelligence briefing | daily_briefing_worker (1/tenant/day) | 100 (at 100 tenants) | ~$3.00 |
+| Outreach email generation | On user click "Reach Out" | Plan-limited (5 Pro, 50 Agency) | ~$0.50 |
+| Agency report narrative | On report generation | ~10/day (estimate) | ~$0.30 |
+| **TOTAL** | | **~200/day** | **~$6.20/day (~$186/mo)** |
+
+**Monthly cap**: $500 (configurable). Circuit breaker at 90%.
+
+**Caching rules**:
+- Platform rationale: cached until input scores change by > 5 points
+- Daily briefing: no caching (unique per day per tenant)
+- Outreach emails: no caching (unique per creator + product)
+- Report narratives: cached per report section until underlying data changes
+
+---
+
+<!-- END OF PART 1 (Sections 1–10) -->
+<!-- Part 2 (Sections 11–20) continues in Phase 5 -->
