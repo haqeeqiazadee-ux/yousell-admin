@@ -1165,3 +1165,191 @@ Query params: `q` (search term, min 2 chars), `type` (optional: 'products', 'cre
 | **TOTAL** | **91 routes** |
 
 ---
+
+## Section 14 — Subscription Plans & Billing
+
+### 14.1 — Plan Feature Matrix
+
+| Feature | Starter ($49/mo) | Pro ($149/mo) | Agency ($349/mo) | Enterprise (Custom) |
+|---------|:----------------:|:------------:|:---------------:|:------------------:|
+| **Platform Access** | | | | |
+| TikTok Intelligence | Yes | Yes | Yes | Yes |
+| Amazon Intelligence | — | Yes | Yes | Yes |
+| Shopify Intelligence | — | — | Yes | Yes |
+| Facebook/Instagram Ads | — | — | Yes | Yes |
+| Reddit/Pinterest/Google/YouTube | — | — | Yes | Yes |
+| **Limits** | | | | |
+| Products tracked | 500 | 5,000 | 25,000 | Unlimited |
+| Creators tracked | 200 | 2,000 | 10,000 | Unlimited |
+| Trend alerts | 3 | 25 | Unlimited | Unlimited |
+| Saved collections | 10 items | 100 items | Unlimited | Unlimited |
+| Saved views | 3 | 10 | 20 | Unlimited |
+| Team seats | 1 | 3 | 10 | Unlimited |
+| **Intelligence Features** | | | | |
+| Trend Score | Yes | Yes | Yes | Yes |
+| Predictive engine | — | Yes | Yes | Yes |
+| Creator-Product Match | — | Yes | Yes | Yes |
+| Best Platform Recommender | — | — | Yes | Yes |
+| Product Lifecycle badges | — | Yes | Yes | Yes |
+| Niche Intelligence | — | — | Yes | Yes |
+| Cross-platform graph | — | Yes (basic) | Yes (full) | Yes (full) |
+| **Outreach & Reports** | | | | |
+| Creator outreach emails | — | 5/month | 50/month | Unlimited |
+| AI Intelligence Reports | — | — | Yes (branded) | Yes (white-label) |
+| Daily AI Briefing | — | Yes | Yes | Yes |
+| **Data & Export** | | | | |
+| CSV export | Yes | Yes | Yes | Yes |
+| Excel export | — | Yes | Yes | Yes |
+| PDF export | — | — | Yes | Yes |
+| API access | — | — | 1,000 calls/mo | Unlimited |
+| **Collaboration** | | | | |
+| Team annotations | — | Yes | Yes | Yes |
+| Activity log | — | — | Yes | Yes |
+| Client sharing links | — | — | Yes | Yes |
+| Client portal | — | — | — | Yes |
+| **Customisation** | | | | |
+| Custom branding | — | — | Logo + colours | Full white-label |
+| Custom domain | — | — | — | Yes |
+| Webhook integrations | — | — | Yes | Yes |
+| Dedicated support | — | — | Priority email | Dedicated CSM |
+
+### 14.2 — Pricing Structure
+
+| Plan | Monthly | Annual (20% off) | Annual Total |
+|------|---------|-------------------|-------------|
+| Starter | $49/mo | $39/mo | $468/yr |
+| Pro | $149/mo | $119/mo | $1,428/yr |
+| Agency | $349/mo | $279/mo | $3,348/yr |
+| Enterprise | Custom | Custom | Custom |
+
+`★ NEW: Annual billing (S-14)`
+
+### 14.3 — Stripe Integration Architecture
+
+**Stripe Products & Prices**:
+- 1 Stripe Product per plan (Starter, Pro, Agency)
+- 2 Stripe Prices per product (monthly, annual)
+- Enterprise: custom invoicing via Stripe Invoicing
+
+**Checkout Flow**:
+```
+User clicks "Subscribe" → POST /api/billing/checkout
+→ Create Stripe Checkout Session with:
+    - price_id (based on selected plan + billing cycle)
+    - customer_email (from auth)
+    - success_url: /dashboard?checkout=success
+    - cancel_url: /pricing?checkout=cancel
+    - allow_promotion_codes: true
+→ Redirect user to Stripe Checkout
+→ On success: Stripe sends checkout.session.completed webhook
+→ Backend: update tenants.plan, tenants.stripe_customer_id, tenants.stripe_subscription_id
+→ Redirect user to dashboard with success toast
+```
+
+**Customer Portal**:
+```
+User clicks "Manage Billing" → GET /api/billing/portal
+→ Create Stripe Billing Portal Session
+→ Features enabled:
+    - Update payment method
+    - View invoices
+    - Cancel subscription
+    - Switch plan (upgrade/downgrade)
+→ Redirect user to Stripe portal
+```
+
+**Usage Metering** (via Stripe Meters):
+
+| Meter | What It Tracks | Enforcement Point |
+|-------|---------------|-------------------|
+| products_tracked | COUNT(products WHERE tenant_id = :id) | Before product upsert |
+| creators_tracked | COUNT(creators WHERE tenant_id = :id) | Before creator upsert |
+| alerts_active | COUNT(alert_configs WHERE tenant_id = :id AND is_active = true) | Before alert creation |
+| outreach_sent | COUNT(outreach_sequences WHERE tenant_id = :id AND MONTH(sent_at) = current) | Before outreach send |
+| api_calls | COUNT(api_usage_log WHERE tenant_id = :id AND MONTH(created_at) = current) | API rate limiter middleware |
+
+**Enforcement**: Application middleware checks usage against plan limits BEFORE executing the operation. Returns 403 with upgrade prompt if limit reached.
+
+### 14.4 — Webhook Event Handling
+
+`✓ FIXED: T-3 — complete Stripe webhook handling defined`
+
+**Endpoint**: `POST /api/webhooks/stripe`
+
+```typescript
+app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+    // 1. Verify webhook signature
+    const event = stripe.webhooks.constructEvent(
+        req.body, req.headers['stripe-signature'], STRIPE_WEBHOOK_SECRET
+    )
+
+    // 2. Idempotency check
+    const existing = await supabase.from('processed_webhooks')
+        .select('id').eq('event_id', event.id).single()
+    if (existing.data) return res.json({ received: true, duplicate: true })
+
+    // 3. Process event
+    switch (event.type) {
+        case 'checkout.session.completed': await handleCheckoutComplete(event); break
+        case 'invoice.payment_succeeded': await handlePaymentSuccess(event); break
+        case 'invoice.payment_failed': await handlePaymentFailed(event); break
+        case 'customer.subscription.updated': await handleSubscriptionUpdate(event); break
+        case 'customer.subscription.deleted': await handleSubscriptionDeleted(event); break
+    }
+
+    // 4. Record as processed
+    await supabase.from('processed_webhooks').insert({
+        event_id: event.id, event_type: event.type
+    })
+
+    res.json({ received: true })
+})
+```
+
+### 14.5 — Free Trial Lifecycle
+
+`✓ FIXED: T-18`
+
+| Day | Event | Tenant State | Action |
+|-----|-------|-------------|--------|
+| 0 | Signup | `plan: 'trial'`, `plan_status: 'trial'`, `trial_ends_at: +14d` | Full Pro access. No card required. Welcome email. |
+| 7 | Midpoint | No change | Email: "Your trial is halfway. Here's what you've discovered: [stats]." |
+| 12 | Urgent | No change | Email: "2 days left. Upgrade to keep your data." |
+| 14 | Expires | `plan: 'locked'`, `plan_status: 'locked'` | Read-only access. No scrapes, exports, outreach. Banner: "Trial ended. Choose a plan." |
+| 21 | Reminder | No change | Email: "Your data will be archived in 9 days. Upgrade now." |
+| 30 | Archive | `plan_status: 'archived'` | Data moved to cold storage. Account shell preserved. Can reactivate. |
+
+### 14.6 — Dunning Flow (Failed Payments)
+
+`★ NEW: S-12 — P0 launch blocker`
+
+| Day | Trigger | Tenant State | User Experience |
+|-----|---------|-------------|-----------------|
+| 0 | `invoice.payment_failed` | `plan_status: 'past_due'` | Stripe auto-retries. Email: "Payment failed. Update card." + portal link. |
+| 3 | Grace expired | `plan_status: 'grace_expired'` | Full access continues. Email: "Update payment within 4 days." |
+| 7 | Restricted | `plan_status: 'restricted'` | Read-only. No scrapes/exports/outreach. Banner in app. |
+| 14 | Locked | `plan_status: 'locked'` | Login → payment update page. Email: "Account locked. Data preserved 16 more days." |
+| 30 | Archived | `plan_status: 'archived'` | Data archived. Re-activate with new payment. |
+
+### 14.7 — Upgrade/Downgrade Logic
+
+`★ NEW: S-13`
+
+**Upgrade** (e.g., Starter → Pro):
+1. Stripe prorates charge immediately
+2. New plan limits effective immediately
+3. New features available immediately
+4. Confirmation email with new plan summary
+
+**Downgrade** (e.g., Agency → Pro):
+1. Takes effect at end of current billing cycle
+2. Before confirmation, show impact summary:
+   - "Your Agency plan ends on [date]. After that:"
+   - "Shopify Intelligence will be locked"
+   - "20,000 of your 25,000 products will be archived (newest kept)"
+   - "Agency reports will be locked"
+   - "Team seats reduced from 10 to 3 (remove members first)"
+3. Excess data archived (not deleted) — accessible if user re-upgrades
+4. Excess team members: admin must remove to reach new limit before downgrade takes effect
+
+---
