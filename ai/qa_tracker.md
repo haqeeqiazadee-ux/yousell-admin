@@ -11,7 +11,7 @@
 |-------|-------------|--------|-------------|
 | 1 | Read brief + structured summary | COMPLETED | `ai/qa_brief_summary.md` |
 | 2 | Critical review: discrepancies & technical gaps | COMPLETED | `ai/qa_findings_technical.md` |
-| 3 | Critical review: SaaS features & moat gaps | NOT STARTED | `ai/qa_findings_product.md` |
+| 3 | Critical review: SaaS features & moat gaps | COMPLETED | `ai/qa_findings_product.md` |
 | 4 | Produce v6.0 Sections 1–10 | NOT STARTED | `ai/master_brief_v6_part1.md` |
 | 5 | Produce v6.0 Sections 11–20 + merge final | NOT STARTED | `ai/YOUSELL_MASTER_BUILD_BRIEF_v6.md` |
 
@@ -23,6 +23,7 @@
 |------|-------|-------|
 | 2026-03-11 | Phase 1 | Brief summary complete. 14 sections produced. 5 ⚠️ VAGUE items flagged: missing Google Trends/YouTube workers, missing notifications/outreach/webhook DB tables, no dedicated API routes section. |
 | 2026-03-11 | Phase 2 | Technical review complete. Found 15 discrepancies (4 CRITICAL) and 24 technical gaps (4 CRITICAL). 39 total findings. Top issues: no API routes section, CLAUDE.md out of sync with v5, zero error handling for external APIs, security gaps. |
+| 2026-03-11 | Phase 3 | Product review complete. Found 18 missing SaaS features (4 P0 launch blockers), reviewed all 6 moat features, identified 5 new moat opportunities. Top gaps: no team invitations, no dunning flow, no onboarding empty states, no contextual help. |
 
 ---
 
