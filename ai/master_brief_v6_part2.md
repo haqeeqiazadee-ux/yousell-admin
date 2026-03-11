@@ -1432,3 +1432,199 @@ This section provides a consolidated index of all 18 missing SaaS features from 
 | S-18: Keyboard shortcuts | Small | react-hotkeys or similar |
 
 ---
+
+## Section 16 — Error Handling, Monitoring & Disaster Recovery
+
+This section consolidates all error handling, monitoring, and disaster recovery specifications. Much of this content is defined in detail in earlier sections — this section serves as the **complete error handling reference**.
+
+### 16.1 — External Dependency Error Matrix
+
+`✓ FIXED: T-1, T-2, T-3, T-4, T-5 — error handling was entirely absent in v5`
+
+| Dependency | Failure Mode | Detection | Immediate Response | Recovery |
+|-----------|-------------|-----------|-------------------|----------|
+| **Apify** | Actor timeout | Status: TIMED_OUT | Log, retry with 2× timeout | 3 retries → dead_letter |
+| **Apify** | Service down (5xx) | HTTP 5xx / connection refused | Circuit breaker (5 failures/5 min) | Stale data + badge. Retry 15 min. |
+| **Apify** | Partial data | Item count < expected | Accept with `quality: 'partial'` | Process available, schedule P2 retry |
+| **Apify** | Empty dataset | 0 items | Do NOT overwrite existing | Retry once P1, then dead_letter |
+| **Apify** | Rate limited (429) | HTTP 429 | Exponential backoff 2s/4s/8s/16s | Budget decrement |
+| **Apify** | Actor deprecated | Deprecation header | Alert admin immediately | Manual: swap actor ID |
+| **RapidAPI** | Rate limited (429) | HTTP 429 | Backoff + budget decrement | Wait for window reset |
+| **RapidAPI** | Quota exceeded | 429 + quota header | Halt worker for day | Alert admin |
+| **RapidAPI** | Schema change | Zod validation fail | Quarantine raw data | Alert admin |
+| **RapidAPI** | Service outage (5xx) | HTTP 5xx | Circuit breaker | Stale data + badge |
+| **Stripe** | Webhook delivery fail | No event received | — | Stripe auto-retries for 72h |
+| **Stripe** | Duplicate webhook | Same event.id | Idempotency check (processed_webhooks table) | Skip duplicate |
+| **Stripe** | Invalid signature | Signature mismatch | Reject + log security event | — |
+| **Anthropic** | Rate limited (429) | HTTP 429 | Backoff | Retry after window |
+| **Anthropic** | Quota exceeded | HTTP 429 + quota | Circuit breaker for non-P0 calls | Alert admin, use cached responses |
+| **Anthropic** | Malformed response | Parse error | Fall back to cached AI rationale | Retry once |
+| **Resend** | Delivery fail | Webhook: email.bounced | Update outreach_sequences status | Log, don't retry (bad email) |
+| **Resend** | Service down | HTTP 5xx | Queue email for retry | Retry with backoff, max 3 |
+| **Redis** | Freshness check fail | Connection error | Treat data as stale → return DB data | Reconnect with backoff |
+| **Redis** | Budget check fail | Connection error | **REFUSE API call** (fail-safe, never fail-open) | Reconnect with backoff |
+| **Redis** | BullMQ unavailable | Connection error | Return stale DB data + warning message | Reconnect with backoff |
+| **Supabase DB** | Unreachable | Connection error | Cached data if available; clear error message | Reconnect with backoff |
+| **Supabase Auth** | Unreachable | Connection error | Existing JWTs valid until expiry; maintenance banner | Reconnect |
+| **Supabase Realtime** | Disconnected | WebSocket close | Fallback polling every 30s; "Live updates paused" indicator | Auto-reconnect with backoff |
+
+### 16.2 — Circuit Breaker Pattern
+
+Used for all external APIs (Apify, RapidAPI, Anthropic, Resend).
+
+```typescript
+class CircuitBreaker {
+    private failures = 0
+    private lastFailure = 0
+    private state: 'closed' | 'open' | 'half-open' = 'closed'
+
+    private readonly THRESHOLD = 5        // failures to trip
+    private readonly WINDOW = 5 * 60_000  // 5 minutes
+    private readonly COOLDOWN = 15 * 60_000  // 15 minutes before half-open
+
+    async execute<T>(fn: () => Promise<T>): Promise<T> {
+        if (this.state === 'open') {
+            if (Date.now() - this.lastFailure > this.COOLDOWN) {
+                this.state = 'half-open'  // allow one test request
+            } else {
+                throw new CircuitOpenError()
+            }
+        }
+
+        try {
+            const result = await fn()
+            this.reset()
+            return result
+        } catch (error) {
+            this.recordFailure()
+            throw error
+        }
+    }
+
+    private recordFailure() {
+        this.failures++
+        this.lastFailure = Date.now()
+        if (this.failures >= this.THRESHOLD) {
+            this.state = 'open'
+            // Alert admin
+        }
+    }
+
+    private reset() {
+        this.failures = 0
+        this.state = 'closed'
+    }
+}
+```
+
+### 16.3 — Health Check System
+
+`✓ FIXED: T-9`
+
+**Endpoint**: `GET /api/health` (public)
+
+```typescript
+app.get('/api/health', async (req, res) => {
+    const checks = await Promise.allSettled([
+        checkDatabase(),
+        checkRedis(),
+        checkBullMQ()
+    ])
+
+    const services = {
+        database: formatCheck(checks[0]),
+        redis: formatCheck(checks[1]),
+        bullmq: formatCheck(checks[2])
+    }
+
+    const allHealthy = Object.values(services).every(s => s.status === 'up')
+
+    res.status(allHealthy ? 200 : 503).json({
+        status: allHealthy ? 'healthy' : 'degraded',
+        timestamp: new Date().toISOString(),
+        services
+    })
+})
+```
+
+### 16.4 — Alert Rules
+
+| Metric | Warning | Critical | Action |
+|--------|---------|----------|--------|
+| P0 queue depth | > 50 jobs | > 100 jobs | Email admin |
+| P1 queue depth | > 100 jobs | > 200 jobs | Email admin |
+| Worker failure rate | > 5% in 15 min | > 10% in 15 min | Email + pause worker |
+| API p95 response time | > 3 seconds | > 5 seconds | Email admin |
+| Worker budget usage | 80% of daily limit | 100% of daily limit | Email / halt worker |
+| Redis memory | > 75% capacity | > 90% capacity | Email admin |
+| Dead letter queue | > 10 jobs/hour | > 50 jobs/hour | Email admin |
+| Anthropic monthly spend | 80% of cap ($400) | 90% of cap ($450) | Email / circuit breaker |
+| Circuit breaker trips | Any breaker opens | 3+ breakers open | Email admin |
+| Data quarantine volume | > 50 records/day | > 200 records/day | Email admin |
+
+**Alert destinations**: Configurable admin email list. Enterprise: custom Slack webhook.
+
+### 16.5 — Logging Strategy
+
+| Log Type | Destination | Retention | Purpose |
+|----------|------------|-----------|---------|
+| Worker execution | `scrape_log` table | 90 days | Track every worker run: trigger, duration, status, cost |
+| API requests | `api_usage_log` table | 90 days | Track every API call: endpoint, user, response time |
+| Data validation failures | `data_quarantine` table | Until resolved | Track rejected data for review |
+| Security events | `api_usage_log` (action = 'security_event') | 90 days | Cross-tenant access attempts, auth failures |
+| Application errors | Railway logs | 30 days (Railway default) | Unhandled exceptions, stack traces |
+| BullMQ job history | Redis (BullMQ built-in) | 1000 completed / 5000 failed | Job execution history |
+
+### 16.6 — Backup & Disaster Recovery
+
+`✓ FIXED: T-10`
+
+| Component | Strategy | Frequency | Retention |
+|-----------|---------|-----------|-----------|
+| PostgreSQL | Supabase automatic backups + PITR | Continuous (WAL) | 7 days |
+| Redis | Railway RDB snapshots | Hourly | 24 hours |
+| App code | GitHub repository | Every commit | Indefinite |
+| Environment vars | Railway encrypted env | On change | Current only |
+
+**Recovery Targets**:
+- **RTO**: 4 hours (full service restoration)
+- **RPO**: 1 hour (maximum data loss)
+
+**Recovery Procedures**:
+
+| Scenario | Procedure | Estimated Time |
+|----------|----------|---------------|
+| DB corruption | Supabase PITR to last clean state | 1–2 hours |
+| Redis data loss | Ephemeral cache — rebuild from DB. Budgets reset. Queues re-enqueue from scrape_schedule. | 15 minutes |
+| Railway outage | Deploy to backup Railway project (pre-configured) | 30 minutes |
+| Supabase outage | No failover. Display maintenance page. Monitor status. | Dependent on Supabase |
+| Accidental table drop | Supabase PITR | 1 hour |
+
+### 16.7 — Data Retention & Cleanup
+
+`✓ FIXED: T-13`
+
+**Nightly cleanup job** (runs at 03:00 UTC):
+
+```typescript
+async function nightlyCleanup(tenantId: string) {
+    const deletions = {
+        scrape_log: await deleteOlderThan('scrape_log', tenantId, 90),
+        api_usage_log: await deleteOlderThan('api_usage_log', tenantId, 90),
+        notifications: await deleteOlderThan('notifications', tenantId, 30),
+        trend_scores: await deleteOlderThan('trend_scores', tenantId, 90),
+        predictive_signals: await deleteOlderThan('predictive_signals', tenantId, 90),
+        data_quarantine: await deleteResolvedOlderThan('data_quarantine', tenantId, 30),
+        processed_webhooks: await deleteOlderThan('processed_webhooks', null, 30)
+    }
+
+    await logToScrapeLog({
+        worker_name: 'nightly_cleanup',
+        trigger_type: 'system',
+        status: 'success',
+        records_processed: Object.values(deletions).reduce((a, b) => a + b, 0)
+    })
+}
+```
+
+---
