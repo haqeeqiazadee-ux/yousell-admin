@@ -1,13 +1,20 @@
-# YOUSELL Platform – Claude Project Context
+# YOUSELL Intelligence Platform — Claude Code Instructions
 
-This file is the authoritative project context for the YOUSELL platform.
+## SESSION START PROTOCOL (MANDATORY)
 
-Claude must reload this file whenever:
-- a new development session starts
-- chat history becomes compressed
-- context appears incomplete
+Before writing ANY code, read these files in order:
+1. `/system/development_log.md` — Last completed task + next step
+2. `/system/project_context.md` — What this project is
+3. `/system/system_architecture.md` — Architecture diagram
+4. `/system/database_schema.md` — Data model
+5. `/system/worker_map.md` — Worker status
+6. `/system/ai_logic.md` — Scoring algorithms
+7. `/system/development_guardrails.md` — Safety rules
 
-Claude must never restart the project from scratch unless explicitly instructed.
+Resume from the last entry in development_log.md. NEVER restart from scratch.
+
+If chat history becomes compressed or context appears incomplete,
+Claude must immediately re-read the files above and continue from development_log.md.
 
 
 ------------------------------------------------
@@ -19,323 +26,164 @@ YOUSELL is an AI-powered product discovery and intelligence platform.
 The system identifies trending e-commerce products across multiple marketplaces,
 analyzes product viability, and generates actionable insights for product launches.
 
-Primary Users
+Primary Users:
 - Admin operators managing product discovery scans
 - Client businesses receiving curated product opportunities
 
-Core Capabilities
-- automated product discovery
-- AI-assisted product scoring
-- influencer and supplier analysis
-- product launch blueprint generation
-- client product allocation
+Core Capabilities:
+- Automated product discovery across TikTok, Amazon, Shopify, Pinterest
+- AI-assisted product scoring (3-pillar model)
+- Influencer and supplier analysis
+- Product launch blueprint generation
+- Client product allocation
+
+Business Model: Standalone SaaS — white-labelable, rebrandable, multi-tenant
 
 
 ------------------------------------------------
 TECHNOLOGY STACK
 ------------------------------------------------
 
-Frontend
-Next.js 14 (App Router)
-TypeScript
-TailwindCSS
-shadcn/ui
-Netlify deployment
+Frontend:
+- Next.js 14 (App Router) + TypeScript + TailwindCSS + shadcn/ui
+- Deployed on Netlify
 
-Backend
-Node.js
-Express API
-BullMQ job queue
-Redis
+Backend API (Dashboard):
+- Next.js API Routes (Netlify serverless)
+- Handles CRUD operations, auth, dashboard data
 
-Database
-Supabase PostgreSQL
-Supabase Auth
-Supabase Realtime
+Backend Services (Workers):
+- Express server at `/backend/` (Railway, port 4000)
+- BullMQ job queue + Redis
+- Scan worker processes TikTok, Amazon, Shopify, Pinterest, Trends
 
-Scraping / Data Sources
-Apify Actors
+Database:
+- Supabase PostgreSQL + Auth + Realtime
 
-AI
-Anthropic Claude API
+Scraping:
+- Apify Actors (primary)
+- ScrapeCreators, RapidAPI (fallbacks)
 
-Email
-Resend API
-
-Version Control
-GitHub
+AI: Anthropic Claude API (cost-controlled)
+Email: Resend API
 
 
 ------------------------------------------------
 SYSTEM ARCHITECTURE
 ------------------------------------------------
 
-Admin Dashboard (Next.js)
+```
+Admin Dashboard (Next.js on Netlify)
         ↓
-Next.js API Routes
-        ↓
-Express Backend
-        ↓
-BullMQ Job Queue
-        ↓
-Scan Worker
-        ↓
-Apify Actors
-        ↓
-Actor Dataset
-        ↓
-Dataset Fetch Layer
-        ↓
-Raw Listings Table
-        ↓
-Transformation Layer
-        ↓
-Products Table
-        ↓
-Scoring Engine
-        ↓
-Supabase Database
-        ↓
-Realtime Dashboard Updates
+┌──────────────────────────────────────────────┐
+│  Next.js API Routes        Express Backend   │
+│  (Netlify serverless)      (Railway :4000)   │
+│  - Dashboard endpoints     - POST /api/scan  │
+│  - CRUD operations         - GET /api/scan/* │
+│  - Auth routes             - Job queue mgmt  │
+└──────────┬──────────────────────┬────────────┘
+           ↓                      ↓
+    Supabase (PostgreSQL)    Redis Queue (BullMQ)
+           ↑                      ↓
+           └──── BullMQ Worker ──→ Apify Actors → Dataset → Products
+```
+
+
+------------------------------------------------
+EXISTING BACKEND (DO NOT REBUILD)
+------------------------------------------------
+
+The `/backend/` directory already has:
+- `backend/src/index.ts` — Express server with auth, rate limiting, CORS
+- `backend/src/worker.ts` — BullMQ scan worker (scrapes all platforms)
+- `backend/src/lib/queue.ts` — Redis/BullMQ connection
+- `backend/src/lib/supabase.ts` — Supabase client
+- `backend/src/lib/providers.ts` — Platform scraping providers
+- `backend/src/lib/scoring.ts` — Composite score calculation
+- `backend/src/lib/email.ts` — Scan/product alerts via Resend
+
+**All new workers MUST be added to `/backend/src/`. Do NOT rebuild the queue.**
 
 
 ------------------------------------------------
 DATA INGESTION PIPELINE
 ------------------------------------------------
 
-The platform uses a multi-stage ingestion pipeline.
-
-Stage 1 — Actor Execution
-Trigger Apify actors to scrape external data sources.
-
-Stage 2 — Dataset Retrieval
-Fetch dataset results produced by the actor.
-
-Stage 3 — Raw Data Storage
-Store dataset JSON in the raw_listings table before transformation.
-
-Stage 4 — Data Transformation
-Normalize raw dataset records into structured product entries.
-
-Stage 5 — Product Scoring
-Apply the 3-pillar scoring engine.
-
-Stage 6 — Database Upsert
-Insert or update products in the products table.
+Stage 1 — Actor Execution: Trigger Apify actors to scrape external sources
+Stage 2 — Dataset Retrieval: Fetch dataset results from actor run
+Stage 3 — Raw Data Storage: Store in raw_listings table
+Stage 4 — Data Transformation: Normalize into structured product entries
+Stage 5 — Product Scoring: Apply 3-pillar scoring engine
+Stage 6 — Database Upsert: Insert/update products table
 
 
 ------------------------------------------------
 SCORING ENGINE
 ------------------------------------------------
 
-Products are evaluated using a three-pillar scoring model.
+Final Score Formula:
+final_score = trend_score × 0.40 + viral_score × 0.35 + profit_score × 0.25
 
-Final Score Formula
-
-final_score =
-trend_score × 0.40 +
-viral_score × 0.35 +
-profit_score × 0.25
-
-Score Tiers
-
-HOT  ≥ 80
-WARM ≥ 60
-COLD < 60
+Score Tiers:
+- HOT  ≥ 80
+- WARM ≥ 60
+- COLD < 60
 
 
 ------------------------------------------------
 DATABASE SOURCE OF TRUTH
 ------------------------------------------------
 
-Primary Table
+Primary Table: `products`
+Key Fields: id, title, platform, external_id, price, cost, trend_score, viral_score, profit_score, final_score, created_at
+Uniqueness: UNIQUE(platform, external_id)
 
-products
-
-Key Fields
-
-id
-title
-platform
-external_id
-price
-cost
-trend_score
-viral_score
-profit_score
-final_score
-created_at
-
-Uniqueness Constraint
-
-UNIQUE(platform, external_id)
-
-This prevents duplicate products when the same item appears across multiple scans.
-
-
-Raw Ingestion Table
-
-raw_listings
-
-Example Fields
-
-id
-platform
-actor_run_id
-raw_json
-created_at
+Raw Ingestion Table: `raw_listings`
+Fields: id, platform, actor_run_id, raw_json, created_at
 
 
 ------------------------------------------------
-DISCOVERY PIPELINE
+CORE RULES
 ------------------------------------------------
 
-Purpose
-Identify trending products across marketplaces.
-
-Primary Sources
-
-TikTok
-Pinterest
-Amazon Movers
-Shopify stores
-
-Output
-
-products table
+1. API routes NEVER perform scraping — only read from database
+2. All scraping runs in background workers via Redis queue
+3. Update `/system/development_log.md` after every major task
+4. Before creating files, check if similar functionality exists
+5. NEVER commit .env files
+6. Run `npm run build` before committing
+7. Keep job scheduling configurable
+8. Use the existing Supabase singleton client
+9. Use Apify actors as the primary scraping method
+10. Ensure compatibility with Netlify deployment constraints
 
 
 ------------------------------------------------
-INTELLIGENCE PIPELINE
+KEY DIRECTORIES
 ------------------------------------------------
 
-Purpose
-Enhance discovered products with deeper insights.
-
-Sources
-
-Influencer platforms
-Supplier APIs
-AI product analysis
-Profit calculations
-
-Output
-
-product intelligence data.
-
-
-------------------------------------------------
-JOB QUEUE SYSTEM
-------------------------------------------------
-
-BullMQ manages background jobs.
-
-Queue Types
-
-scan_jobs
-transform_jobs
-scoring_jobs
-
-Worker Pipeline
-
-scan job
-↓
-run Apify actor
-↓
-fetch dataset
-↓
-store raw data
-↓
-transform listings
-↓
-score products
-↓
-upsert to database
+```
+src/app/admin/       — Dashboard pages (25 pages)
+src/app/api/         — Next.js API routes (27+ endpoints)
+src/lib/scoring/     — Scoring algorithms (DO NOT REBUILD)
+src/lib/providers/   — API provider configs
+src/components/      — Reusable React components
+backend/src/         — Express server + BullMQ workers
+backend/src/lib/     — Queue, supabase, providers, scoring, email
+system/              — Session maintenance files (Claude memory)
+docs/                — Project documentation
+supabase/migrations/ — Database migrations
+```
 
 
 ------------------------------------------------
-AUTOMATION SCHEDULER
+DEVELOPMENT PHASES
 ------------------------------------------------
 
-Periodic scans should run automatically using the automation_jobs table.
+See `/docs/EXECUTION_ROADMAP.md` for full 10-phase plan.
+See `/docs/CLAUDE_CODE_PROMPT.md` for autonomous execution prompt.
 
-Recommended schedules
-
-TikTok trends — every 6 hours
-Amazon movers — every 12 hours
-Shopify stores — daily
-Pinterest trends — daily
-
-Admin dashboard scans should primarily read existing data rather than trigger scraping.
-
-
-------------------------------------------------
-DEVELOPMENT GUARDRAILS
-------------------------------------------------
-
-Claude must follow these rules.
-
-1. Do NOT rebuild completed functionality.
-2. Always inspect the repository before creating new files.
-3. Only implement missing or broken components.
-4. Always check the task board before starting work.
-5. Use the existing Supabase singleton client.
-6. Use Apify actors as the primary scraping method.
-7. Ensure compatibility with Netlify deployment constraints.
-
-
-------------------------------------------------
-PROJECT MEMORY SYSTEM
-------------------------------------------------
-
-Persistent project memory is stored in the /ai directory.
-
-Files
-
-/ai/architecture.md
-/ai/project_state.md
-/ai/task_board.md
-/ai/claude_rules.md
-
-
-File purposes
-
-architecture.md
-System architecture reference.
-
-project_state.md
-Current development progress.
-
-task_board.md
-Task tracking and priorities.
-
-claude_rules.md
-Development behavior rules.
-
-
-------------------------------------------------
-SESSION CONTEXT RECOVERY
-------------------------------------------------
-
-If chat history becomes compressed or context appears incomplete,
-Claude must immediately run the following protocol.
-
-1. Reload these files
-
-CLAUDE.md
-/ai/architecture.md
-/ai/project_state.md
-/ai/task_board.md
-
-2. Summarize
-
-current architecture
-completed tasks
-remaining tasks
-
-3. Continue development from the task board.
-
-Claude must never restart the project from scratch.
+Current phase: Check `/system/development_log.md` for latest status.
 
 
 ------------------------------------------------
@@ -345,29 +193,8 @@ TASK EXECUTION PRINCIPLES
 Claude must complete tasks sequentially.
 
 After completing each task:
+1. Update `/system/development_log.md`
+2. Commit changes
+3. Continue to the next task from the roadmap
 
-1. update /ai/task_board.md
-2. update /ai/project_state.md
-3. commit changes
-
-If architecture changes:
-
-update /ai/architecture.md
-
-
-------------------------------------------------
-FINAL VERIFICATION REQUIREMENT
-------------------------------------------------
-
-After implementing the ingestion pipeline,
-the system must be tested.
-
-Run:
-
-node sync-listings.js
-
-Expected Result
-
-200 OK response from Supabase
-
-Claude must not claim completion until this verification succeeds.
+Claude must never restart the project from scratch.
