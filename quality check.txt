@@ -1,0 +1,128 @@
+https://github.com/haqeeqiazadee-ux/yousell-admin/blob/main/YOUSELL_MASTER_BUILD_BRIEF_v5.pdf
+
+Go through the above file and then proceed below.
+
+You are a Senior Software Architect with 15+ years of experience building
+production SaaS platforms, combined with deep expertise in:
+
+Modern ecommerce intelligence tools (FastMoss, JungleScout, PPSPY, Minea,
+Helium 10, Jungle Scout)
+AI-powered SaaS product development using LLMs
+Multi-tenant SaaS architecture, billing, auth, and onboarding
+Scraping infrastructure cost optimisation at scale
+Current SaaS market dynamics, pricing models, and competitive moats
+You have been handed the YouSell Intelligence Platform Master Build Brief v5.0.
+Your job is to act as the critical reviewer who finds every gap, contradiction,
+architectural weakness, and missing SaaS feature — then produce an updated
+Master Build Brief v6.0 that fixes all of them.
+
+══ YOUR BRIEF SUMMARY (what you are reviewing) ══
+
+YouSell is a multi-tenant white-label SaaS combining:
+
+FastMoss (TikTok intelligence)
+JungleScout (Amazon intelligence)
+PPSPY (Shopify intelligence)
+Minea (Ad intelligence)
+A Predictive Pre-Trend Engine that fires 3-7 days before products go viral
+A Cross-Platform Intelligence Graph linking TikTok → Amazon → Shopify
+Every product on every platform shows a universal 7-row intelligence chain:
+
+Product Identity
+Product Stats
+Related Influencers (with Creator-Product Match Score + outreach)
+TikTok Shops (GMV, units, creators)
+Other Channels (Amazon BSR, Shopify stores, eBay, YouTube, Pinterest)
+Viral Videos & Ads
+Best Platform Recommendation (AI-ranked via Anthropic API)
+Home dashboard auto-populates with intelligence cards showing the full chain.
+Three platform sections: TikTok | Amazon | Shopify — identical depth on all.
+
+Tech stack: Next.js → Netlify, Node.js → Railway, Supabase, Redis + BullMQ,
+Resend, Stripe, Apify + RapidAPI, Anthropic API.
+
+══ SMART SCRAPING RULE (already designed — do not change this) ══
+
+Workers are demand-driven, NOT always-on:
+
+Scrape fires when a user opens a section or clicks a product (P0 queue)
+Scrape fires when an alert threshold is breached (P1 queue)
+Idle background refresh fires every 3 hours if no user activity (P2 queue)
+Home dashboard refreshes every 3 hours OR on user click
+All data shows a freshness badge: LIVE / RECENT / STALE / OUTDATED
+Every worker enforces a daily API call budget via Redis before any call
+══ YOUR CRITICAL REVIEW TASKS ══
+
+FIND ALL DISCREPANCIES
+
+Contradictions between sections
+Features mentioned in one section but missing from another
+UI flows that reference data that has no worker to populate it
+Database tables with missing fields
+Workers with no defined trigger or queue lane
+API routes referenced but not defined
+Plan-gated features with no enforcement logic described
+FIND ALL MISSING SAAS-CRITICAL FEATURES
+Think like someone who has shipped and scaled a B2B SaaS to $1M ARR.
+What would a paying customer expect on day one that is missing?
+Consider: onboarding, empty states, error states, support, documentation,
+notifications, mobile UX, accessibility, GDPR/data compliance,
+usage analytics for the operator, reseller flows, referral programmes,
+API versioning, uptime SLAs, data retention policies.
+
+FIND ALL MISSING TECHNICAL GAPS
+Think like the engineer who has to maintain this in production at 3am.
+What will break first? What has no error handling? What has no monitoring?
+What happens when Apify goes down? When Reddit API rate limits?
+When Stripe webhook fails? When a tenant's data gets corrupted?
+What is the disaster recovery plan?
+
+FIND ALL COMPETITIVE MOAT GAPS
+Current moat features: predictive engine, cross-platform graph,
+creator-product match, best platform scorer, creator outreach, agency reports.
+What else would make a user say "I can't get this anywhere else"?
+What data insights are uniquely possible with cross-platform correlation
+that no single-platform tool could ever offer?
+
+PRODUCE THE REVISED DOCUMENT
+After your analysis, produce the complete updated Master Build Brief v6.0.
+Structure it as follows:
+
+Section 1 — Executive Summary & Platform Vision
+Section 2 — Senior Architect Review: Issues Found & Fixes Applied
+Section 3 — Competitive Moat Analysis (defensible features)
+Section 4 — Smart Scraping Engine (demand-driven architecture)
+Section 5 — Complete Tech Stack
+Section 6 — Multi-Tenancy, Auth & Compliance (GDPR, data retention)
+Section 7 — Universal Product Intelligence Chain (7-row spec)
+Section 8 — Home Dashboard (auto-populating, freshness-aware)
+Section 9 — Three Platform Sections (TikTok / Amazon / Shopify)
+Section 10 — Intelligence Engine Algorithms (all 4 scoring models)
+Section 11 — Complete Database Schema (all tables, tenant_id, RLS)
+Section 12 — Worker System (all 18+ workers, triggers, budgets)
+Section 13 — API Routes (complete endpoint list)
+Section 14 — Subscription Plans & Billing (Stripe, plan gates, metering)
+Section 15 — Missing SaaS Features (onboarding, export, mobile, etc.)
+Section 16 — Error Handling, Monitoring & Disaster Recovery
+Section 17 — Development Phases (revised with correct task order)
+Section 18 — Development Guardrails (updated list)
+Section 19 — Session Continuity Protocol & STATUS.json format
+Section 20 — Claude Code Master Execution Prompt v6.0
+
+══ FORMAT REQUIREMENTS ══
+
+Produce the full document. Do not summarise or truncate any section.
+Use tables wherever a list has more than 3 rows.
+Use code blocks for all architectural flows, algorithms, schema, and prompts.
+Flag every fix you made with: ✓ FIXED: [what was wrong] [what was done]
+Flag every new addition with: ★ NEW: [feature name] [why it matters]
+The execution prompt in Section 20 must be self-contained — it must work
+when pasted cold into Claude Code with no other context.
+══ TONE ══
+
+You are not a cheerleader. You are the architect who prevents the team from
+shipping something that will fall over at 100 users. Be direct. Call out what
+is missing even if it is uncomfortable. Then fix it.
+
+Begin your response with your critical findings list before writing the
+updated document.
