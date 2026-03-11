@@ -954,3 +954,214 @@ product_extractor_worker (normalise raw → products table)
 ```
 
 ---
+
+## Section 13 — API Routes
+
+`★ NEW: This entire section is new. The v5 brief had NO dedicated API routes section — identified as the #1 gap in Phase 2.`
+
+All routes are on the **Railway Express backend** (not Netlify). All routes require JWT auth unless marked PUBLIC.
+
+### 13.1 — Authentication Routes
+
+| Method | Path | Purpose | Auth | Rate Limit |
+|--------|------|---------|------|-----------|
+| POST | `/api/auth/signup` | Create account + tenant | PUBLIC | 5/15min per IP |
+| POST | `/api/auth/login` | Email/password login | PUBLIC | 5/15min per IP |
+| POST | `/api/auth/magic-link` | Send magic link email | PUBLIC | 3/15min per IP |
+| POST | `/api/auth/logout` | Invalidate JWT (blacklist) | JWT | — |
+| POST | `/api/auth/refresh` | Refresh JWT using refresh token | Refresh token | 10/min |
+| GET | `/api/auth/me` | Current user profile | JWT | — |
+
+### 13.2 — Dashboard Routes
+
+| Method | Path | Purpose | Auth | Plan Gate | Trigger |
+|--------|------|---------|------|----------|---------|
+| GET | `/api/dashboard/cards` | Home dashboard product cards (from MV) | JWT | All | Checks freshness, enqueues refresh if stale |
+| POST | `/api/dashboard/refresh` | Force refresh dashboard MV | JWT | All | Enqueues P0 MV refresh |
+| GET | `/api/dashboard/stats` | Live stats bar counters | JWT | All | Cached in Redis, updated on MV refresh |
+| GET | `/api/dashboard/briefing` | Daily AI briefing (★ NEW: MN-3) | JWT | Pro+ | Reads latest briefing from cache/DB |
+
+### 13.3 — Product Routes
+
+| Method | Path | Purpose | Auth | Plan Gate | Trigger |
+|--------|------|---------|------|----------|---------|
+| GET | `/api/products` | List products (paginated, filtered, sorted) | JWT | All | No scrape — reads DB only |
+| GET | `/api/products/:id` | Product detail (triggers chain freshness check) | JWT | All | Checks 7-row freshness, enqueues stale rows |
+| GET | `/api/products/:id/chain/:row` | Specific chain row data | JWT | All | Checks freshness of specific row |
+| POST | `/api/products/:id/refresh` | Force refresh all chain rows | JWT | All | Enqueues P0 job per stale row |
+| GET | `/api/products/:id/trend-history` | 30/60/90 day trend score chart data | JWT | Pro+ | Reads trend_scores time-series |
+| GET | `/api/products/:id/cross-platform` | Cross-platform matches (Row 5) | JWT | Pro+ | Reads product_platform_matches |
+| POST | `/api/products/compare` | Compare 2-4 products side-by-side | JWT | Pro+ | Body: `{ product_ids: [...] }` |
+| POST | `/api/products/bulk-action` | Bulk save/alert/archive/dismiss | JWT | All | Body: `{ product_ids, action, params }` |
+
+### 13.4 — Platform-Specific Routes
+
+| Method | Path | Purpose | Auth | Plan Gate |
+|--------|------|---------|------|----------|
+| GET | `/api/tiktok/products` | TikTok trending products | JWT | All |
+| GET | `/api/tiktok/creators` | TikTok creator rankings | JWT | All |
+| GET | `/api/tiktok/videos` | TikTok viral videos | JWT | All |
+| GET | `/api/tiktok/shops` | TikTok shops by GMV | JWT | All |
+| GET | `/api/tiktok/live` | TikTok live streams | JWT | All |
+| GET | `/api/tiktok/ads` | TikTok ad creatives | JWT | All |
+| GET | `/api/amazon/products` | Amazon rising products (BSR) | JWT | Pro+ |
+| GET | `/api/amazon/rankings` | Amazon BSR movement charts | JWT | Pro+ |
+| GET | `/api/amazon/cross-signal` | Amazon vs TikTok cross-signal | JWT | Pro+ |
+| GET | `/api/shopify/stores` | Shopify store discovery | JWT | Agency+ |
+| GET | `/api/shopify/stores/:id` | Shopify store deep dive | JWT | Agency+ |
+| GET | `/api/shopify/niches` | Shopify niche scanner | JWT | Agency+ |
+
+All platform routes: check freshness → return data + badge → enqueue P0 scrape if stale.
+
+### 13.5 — Creator & Outreach Routes
+
+| Method | Path | Purpose | Auth | Plan Gate |
+|--------|------|---------|------|----------|
+| GET | `/api/creators` | List creators (paginated, filtered) | JWT | All |
+| GET | `/api/creators/:id` | Creator detail | JWT | All |
+| GET | `/api/creators/:id/products` | Products linked to this creator | JWT | All |
+| POST | `/api/creators/:id/outreach` | Generate + send outreach email | JWT | Pro+ (5/mo), Agency+ (50/mo) |
+| GET | `/api/outreach/sequences` | Outreach sequence dashboard | JWT | Pro+ |
+| GET | `/api/outreach/stats` | Outreach analytics (open/reply rates) | JWT | Pro+ |
+
+### 13.6 — Collection & Saved View Routes
+
+| Method | Path | Purpose | Auth | Plan Gate |
+|--------|------|---------|------|----------|
+| GET | `/api/collections` | List user's collections | JWT | All |
+| POST | `/api/collections` | Create/save to collection | JWT | All |
+| DELETE | `/api/collections/:id` | Remove from collection | JWT | All |
+| GET | `/api/views` | List saved views | JWT | Pro+ |
+| POST | `/api/views` | Save current view config | JWT | Pro+ |
+| PUT | `/api/views/:id` | Update saved view | JWT | Pro+ |
+| DELETE | `/api/views/:id` | Delete saved view | JWT | Pro+ |
+| PUT | `/api/views/:id/default` | Set as default view | JWT | Pro+ |
+
+### 13.7 — Alert & Notification Routes
+
+| Method | Path | Purpose | Auth | Plan Gate |
+|--------|------|---------|------|----------|
+| GET | `/api/alerts` | List alert configurations | JWT | All |
+| POST | `/api/alerts` | Create alert | JWT | All (limited by plan) |
+| PUT | `/api/alerts/:id` | Update alert threshold | JWT | All |
+| DELETE | `/api/alerts/:id` | Delete alert | JWT | All |
+| GET | `/api/notifications` | List notifications (paginated) | JWT | All |
+| PUT | `/api/notifications/:id/read` | Mark notification as read | JWT | All |
+| PUT | `/api/notifications/read-all` | Mark all as read | JWT | All |
+| GET | `/api/notifications/preferences` | Get notification preferences | JWT | All |
+| PUT | `/api/notifications/preferences` | Update notification preferences | JWT | All |
+
+### 13.8 — Search Route
+
+| Method | Path | Purpose | Auth | Plan Gate |
+|--------|------|---------|------|----------|
+| GET | `/api/search?q={query}&type={type}` | Global search (Cmd+K) across products, creators, shops, niches | JWT | All |
+
+Query params: `q` (search term, min 2 chars), `type` (optional: 'products', 'creators', 'shops', 'niches'), `limit` (default 5 per type).
+
+### 13.9 — Team & Invitation Routes
+
+| Method | Path | Purpose | Auth | Plan Gate |
+|--------|------|---------|------|----------|
+| GET | `/api/team` | List team members | JWT | All |
+| POST | `/api/team/invite` | Send invitation email | JWT (admin) | Pro+ (3 seats), Agency+ (10) |
+| DELETE | `/api/team/:userId` | Remove team member | JWT (admin) | Pro+ |
+| PUT | `/api/team/:userId/role` | Change member role | JWT (admin) | Pro+ |
+| POST | `/api/invite/accept/:token` | Accept invitation | PUBLIC | — |
+| GET | `/api/team/activity` | Activity feed (★ NEW: S-10) | JWT (admin) | Agency+ |
+
+### 13.10 — Billing Routes
+
+| Method | Path | Purpose | Auth | Plan Gate |
+|--------|------|---------|------|----------|
+| POST | `/api/billing/checkout` | Create Stripe Checkout session | JWT (admin) | All |
+| GET | `/api/billing/portal` | Get Stripe Customer Portal URL | JWT (admin) | All |
+| GET | `/api/billing/usage` | Current usage vs plan limits | JWT | All |
+| GET | `/api/billing/invoices` | Invoice history | JWT (admin) | All |
+
+### 13.11 — Export & Report Routes
+
+| Method | Path | Purpose | Auth | Plan Gate |
+|--------|------|---------|------|----------|
+| POST | `/api/export/csv` | Export products/creators as CSV | JWT | All (limited) |
+| POST | `/api/export/excel` | Export as Excel | JWT | Pro+ |
+| POST | `/api/reports/generate` | Generate AI intelligence report PDF | JWT | Agency+ |
+| GET | `/api/reports` | List generated reports | JWT | Agency+ |
+| GET | `/api/reports/:id/download` | Download report PDF | JWT | Agency+ |
+| POST | `/api/reports/schedule` | Schedule recurring reports | JWT | Agency+ |
+
+### 13.12 — Sharing Routes (★ NEW: S-11)
+
+| Method | Path | Purpose | Auth | Plan Gate |
+|--------|------|---------|------|----------|
+| POST | `/api/share/link` | Create shareable read-only link | JWT | Agency+ |
+| GET | `/api/share/:token` | Access shared content (public) | Token | — |
+| DELETE | `/api/share/:id` | Revoke share link | JWT | Agency+ |
+
+### 13.13 — Annotation Routes (★ NEW: MN-4)
+
+| Method | Path | Purpose | Auth | Plan Gate |
+|--------|------|---------|------|----------|
+| GET | `/api/annotations?target_type={type}&target_id={id}` | List annotations on target | JWT | Pro+ |
+| POST | `/api/annotations` | Create annotation | JWT | Pro+ |
+| PUT | `/api/annotations/:id` | Edit annotation | JWT (owner) | Pro+ |
+| DELETE | `/api/annotations/:id` | Delete annotation | JWT (owner) | Pro+ |
+| PUT | `/api/annotations/:id/pin` | Toggle pin | JWT (admin) | Pro+ |
+
+### 13.14 — Webhook Configuration Routes
+
+| Method | Path | Purpose | Auth | Plan Gate |
+|--------|------|---------|------|----------|
+| GET | `/api/webhooks` | List configured webhooks | JWT (admin) | Agency+ |
+| POST | `/api/webhooks` | Create webhook endpoint | JWT (admin) | Agency+ |
+| PUT | `/api/webhooks/:id` | Update webhook | JWT (admin) | Agency+ |
+| DELETE | `/api/webhooks/:id` | Delete webhook | JWT (admin) | Agency+ |
+| POST | `/api/webhooks/:id/test` | Send test event | JWT (admin) | Agency+ |
+
+### 13.15 — Admin / System Routes
+
+| Method | Path | Purpose | Auth | Plan Gate |
+|--------|------|---------|------|----------|
+| GET | `/api/admin/settings` | Tenant settings (branding, API keys) | JWT (admin) | All |
+| PUT | `/api/admin/settings` | Update tenant settings | JWT (admin) | All |
+| GET | `/api/admin/system-health` | System health dashboard data | JWT (super_admin) | — |
+| GET | `/api/admin/scrape-log` | Scrape execution history | JWT (admin) | All |
+| GET | `/api/admin/quarantine` | Data quarantine records | JWT (admin) | All |
+
+### 13.16 — Incoming Webhook Endpoints (external services)
+
+| Method | Path | Purpose | Auth | Source |
+|--------|------|---------|------|--------|
+| POST | `/api/webhooks/stripe` | Stripe subscription events | Stripe signature | Stripe |
+| POST | `/api/webhooks/resend` | Resend email tracking events | Resend signature | Resend |
+
+### 13.17 — Public Health Check
+
+| Method | Path | Purpose | Auth |
+|--------|------|---------|------|
+| GET | `/api/health` | Service health check (DB, Redis, BullMQ) | PUBLIC |
+
+### 13.18 — Route Count Summary
+
+| Category | Routes |
+|----------|--------|
+| Authentication | 6 |
+| Dashboard | 4 |
+| Products | 8 |
+| Platform-specific | 12 |
+| Creators & Outreach | 6 |
+| Collections & Views | 8 |
+| Alerts & Notifications | 9 |
+| Search | 1 |
+| Team & Invitations | 6 |
+| Billing | 4 |
+| Export & Reports | 6 |
+| Sharing | 3 |
+| Annotations | 5 |
+| Webhooks (config) | 5 |
+| Admin/System | 5 |
+| Incoming Webhooks | 2 |
+| Health | 1 |
+| **TOTAL** | **91 routes** |
+
+---
