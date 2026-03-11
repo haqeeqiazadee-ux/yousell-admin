@@ -1157,6 +1157,47 @@ Generate content → Human reviews → Approve/Reject
 
 ---
 
+# APPENDIX D: n8n Integration Capabilities (Verified)
+
+### Node Availability Summary
+
+| Service | Node Type | Status | Key Detail |
+|---------|-----------|--------|-----------|
+| **Blotato** | Community (official by Blotato Inc) | 6 actions, 9 platforms | Self-hosted only. npm: `@blotato/n8n-nodes-blotato` |
+| **ElevenLabs** | Native (verified partner) | TTS, STS, voice clone | Official launch partner. npm: `@elevenlabs/n8n-nodes-elevenlabs` |
+| **Supabase** | Native (built-in core) | Full CRUD + Vector Store | 5 operations: Create, Get One, Get Many, Update, Delete |
+| **BullMQ** | Community (third-party) | Trigger, Add Job, Respond, Wait | npm: `n8n-nodes-bullmq`. Enables Express→n8n bridge |
+| **OpenAI** | Native (built-in core) | Full support | Used in templates for script generation |
+| **Google Drive** | Native (built-in core) | Full support | Used in image templates |
+| **HeyGen** | Community (third-party) | HTTP Request preferred | No native node |
+| **Runway ML** | HTTP Request only | No node available | Not recommended |
+| **fal.ai** | HTTP Request | Used for NanoBanana + VEO3 | Standard integration path in templates |
+
+### Critical n8n Configuration
+
+- **Community Edition:** ALL nodes available (built-in + AI/LangChain + community). No restrictions.
+- **Concurrency:** Set `N8N_CONCURRENCY_PRODUCTION_LIMIT` env var (recommended: 10-20)
+- **Queue mode:** Use `--concurrency` flag per worker for horizontal scaling
+- **Railway setup:** One-click deploy available. Production stack template includes: main + worker + webhook processor + PostgreSQL + Redis
+
+### BullMQ Bridge (Express Backend ↔ n8n)
+
+The `n8n-nodes-bullmq` community node enables direct communication between the existing Express/BullMQ backend and n8n workflows:
+- **Express → n8n:** BullMQ Trigger node listens for jobs from Express workers
+- **n8n → Express:** BullMQ Add Job node queues work back to Express workers
+- This eliminates the need for webhook-based communication between the two systems
+
+### NanoBanana via fal.ai (Important Clarification)
+
+The n8n templates (#8270, #11204) use **fal.ai** as the API gateway for NanoBanana and VEO3:
+- fal.ai wraps Google's Gemini image models as "NanoBanana" branded APIs
+- Pricing through fal.ai: Nano Banana $0.039/image, Nano Banana 2 $0.08/image, Nano Banana Pro $0.15/image
+- Alternative: Use Google AI Studio API directly for potentially lower cost (free tier: 500 images/day)
+- VEO3 via fal.ai may have different pricing than Google's direct API ($0.10-0.40/sec)
+- **Recommendation:** Start with fal.ai (templates work out-of-box), migrate to Google direct API for cost savings once pipeline is stable
+
+---
+
 **END OF BLUEPRINT**
 
 *This document should be treated as the authoritative architecture reference for Engines 1-3 of the YOUSELL platform. All implementation sessions should reference this document.*
