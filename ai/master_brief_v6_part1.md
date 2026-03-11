@@ -171,7 +171,395 @@ This section is the complete changelog between v5.0 and v6.0. Every issue discov
 | MN-5 | Trend Replay | Historical proof-of-value: "YouSell detected this 5 days early." Sales tool + retention tool. | Phase 3 |
 
 ---
-<!-- Section 3: Competitive Moat — PENDING -->
+## Section 3 — Competitive Moat Analysis
+
+### 3.1 — Competitor Landscape
+
+| Competitor | What They Do | Weakness | YouSell Advantage |
+|-----------|-------------|---------|-------------------|
+| FastMoss | TikTok product analytics | TikTok only. No Amazon/Shopify. No pre-trend. No creator outreach. | Cross-platform + predictive engine + outreach automation |
+| JungleScout | Amazon product research | Amazon only. No social signal layer. No trend prediction. | TikTok viral signal drives Amazon opportunity score |
+| PPSPY | Shopify store spy tool | Shopify only. No creator intelligence. No scoring engine. | Creator-to-store linkage across all platforms |
+| Minea | Ad creative spy tool | Ads only. No product or creator intelligence. No scoring. | Full funnel: product → creator → ad → store → platform recommendation |
+| Helium 10 | Amazon SEO & analytics | Amazon SEO tool. No social or trend layer. No predictive. | Social-first product discovery feeding Amazon intelligence |
+| **All competitors** | **Siloed to one platform** | **No cross-platform product graph. No lifecycle prediction.** | **Unified intelligence graph is the core moat** |
+
+### 3.2 — Existing Moat Features (Improved in v6.0)
+
+#### Moat 1: Pre-Trend Predictive Engine
+
+**Build Phase**: Phase 1 (core moat — highest priority)
+**Defensibility**: HIGH
+
+Detects products 3–7 days before viral breakout by analysing early signals across platforms.
+
+```
+predictive_score = CLAMP(0, 100,
+    (creator_burst_signal     × 0.35)  // 3+ new creators post same product in 48h
+  + (engagement_velocity      × 0.25)  // hourly view rate doubling over baseline
+  + (store_adoption_velocity  × 0.20)  // new stores listing same product within 72h
+  + (ad_creative_replication  × 0.20)  // same creative format appearing on 3+ accounts
+)
+```
+
+**v6.0 Data Pipeline (✓ FIXED: M-1)**:
+
+| Input Variable | Source Table | Time Window | Worker That Populates |
+|---------------|-------------|-------------|----------------------|
+| creator_burst_signal | `creator_product_links` | 48h rolling window | `creator_monitor_worker` |
+| engagement_velocity | `videos` (view_count time-series) | 24h vs 7d baseline | `video_scraper_worker` |
+| store_adoption_velocity | `shops` + `product_platform_matches` | 72h rolling window | `shopify_store_discovery_worker` + `cross_platform_match_worker` |
+| ad_creative_replication | `ads` (duplication_count) | 72h rolling window | `facebook_ads_worker` + `tiktok_ads_worker` |
+
+**Anthropic API Usage**: The predictive worker uses Anthropic for **batch classification** (not per-product analysis). Every 2h, it:
+1. Queries products with `predictive_score > 50` from the last computation
+2. Sends a batch of up to 50 product summaries to Anthropic for pattern classification
+3. Anthropic returns: confidence level, predicted trend timeline, recommended action
+4. Results stored in `predictive_signals` table
+
+This maps 50 Anthropic calls/day to ~600 product evaluations (batches of 12 per call).
+
+`✓ FIXED: M-1 — predictive worker data flow was unclear, now fully specified with tables, time windows, and Anthropic batch strategy`
+
+---
+
+#### Moat 2: Cross-Platform Intelligence Graph
+
+**Build Phase**: Phase 1 (foundation) → Phase 2 (full graph)
+**Defensibility**: HIGH
+
+Links TikTok video → creator → Amazon ASIN → Shopify store → Facebook ad in one unified graph.
+
+**Graph Data Structure (✓ FIXED: M-2)**:
+
+The graph is implemented as relational joins, not a graph database. The `product_platform_matches` table serves as the graph edge table:
+
+```sql
+product_platform_matches (
+    id uuid PK,
+    tenant_id uuid NOT NULL,
+    product_id uuid FK → products(id),      -- the "canonical" product
+    platform text NOT NULL,                   -- 'tiktok', 'amazon', 'shopify', 'facebook', 'ebay'
+    external_id text NOT NULL,               -- platform-specific ID (ASIN, TikTok product ID, etc.)
+    match_confidence decimal(5,2),           -- 0.00–100.00
+    match_method text,                       -- 'title_similarity', 'upc_gtin', 'manual', 'image_match'
+    matched_at timestamptz DEFAULT now(),
+    UNIQUE(tenant_id, product_id, platform, external_id)
+)
+```
+
+**Matching Algorithm**:
+
+```
+Step 1: UPC/GTIN lookup (highest confidence — 95%+)
+    IF product has UPC/GTIN → search other platforms by barcode
+Step 2: Title + category similarity (medium confidence — 70-90%)
+    Normalise titles (lowercase, remove filler words)
+    Trigram similarity score (pg_trgm) > 0.6 = potential match
+Step 3: Manual confirmation (100% confidence)
+    User confirms or rejects suggested matches in UI
+```
+
+**Worker**: `cross_platform_match_worker` — fires after any product scrape completes. Runs matching across all platform pairs.
+
+`✓ FIXED: M-2 — graph was vague, now has concrete data structure, matching algorithm, and dedicated worker`
+
+---
+
+#### Moat 3: Creator-Product Match Score
+
+**Build Phase**: Phase 2
+**Defensibility**: MEDIUM
+
+AI-ranked creator recommendations per product with conversion probability.
+
+```
+match_score = CLAMP(0, 100,
+    (niche_alignment         × 0.35)  // keyword overlap: creator bio tags vs product category tags
+  + (historical_conversion   × 0.30)  // past sales generated for similar product categories
+  + (engagement_rate         × 0.20)  // (likes + comments) / followers × 100
+  + (demographics_fit        × 0.15)  // audience overlap with product target demographic
+)
+```
+
+**v6.0 Improvements (✓ FIXED: M-3)**:
+
+| Input | v5 Issue | v6 Fix |
+|-------|----------|--------|
+| niche_alignment | "Semantic similarity" undefined — implies expensive embeddings | v6 uses keyword tag matching (creator bio tags vs product category tags). Simple, fast, no Anthropic cost. Upgrade to embeddings in future. |
+| historical_conversion | No data exists for new products/creators | Cold-start fallback: use category-average conversion rate. New creators default to 50th percentile. Score improves as data accumulates. |
+| demographics_fit | Creator demographic data source unknown | Source from Apify creator profile scrapes (where publicly available). When unavailable, demographics_fit weight redistributed to other inputs (niche_alignment gets 0.45, engagement_rate gets 0.25). |
+
+**Outreach threshold**: match_score > 70 → creator appears in outreach list
+
+`✓ FIXED: M-3 — semantic similarity, cold-start, and demographics gaps all resolved`
+
+---
+
+#### Moat 4: Best Platform Recommender
+
+**Build Phase**: Phase 3
+**Defensibility**: MEDIUM
+
+AI tells users: should you sell this product on TikTok Shop, Amazon, or Shopify?
+
+```
+platform_score[platform] = CLAMP(0, 100,
+    (estimated_margin      × 0.40)  // gross margin estimate for this category on this platform
+  + (demand_velocity       × 0.30)  // platform-specific search/browse volume
+  + (competition_inverse   × 0.30)  // 100 - (active_sellers / market_threshold × 100)
+)
+```
+
+**v6.0 Data Source Mapping (✓ FIXED: M-4)**:
+
+| Input | Data Source | Worker |
+|-------|-----------|--------|
+| estimated_margin | Cost: manual input OR AliExpress Apify scrape (Phase 3). Selling price: per-platform from product scrapes. | `product_extractor_worker` + manual input UI |
+| demand_velocity | TikTok: view velocity from `videos`. Amazon: BSR movement from `trend_scores`. Shopify: traffic estimate from `shops`. Google Trends: search volume from `google_trends_worker`. | Platform-specific workers + `google_trends_worker` |
+| competition_inverse | TikTok: shop count selling same product. Amazon: active seller count from BSR data. Shopify: store count in same niche. | Platform-specific workers |
+
+**Anthropic API usage**: 30 calls/day. Generates one-line rationale per product per platform recommendation. Cached — only regenerated when input scores change by >5 points.
+
+`✓ FIXED: M-4 — data sources for all input variables now specified`
+
+---
+
+#### Moat 5: Automated Creator Outreach
+
+**Build Phase**: Phase 3
+**Defensibility**: MEDIUM
+
+**v6.0 Full Specification (✓ FIXED: M-5)**:
+
+**Email Template Structure**:
+```
+Subject: [AI-generated, personalised per creator+product]
+Body:
+  - Opening: personalised hook referencing creator's recent content
+  - Value prop: why this product matches their audience
+  - CTA: specific next step (reply, link to product page, schedule call)
+  - Footer: unsubscribe link (mandatory — CAN-SPAM/GDPR)
+```
+
+**Anthropic Prompt** (generates subject + body):
+```
+Given this creator profile: {creator_bio, niche, follower_count, recent_videos}
+And this product: {title, category, trend_score, platform_recommendation}
+Generate a personalised outreach email that:
+1. References their specific content style
+2. Explains why this product fits their audience
+3. Includes a clear call to action
+4. Tone: professional but friendly, not salesy
+Max length: 200 words.
+```
+
+**3-Email Sequence**:
+
+| Email | Timing | Condition | Content |
+|-------|--------|-----------|---------|
+| 1 — Initial outreach | Day 0 (immediate) | match_score > 70 + user clicks "Reach Out" | AI-generated personalised pitch |
+| 2 — Follow-up | Day 3 | No reply to email 1 | Shorter reminder with social proof |
+| 3 — Final | Day 7 | No reply to email 2 | Brief "last chance" with direct CTA |
+| STOP | — | Creator replies OR clicks unsubscribe OR user manually stops | Sequence halted immediately |
+
+**Tracking** (via Resend webhooks):
+- Resend webhook endpoint: `POST /api/webhooks/resend`
+- Events tracked: `email.sent`, `email.delivered`, `email.opened`, `email.clicked`, `email.bounced`, `email.complained`
+- Stored in `outreach_sequences` table (see Section 6)
+
+**Anti-Spam Compliance**:
+- Only contact creators with publicly listed email addresses
+- Mandatory unsubscribe link in every email
+- Respect opt-outs immediately (store in `outreach_optouts` table)
+- Rate limit: max 50 outreach emails per tenant per day
+- CAN-SPAM: physical address in footer (tenant's registered address)
+
+**Outreach Dashboard**:
+
+| Metric | Calculation |
+|--------|------------|
+| Emails sent | COUNT where status = 'sent' |
+| Open rate | opened / sent × 100 |
+| Reply rate | replied / sent × 100 |
+| Conversion rate | deal_closed / sent × 100 |
+| Avg response time | AVG(replied_at - sent_at) |
+
+`✓ FIXED: M-5 — email template, sequence logic, compliance, tracking, and analytics all defined`
+
+---
+
+#### Moat 6: Agency Intelligence Reports
+
+**Build Phase**: Phase 4
+**Defensibility**: MEDIUM (elevated by AI-generated narrative)
+
+**v6.0 Full Specification (✓ FIXED: M-6)**:
+
+**Report Template** (6 sections):
+
+| Section | Content | Data Source | AI-Generated? |
+|---------|---------|-------------|---------------|
+| Executive Summary | Market overview, key trends, top opportunities | Aggregated from all sections | YES — Anthropic generates narrative |
+| Top Products | Top 10 products by trend_score with key metrics | `products` + `trend_scores` | Partial — AI writes commentary per product |
+| Trend Analysis | 30/60/90-day trend charts, emerging niches | `trend_scores` time-series | YES — AI interprets trends |
+| Creator Recommendations | Top 5 matched creators per product with outreach status | `creators` + `creator_product_links` | NO — data tables only |
+| Platform Comparison | Platform scores + AI rationale per recommended product | `platform_scores` | YES — uses cached AI rationale |
+| Competitive Landscape | Niche saturation, competitor store counts, opportunity gaps | `niches` + `shops` | YES — AI identifies gaps |
+
+**PDF Generation**: `@react-pdf/renderer` (React-native PDF rendering, works in Node.js)
+
+**Branding**:
+- Agency plan: logo swap + brand colours + custom report title
+- Enterprise plan: full white-label (custom domain in footer, no YouSell branding)
+
+**Scheduling**:
+- On-demand: one-click generation from any product collection
+- Scheduled: weekly or monthly auto-generation + email delivery to configured recipients
+- History: all generated reports stored with version timestamp, accessible from Reports page
+
+`✓ FIXED: M-6 — report template, AI narrative, PDF library, branding, scheduling all defined`
+
+---
+
+### 3.3 — New Moat Features (Added in v6.0)
+
+#### ★ NEW: MN-1 — Product Lifecycle Prediction
+
+**Build Phase**: Phase 2
+**Defensibility**: HIGH (requires 90+ days of historical data — new entrants can't replicate)
+
+Extends the predictive engine to forecast the full product lifecycle, not just "about to trend."
+
+**Lifecycle Stages**:
+
+| Stage | Badge | Criteria | User Action |
+|-------|-------|----------|-------------|
+| Emerging | Emerging | predictive_score > 65, product_age < 7d, trend_score < 40 | Get in early — first-mover opportunity |
+| Growing | Growing | trend_score 40–70, 30d slope positive, creator adoption accelerating | Scale now — demand is rising |
+| Peak | Peak | trend_score > 75, 7d slope flattening or negative, saturation_score > 50 | Caution — market may be peaking |
+| Declining | Declining | trend_score dropping >10 points over 14d, creator adoption slowing | Exit or discount — demand falling |
+| Saturated | Saturated | saturation_score > 80, competition_inverse < 20, price compression detected | Avoid — market is oversupplied |
+
+**Computation**: Runs as part of the `trend_scoring_worker` (no additional worker needed). Uses 30-day trend_score slope + saturation_score + creator adoption rate.
+
+This directly resolves finding D-11 (Saturation Score undefined) by integrating saturation into a broader lifecycle model.
+
+`★ NEW: MN-1 — solves D-11 and creates defensible data moat`
+
+---
+
+#### ★ NEW: MN-2 — Niche Intelligence Engine
+
+**Build Phase**: Phase 3
+**Defensibility**: HIGH (requires cross-platform niche data)
+
+Aggregates product-level intelligence to the niche level.
+
+**`niches` Table**:
+```sql
+niches (
+    id uuid PK,
+    tenant_id uuid NOT NULL,
+    name text NOT NULL,           -- e.g., "Fitness Accessories"
+    category text,                -- parent category
+    product_count integer,
+    avg_trend_score decimal(5,2),
+    avg_saturation_score decimal(5,2),
+    platform_breakdown jsonb,     -- {"tiktok": 45, "amazon": 30, "shopify": 25}
+    growth_rate decimal(5,2),     -- % change over 30 days
+    lifecycle_stage text,         -- 'emerging', 'growing', 'peak', 'declining', 'saturated'
+    updated_at timestamptz,
+    UNIQUE(tenant_id, name)
+)
+```
+
+**Niche Intelligence Page**:
+- Niche leaderboard (ranked by growth_rate)
+- Niche lifecycle stage badges
+- Cross-platform niche comparison ("fitness is +340% on TikTok but saturated on Amazon")
+- Niche saturation map (bubble chart — extends existing competitor niche map)
+
+**Computation**: Aggregated from `products` table grouped by category/niche tags. Refreshed with trend_scoring_worker.
+
+`★ NEW: MN-2 — niche-level intelligence no competitor offers`
+
+---
+
+#### ★ NEW: MN-3 — Smart Alerts (AI Daily Briefing)
+
+**Build Phase**: Phase 3
+**Defensibility**: HIGH (requires cross-platform data + AI synthesis)
+
+Instead of raw threshold alerts, generate a daily AI-curated intelligence briefing per tenant.
+
+**`daily_briefing_worker`**:
+- Runs once per day per active tenant (08:00 UTC)
+- Reads: new pre-trend alerts, top movers, creator matches, niche changes from last 24h
+- Sends to Anthropic: structured data summary → AI generates narrative briefing
+- Output: structured JSON with sections (new_opportunities, top_movers, recommended_actions, creator_matches)
+- Delivered via: email (Resend) + first card on dashboard
+
+**Anthropic budget**: 1 call per tenant per day. At 100 tenants = 100 calls/day.
+
+`★ NEW: MN-3 — turns raw data into actionable daily intelligence`
+
+---
+
+#### ★ NEW: MN-4 — Collaborative Intelligence (Team Annotations)
+
+**Build Phase**: Phase 2
+**Defensibility**: HIGH (creates switching costs)
+
+Team annotations on products, creators, and collections.
+
+**`annotations` Table**:
+```sql
+annotations (
+    id uuid PK,
+    tenant_id uuid NOT NULL,
+    user_id uuid FK → users(id),
+    target_type text NOT NULL,    -- 'product', 'creator', 'collection'
+    target_id uuid NOT NULL,
+    content text NOT NULL,
+    is_pinned boolean DEFAULT false,
+    created_at timestamptz DEFAULT now()
+)
+```
+
+**Features**:
+- Notes/comments section on product detail and collection pages
+- @mention team members (triggers in-app notification)
+- Pin important notes to top
+- Filter annotations by user, date, target
+
+`★ NEW: MN-4 — low engineering effort, massive switching costs`
+
+---
+
+#### ★ NEW: MN-5 — Trend Replay
+
+**Build Phase**: Phase 3
+**Defensibility**: HIGH (requires historical data that accumulates over time)
+
+Shows users historical trends they would have caught with YouSell.
+
+**Dashboard Section**: "What YouSell Caught" — 3–5 recent success stories:
+- Product name + image
+- "Detected as pre-trend on [date]" vs "Went viral on [date]" → "[X] days early"
+- Estimated market opportunity ($)
+- Prediction accuracy badge
+
+**Data Source**: Historical `predictive_signals` + `trend_scores`. Compare predicted vs actual outcomes.
+
+**Use Cases**:
+- Onboarding: "Here's what YouSell caught last week"
+- Marketing: public-facing success stories
+- Retention: proof of value for existing users
+
+`★ NEW: MN-5 — historical proof of value, gets better over time`
+
+---
 <!-- Section 4: Smart Scraping — PENDING -->
 <!-- Section 5: Tech Stack — PENDING -->
 <!-- Section 6: Auth & Compliance — PENDING -->
