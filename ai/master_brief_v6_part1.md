@@ -981,7 +981,440 @@ data_quarantine (
 `✓ FIXED: D-1 — SERPAPI_KEY and YOUTUBE_API_KEY now have defined workers that use them`
 
 ---
-<!-- Section 6: Auth & Compliance — PENDING -->
+## Section 6 — Multi-Tenancy, Auth & Compliance
+
+### 6.1 — Tenant Model
+
+```sql
+tenants (
+    id uuid PK DEFAULT gen_random_uuid(),
+    name text NOT NULL,
+    plan text NOT NULL DEFAULT 'starter',  -- 'starter', 'pro', 'agency', 'enterprise', 'trial', 'locked'
+    billing_cycle text DEFAULT 'monthly',  -- 'monthly', 'annual'
+    trial_ends_at timestamptz,             -- null if not on trial
+    stripe_customer_id text,
+    stripe_subscription_id text,
+    custom_domain text,
+    brand_config jsonb DEFAULT '{}',       -- { logo_url, primary_color, company_name }
+    api_keys jsonb DEFAULT '{}',           -- per-tenant external API key overrides (enterprise)
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
+)
+```
+
+`✓ FIXED: D-6 — clarified that per-tenant API keys live in tenants.api_keys jsonb. No separate platform_configs table.`
+
+### 6.2 — User Model & Roles
+
+```sql
+users (
+    id uuid PK,                            -- = Supabase Auth user id
+    tenant_id uuid NOT NULL FK → tenants(id),
+    role text NOT NULL DEFAULT 'viewer',   -- 'super_admin', 'agency_owner', 'analyst', 'viewer'
+    email text NOT NULL,
+    display_name text,
+    avatar_url text,
+    last_active_at timestamptz,
+    created_at timestamptz DEFAULT now()
+)
+```
+
+**Role-Based Access Control**:
+
+| Role | Intelligence Features | Data Management | Team Management | Billing | System Config |
+|------|----------------------|-----------------|-----------------|---------|---------------|
+| super_admin | All | All (export, save, alert, archive) | All (invite, change roles, remove) | All (plan changes, invoices) | All (white-label, API keys) |
+| agency_owner | All | All | All except billing | View invoices only | Brand config only |
+| analyst | All | All (export, save, alert, archive) | View team only | None | None |
+| viewer | View dashboards and reports only | Read-only | View team only | None | None |
+
+### 6.3 — Team Invitation Flow
+
+`★ NEW: S-9 — team invitation and multi-user management (P0 launch blocker)`
+
+```sql
+invitations (
+    id uuid PK DEFAULT gen_random_uuid(),
+    tenant_id uuid NOT NULL FK → tenants(id),
+    invited_by uuid NOT NULL FK → users(id),
+    email text NOT NULL,
+    role text NOT NULL DEFAULT 'analyst',
+    token text NOT NULL UNIQUE,            -- secure random token for invite link
+    expires_at timestamptz NOT NULL,       -- 7 days from creation
+    accepted_at timestamptz,               -- null until accepted
+    created_at timestamptz DEFAULT now()
+)
+```
+
+**Flow**:
+1. Owner/admin enters email + role on Team Management page
+2. System creates invitation record + sends email via Resend with invite link
+3. Invite link: `{app_url}/invite/{token}`
+4. Invitee clicks link → if no account, signs up via Supabase Auth → auto-assigned to tenant with pre-set role
+5. If invitee already has an account on different tenant → error ("This email is already associated with another organisation")
+6. Invitation expires after 7 days. Owner can resend.
+
+**Seat Limits Per Plan**:
+
+| Plan | Max Users |
+|------|-----------|
+| Starter | 1 |
+| Pro | 3 |
+| Agency | 10 |
+| Enterprise | Unlimited (configurable) |
+
+### 6.4 — Authentication
+
+**Supabase Auth configuration**:
+- Email/password sign-up
+- Google OAuth
+- Magic links (passwordless)
+- JWT on all API routes
+
+**JWT Configuration** (`✓ FIXED: T-11 — defence in depth`):
+- JWT expiry: 15 minutes (short-lived)
+- Refresh token: 7 days
+- JWT claims include: `user_id`, `tenant_id`, `role`
+- JWT blacklist on logout (stored in Redis, checked on each request)
+
+**Application-Layer Tenant Enforcement** (`✓ FIXED: T-11`):
+
+```typescript
+// Express middleware — belt-and-suspenders with RLS
+function enforceTenantIsolation(req, res, next) {
+    const jwtTenantId = req.user.tenant_id
+    const requestedTenantId = req.params.tenantId || req.query.tenantId
+
+    if (requestedTenantId && requestedTenantId !== jwtTenantId) {
+        // Log cross-tenant access attempt
+        await logSecurityEvent({
+            type: 'cross_tenant_access_attempt',
+            user_id: req.user.id,
+            jwt_tenant: jwtTenantId,
+            requested_tenant: requestedTenantId,
+            ip: req.ip,
+            path: req.path
+        })
+        return res.status(403).json({ error: 'Access denied' })
+    }
+    next()
+}
+```
+
+### 6.5 — Row-Level Security (RLS)
+
+ALL data tables include `tenant_id uuid NOT NULL`. Supabase RLS enforces isolation at the database level.
+
+**Standard RLS policy** (applied to every data table):
+
+```sql
+CREATE POLICY "Tenant isolation" ON {table_name}
+    FOR ALL
+    USING (tenant_id = (auth.jwt()->>'tenant_id')::uuid)
+    WITH CHECK (tenant_id = (auth.jwt()->>'tenant_id')::uuid);
+```
+
+**Admin-only tables** (scrape_log, scrape_schedule, api_usage_log, data_quarantine):
+
+```sql
+CREATE POLICY "Admin only" ON {table_name}
+    FOR ALL
+    USING (
+        tenant_id = (auth.jwt()->>'tenant_id')::uuid
+        AND (auth.jwt()->>'role') IN ('super_admin', 'agency_owner')
+    );
+```
+
+**Tenant A can NEVER see tenant B's data — enforced at both DB level (RLS) and application level (middleware).**
+
+### 6.6 — API Rate Limiting
+
+`✓ FIXED: T-12 — no rate limiting existed on API routes`
+
+Implemented via Redis counters in Express middleware.
+
+| Endpoint Category | Rate Limit | Window | Scope |
+|------------------|-----------|--------|-------|
+| Auth (login, signup, magic link) | 5 requests | 15 minutes | Per IP |
+| Scrape triggers (section open, refresh) | 10 requests | 1 minute | Per user |
+| Product detail (click) | 30 requests | 1 minute | Per user |
+| Data export | 5 requests | 1 hour | Per user |
+| Public API (Agency/Enterprise) | Plan limit / 30 | Per day (divided into 30-day month) | Per tenant |
+| Outreach email send | 10 requests | 1 hour | Per user |
+
+**Response on rate limit**: HTTP 429 with `Retry-After` header.
+
+### 6.7 — Onboarding Flow
+
+**5-Step Onboarding**:
+
+| Step | Action | Implementation |
+|------|--------|----------------|
+| 1 | Sign up | Supabase Auth creates user. System creates tenant record with `plan: 'trial'`, `trial_ends_at: now() + 14 days`. |
+| 2 | Plan preview | Show plan comparison. Trial starts on Pro plan. "You'll choose a plan before your trial ends." |
+| 3 | Platform connection | Wizard: select TikTok region, Amazon marketplace, Shopify niche filters. Stored in `tenants.brand_config.platform_preferences`. |
+| 4 | First scrape triggered | Enqueue P0 scrape for selected platforms. Dashboard shows skeleton loading states (see Section 8). |
+| 5 | Onboarding checklist | Persistent sidebar checklist: "Set your first alert" (done?), "Save a product" (done?), "Find a creator" (done?). Dismissed when all 3 complete. |
+
+**Onboarding Empty States** (`★ NEW: S-1 — P0 launch blocker`):
+
+| State | What User Sees |
+|-------|---------------|
+| First scrape running (0–3 min) | Skeleton loading cards with shimmer animation + "Setting up your intelligence feed... this takes about 2 minutes" message |
+| First scrape complete, few products | Real product cards + "Your feed is building. More products will appear as we scan more sources." banner |
+| Demo data toggle | Optional: "See how YouSell works with sample data" button. Shows pre-loaded demo products. Toggle off returns to real data. |
+
+**Re-engagement** (`★ NEW: S-1`):
+- If onboarding checklist not completed within 24h → Resend email: "You're 2 steps away from your first product insight"
+- If user hasn't logged in within 48h of signup → Resend email: "Your trend feed is ready — here's what's trending this week"
+
+### 6.8 — Billing Architecture (Stripe)
+
+**Plan Selection**:
+- Stripe Checkout for initial plan selection and trial-to-paid conversion
+- Stripe Customer Portal for self-service plan changes and invoice history
+
+**Usage Metering** (via Stripe Meters):
+- Products tracked (count against plan limit)
+- API calls (Agency/Enterprise)
+- Outreach emails sent (Pro: 5/mo, Agency: 50/mo)
+- Alerts fired (Starter: 3, Pro: 25)
+
+**Overage Protection**: Usage limits enforced in application middleware BEFORE they cost money. Approaching-limit warning at 80%.
+
+**Free Trial** (`✓ FIXED: T-18 — trial lifecycle fully defined`):
+
+| Day | Event | Action |
+|-----|-------|--------|
+| 0 | Sign up | Create tenant with `plan: 'trial'`, `trial_ends_at: now() + 14d`. Full Pro plan access. No card required. |
+| 7 | Reminder | Resend email: "Your trial is halfway through. Here's what you've discovered so far: [stats]." |
+| 12 | Urgent reminder | Resend email: "2 days left on your trial. Upgrade to keep your data and intelligence feed." |
+| 14 | Trial expires | Downgrade to `plan: 'locked'`. Can view dashboard (read-only). Cannot trigger scrapes, export, or send outreach. Banner: "Your trial has ended. Choose a plan to continue." |
+| 21 | Final reminder | Resend email: "Your data will be archived in 9 days. Upgrade to keep it." |
+| 30 | Data archived | Data moved to cold storage. Account still exists. Can re-activate by selecting plan. |
+
+**Dunning Flow** (`★ NEW: S-12 — P0 launch blocker`):
+
+**Stripe Webhook Handling** (`✓ FIXED: T-3`):
+
+Endpoint: `POST /api/webhooks/stripe`
+
+```typescript
+// Verify webhook signature
+const event = stripe.webhooks.constructEvent(
+    req.body,
+    req.headers['stripe-signature'],
+    process.env.STRIPE_WEBHOOK_SECRET
+)
+
+// Idempotency: store event.id in processed_webhooks table
+// Skip if already processed
+```
+
+**Events handled**:
+
+| Stripe Event | Action |
+|-------------|--------|
+| `checkout.session.completed` | Activate subscription. Update tenant plan. Send welcome email. |
+| `invoice.payment_succeeded` | Update `tenant.plan_active_until`. Log payment. |
+| `invoice.payment_failed` | Start dunning flow (see below). |
+| `customer.subscription.updated` | Update tenant plan + limits. Handle upgrade/downgrade (see S-13). |
+| `customer.subscription.deleted` | Set tenant `plan: 'locked'`. Start 30-day data preservation. |
+
+**Dunning Timeline**:
+
+| Day | Event | Tenant State | User Experience |
+|-----|-------|-------------|-----------------|
+| 0 | Payment fails | `plan_status: 'past_due'` | Stripe auto-retries. Email: "We couldn't charge your card. Please update your payment method." + Stripe Customer Portal link. |
+| 3 | Grace period ends | `plan_status: 'grace_expired'` | Full access continues. Email: "Action required — update payment within 4 days to avoid service interruption." |
+| 7 | Restricted mode | `plan_status: 'restricted'` | Read-only access. No scrapes, no exports, no outreach. Banner: "Your account is restricted due to payment failure. Update payment to restore access." |
+| 14 | Account locked | `plan_status: 'locked'` | Cannot access dashboard. Login redirects to payment update page. Email: "Your account is locked. Data preserved for 16 more days." |
+| 30 | Data archived | `plan_status: 'archived'` | Data moved to cold storage. Account shell preserved. Can re-activate with new payment. |
+
+**Upgrade/Downgrade Proration** (`★ NEW: S-13`):
+
+| Action | Billing | Data | Feature Access |
+|--------|---------|------|----------------|
+| Upgrade (e.g., Starter → Pro) | Prorated charge immediately via Stripe | New limits effective immediately. Historical data preserved. | New features available immediately. |
+| Downgrade (e.g., Agency → Pro) | Takes effect at end of current billing cycle | Excess products marked `status: 'archived'` (not deleted). User warned before confirming: "You will lose access to: Agency reports. 20,000 of your 25,000 products will be archived." | Features restricted at cycle end. |
+
+**Annual Plans** (`★ NEW: S-14`):
+
+| Plan | Monthly | Annual (20% off) |
+|------|---------|-------------------|
+| Starter | $49/mo | $39/mo ($468/yr) |
+| Pro | $149/mo | $119/mo ($1,428/yr) |
+| Agency | $349/mo | $279/mo ($3,348/yr) |
+| Enterprise | Custom | Custom |
+
+Toggle on pricing page. Stripe handles annual invoicing natively.
+
+### 6.9 — Database Schema (Complete)
+
+`✓ FIXED: D-5 — raw_listings added. S-4, S-9, S-15, S-16 tables added.`
+
+#### Core Intelligence Tables
+
+| Table | Purpose | RLS Policy |
+|-------|---------|-----------|
+| tenants | Organisation accounts, plan config, branding | Super admin only |
+| users | User accounts linked to tenants | Own row + admin |
+| products | Core product intelligence data | By tenant_id |
+| creators | Creator profiles across platforms | By tenant_id |
+| videos | Video content linked to products/creators | By tenant_id |
+| shops | Store profiles (TikTok Shop, Shopify stores, Amazon sellers) | By tenant_id |
+| ads | Ad creative data across platforms | By tenant_id |
+| trend_scores | Time-series trend score history per product | By tenant_id |
+| platform_scores | AI-generated platform profitability scores | By tenant_id |
+| product_platform_matches | Cross-platform product graph (edge table) | By tenant_id |
+| creator_product_links | Creator-product relationships with match scores | By tenant_id |
+| affiliate_programs | Affiliate programme data per product | By tenant_id |
+| predictive_signals | Pre-trend detection signals | By tenant_id |
+| niches | Niche-level aggregated intelligence (★ NEW: MN-2) | By tenant_id |
+| raw_listings | Raw scrape data before transformation (✓ FIXED: D-5) | By tenant_id |
+
+#### User Activity Tables
+
+| Table | Purpose | RLS Policy |
+|-------|---------|-----------|
+| alert_configs | User-configured trend alert thresholds | By tenant_id + user |
+| saved_collections | Saved product/creator bookmarks | By tenant_id + user |
+| product_user_status | Dismiss/archive status per user per product (★ NEW: S-16) | By tenant_id + user |
+| saved_views | Custom filter/sort/column configurations (★ NEW: S-6) | By tenant_id + user |
+| annotations | Team notes on products/creators/collections (★ NEW: MN-4) | By tenant_id |
+| notification_preferences | Per-user notification channel/frequency config (★ NEW: S-4) | By tenant_id + user |
+| notifications | In-app notification records | By tenant_id + user |
+
+#### Outreach & Communication Tables
+
+| Table | Purpose | RLS Policy |
+|-------|---------|-----------|
+| outreach_sequences | Creator outreach email tracking (★ NEW: per M-5) | By tenant_id |
+| outreach_optouts | Creator email opt-out records | By tenant_id |
+
+#### Billing & Team Tables
+
+| Table | Purpose | RLS Policy |
+|-------|---------|-----------|
+| invitations | Team member invitation tokens (★ NEW: S-9) | By tenant_id (admin only) |
+| referrals | Referral tracking (★ NEW: S-15) | By tenant_id |
+| processed_webhooks | Stripe webhook idempotency tracking | System only |
+
+#### System Tables
+
+| Table | Purpose | RLS Policy |
+|-------|---------|-----------|
+| scrape_log | Worker execution history | Admin only |
+| scrape_schedule | Platform refresh schedule | Admin only |
+| api_usage_log | API usage + audit log | Admin only |
+| data_quarantine | Failed validation records (★ NEW: per T-8) | Admin only |
+| dashboard_cards_mv | MATERIALISED VIEW — pre-joined product intelligence | By tenant_id |
+
+#### Webhook Config Tables
+
+| Table | Purpose | RLS Policy |
+|-------|---------|-----------|
+| webhook_configs | User-configured webhook endpoints for alerts (★ NEW: per brief 14.9) | By tenant_id (admin only) |
+
+### 6.10 — Database Migration Strategy
+
+`✓ FIXED: T-24 — no migration strategy existed`
+
+- **Tool**: Supabase CLI (`supabase migration new`, `supabase db push`)
+- **Storage**: All migrations in `supabase/migrations/` directory, committed to Git
+- **Testing**: All migrations tested against a staging Supabase project before production
+- **Reversibility**: Every migration has a corresponding down migration where possible
+- **Zero-downtime**: Use `ALTER TABLE ... ADD COLUMN` (non-blocking) instead of table recreations
+
+### 6.11 — GDPR & Privacy Compliance
+
+`✓ FIXED: T-16 — no GDPR compliance existed`
+
+#### Consent & Data Collection
+
+| Data Type | Legal Basis | User Consent Required? |
+|-----------|------------|----------------------|
+| User account data (email, name) | Contract (service delivery) | Terms acceptance at signup |
+| Scraped product data (public) | Legitimate interest | No (publicly available data) |
+| Creator data (public profiles) | Legitimate interest | No (publicly available data) |
+| Creator outreach (email) | Legitimate interest + consent | CAN-SPAM: unsubscribe link. GDPR: publicly listed email only. |
+| Analytics / usage tracking | Legitimate interest | Cookie consent banner |
+
+#### Right to Deletion (GDPR Article 17)
+
+**Cascade delete across ALL tables** when a tenant requests deletion:
+
+```sql
+-- Order matters for FK constraints
+DELETE FROM notifications WHERE tenant_id = :id;
+DELETE FROM notification_preferences WHERE tenant_id = :id;
+DELETE FROM outreach_optouts WHERE tenant_id = :id;
+DELETE FROM outreach_sequences WHERE tenant_id = :id;
+DELETE FROM annotations WHERE tenant_id = :id;
+DELETE FROM product_user_status WHERE tenant_id = :id;
+DELETE FROM saved_views WHERE tenant_id = :id;
+DELETE FROM saved_collections WHERE tenant_id = :id;
+DELETE FROM alert_configs WHERE tenant_id = :id;
+DELETE FROM webhook_configs WHERE tenant_id = :id;
+DELETE FROM predictive_signals WHERE tenant_id = :id;
+DELETE FROM affiliate_programs WHERE tenant_id = :id;
+DELETE FROM creator_product_links WHERE tenant_id = :id;
+DELETE FROM product_platform_matches WHERE tenant_id = :id;
+DELETE FROM platform_scores WHERE tenant_id = :id;
+DELETE FROM trend_scores WHERE tenant_id = :id;
+DELETE FROM ads WHERE tenant_id = :id;
+DELETE FROM shops WHERE tenant_id = :id;
+DELETE FROM videos WHERE tenant_id = :id;
+DELETE FROM creators WHERE tenant_id = :id;
+DELETE FROM products WHERE tenant_id = :id;
+DELETE FROM niches WHERE tenant_id = :id;
+DELETE FROM raw_listings WHERE tenant_id = :id;
+DELETE FROM data_quarantine WHERE tenant_id = :id;
+DELETE FROM scrape_log WHERE tenant_id = :id;
+DELETE FROM scrape_schedule WHERE tenant_id = :id;
+DELETE FROM api_usage_log WHERE tenant_id = :id;
+DELETE FROM invitations WHERE tenant_id = :id;
+DELETE FROM referrals WHERE tenant_id = :id;
+DELETE FROM users WHERE tenant_id = :id;
+DELETE FROM tenants WHERE id = :id;
+```
+
+**Processing time**: 30 days from request (GDPR allows this). Confirmation email sent on completion.
+
+#### Subject Access Request (SAR)
+
+User can request full data export from Settings page. Export includes: all products, creators, collections, alerts, outreach history, usage logs. Delivered as ZIP of CSV files via email.
+
+#### Data Retention Policy (`★ NEW: S-8`)
+
+| Data Type | Retention | Visible to User |
+|-----------|-----------|----------------|
+| Product intelligence data | While subscription active | Yes (Settings page) |
+| Trend score history | 90 days rolling | Yes (Settings page) |
+| Scrape logs | 90 days | Admin only |
+| API usage logs | 90 days | Admin only |
+| Notifications | 30 days | Yes |
+| Dead letter queue | 30 days | Admin only |
+| Data after cancellation | 30 days preserved, then archived | Yes (cancellation flow warning) |
+
+**Nightly cleanup job**: Runs at 03:00 UTC. Deletes records past retention period. Logs rows deleted to scrape_log.
+
+### 6.12 — Client Sharing (Agency Feature)
+
+`★ NEW: S-11 — external client sharing`
+
+**Shareable Links** (Agency + Enterprise plans):
+- Token-based read-only links for product pages and collections
+- Expiry: configurable (7d, 30d, 90d, or no expiry)
+- URL format: `{app_url}/share/{token}`
+- No login required for viewer. Data scoped to shared items only.
+
+**Client Portal** (Enterprise plan):
+- Lightweight view-only dashboard branded with agency logo
+- Client accounts: sub-users under agency tenant with `viewer` role
+- Restricted to shared collections only (not full product feed)
+
+---
 <!-- Section 7: Intelligence Chain — PENDING -->
 <!-- Section 8: Home Dashboard — PENDING -->
 <!-- Section 9: Platform Sections — PENDING -->
