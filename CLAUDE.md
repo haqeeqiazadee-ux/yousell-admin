@@ -1,3 +1,33 @@
+Deployment Instructions
+1. Push to GitHub
+cd yousell-admin
+git remote set-url origin https://github.com/haqeeqiazadee-ux/yousell-admin.git
+git push -u origin main --force
+2. Create .env.local (already created, but won't be in git)
+cp .env.local.example .env.local
+# Edit with your actual values
+3. Deploy to Netlify
+Option A: Link to GitHub (Recommended)
+Go to https://app.netlify.com
+Import the haqeeqiazadee-ux/yousell-admin repo
+Build command: npm run build
+Publish directory: .next
+Add environment variables in Netlify UI:
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY
+Option B: CLI Deploy
+npm install -g netlify-cli
+netlify login
+netlify link --id inquisitive-cendol-4771eb
+netlify deploy --prod --build
+4. Set Supabase Auth Redirect URL
+In your Supabase dashboard:
+
+Go to Authentication > URL Configuration
+Add your Netlify URL to "Redirect URLs":
+https://your-site.netlify.app/api/auth/callback
+
 # YOUSELL Platform – Claude Project Context
 
 This file is the authoritative project context for the YOUSELL platform.
