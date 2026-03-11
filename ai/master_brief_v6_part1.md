@@ -1415,7 +1415,203 @@ User can request full data export from Settings page. Export includes: all produ
 - Restricted to shared collections only (not full product feed)
 
 ---
-<!-- Section 7: Intelligence Chain — PENDING -->
+## Section 7 — Universal Product Intelligence Chain
+
+### 7.1 — Chain Parity Requirement
+
+Every product on every platform shows this identical 7-row intelligence chain. Chain parity across TikTok, Amazon, and Shopify is a **non-negotiable requirement**. Each row adapts its data sources per platform but maintains the same structure and depth.
+
+### 7.2 — The 7 Rows
+
+#### Row 1 — Product Identity
+
+| Field | Description | Source |
+|-------|------------|--------|
+| Image | Primary product image | Platform scrape |
+| Title | Product title (normalised) | Platform scrape |
+| Category | Product category / niche | Platform scrape + AI classification |
+| Product type | physical / digital / SaaS / AI | AI classification |
+| Source platform badge | TikTok / Amazon / Shopify | Platform of first discovery |
+| Trend badge | Trending / Pre-Trend / — | trend_score > 75 or predictive_score > 65 |
+| Lifecycle badge | Emerging / Growing / Peak / Declining / Saturated (★ NEW: MN-1) | lifecycle_stage computed field |
+| First detected date | When YouSell first found this product | products.created_at |
+| Price range | Min–max price across platforms | product_platform_matches prices |
+| Data freshness badge | LIVE / RECENT / STALE / OUTDATED / UPDATING | Redis freshness key |
+
+**Worker**: `product_extractor_worker` — fires after any scrape completes
+**Trigger to refresh**: On product click
+**Max stale age**: 24 hours
+
+---
+
+#### Row 2 — Product Stats
+
+| Field | Description | Source |
+|-------|------------|--------|
+| Trend Score (0–100) | Viral momentum score | trend_scoring_worker |
+| Predictive Score (0–100) | Pre-trend detection confidence | predictive_discovery_worker |
+| Saturation Score (0–100) | Market saturation level (✓ FIXED: D-11) | trend_scoring_worker (lifecycle computation) |
+| Lifecycle Stage | Emerging → Growing → Peak → Declining → Saturated (★ NEW: MN-1) | Derived from trend slope + saturation |
+| Est. monthly sales (units) | Estimated units sold per month | Platform-specific estimation |
+| Est. monthly revenue ($) | sales × avg price | Computed |
+| Price history chart | 30/60/90 day price trend | trend_scores time-series |
+| Review count & velocity | Total reviews + reviews/week | Platform scrape (Amazon, Shopify) |
+| Search volume trend | Google Trends interest over time | google_trends_worker (✓ FIXED: D-1) |
+| 7d / 30d / 90d momentum graphs | Trend score over time periods | trend_scores time-series |
+| Platform breakdown bar | % presence across platforms | product_platform_matches |
+
+**Worker**: `trend_scoring_worker` + `amazon_bsr_scanner_worker` + `google_trends_worker`
+**Trigger to refresh**: On product click
+**Max stale age**: 3 hours
+
+---
+
+#### Row 3 — Related Influencers (ranked by Creator-Product Match Score)
+
+| Field | Description | Source |
+|-------|------------|--------|
+| Avatar | Creator profile image | creator_monitor_worker |
+| Username | Creator handle | creator_monitor_worker |
+| Platform | TikTok / YouTube / Instagram | creator_monitor_worker |
+| Followers | Total follower count | creator_monitor_worker |
+| Engagement rate | (likes + comments) / followers × 100 | Computed |
+| Niche alignment % | Keyword overlap score | match_score computation |
+| Est. sales generated | Historical sales for similar products | creator_product_links |
+| Videos made | Count of videos featuring this product | videos table |
+| Match Score (0–100) | Creator-Product Match Score | Section 10 algorithm |
+| Outreach button | Generates email copy (Anthropic) → sends via Resend | Outreach system (Section 3, Moat 5) |
+
+**Worker**: `creator_monitor_worker` + match engine
+**Trigger to refresh**: On row expand
+**Max stale age**: 6 hours
+
+---
+
+#### Row 4 — Marketplace Presence
+
+`✓ FIXED: D-9 — renamed from "TikTok Shops" to "Marketplace Presence" for chain parity`
+
+This row adapts per source platform:
+
+**When product source = TikTok**:
+
+| Field | Description |
+|-------|------------|
+| Shop name | TikTok Shop name |
+| Logo | Shop logo |
+| TikTok followers | Shop follower count |
+| Est. GMV/month | Gross merchandise value estimate |
+| Units sold | Total units sold |
+| Active creator count | Creators promoting for this shop |
+| Ads running | Number of active ads |
+| Growth rate % | Month-over-month growth |
+| Commission rate | TikTok affiliate programme rate (if available) |
+
+**When product source = Amazon**:
+
+| Field | Description |
+|-------|------------|
+| Seller name | Amazon seller / brand name |
+| BSR rank | Best Sellers Rank in category |
+| Price | Current Amazon price |
+| Reviews | Total review count |
+| Review velocity | New reviews per week |
+| Est. monthly sales | Estimated units/month |
+| FBA/FBM | Fulfilment method |
+| Category rank change | BSR movement over 30d |
+
+**When product source = Shopify**:
+
+| Field | Description |
+|-------|------------|
+| Store name | Shopify store name |
+| Store URL | Full URL |
+| Traffic estimate | Monthly visitor estimate |
+| Est. revenue | Monthly revenue estimate |
+| Product count | Total products in store |
+| Ad spend signal | Detected ad activity |
+| Tech stack | Detected Shopify apps |
+| Growth rate % | Month-over-month traffic growth |
+
+**Worker**: `tiktok_discovery_worker` / `amazon_bsr_scanner_worker` / `shopify_store_discovery_worker` (platform-dependent)
+**Trigger to refresh**: On row expand
+**Max stale age**: 3 hours
+
+---
+
+#### Row 5 — Other Sales Channels (cross-platform presence)
+
+Shows the same product on OTHER platforms (not the source platform).
+
+| Platform | Fields | Worker |
+|----------|--------|--------|
+| Amazon | ASIN, BSR rank, Price, Reviews, Est. monthly sales | amazon_tiktok_match_worker + cross_platform_match_worker |
+| Shopify | Store URL, Traffic estimate, Revenue, Ad signal | shopify_store_discovery_worker + cross_platform_match_worker |
+| TikTok | TikTok Shop, GMV, Creator count, Growth | tiktok_discovery_worker + cross_platform_match_worker |
+| YouTube | Channel, Views, Affiliate link detected, Sub count | youtube_worker (✓ FIXED: D-1) |
+| Pinterest | Board saves, Traffic signal, Pin velocity | pinterest_trend_worker |
+| eBay | Placeholder: "Coming soon" (✓ FIXED: T-20) | No worker yet — Phase 3 future addition |
+
+**Data source**: `product_platform_matches` table (cross-platform graph edges) + platform-specific tables
+
+**Worker**: `cross_platform_match_worker` (✓ FIXED: D-15 — this worker now exists)
+**Trigger to refresh**: On row expand
+**Max stale age**: 6 hours
+
+---
+
+#### Row 6 — Viral Videos & Ads
+
+| Field | Description | Source |
+|-------|------------|--------|
+| Thumbnail | Video thumbnail image | video_scraper_worker |
+| Platform | TikTok / YouTube / Instagram | video_scraper_worker |
+| Creator | Creator username (linked to Row 3) | video_scraper_worker |
+| Views | Total view count | video_scraper_worker |
+| Likes | Like count | video_scraper_worker |
+| Shares | Share count | video_scraper_worker |
+| Comments | Comment count | video_scraper_worker |
+| Engagement velocity | Views per hour (current) | Computed from time-series |
+| Organic vs Ad classification | Is this organic content or a paid ad? | AI classification or `is_ad` flag |
+| Est. ad spend | Estimated spend (ads only) | facebook_ads_worker / tiktok_ads_worker |
+| Duplication count | Same creative on N accounts (ads only) | facebook_ads_worker / tiktok_ads_worker |
+| Ad run duration | How long this ad has been running | facebook_ads_worker / tiktok_ads_worker |
+
+**Worker**: `video_scraper_worker` + `facebook_ads_worker` + `tiktok_ads_worker`
+**Trigger to refresh**: On row expand
+**Max stale age**: 3 hours
+
+---
+
+#### Row 7 — Best Platform Recommendation (AI-powered)
+
+| Field | Description | Source |
+|-------|------------|--------|
+| Recommended platform | Top-ranked platform with score (e.g., "TikTok Shop: 94/100") | platform_profitability_scorer |
+| Ranked list | All platforms with scores | platform_scores table |
+| Per-platform breakdown | Margin estimate, competition level, demand score | platform_scores table |
+| AI rationale | One-line explanation from Anthropic | Anthropic API (cached) |
+| Supplier match | AliExpress/CJ suggestion with MOQ, price, lead time | Manual input + future supplier scrape (Phase 3) |
+| Data freshness badge | LIVE / RECENT / STALE / OUTDATED | Redis freshness key |
+| Manual refresh button | Click to re-run platform profitability scorer | Enqueues P0 job |
+
+**Worker**: `platform_profitability_scorer` (Anthropic API)
+**Trigger to refresh**: On product click
+**Max stale age**: 12 hours
+
+### 7.3 — Chain Data Sources Summary
+
+| Row | Data Source | Trigger | Max Stale | Priority |
+|-----|-----------|---------|-----------|----------|
+| 1 — Identity | product_extractor_worker | Product click | 24h | P0 |
+| 2 — Stats | trend_scoring_worker + BSR + google_trends | Product click | 3h | P0 |
+| 3 — Influencers | creator_monitor + match engine | Row expand | 6h | P0 |
+| 4 — Marketplace | Platform-specific workers | Row expand | 3h | P0 |
+| 5 — Other Channels | cross_platform_match_worker | Row expand | 6h | P0 |
+| 6 — Videos & Ads | video_scraper + ad workers | Row expand | 3h | P0 |
+| 7 — Best Platform | platform_profitability_scorer | Product click | 12h | P0 |
+
+---
 <!-- Section 8: Home Dashboard — PENDING -->
 <!-- Section 9: Platform Sections — PENDING -->
 <!-- Section 10: Algorithms — PENDING -->
