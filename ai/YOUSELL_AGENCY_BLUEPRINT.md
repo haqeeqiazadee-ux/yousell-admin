@@ -169,7 +169,9 @@ For hero/flagship product images where quality matters most, Nano Banana Pro at 
 5. Native n8n node exists
 6. Built into Blotato as well (dual integration path)
 
-**Fallback:** OpenAI TTS via n8n for overflow (already integrated, pay-per-use ~$0.015/1000 chars)
+**Cost optimization:** Use **OpenAI TTS** (~$0.20/mo) for day-to-day product voiceovers via native n8n node (13 voices, very good quality, $15/1M characters). Reserve **ElevenLabs** for hero/showcase content where maximum naturalness matters. This brings effective voiceover cost to ~$5.20/month.
+
+**Fallback:** Google Cloud TTS WaveNet (free tier: 1M characters/month — massive headroom)
 
 **Engine 3 Voiceover Monthly Cost: $5**
 
@@ -190,7 +192,7 @@ Blotato's $29/mo Starter plan includes:
 - Scheduling with optimal time slots
 - Native n8n node for full automation
 
-**Postiz as free backup:** Self-hostable on Railway (template exists), 17+ platforms, full API. Keep this as a fallback if Blotato ever has posting issues. Cost: $0 (self-hosted), but adds Railway resource usage.
+**Postiz as backup:** Self-hostable on Railway (one-click deploy template exists), 17+ platforms, full API + webhooks. Keep as fallback if Blotato has posting issues or if you outgrow 20 accounts. Cost: ~$10-20/mo self-hosted (Railway compute + Redis + PostgreSQL), not free. Only worth deploying if Blotato becomes a bottleneck.
 
 **Engine 3 Publishing Monthly Cost: $0** (included in Blotato $29)
 
