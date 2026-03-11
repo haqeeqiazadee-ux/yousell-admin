@@ -1,0 +1,1151 @@
+# YOUSELL PLATFORM — Definitive Agency Blueprint
+## Fully Automated E-Commerce Sales & Marketing Agency
+### Strategic Architecture Decision Document v1.0
+
+**Date:** 2026-03-11
+**Author:** AI Systems Architect
+**Scope:** Engine 1 (Purchasing) + Engine 2 (Profitability) + Engine 3 (Content & Marketing)
+**Budget Ceiling:** ~$300/month total (~$160 available for new engines)
+
+---
+
+# PART 1: TOOL SELECTION ANALYSIS
+
+---
+
+## ENGINE 1 — PURCHASING ENGINE
+
+### Tool Evaluation
+
+| Platform | Monthly Cost | API? | Per-Query Cost | Product Count | n8n Integration | Verdict |
+|----------|-------------|------|---------------|---------------|----------------|---------|
+| **CJDropshipping** | **$0** | **Yes (REST, documented)** | **Free** | 400K+ | HTTP Request | **PRIMARY** |
+| AliExpress (Apify) | $0 (Apify free tier) + ~$0.004-0.006/result | Via Apify | ~$4-6/1000 products | Millions | Via Apify node | SECONDARY |
+| TopDawg | $35/mo (Premier for API) | Yes (gated) | Included | 500K+ US | HTTP Request | REJECTED |
+| Alibaba (Apify) | Apify compute costs | Via Apify | ~$3-5/1000 | Millions (wholesale) | Via Apify node | OPTIONAL (P2) |
+| Spocket | $39/mo+ | Limited | N/A | 100K+ | None | REJECTED |
+| Zendrop | $49/mo+ | Limited | N/A | Unknown | None | REJECTED |
+
+### My Recommendation: CJDropshipping (Primary) + AliExpress via Apify (Secondary)
+
+**Why CJDropshipping wins as primary:**
+1. **FREE API** with full product search, pricing, and supplier data — no monthly fee
+2. **Well-documented REST API** at developers.cjdropshipping.com with Elasticsearch-powered product search
+3. Supports keyword search with filters (price range, category, country)
+4. Returns: product price, shipping costs by destination, supplier info, images, variants
+5. Global warehouses (CN, US, Thailand, Germany, Indonesia) — reduces shipping time estimates
+6. No MOQ — perfect for dropshipping validation
+7. Direct integration via n8n HTTP Request node
+
+**Why AliExpress via Apify as secondary:**
+1. Largest product catalog (millions of products)
+2. Apify's free tier ($5/mo credits) covers ~800-1000 product lookups/month
+3. Provides pricing comparison data to validate CJ prices
+4. Multiple scrapers available (sovereigntaylor, epctex, logical_scrapers)
+
+**What I explicitly rejected and why:**
+- **TopDawg ($35/mo):** API gated behind Premier membership. For $35/mo you get API access but limited documentation. CJDropshipping provides the same data for free.
+- **Spocket ($39/mo):** No proper API, expensive, smaller catalog. Not worth the cost for approximate price lookups.
+- **Zendrop ($49/mo):** Same issues as Spocket. Premium pricing without premium API access.
+- **Alibaba/1688:** Good for wholesale/MOQ research but not needed for initial cost estimation. Added as optional P2 expansion. Most products found on AliExpress also exist on Alibaba.
+
+**Engine 1 Monthly Cost: $0** (CJDropshipping API is free, AliExpress covered by Apify free tier)
+
+---
+
+## ENGINE 2 — PROFITABILITY INTELLIGENCE ENGINE
+
+### No External Tools Needed
+
+This engine is pure logic + existing Claude API. No new paid services required.
+
+**Components:**
+- Cost calculation: JavaScript/TypeScript logic in Express workers
+- AI decision-making: Anthropic Claude API (already in stack)
+  - Haiku for batch viability assessment (~$0.001/product)
+  - Sonnet for STRONG product deep analysis (~$0.01/product)
+- Database: Supabase PostgreSQL (already in stack)
+
+**Estimated additional Claude API cost:** ~$5-10/mo for 2000-5000 product analyses/month
+
+**Engine 2 Monthly Cost: ~$5-10** (incremental Claude API usage)
+
+---
+
+## ENGINE 3 — CONTENT CREATION & MARKETING ENGINE
+
+This is the critical decision. Here is my definitive analysis.
+
+### 3A. FACELESS VIDEO CREATION
+
+| Tool | Monthly Cost | Videos/Mo (est.) | API? | n8n? | Quality | E-commerce Fit | Verdict |
+|------|-------------|-----------------|------|------|---------|---------------|---------|
+| **Blotato** | **$29** | **~40-60 (1250 credits)** | **Yes (REST)** | **Yes (native node)** | **Good** | **Excellent** | **PRIMARY** |
+| Runway ML | $12 | ~12 (625 credits, 50cr/10s) | Yes | No native | Excellent | Poor (generic) | REJECTED |
+| Flux/BFL API | ~$2-4/mo for 90 images | Pay-per-image | Yes | No native | Excellent images | Images only | SUPPLEMENTARY |
+| InVideo AI | $28 | ~50 | Limited | No | Good | Good | REJECTED |
+| Creatify | $39 (100 credits) | ~5-20 | Yes | No native | Excellent for ads | Excellent | TOO EXPENSIVE |
+| Pippit | ~$20 | Unknown | Unknown | No | Good | Good (TikTok) | INSUFFICIENT DATA |
+| VEO3 via API | ~$0.40/sec | Pay-per-use | Yes (Gemini API) | Yes (HTTP) | Excellent | Good | **CORE VIDEO GEN** |
+| Kling AI | ~$5-10/mo | Varies | Yes (via fal.ai) | No native | Very Good | Good | ALTERNATIVE |
+
+### 3B. AI AVATAR/PRESENTER CONTENT
+
+| Tool | Monthly Cost | Videos/Mo | API? | n8n? | Lip-sync Quality | Verdict |
+|------|-------------|----------|------|------|-----------------|---------|
+| **HeyGen** | **$29** | **~6-10 (200 credits)** | **Yes** | **HTTP** | **Best in class** | **REJECTED (too few videos)** |
+| Creatify | $39 (100 credits) | ~5 | Yes | No | Very good | REJECTED (expensive) |
+| Synthesia | $29 | ~10 | Yes | No | Good (corporate) | REJECTED (corporate feel) |
+| D-ID | Pay-as-you-go | Varies | Yes | No | Good | REJECTED (expensive at scale) |
+| **NanoBanana + VEO3** | **~$8-15/mo** | **20-40** | **Yes** | **Yes (template #8270/#11204)** | **Good (improving fast)** | **PRIMARY** |
+
+### The Critical Comparison: HeyGen vs NanoBanana+VEO3
+
+**HeyGen ($29/mo Creator):**
+- 200 credits/month → approximately 6-10 one-minute videos (Avatar IV costs 20 credits/minute)
+- Best lip-sync quality in the market (Avatar IV)
+- Polished, professional output
+- BUT: 20 videos/month target requires $87+/mo (Business plan) — **blows the budget**
+- API exists but is a separate billing system ($5+ wallet top-ups)
+
+**NanoBanana + VEO3 Pipeline (~$8-15/mo):**
+- NanoBanana 2 generates character-consistent images ($0.067/image at 1K) — use as "avatar frame"
+- Nano Banana Pro for high-quality hero images ($0.134/image at 2K)
+- VEO3/3.1 generates video from reference image ($0.10-0.40/sec via Gemini API)
+- For a 30-second clip: ~$3-12 depending on quality settings (VEO3 Fast vs standard)
+- Using VEO3 Fast at $0.10/sec: 8-second clips = $0.80 each → 20 clips = $16/mo
+- Pre-built n8n templates (#8270, #11204) handle the full pipeline
+- Lip-sync less polished than HeyGen but rapidly improving
+- **Free tier**: 500 Nano Banana images/day via Google AI Studio!
+
+**My verdict: NanoBanana + VEO3 for avatar content.** Here's why:
+1. At $8-15/mo it produces 2-4x more content than HeyGen at $29/mo
+2. The n8n templates (#8270, #11204) already exist — zero custom dev needed
+3. Google's models are improving faster than HeyGen's (Nano Banana 2 launched Feb 2026)
+4. The free tier (500 images/day) means character images cost effectively $0
+5. VEO3 Fast at $0.10/sec makes 8-second clips under $1 each
+6. Quality is "good enough" for TikTok/Reels — these platforms reward authenticity over polish
+
+**Fallback:** If avatar quality becomes a bottleneck impacting sales, HeyGen Creator ($29/mo) can be added later for the highest-performing products only.
+
+### 3C. PRODUCT IMAGES
+
+| Tool | Monthly Cost | Images/Mo | Quality | Verdict |
+|------|-------------|----------|---------|---------|
+| **Nano Banana 2 (free tier)** | **$0** | **500/day = 15,000/mo** | **Excellent** | **PRIMARY** |
+| Nano Banana Pro (API) | ~$2-4/mo for 90 images | Pay-per-image | Studio quality | For hero images |
+| Flux/BFL API | ~$2-3/mo | Pay-per-image ($0.014-0.04) | Excellent | ALTERNATIVE |
+| Imagen 4 (Google) | ~$1-2/mo | Pay-per-image ($0.02-0.06) | Very good | ALTERNATIVE |
+
+**My verdict: Nano Banana 2 via Google AI Studio free tier.** 500 images/day is absurdly generous. Even at the API rate of $0.067/image, 90 images/month costs ~$6. But the free tier makes this effectively $0 for our volume.
+
+For hero/flagship product images where quality matters most, Nano Banana Pro at $0.134/image — budget ~$2/mo for 15 hero images.
+
+**Engine 3 Images Monthly Cost: ~$2** (hero images via Nano Banana Pro API, rest free)
+
+### 3D. VOICEOVER
+
+| Tool | Monthly Cost | Minutes/Mo | Quality | API? | n8n? | Verdict |
+|------|-------------|-----------|---------|------|------|---------|
+| **ElevenLabs** | **$5** | **~30 min** | **Best** | **Yes** | **Yes (native node)** | **PRIMARY** |
+| OpenAI TTS | Pay-per-use | Unlimited | Good | Yes | Yes (native) | FALLBACK |
+| Google Cloud TTS | Free tier | Limited | Good | Yes | Yes | BACKUP |
+| Edge TTS (Microsoft) | Free | Unlimited | Decent | No official | No | NOT RECOMMENDED |
+| Play.ht | $31/mo | Varies | Good | Yes | No | REJECTED (expensive) |
+
+**My verdict: ElevenLabs Starter ($5/mo).** No contest:
+1. 30,000 credits = ~30 minutes of audio/month — covers ~30 product voiceovers (1 min each)
+2. Best voice quality in the market, indistinguishable from human
+3. Voice cloning included — create a consistent brand voice
+4. Commercial rights included
+5. Native n8n node exists
+6. Built into Blotato as well (dual integration path)
+
+**Fallback:** OpenAI TTS via n8n for overflow (already integrated, pay-per-use ~$0.015/1000 chars)
+
+**Engine 3 Voiceover Monthly Cost: $5**
+
+### 3E. SOCIAL MEDIA PUBLISHING
+
+| Tool | Monthly Cost | Platforms | API? | n8n? | Accounts | Verdict |
+|------|-------------|----------|------|------|----------|---------|
+| **Blotato** | **Included ($29)** | **9 platforms** | **Yes** | **Yes (native)** | **20** | **PRIMARY** |
+| Postiz (self-hosted) | $0 | 17+ platforms | Yes | Via HTTP | Unlimited | SECONDARY |
+| Ayrshare | $39/mo | Major platforms | Yes | Yes | 1-5 | REJECTED |
+| Buffer | $6/mo per channel | Major platforms | Yes | Yes | Per channel | REJECTED |
+
+**My verdict: Blotato handles publishing (included in the $29 content plan).**
+
+Blotato's $29/mo Starter plan includes:
+- Publishing to TikTok, Instagram, YouTube, Facebook, LinkedIn, Threads, X, Pinterest, Bluesky
+- 20 social accounts (more than enough for 3 stores)
+- Scheduling with optimal time slots
+- Native n8n node for full automation
+
+**Postiz as free backup:** Self-hostable on Railway (template exists), 17+ platforms, full API. Keep this as a fallback if Blotato ever has posting issues. Cost: $0 (self-hosted), but adds Railway resource usage.
+
+**Engine 3 Publishing Monthly Cost: $0** (included in Blotato $29)
+
+---
+
+## COMPLETE TOOL STACK RECOMMENDATION
+
+| Service | Purpose | Monthly Cost |
+|---------|---------|-------------|
+| **Existing platform** | Frontend, Backend, DB, Auth, etc. | $139 |
+| **CJDropshipping API** | Primary supplier lookups | $0 |
+| **Apify (free tier)** | AliExpress secondary lookups | $0 |
+| **Claude API (incremental)** | Profitability AI analysis | ~$8 |
+| **Blotato Starter** | Faceless video + publishing | $29 |
+| **VEO3 API (Google)** | Avatar video generation | ~$12 |
+| **Nano Banana 2/Pro** | Product images + avatar frames | ~$2 |
+| **ElevenLabs Starter** | AI voiceover | $5 |
+| | | |
+| **TOTAL** | | **~$195/month** |
+
+**vs. Budget ceiling of $300/month — $105 under budget.**
+
+This leaves a $105/month buffer for:
+- Scaling VEO3 usage for more videos
+- Adding HeyGen Creator ($29) if avatar quality needs upgrading
+- Scaling Apify for more supplier lookups
+- Unexpected API costs
+
+---
+
+# PART 2: COMPLETE AGENCY BLUEPRINT
+
+---
+
+## 2A. Intelligence Flow
+
+```
+EXISTING PIPELINE
+Product Discovery (14 scraping workers)
+        ↓
+Scoring Engine (trend 40% + viral 35% + profit 25%)
+        ↓ triggers when final_score >= 60 (WARM/HOT)
+
+ENGINE 1: PURCHASING ENGINE
+        ↓
+CJDropshipping API → product search by title/keywords
+        ↓
+AliExpress (Apify) → price validation/comparison
+        ↓
+Cost Calculator → landed cost per platform
+        ↓
+Stores results in `product_costs` table
+
+ENGINE 2: PROFITABILITY INTELLIGENCE ENGINE (THE BRAIN)
+        ↓
+Reads: product_costs + competitor_prices + platform_fees
+        ↓
+Calculates: gross margin per platform
+        ↓
+Claude Haiku batch → viability verdict (STRONG/MODERATE/WEAK/NOT_VIABLE)
+        ↓
+Claude Sonnet (STRONG only) → deep analysis + content strategy
+        ↓
+Outputs: pricing, marketing budget, platform selection, content priority
+        ↓
+Stores results in `profitability_analysis` table
+        ↓
+Gates Engine 3 (NOT_VIABLE = no content created)
+
+ENGINE 3: CONTENT & MARKETING ENGINE
+        ↓
+n8n Workflow: Script Generation (Claude Haiku)
+        ↓
+Branching by content_priority:
+  STRONG → Full suite (faceless reels + avatar reels + product images)
+  MODERATE → Reduced (1 faceless reel + product images)
+  WEAK → Minimal (product images only, organic)
+        ↓
+Faceless Reels: Blotato API → AI video from product data
+Avatar Reels: Nano Banana (image) → VEO3 (video) → Blotato (publish)
+Product Images: Nano Banana 2 (free tier) / Pro (hero images)
+Voiceover: ElevenLabs → audio clips for reels
+        ↓
+Human Review Queue (default) / Auto-post (trusted toggle)
+        ↓
+Blotato Publishing → TikTok, IG, FB, YT Shorts, Pinterest
+        ↓
+Performance Tracking → views, likes, shares, CTR, engagement
+        ↓
+FEEDBACK LOOP
+        ↓
+Performance data feeds back to Engine 2
+        ↓
+Engine 2 recalibrates: budget allocation, content type selection,
+platform weighting, scoring model adjustment
+```
+
+### Decision Points: Autonomous vs Human Input
+
+| Decision | Autonomous? | Human Override? |
+|----------|------------|----------------|
+| Supplier lookup trigger | Yes (score >= 60) | Manual trigger for any product |
+| Cost calculation | Yes (formula-based) | Override cost inputs |
+| Viability classification | Yes (Claude AI) | Override verdict |
+| Pricing recommendation | Yes (algorithm) | Set price manually |
+| Content creation trigger | Yes (gated by verdict) | Force content for any product |
+| Script generation | Yes (Claude AI) | Edit before production |
+| Content production | Yes (automated pipeline) | Review queue (default ON) |
+| Publishing | **No (human review default)** | Toggle to auto-post per account |
+| Budget allocation | Yes (% of gross profit) | Set manual budget caps |
+| Performance tracking | Yes (automated ingestion) | Manual data correction |
+
+### What The System Learns Over Time
+
+1. **Margin accuracy:** Compares estimated vs actual margins, adjusts cost estimation multipliers
+2. **Score-to-sales correlation:** Which scoring combinations actually predict sales
+3. **Content type performance:** Which reel format/template drives highest conversion per niche
+4. **Platform performance:** Which selling platform performs best per product category
+5. **Posting time optimization:** When posts get most engagement per platform
+6. **Template selection:** Which Blotato templates produce highest-converting content
+7. **Voiceover style:** Which ElevenLabs voice/style gets best engagement
+
+---
+
+## 2B. n8n Workflow Architecture
+
+### Workflow Registry
+
+| # | Workflow Name | Trigger | Template Base | Custom? | Services Used |
+|---|-------------|---------|-------------|---------|--------------|
+| W1 | Supplier Lookup | BullMQ webhook (product scored >= 60) | Custom | Yes | CJDropshipping API, Apify |
+| W2 | Cost Calculator | W1 completion webhook | Custom | Yes | Internal calculation |
+| W3 | Profitability Analysis | W2 completion webhook | Custom | Yes | Claude API (Haiku/Sonnet) |
+| W4 | Content Script Generator | W3 completion (verdict != NOT_VIABLE) | Custom | Yes | Claude API (Haiku) |
+| W5 | Faceless Video Pipeline | W4 completion (priority HIGH/MEDIUM) | **#5035** modified | Partial | Blotato API, VEO3 |
+| W6 | Avatar Video Pipeline | W4 completion (priority HIGH only) | **#8270/#11204** modified | Partial | Nano Banana, VEO3, Blotato |
+| W7 | Product Image Generator | W4 completion (all priorities) | **#8226** modified | Partial | Nano Banana 2/Pro |
+| W8 | Voiceover Generator | W4 completion (priority HIGH/MEDIUM) | Custom | Yes | ElevenLabs |
+| W9 | Content Assembly | W5/W6/W7/W8 completion | Custom | Yes | FFmpeg (optional), Blotato |
+| W10 | Publishing Pipeline | W9 completion OR manual trigger | **#7187** modified | Partial | Blotato (native node) |
+| W11 | Performance Tracker | Cron (every 6 hours) | Custom | Yes | Platform APIs, Supabase |
+| W12 | Feedback Processor | Cron (weekly) | Custom | Yes | Claude API, Supabase |
+| W13 | Budget Monitor | Cron (daily) | Custom | Yes | Supabase, Slack/email alerts |
+
+### Workflow Details
+
+**W1: Supplier Lookup**
+```
+Trigger: Webhook from Express backend (product scored >= 60)
+→ Extract product title, category, price range
+→ CJDropshipping API: Search by keyword
+  → If found: extract price, shipping, variants
+  → If not found: fallback to Apify AliExpress scraper
+→ Store results in product_costs table via Supabase
+→ Trigger W2 via webhook
+```
+
+**W2: Cost Calculator**
+```
+Trigger: Webhook from W1
+→ Read product_costs record
+→ For each selling platform (TikTok Shop, Amazon FBA, Amazon FBM, Shopify):
+  → Calculate: landed_cost = buy_price + shipping + (buy_price × customs_rate)
+  → Calculate: platform_fee = selling_price × fee_rate
+  → Calculate: payment_fee = selling_price × processing_rate + fixed_fee
+  → Calculate: fulfillment_cost (FBA fee table OR shipping estimate)
+  → Calculate: gross_margin = (selling_price - total_cost) / selling_price × 100
+→ Store per-platform cost breakdown in product_costs table
+→ Trigger W3 via webhook
+```
+
+**W3: Profitability Analysis**
+```
+Trigger: Webhook from W2
+→ Read product data + cost data + competitor prices
+→ IF highest margin < 15%: verdict = NOT_VIABLE, skip AI
+→ ELSE: Call Claude Haiku API with structured prompt
+  → Input: product data, costs, competitor prices, category benchmarks
+  → Output: viability_verdict, recommended_price, marketing_budget,
+            best_platform, content_priority, reasoning
+→ IF verdict == STRONG: Escalate to Claude Sonnet for deep analysis
+  → Additional output: content_strategy, influencer_budget, target_audience
+→ Store in profitability_analysis table
+→ IF verdict != NOT_VIABLE: Trigger W4
+→ IF verdict == NOT_VIABLE: Update product status to archived
+```
+
+**W4: Content Script Generator**
+```
+Trigger: Webhook from W3
+→ Read profitability_analysis + product data
+→ Claude Haiku: Generate content scripts
+  → For STRONG: 3 faceless scripts + 2 avatar scripts + image prompts + voiceover scripts
+  → For MODERATE: 1 faceless script + image prompts
+  → For WEAK: image prompts only
+→ Store scripts in content_queue table
+→ Trigger W5/W6/W7/W8 based on content_priority
+```
+
+**W5: Faceless Video Pipeline (based on template #5035)**
+```
+Trigger: Webhook from W4 (content_priority HIGH or MEDIUM)
+→ Read script from content_queue
+→ Blotato API: Create Visual (video template)
+  → Input: script, product images, brand colors
+  → Template: faceless product showcase
+→ Poll for completion
+→ Download rendered video
+→ Queue for publishing (W10) or human review
+```
+
+**W6: Avatar Video Pipeline (based on template #8270/#11204)**
+```
+Trigger: Webhook from W4 (content_priority HIGH only)
+→ Read avatar script from content_queue
+→ Nano Banana 2: Generate character-consistent presenter image
+  → Prompt: "professional product reviewer, [demographics], holding [product]"
+  → Uses character seed for consistency across videos
+→ VEO3 API: Generate video from reference image + script
+  → Input: Nano Banana image + motion prompt
+  → Format: 9:16 vertical, 8 seconds
+  → Generate 3-4 clips, concatenate
+→ ElevenLabs: Generate voiceover from script
+→ Assemble: video + voiceover (via Blotato or n8n binary merge)
+→ Queue for publishing (W10) or human review
+```
+
+**W7: Product Image Generator (based on template #8226)**
+```
+Trigger: Webhook from W4 (all content priorities)
+→ Read image prompts from content_queue
+→ FOR each image prompt:
+  → Nano Banana 2 (free tier via Google AI Studio):
+    → Generate product lifestyle image
+    → Generate product on white background
+    → Generate product in-use context image
+  → IF hero image needed: Nano Banana Pro ($0.134 for 2K quality)
+→ Store images in Supabase Storage
+→ Queue for publishing (W10)
+```
+
+**W10: Publishing Pipeline (based on template #7187)**
+```
+Trigger: W9 completion OR manual approval from review queue
+→ Read content from content_queue (status: approved)
+→ Blotato node: Create Post
+  → Platforms: TikTok, Instagram, YouTube Shorts, Facebook, Pinterest
+  → Schedule: optimal posting times (Blotato auto-scheduling)
+  → Stagger: 2-hour gaps between platforms
+  → Captions: AI-generated (from W4), platform-optimized
+  → Hashtags: AI-generated, trending + niche-specific
+→ Record post IDs in published_content table
+→ Schedule performance check (W11)
+```
+
+**W11: Performance Tracker**
+```
+Trigger: Cron every 6 hours
+→ FOR each published_content record (last 30 days):
+  → Blotato API: Get post analytics (if available)
+  → Platform APIs (supplementary): views, likes, shares, comments
+  → Calculate: engagement_rate, estimated_reach, CTR
+→ Update content_performance table
+→ IF any content has engagement_rate > 5%: Flag as "viral candidate"
+→ IF any content has engagement_rate < 0.5% after 48h: Flag as "underperforming"
+```
+
+**W12: Feedback Processor**
+```
+Trigger: Cron weekly (Sunday midnight)
+→ Aggregate performance data per product, per content type, per platform
+→ Claude Haiku: Analyze patterns
+  → Which niches perform best on which platform?
+  → Which content templates drive highest engagement?
+  → Which voiceover styles get most views?
+→ Update scoring_adjustments table (feeds back to scoring engine)
+→ Update template_performance table (feeds back to W4/W5/W6)
+→ Generate weekly performance report → email via Resend
+```
+
+**W13: Budget Monitor**
+```
+Trigger: Cron daily (6 AM)
+→ Check API spend across all services:
+  → Google AI API usage (VEO3 + Nano Banana)
+  → ElevenLabs credit usage
+  → Blotato credit usage
+  → Apify credit usage
+  → Claude API usage
+→ IF any service > 80% of monthly budget: Alert via email
+→ IF any service > 95%: Pause non-critical workflows
+→ Log daily spend in budget_tracking table
+```
+
+---
+
+## 2C. Worker Registry
+
+### New Workers (Beyond Existing 21)
+
+| # | Worker Name | Queue | Priority | Trigger | Downstream | Purpose |
+|---|-----------|-------|----------|---------|------------|---------|
+| W22 | supplier_lookup_worker | intelligence_jobs | P1 | product scored >= 60 | W23 | CJDropshipping + AliExpress lookup |
+| W23 | cost_calculator_worker | intelligence_jobs | P1 | W22 completion | W24 | Per-platform cost calculation |
+| W24 | profitability_analysis_worker | intelligence_jobs | P1 | W23 completion | W25 | AI viability assessment |
+| W25 | content_script_worker | content_jobs | P1 | W24 (verdict != NOT_VIABLE) | W26-W29 | AI script generation |
+| W26 | faceless_video_worker | content_jobs | P2 | W25 (priority HIGH/MEDIUM) | W30 | Blotato video creation |
+| W27 | avatar_video_worker | content_jobs | P2 | W25 (priority HIGH) | W30 | NanoBanana + VEO3 pipeline |
+| W28 | product_image_worker | content_jobs | P2 | W25 (all priorities) | W30 | Nano Banana image gen |
+| W29 | voiceover_worker | content_jobs | P2 | W25 (priority HIGH/MEDIUM) | W30 | ElevenLabs TTS |
+| W30 | content_assembly_worker | content_jobs | P1 | W26-W29 completion | W31 | Combine assets |
+| W31 | publishing_worker | publishing_jobs | P1 | W30 OR manual approval | W32 | Blotato multi-platform post |
+| W32 | performance_tracking_worker | analytics_jobs | P2 | Cron (6h) | W33 | Collect engagement data |
+| W33 | feedback_processor_worker | analytics_jobs | P2 | Cron (weekly) | scoring engine | Learn from performance |
+| W34 | budget_monitor_worker | system_jobs | P0 | Cron (daily) | alerts | Enforce spending limits |
+| W35 | price_optimization_worker | intelligence_jobs | P2 | competitor price change | W24 | Re-evaluate pricing |
+
+**Total new workers: 14**
+**Total workers (existing 21 + new 14): 35**
+
+### New BullMQ Queues
+
+| Queue | Priority Workers | Purpose |
+|-------|-----------------|---------|
+| intelligence_jobs | W22, W23, W24, W35 | Supplier + profitability pipeline |
+| content_jobs | W25, W26, W27, W28, W29, W30 | Content creation pipeline |
+| publishing_jobs | W31 | Social media publishing |
+| analytics_jobs | W32, W33 | Performance tracking + learning |
+
+---
+
+## 2D. Database Schema
+
+### New Tables
+
+```sql
+-- ENGINE 1: Purchasing
+CREATE TABLE product_costs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID NOT NULL REFERENCES products(id),
+  supplier_platform TEXT NOT NULL, -- 'cjdropshipping', 'aliexpress', 'alibaba'
+  supplier_product_id TEXT,
+  supplier_url TEXT,
+  buy_price DECIMAL(10,2),
+  shipping_cost_us DECIMAL(10,2),
+  shipping_cost_uk DECIMAL(10,2),
+  shipping_cost_eu DECIMAL(10,2),
+  shipping_time_days INTEGER,
+  moq INTEGER DEFAULT 1,
+  supplier_rating DECIMAL(3,2),
+  variants JSONB, -- [{color, size, price, stock}]
+  is_approximate BOOLEAN DEFAULT true,
+  confidence_level TEXT DEFAULT 'low', -- low, medium, high
+  -- Per-platform cost breakdown
+  tiktok_landed_cost DECIMAL(10,2),
+  tiktok_gross_margin DECIMAL(5,2),
+  amazon_fba_landed_cost DECIMAL(10,2),
+  amazon_fba_gross_margin DECIMAL(5,2),
+  amazon_fbm_landed_cost DECIMAL(10,2),
+  amazon_fbm_gross_margin DECIMAL(5,2),
+  shopify_landed_cost DECIMAL(10,2),
+  shopify_gross_margin DECIMAL(5,2),
+  fetched_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_product_costs_product ON product_costs(product_id);
+CREATE INDEX idx_product_costs_platform ON product_costs(supplier_platform);
+
+-- ENGINE 2: Profitability
+CREATE TABLE profitability_analysis (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID NOT NULL REFERENCES products(id),
+  product_cost_id UUID REFERENCES product_costs(id),
+  -- Viability
+  viability_verdict TEXT NOT NULL, -- STRONG, MODERATE, WEAK, NOT_VIABLE
+  best_margin DECIMAL(5,2),
+  best_platform TEXT, -- tiktok_shop, amazon_fba, amazon_fbm, shopify
+  -- Pricing
+  recommended_price DECIMAL(10,2),
+  competitor_median_price DECIMAL(10,2),
+  price_strategy TEXT, -- undercut, match, premium
+  -- Marketing
+  marketing_budget DECIMAL(10,2) DEFAULT 0,
+  content_priority TEXT, -- HIGH, MEDIUM, LOW, SKIP
+  influencer_max_cpa DECIMAL(10,2),
+  -- AI Analysis
+  ai_model_used TEXT, -- haiku, sonnet
+  ai_reasoning TEXT,
+  ai_content_strategy JSONB,
+  -- Promotion
+  social_platforms TEXT[], -- ['tiktok', 'instagram', 'pinterest']
+  -- Metadata
+  analysis_version INTEGER DEFAULT 1,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_profitability_product ON profitability_analysis(product_id);
+CREATE INDEX idx_profitability_verdict ON profitability_analysis(viability_verdict);
+CREATE INDEX idx_profitability_priority ON profitability_analysis(content_priority);
+
+-- ENGINE 3: Content
+CREATE TABLE content_queue (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID NOT NULL REFERENCES products(id),
+  profitability_id UUID REFERENCES profitability_analysis(id),
+  content_type TEXT NOT NULL, -- faceless_reel, avatar_reel, product_image, voiceover
+  content_priority TEXT NOT NULL, -- HIGH, MEDIUM, LOW
+  -- Script/Prompt
+  script TEXT,
+  image_prompt TEXT,
+  voiceover_text TEXT,
+  -- Production
+  status TEXT DEFAULT 'pending', -- pending, producing, produced, review, approved, published, failed
+  produced_asset_url TEXT,
+  produced_asset_type TEXT, -- video/mp4, image/png, audio/mp3
+  -- Metadata
+  template_used TEXT,
+  generation_cost DECIMAL(10,4),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_content_queue_product ON content_queue(product_id);
+CREATE INDEX idx_content_queue_status ON content_queue(status);
+CREATE INDEX idx_content_queue_type ON content_queue(content_type);
+
+CREATE TABLE published_content (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  content_id UUID NOT NULL REFERENCES content_queue(id),
+  product_id UUID NOT NULL REFERENCES products(id),
+  platform TEXT NOT NULL, -- tiktok, instagram, youtube, facebook, pinterest
+  post_id TEXT, -- platform-specific post ID
+  post_url TEXT,
+  published_at TIMESTAMPTZ,
+  scheduled_at TIMESTAMPTZ,
+  caption TEXT,
+  hashtags TEXT[],
+  status TEXT DEFAULT 'scheduled', -- scheduled, published, failed, removed
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_published_product ON published_content(product_id);
+CREATE INDEX idx_published_platform ON published_content(platform);
+
+CREATE TABLE content_performance (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  published_content_id UUID NOT NULL REFERENCES published_content(id),
+  product_id UUID NOT NULL REFERENCES products(id),
+  platform TEXT NOT NULL,
+  -- Metrics
+  views INTEGER DEFAULT 0,
+  likes INTEGER DEFAULT 0,
+  shares INTEGER DEFAULT 0,
+  comments INTEGER DEFAULT 0,
+  saves INTEGER DEFAULT 0,
+  clicks INTEGER DEFAULT 0,
+  engagement_rate DECIMAL(5,4), -- (likes+shares+comments+saves) / views
+  estimated_reach INTEGER DEFAULT 0,
+  -- Calculated
+  ctr DECIMAL(5,4), -- clicks / views
+  cost_per_view DECIMAL(10,6),
+  cost_per_engagement DECIMAL(10,6),
+  -- Tracking
+  measured_at TIMESTAMPTZ DEFAULT NOW(),
+  is_viral BOOLEAN DEFAULT false, -- engagement_rate > 5%
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_performance_product ON content_performance(product_id);
+CREATE INDEX idx_performance_platform ON content_performance(platform);
+CREATE INDEX idx_performance_viral ON content_performance(is_viral) WHERE is_viral = true;
+
+-- FEEDBACK & LEARNING
+CREATE TABLE scoring_adjustments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  category TEXT NOT NULL,
+  platform TEXT NOT NULL,
+  adjustment_type TEXT, -- trend_weight, viral_weight, profit_weight
+  adjustment_value DECIMAL(5,4),
+  based_on_sample_size INTEGER,
+  effective_from TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE budget_tracking (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  date DATE NOT NULL,
+  service TEXT NOT NULL, -- blotato, veo3, nanobananana, elevenlabs, apify, claude_api
+  credits_used DECIMAL(10,4),
+  cost_usd DECIMAL(10,4),
+  monthly_budget DECIMAL(10,2),
+  budget_remaining DECIMAL(10,2),
+  alert_sent BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_budget_date ON budget_tracking(date);
+CREATE INDEX idx_budget_service ON budget_tracking(service);
+
+CREATE TABLE template_performance (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  template_name TEXT NOT NULL,
+  content_type TEXT NOT NULL,
+  platform TEXT NOT NULL,
+  uses_count INTEGER DEFAULT 0,
+  avg_engagement_rate DECIMAL(5,4),
+  avg_views INTEGER DEFAULT 0,
+  best_performing_niche TEXT,
+  last_updated TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### RLS Policies
+
+```sql
+-- All new tables follow the same RLS pattern as existing tables
+-- Service role for backend workers, authenticated for admin dashboard
+
+ALTER TABLE product_costs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE profitability_analysis ENABLE ROW LEVEL SECURITY;
+ALTER TABLE content_queue ENABLE ROW LEVEL SECURITY;
+ALTER TABLE published_content ENABLE ROW LEVEL SECURITY;
+ALTER TABLE content_performance ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scoring_adjustments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE budget_tracking ENABLE ROW LEVEL SECURITY;
+ALTER TABLE template_performance ENABLE ROW LEVEL SECURITY;
+
+-- Admin read access for all tables
+CREATE POLICY "Admins can read all data"
+  ON product_costs FOR SELECT
+  TO authenticated
+  USING (auth.jwt() ->> 'role' = 'admin');
+
+-- Repeat for each table...
+-- Service role has full access (used by backend workers)
+```
+
+### Schema Relationships
+
+```
+products (existing)
+  ├── product_costs (1:many, per supplier)
+  │     └── profitability_analysis (1:1 per cost record)
+  │           └── content_queue (1:many, per content type)
+  │                 └── published_content (1:many, per platform)
+  │                       └── content_performance (1:many, over time)
+  │
+  └── scoring_adjustments (referenced by scoring engine)
+
+budget_tracking (standalone, per service per day)
+template_performance (standalone, aggregated metrics)
+```
+
+**New tables: 8**
+**Total tables (existing 32 + new 8): 40**
+
+---
+
+## 2E. UI Components
+
+### New Pages
+
+| Page | Route | Purpose |
+|------|-------|---------|
+| Purchasing Dashboard | /purchasing | Supplier lookup results, cost breakdowns |
+| Profitability Center | /profitability | Viability verdicts, pricing recommendations |
+| Content Studio | /content | Content queue, review, approve/reject |
+| Publishing Calendar | /content/calendar | Scheduled posts across platforms |
+| Performance Analytics | /analytics/content | Engagement metrics, ROI tracking |
+| Budget Control | /settings/budget | Spending limits, alerts, daily tracking |
+
+### Product Detail Page Additions
+
+The existing product detail page (7-row chain) gets 3 new sections:
+
+**Row 8: Supplier & Cost Data**
+- Supplier source (CJ/AliExpress)
+- Buy price, shipping cost, landed cost
+- Per-platform margin breakdown (visual bars)
+- Confidence level indicator
+- "Re-check price" button
+
+**Row 9: Profitability Verdict**
+- Large viability badge (STRONG/MODERATE/WEAK/NOT_VIABLE)
+- Recommended selling price
+- Best platform recommendation
+- Marketing budget allocation
+- AI reasoning (expandable)
+
+**Row 10: Content & Performance**
+- Generated content gallery (videos, images)
+- Publishing status per platform
+- Engagement metrics (mini-charts)
+- Content performance comparison
+- "Create more content" button
+
+### Content Studio Interface
+
+```
+/content page layout:
+
+┌─────────────────────────────────────────────────────┐
+│  Content Studio                          [Filters▼]  │
+├─────────┬───────────────────────────────────────────┤
+│ Queue   │  ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐       │
+│ Review  │  │Video│ │Video│ │Image│ │Image│  ...    │
+│ Approved│  │ ▶   │ │ ▶   │ │     │ │     │        │
+│ Published│ └──┬──┘ └──┬──┘ └──┬──┘ └──┬──┘       │
+│ Failed  │     │Product A│  Product B│  Product C    │
+│         │  [Approve] [Reject] [Edit] [Regenerate]   │
+├─────────┴───────────────────────────────────────────┤
+│ Publishing Calendar (week view)                      │
+│ Mon    Tue    Wed    Thu    Fri    Sat    Sun        │
+│ TikTok IG     FB     TikTok IG     YT     Pinterest│
+│ 9am    11am   2pm    9am    11am   10am   3pm      │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+# PART 3: REVISED COST ANALYSIS
+
+---
+
+## Line-Item Monthly Cost
+
+| # | Service | Plan | Monthly Cost | Purpose |
+|---|---------|------|-------------|---------|
+| | **EXISTING BASELINE** | | | |
+| 1 | Supabase | Pro | $25 | Database + Auth + Realtime |
+| 2 | Railway | Starter | $5 + usage (~$20) | Backend + Redis + n8n |
+| 3 | Netlify | Starter | $0 | Frontend hosting |
+| 4 | Apify | Free tier | $0 ($5 free credits) | Web scraping |
+| 5 | Anthropic Claude API | Pay-as-you-go | ~$30 | AI analysis (existing) |
+| 6 | Resend | Free tier | $0 | Email (100/day free) |
+| 7 | Redis (Railway) | Included | $0 | Job queue backing |
+| 8 | GitHub | Free | $0 | Version control |
+| 9 | Stripe | 2.9% + $0.30/tx | ~$0 (until revenue) | Payments |
+| | **Baseline subtotal** | | **~$80** | |
+| | | | | |
+| | **ENGINE 1: PURCHASING** | | | |
+| 10 | CJDropshipping API | Free | $0 | Primary supplier data |
+| 11 | Apify (AliExpress) | Free tier (shared) | $0 | Secondary supplier data |
+| | **Engine 1 subtotal** | | **$0** | |
+| | | | | |
+| | **ENGINE 2: PROFITABILITY** | | | |
+| 12 | Claude API (incremental) | Pay-as-you-go | ~$8 | Viability analysis |
+| | **Engine 2 subtotal** | | **~$8** | |
+| | | | | |
+| | **ENGINE 3: CONTENT & MARKETING** | | | |
+| 13 | Blotato | Starter | $29 | Faceless video + publishing |
+| 14 | Google AI (VEO3) | Pay-as-you-go | ~$12 | Avatar video generation |
+| 15 | Google AI (Nano Banana) | Free tier + Pro API | ~$2 | Product images |
+| 16 | ElevenLabs | Starter | $5 | AI voiceover |
+| | **Engine 3 subtotal** | | **~$48** | |
+| | | | | |
+| | **GRAND TOTAL** | | **~$136/month** | |
+
+### Comparison With Previous Estimates
+
+| Configuration | Monthly Cost | Notes |
+|--------------|-------------|-------|
+| Previous Config A (base only) | $139 | No content engines |
+| Previous Config B (full featured) | $415 | Over budget |
+| Previous Config C (optimized) | $291 | Near budget ceiling |
+| **This Blueprint** | **~$136** | **All 3 engines included** |
+
+**This blueprint delivers ALL 3 engines for LESS than the previous base-only configuration.** The key savings:
+1. CJDropshipping API replaces TopDawg ($35/mo saved)
+2. NanoBanana+VEO3 replaces HeyGen ($29/mo saved if HeyGen was planned)
+3. Nano Banana free tier replaces paid image generation (~$10-20/mo saved)
+4. Blotato bundles video creation + publishing (vs separate tools ~$50-70/mo saved)
+5. Previous baseline estimate of $139 appears to have included TopDawg ($35) and possibly over-estimated Apify usage
+
+### Break-Even Analysis
+
+**Fixed costs:** ~$136/month
+**Variable costs per product (full content suite):**
+- Supplier lookup: $0
+- AI analysis: ~$0.01
+- Faceless video (Blotato): ~$0.50/video (est. 25 credits)
+- Avatar video (VEO3): ~$3-4/video
+- Product images (free tier): $0
+- Voiceover (ElevenLabs): ~$0.10/clip
+- Total per STRONG product: ~$4-5 for full content suite
+- Total per MODERATE product: ~$1-2 for reduced content
+- Total per WEAK product: ~$0.01 for images only
+
+**At 30 STRONG products/month:** $136 fixed + $150 variable = ~$286/month
+**At 20 STRONG products/month:** $136 fixed + $100 variable = ~$236/month
+
+**Revenue needed to break even at $236/month:**
+- If average product profit is $10/sale: need 24 sales/month
+- If average product profit is $20/sale: need 12 sales/month
+- If average product profit is $5/sale: need 48 sales/month
+
+### Cost Optimization Opportunities
+
+1. **Nano Banana free tier:** 500 images/day free — this alone covers ALL image needs
+2. **VEO3 Fast mode:** $0.10/sec vs $0.40/sec — 4x cheaper for shorter clips
+3. **Claude Haiku batch API:** 50% cheaper than real-time
+4. **Blotato credit management:** Roll-over credits, batch production during low-usage months
+5. **Scale with revenue:** Start with minimal content (WEAK products = images only), increase content investment as sales prove ROI
+
+---
+
+# PART 4: IMPLEMENTATION ROADMAP
+
+---
+
+## Session Breakdown
+
+### Phase 1: Foundation (Sessions 1-3)
+
+**Session 1: Database + Purchasing Engine Core** (3-4 tasks)
+1. Create all 8 new database tables with indexes and RLS
+2. Implement CJDropshipping API client (product search, price lookup)
+3. Build supplier_lookup_worker (W22)
+4. Test: product → supplier lookup → cost data stored
+
+**Session 2: Cost Calculator + Profitability Core** (3-4 tasks)
+1. Implement cost calculation logic (per-platform formulas)
+2. Build cost_calculator_worker (W23)
+3. Build profitability_analysis_worker (W24) with Claude Haiku integration
+4. Test: cost data → profitability verdict → stored
+
+**Session 3: Pipeline Integration** (3 tasks)
+1. Wire scoring engine output → Engine 1 trigger (score >= 60)
+2. Wire Engine 1 → Engine 2 → verdict output
+3. Add AliExpress fallback to supplier_lookup_worker
+4. Test end-to-end: product scored → supplier found → viability assessed
+
+### Phase 2: Content Engine (Sessions 4-7)
+
+**Session 4: n8n Setup + Blotato Integration** (3-4 tasks)
+1. Configure n8n on Railway (if not already)
+2. Install Blotato n8n community node
+3. Set up Blotato API credentials
+4. Create W1-W3 as n8n workflows (supplier → cost → profitability)
+
+**Session 5: Content Script + Image Generation** (3-4 tasks)
+1. Build content_script_worker (W25) with Claude Haiku
+2. Implement Nano Banana 2 image generation via Google AI API
+3. Build product_image_worker (W28) as n8n workflow (template #8226 base)
+4. Test: product → script → images generated
+
+**Session 6: Video Generation Pipeline** (3-4 tasks)
+1. Implement Blotato faceless video workflow (template #5035 base)
+2. Implement NanoBanana + VEO3 avatar pipeline (template #8270 base)
+3. Build ElevenLabs voiceover workflow
+4. Test: script → video + audio → assembled content
+
+**Session 7: Publishing Pipeline** (3-4 tasks)
+1. Build publishing workflow (template #7187 base)
+2. Implement human review queue (content_queue status management)
+3. Set up staggered posting schedule
+4. Test: approved content → published to test accounts
+
+### Phase 3: Intelligence & UI (Sessions 8-11)
+
+**Session 8: Performance Tracking** (3-4 tasks)
+1. Build performance_tracking_worker (W32)
+2. Implement engagement data collection
+3. Set up performance aggregation
+4. Test: published content → metrics tracked
+
+**Session 9: Feedback Loop + Budget Monitor** (3 tasks)
+1. Build feedback_processor_worker (W33) with Claude analysis
+2. Build budget_monitor_worker (W34)
+3. Test: weekly feedback → scoring adjustments
+
+**Session 10: Admin UI — Purchasing + Profitability Pages** (3-4 tasks)
+1. Build /purchasing dashboard page
+2. Build /profitability center page
+3. Add Row 8-9 to product detail page
+4. Add /settings/budget page
+
+**Session 11: Admin UI — Content Studio** (3-4 tasks)
+1. Build /content page with review queue
+2. Build /content/calendar with publishing schedule
+3. Build /analytics/content performance dashboard
+4. Add Row 10 to product detail page
+
+### Phase 4: Optimization (Sessions 12-13)
+
+**Session 12: Pipeline Refinement** (3-4 tasks)
+1. Implement price_optimization_worker (W35)
+2. Add Claude Sonnet escalation for STRONG products
+3. Optimize n8n workflow error handling and retries
+4. Implement dead letter queues for content pipeline
+
+**Session 13: Testing + Launch** (3-4 tasks)
+1. End-to-end integration testing
+2. Budget alert testing
+3. Content quality review
+4. Production deployment
+
+### Dependencies
+
+```
+Session 1 ──→ Session 2 ──→ Session 3
+                                ↓
+Session 4 (n8n setup, can partially parallel with 1-3)
+    ↓
+Session 5 ──→ Session 6 ──→ Session 7
+                                ↓
+Session 8 ──→ Session 9
+    ↓
+Session 10 ──→ Session 11 (can parallel with 8-9)
+    ↓
+Session 12 ──→ Session 13
+```
+
+**Sessions leveraging n8n templates (saving dev time):**
+- Session 5: Template #8226 (NanoBanana e-commerce images)
+- Session 6: Templates #5035 (VEO3+Blotato) and #8270 (NanoBanana+VEO3+Blotato)
+- Session 7: Template #7187 (multi-platform publishing)
+
+**Total sessions: 13**
+**Estimated tasks: ~44**
+
+---
+
+# PART 5: RISK ASSESSMENT
+
+---
+
+## Service Failure Scenarios
+
+| Service | Probability | Impact | Fallback | Recovery Time |
+|---------|------------|--------|----------|---------------|
+| CJDropshipping API | Low | Medium | AliExpress via Apify | Automatic (built-in) |
+| Apify | Low | Low | Direct HTTP scraping | 1-2 hours |
+| Claude API | Very Low | High | OpenAI GPT-4o-mini as fallback | < 1 hour config change |
+| Blotato | Medium | High | Postiz (self-hosted) for publishing; Runway for video | 4-8 hours |
+| Google AI (VEO3) | Low | Medium | Kling AI or Runway for video gen | 2-4 hours |
+| Google AI (Nano Banana) | Low | Medium | Flux/BFL API for images | 1-2 hours |
+| ElevenLabs | Low | Low | OpenAI TTS or Google Cloud TTS | < 1 hour |
+| Supabase | Very Low | Critical | No practical fallback | Wait for restoration |
+| Railway (n8n) | Low | High | Redeploy n8n to different Railway project | 1-2 hours |
+
+## Quality Control for AI-Generated Content
+
+### Content Quality Gates
+
+1. **Script review:** Claude generates scripts, but a quality score is attached (Claude self-evaluates 1-10). Scripts < 7 go to manual review.
+2. **Image review:** Generated images are stored with metadata. Admin can bulk-approve or flag for regeneration.
+3. **Video review:** All videos go to human review queue by default. Auto-post only enabled per-account after 10 successful manual approvals.
+4. **Brand consistency:** Character seed for Nano Banana ensures consistent avatar appearance. Voice clone on ElevenLabs ensures consistent brand voice.
+5. **Platform compliance:** Automated checks for video duration, aspect ratio, file size per platform before publishing.
+
+### Content Quality Improvement Loop
+
+```
+Generate content → Human reviews → Approve/Reject
+                                       ↓
+                              If rejected: reason logged
+                                       ↓
+                              Feedback to Claude prompt engineering
+                                       ↓
+                              Template/prompt updated
+                                       ↓
+                              Next generation is better
+```
+
+## Budget Overrun Prevention
+
+### Per-Service Daily Limits
+
+| Service | Monthly Budget | Daily Limit | Auto-Pause Threshold |
+|---------|---------------|------------|---------------------|
+| Blotato | $29 (fixed) | N/A (credit-based) | 90% credits used |
+| VEO3 API | $15 | $0.50/day | $12 total spend |
+| Nano Banana Pro | $3 | $0.10/day | $2.50 total |
+| ElevenLabs | $5 (fixed) | N/A (credit-based) | 85% credits used |
+| Claude API | $12 | $0.40/day | $10 total spend |
+| Apify | $0 (free tier) | $5 free credits | $4 total spend |
+
+### Circuit Breakers
+
+1. **Budget monitor workflow (W13)** runs daily at 6 AM
+2. If any service > 80% monthly budget: email alert to admin
+3. If any service > 95% monthly budget: pause all non-critical workflows for that service
+4. If total monthly spend > $160 (engine budget): pause ALL content creation workflows
+5. Manual override available in /settings/budget to resume
+
+### Unexpected Cost Scenarios
+
+| Scenario | Risk | Mitigation |
+|----------|------|-----------|
+| VEO3 price increase | Medium | Switch to Kling AI or VEO3 Fast mode |
+| Viral product spike (too many products to process) | Medium | Content priority gating (only STRONG/MODERATE get content) |
+| Google removes free tier | Low | Budget $5-10/mo for Nano Banana 2 API |
+| Blotato credit exhaustion | Medium | Purchase additional credits or defer to next month |
+| Apify exceeds free tier | Low | Budget $10/mo for Starter plan if needed |
+
+---
+
+# APPENDIX A: API Reference Quick Guide
+
+## CJDropshipping API
+- **Base URL:** `https://developers.cjdropshipping.com/api2.0/v1/`
+- **Auth:** CJ-Access-Token header
+- **Key endpoints:**
+  - `POST /product/list` — search products by keyword
+  - `GET /product/query?pid=` — get product details
+  - `GET /product/getCategory` — browse categories
+- **Rate limits:** Documented per-endpoint
+
+## Blotato API
+- **Base URL:** Via Blotato REST API (docs at help.blotato.com/api)
+- **Auth:** API key (paid subscribers only)
+- **Key actions:** Create Visual, Get Visual, Upload Media, Create Post
+- **n8n:** Official community node `@blotato/n8n-nodes-blotato`
+
+## Google AI (VEO3 + Nano Banana)
+- **Base URL:** `https://generativelanguage.googleapis.com/`
+- **Auth:** Google AI API key
+- **VEO3:** `POST /v1/models/veo-3.1-generate-preview:generateVideos`
+- **Nano Banana 2:** Via Gemini 3.1 Flash Image model
+- **Nano Banana Pro:** Via Gemini 3 Pro Image model
+- **Free tier:** 500 images/day, limited video generation
+
+## ElevenLabs API
+- **Base URL:** `https://api.elevenlabs.io/v1/`
+- **Auth:** xi-api-key header
+- **Key endpoint:** `POST /text-to-speech/{voice_id}`
+- **n8n:** Native ElevenLabs node
+
+---
+
+# APPENDIX B: n8n Template Reference
+
+| Template # | Name | Use In Blueprint | Modification Needed |
+|-----------|------|-----------------|-------------------|
+| #5035 | VEO3 + Blotato auto-post | W5 (faceless video) | Add product data input, script integration |
+| #7187 | Multi-platform via Blotato | W10 (publishing) | Add stagger logic, review queue check |
+| #8226 | NanoBanana e-commerce images | W7 (product images) | Connect to product data, multi-image generation |
+| #8270 | NanoBanana + VEO3 + Blotato | W6 (avatar video) | Replace Telegram trigger with webhook, add voiceover |
+| #11204 | NanoBanana 2 PRO + VEO3.1 | W6 alternative (newer) | Same as #8270 but uses latest models |
+| #3066 | Multi-platform AI content | Reference only | Too generic, build custom instead |
+| #3135 | Content publishing factory | Reference only | Blotato-based approach is simpler |
+
+---
+
+# APPENDIX C: Decision Matrix — What Makes This Blueprint Different
+
+| Factor | Previous Approach | This Blueprint |
+|--------|------------------|---------------|
+| Supplier API | TopDawg ($35/mo) | CJDropshipping (free) |
+| Avatar video | HeyGen ($29/mo, ~10 videos) | NanoBanana+VEO3 (~$12/mo, ~20 videos) |
+| Product images | Paid image gen (~$10/mo) | Nano Banana free tier ($0) |
+| Publishing | Separate tool ($30-40/mo) | Included in Blotato ($0 extra) |
+| Content creation | Multiple tools ($70+/mo) | Blotato ($29) + Google AI (~$14) |
+| Total for engines | $160-276/mo | ~$56/mo |
+| Content volume | Limited by budget | 2-4x more content per dollar |
+
+---
+
+**END OF BLUEPRINT**
+
+*This document should be treated as the authoritative architecture reference for Engines 1-3 of the YOUSELL platform. All implementation sessions should reference this document.*
