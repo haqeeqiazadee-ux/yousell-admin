@@ -837,7 +837,150 @@ data_quarantine (
 ```
 
 ---
-<!-- Section 5: Tech Stack — PENDING -->
+## Section 5 — Complete Tech Stack
+
+### 5.1 — Technology Table
+
+| Layer | Technology | Version / Tier | Purpose | Deployment |
+|-------|-----------|---------------|---------|------------|
+| **Frontend** | Next.js 14 (App Router) | 14.x | Dashboard UI, server components for fast initial load, SSR/SSG | Netlify |
+| **UI Components** | shadcn/ui + Tailwind CSS | Latest | Component library + utility-first CSS | Bundled with frontend |
+| **Realtime UI** | Supabase Realtime | Via supabase-js | WebSocket push of fresh scraped data to page without reload | Supabase managed |
+| **Backend API** | Node.js + Express | Node 20 LTS, Express 4.x | Read-only data API + job queue trigger endpoints | Railway |
+| **Background Workers** | Node.js Worker Processes | Node 20 LTS | 21 scraping + intelligence workers (see Section 4.8) | Railway |
+| **Database** | Supabase PostgreSQL | Supabase Pro plan | Primary data store, RLS for multi-tenancy, full-text search | Supabase managed |
+| **Materialised Views** | PostgreSQL | — | `dashboard_cards_mv` — pre-computed home page data | Supabase managed |
+| **Job Queue** | Redis + BullMQ | Redis 7.x, BullMQ 5.x | Priority job queues: P0/P1/P2 lanes + dead_letter_queue | Railway (managed Redis) |
+| **Cache + Budget** | Redis | Redis 7.x | Data freshness timestamps, API budget counters, rate limit counters | Railway (same Redis instance) |
+| **Auth** | Supabase Auth | Via supabase-js | Email/password, Google OAuth, magic links, JWT on all routes | Supabase managed |
+| **Email** | Resend | API | Trend alerts, creator outreach sequences, onboarding, dunning emails | Resend managed |
+| **Scraping — Primary** | Apify Actors | Pay-per-use | TikTok, Shopify, Facebook Ads, headless browser scraping | Apify managed |
+| **Scraping — Secondary** | RapidAPI | Pay-per-use | TikTok data, creator profiles, Amazon data | RapidAPI managed |
+| **Scraping — Self-built** | Custom Node.js scrapers | — | Shopify /products.json, Amazon public pages (free tier) | Railway |
+| **Scraping — Search** | SerpAPI | Pay-per-use | Google Trends search volume and keyword velocity | SerpAPI managed |
+| **AI Analysis** | Anthropic API (Claude Sonnet) | claude-sonnet-4-6 | Platform recommendations, trend summaries, outreach copy, daily briefings, report narratives | Anthropic managed |
+| **PDF Generation** | @react-pdf/renderer | Latest | Agency intelligence report PDF generation | Railway |
+| **Billing** | Stripe | API | Subscription plans, usage metering, invoicing, customer portal, webhooks | Stripe managed |
+| **Monitoring** | Custom + Railway logs | — | `/api/health` endpoint, worker health, queue depth, error rate alerts | Railway |
+| **Status Page** | BetterUptime (or similar) | Free/Pro | Public status page for users (linked from footer) | External |
+| **Version Control** | GitHub | — | haqeeqiazadee-ux/yousell-admin | GitHub |
+| **Schema Validation** | Zod | Latest | Raw data validation before DB write (see Section 4.10) | Bundled with backend |
+
+### 5.2 — Deployment Architecture
+
+`✓ FIXED: T-23 — Netlify serverless limitations now addressed`
+
+```
+┌─────────────────────────────┐     ┌──────────────────────────────┐
+│         NETLIFY              │     │          RAILWAY              │
+│                              │     │                               │
+│  Next.js 14 App              │     │  Express API Server           │
+│  - Server Components (SSR)   │────▶│  - All /api/* routes          │
+│  - Static pages (SSG)        │     │  - Redis/BullMQ connections   │
+│  - Client components         │     │  - Stripe webhook handler     │
+│  - NO direct Redis/BullMQ    │     │  - Resend webhook handler     │
+│  - NO direct DB writes       │     │                               │
+│                              │     │  Worker Processes (×3)        │
+└─────────────────────────────┘     │  - 21 workers across 3 procs  │
+                                     │  - P0 proc (5 concurrency)    │
+         │                           │  - P1 proc (3 concurrency)    │
+         │                           │  - P2 proc (1 concurrency)    │
+         ▼                           │                               │
+┌─────────────────────────────┐     │  Scheduler Process            │
+│        SUPABASE              │     │  - 15-min idle check          │
+│                              │     │  - 2h predictive trigger      │
+│  PostgreSQL Database         │◀────│  - Daily briefing trigger     │
+│  - All data tables           │     │                               │
+│  - RLS policies              │     └──────────────────────────────┘
+│  - Materialised views        │
+│  Auth Service                │
+│  - JWT issuance              │
+│  - OAuth providers           │
+│  Realtime                    │
+│  - WebSocket channels        │
+└─────────────────────────────┘
+```
+
+**Key architectural decision**: Next.js on Netlify handles **frontend rendering only**. ALL API routes, Redis connections, BullMQ job management, and webhook handlers run on Railway's Express server. This avoids Netlify's 10-second serverless timeout and cold start issues.
+
+### 5.3 — Monitoring & Health (`✓ FIXED: T-9`)
+
+**Health Check Endpoint**: `GET /api/health`
+
+```json
+{
+    "status": "healthy",
+    "timestamp": "2026-03-11T10:00:00Z",
+    "services": {
+        "database": { "status": "up", "latency_ms": 12 },
+        "redis": { "status": "up", "latency_ms": 3 },
+        "bullmq": { "status": "up", "queue_depth": { "P0": 2, "P1": 5, "P2": 12 } },
+        "supabase_realtime": { "status": "up" }
+    }
+}
+```
+
+**Alert Rules**:
+
+| Metric | Warning Threshold | Critical Threshold | Action |
+|--------|------------------|-------------------|--------|
+| P0 queue depth | > 50 jobs | > 100 jobs | Email admin |
+| Worker failure rate | > 5% in 15 min | > 10% in 15 min | Email admin + pause affected worker |
+| API response time | > 3 seconds (p95) | > 5 seconds (p95) | Email admin |
+| Budget usage | 80% of daily limit | 100% of daily limit | Email admin / halt worker |
+| Redis memory | > 75% capacity | > 90% capacity | Email admin |
+| Dead letter queue | > 10 jobs in 1 hour | > 50 jobs in 1 hour | Email admin |
+
+**Alert Destination**: Configurable per tenant (for enterprise: custom Slack webhook). Default: admin email list.
+
+**System Health Dashboard** (admin UI page):
+- Real-time queue depth chart (P0/P1/P2)
+- Worker status grid (running/idle/error per worker)
+- API response time graph (1h/24h/7d)
+- Budget consumption bars per worker
+- Recent errors list with stack traces
+
+### 5.4 — Backup & Disaster Recovery (`✓ FIXED: T-10`)
+
+| Component | Backup Strategy | Frequency | Retention |
+|-----------|----------------|-----------|-----------|
+| Supabase PostgreSQL | Supabase automatic backups + point-in-time recovery | Continuous (WAL) | 7 days (Pro plan) |
+| Redis | Railway managed Redis with RDB snapshots | Hourly | 24 hours |
+| Application code | GitHub repository | Every commit | Indefinite |
+| Environment variables | Railway encrypted env vars | On change | Current only |
+
+**Recovery Targets**:
+- **RTO** (Recovery Time Objective): 4 hours — full service restoration
+- **RPO** (Recovery Point Objective): 1 hour — maximum acceptable data loss
+
+**Disaster Recovery Runbook** (reference — stored in `/docs/disaster-recovery.md`):
+1. Database corruption → restore from Supabase point-in-time recovery
+2. Redis data loss → Redis is ephemeral cache + queue; rebuild from DB state. Budget counters reset (safe — worst case is re-spending today's budget). Queue jobs re-enqueue automatically.
+3. Railway outage → deploy to backup Railway project (pre-configured, env vars cloned)
+4. Supabase outage → no failover (single provider). Display maintenance page. Monitor Supabase status page.
+
+### 5.5 — API Keys Required
+
+| Key | Status | Used By |
+|-----|--------|---------|
+| ANTHROPIC_API_KEY | Available | predictive_discovery_worker, platform_profitability_scorer, daily_briefing_worker, outreach email gen, report narratives |
+| APIFY_API_TOKEN | Available | tiktok_discovery, creator_monitor, video_scraper, shopify_store_discovery, shopify_growth_monitor, facebook_ads |
+| RAPIDAPI_KEY | Available | tiktok_live_worker, amazon_bsr_scanner (secondary) |
+| SUPABASE_URL | Available | All services |
+| SUPABASE_SERVICE_ROLE_KEY | Available | Backend API + workers (bypasses RLS for admin operations) |
+| SUPABASE_ANON_KEY | Available | Frontend (public, RLS-enforced) |
+| REDIS_URL | Available | BullMQ, cache, budget, rate limiting |
+| RESEND_API_KEY | Available | Trend alerts, outreach emails, onboarding, dunning |
+| AMAZON_PA_API_KEY | Available | amazon_bsr_scanner_worker |
+| STRIPE_SECRET_KEY | Available | Billing API, subscription management |
+| STRIPE_WEBHOOK_SECRET | Available | Stripe webhook signature verification |
+| SERPAPI_KEY | Needed | google_trends_worker |
+| REDDIT_CLIENT_ID + SECRET | Needed | reddit_trend_worker |
+| YOUTUBE_API_KEY | Needed | youtube_worker |
+
+`✓ FIXED: D-1 — SERPAPI_KEY and YOUTUBE_API_KEY now have defined workers that use them`
+
+---
 <!-- Section 6: Auth & Compliance — PENDING -->
 <!-- Section 7: Intelligence Chain — PENDING -->
 <!-- Section 8: Home Dashboard — PENDING -->
