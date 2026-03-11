@@ -1612,6 +1612,362 @@ Shows the same product on OTHER platforms (not the source platform).
 | 7 — Best Platform | platform_profitability_scorer | Product click | 12h | P0 |
 
 ---
-<!-- Section 8: Home Dashboard — PENDING -->
+## Section 8 — Home Dashboard
+
+### 8.1 — Dashboard Layout
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ HEADER                                                                        │
+│ [YouSell logo] [Search bar (Cmd+K)] [What's New ★] [Alerts bell 3] [Profile] │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ ONBOARDING BAR (if checklist incomplete — dismissible)                        │
+│ ✓ Set your first alert  ○ Save a product  ○ Find a creator  [2/3 complete]  │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ LIVE STATS BAR (from dashboard_cards_mv, updated every 3h)                   │
+│ Products: 48,291 · Creators: 12,440 · Alerts Today: 7                       │
+│ TikTok Trending: 124 · Amazon Rising: 38 · Shopify Scaling: 19              │
+│ Last updated: 47 min ago [Refresh Now]  Data: LIVE                           │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ DAILY BRIEFING CARD (★ NEW: MN-3 — collapsed by default)                    │
+│ "3 products in fitness are showing pre-trend signals. Creator adoption..."   │
+│ [Read Full Briefing →]                                                       │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ TREND REPLAY (★ NEW: MN-5 — 3 success stories, horizontal scroll)          │
+│ [Product A: detected 5d early] [Product B: detected 3d early] [...]         │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ FILTER TABS + BULK ACTIONS                                                   │
+│ [All] [Trending] [Pre-Trend] [TikTok] [Amazon] [Shopify] [Saved Views ▼]   │
+│ Sort: [Trend Score ▼] [Predictive] [Revenue] [Newest] [Lifecycle Stage]     │
+│ [Select all checkbox]  When selected: [Save] [Alert] [Export] [Compare]     │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ PRODUCT INTELLIGENCE CARDS (20 cards, lazy-loaded, infinite scroll)          │
+│ Each card: checkbox + condensed 7-row chain + action buttons                 │
+│ [□] [Image] Title · Platform · TrendScore · Lifecycle · Price               │
+│      Creators: 12 · Shops: 4 · Videos: 89 · Freshness: LIVE                │
+│      [View Detail] [Save] [Find Creators] [Set Alert] [Dismiss ✕]          │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ SECONDARY INTELLIGENCE ROWS (horizontal scrolling cards):                    │
+│ Pre-Trend Picks (predictive_score > 65, product_age < 7d)                   │
+│ Fastest Growing Creators this week                                           │
+│ Stores Scaling Right Now                                                     │
+│ Ad Creatives Gaining Traction                                                │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ CONTEXTUAL HELP (★ NEW: S-7 — hover tooltips on all scores/badges)          │
+│ [?] on Trend Score → "Measures viral momentum. 0-100. >75 = hot product"    │
+│ [?] on Lifecycle → "Shows where this product is in its market lifecycle"     │
+│ [?] on Predictive → "AI confidence that this product will trend in 3-7 days"│
+├──────────────────────────────────────────────────────────────────────────────┤
+│ FOOTER                                                                       │
+│ [Help Centre] [Status Page] [Feedback] [Terms] [Privacy]                    │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 8.2 — Dashboard Refresh Logic
+
+`✓ FIXED: D-12 — inverted condition corrected`
+
+| Trigger | Condition | Action | Priority |
+|---------|-----------|--------|----------|
+| User opens dashboard | IF `dashboard_cards_mv.last_refreshed` age **>= 3 hours** | Return stale data + STALE badge, enqueue REFRESH_DASHBOARD_HOME at P2 | P2 |
+| User opens dashboard | IF `dashboard_cards_mv.last_refreshed` age **< 3 hours** | Return fresh materialised view (<300ms). Badge: LIVE | — |
+| User clicks [Refresh Now] | Always | Enqueue REFRESH_DASHBOARD_HOME at P0. Show UPDATING state. Supabase Realtime pushes update. | P0 |
+| User clicks product card | Always | Enqueue REFRESH_PRODUCT_CHAIN(product_id) at P0. Navigate to detail. Stale rows show UPDATING. | P0 |
+| Idle 3-hour background | No user activity > 3h | Enqueue REFRESH_DASHBOARD_HOME at P2 + ONE platform refresh (rotating) at P2 | P2 |
+
+### 8.3 — Materialised View Strategy
+
+`✓ FIXED: T-6 — materialised view tenant isolation strategy defined`
+
+**Architecture**: Single global materialised view with `tenant_id` column + composite index.
+
+```sql
+CREATE MATERIALIZED VIEW dashboard_cards_mv AS
+SELECT
+    p.tenant_id,
+    p.id AS product_id,
+    p.title,
+    p.image_url,
+    p.category,
+    p.product_type,
+    p.price,
+    p.platform,
+    ts.score AS trend_score,
+    ts.lifecycle_stage,
+    ps_best.platform AS recommended_platform,
+    ps_best.score AS platform_score,
+    (SELECT COUNT(*) FROM creator_product_links cpl WHERE cpl.product_id = p.id) AS creator_count,
+    (SELECT COUNT(*) FROM shops s WHERE s.tenant_id = p.tenant_id) AS shop_count,
+    (SELECT COUNT(*) FROM videos v WHERE v.product_id = p.id) AS video_count,
+    p.last_scraped_at,
+    p.created_at
+FROM products p
+LEFT JOIN LATERAL (
+    SELECT score, lifecycle_stage FROM trend_scores
+    WHERE product_id = p.id ORDER BY scored_at DESC LIMIT 1
+) ts ON true
+LEFT JOIN LATERAL (
+    SELECT platform, score FROM platform_scores
+    WHERE product_id = p.id ORDER BY score DESC LIMIT 1
+) ps_best ON true;
+
+CREATE UNIQUE INDEX ON dashboard_cards_mv (tenant_id, product_id);
+CREATE INDEX ON dashboard_cards_mv (tenant_id, trend_score DESC);
+```
+
+**Refresh** (`✓ FIXED: T-19`):
+- `dashboard_refresh_worker` runs `REFRESH MATERIALIZED VIEW CONCURRENTLY dashboard_cards_mv`
+- `CONCURRENTLY` requires the unique index (defined above) and allows reads during refresh
+- Refresh timeout: 30 seconds. If exceeded → log warning, keep serving stale view.
+- Triggered by: P2 idle refresh, P0 manual refresh, or after any P0/P1 scrape completes
+
+**Performance**:
+- Query with `WHERE tenant_id = :id ORDER BY trend_score DESC LIMIT 20`: target <300ms cold, <100ms cached
+- Redis cache: per-tenant dashboard cards cached in Redis for <50ms reads. Invalidated on MV refresh.
+
+### 8.4 — Supabase Realtime Architecture
+
+`✓ FIXED: T-14, T-17 — channel architecture and security defined`
+
+**Channel Naming Convention**:
+```
+tenant:{tenant_id}:dashboard     -- dashboard card updates
+tenant:{tenant_id}:product:{id}  -- specific product chain updates
+tenant:{tenant_id}:alerts        -- new alert notifications
+```
+
+**Security**: RLS policies enforce that users can only subscribe to their own tenant's channels. Supabase Realtime respects RLS by default.
+
+**Broadcast Data**: Minimal — only the updated row ID + table name. Client re-fetches from DB. This prevents leaking data in Realtime messages.
+
+**Connection Limits**:
+
+| Plan | Expected Users | Max Concurrent Connections | Strategy |
+|------|---------------|---------------------------|----------|
+| Starter | 1 | 2 (1 user × 2 tabs) | Direct connection |
+| Pro | 3 | 6 | Direct connection |
+| Agency | 10 | 20 | Direct connection |
+| Enterprise | 50+ | 100+ | Connection pooling recommended |
+
+**Fallback** (`✓ FIXED: T-14`): If Realtime disconnects → automatic fallback to polling every 30 seconds. Show "Live updates paused" indicator. Auto-reconnect with exponential backoff.
+
+### 8.5 — Loading & Empty States
+
+#### Skeleton Loading States (`★ NEW: S-2`)
+
+| Component | Skeleton |
+|-----------|----------|
+| Product card | Grey rectangle (image) + 3 shimmer lines (text) + 2 shimmer badges |
+| Stats bar | 6 grey shimmer rectangles in a row |
+| Creator list | Circle (avatar) + 2 shimmer lines × 5 rows |
+| Charts | Grey rectangle with subtle shimmer |
+| Trend Replay | 3 grey card outlines with shimmer |
+
+Use shadcn/ui `<Skeleton />` component with pulse animation.
+
+#### Empty States (`✓ FIXED: T-22`)
+
+| Page | Empty State | CTA |
+|------|------------|-----|
+| Home (new tenant, first scrape running) | Skeleton cards + "Setting up your intelligence feed... ~2 min" | Demo data toggle |
+| Home (new tenant, first scrape done, few products) | Real cards + "Your feed is building. More products appear as we scan." | "Add more platforms" link |
+| Product detail (chain row has no data) | "No data yet for this section" | [Refresh] button |
+| Platform section (plan-locked) | Lock icon + "Upgrade to Pro to access Amazon intelligence" | [View Plans] button |
+| Saved Collections (empty) | "No saved products yet" | "Save your first product from the dashboard" |
+| Alerts (none configured) | "Set up your first trend alert" | [Create Alert] button |
+
+#### Error States (`✓ FIXED: T-22`)
+
+| Scenario | Error UI | Recovery |
+|----------|---------|----------|
+| API failure | "Something went wrong. Please try again." | [Retry] button |
+| Worker failure | "Data refresh failed. Showing last known data." + STALE badge | Auto-retry in background |
+| Permission denied (viewer trying to export) | "You don't have permission to export. Contact your admin." | — |
+| Rate limited | "You're making too many requests. Please wait [X] seconds." | Auto-countdown |
+
+### 8.6 — Global Search
+
+`✓ FIXED: T-21 — search indexing strategy defined`
+
+**Trigger**: Cmd+K (keyboard shortcut) or click search bar in header.
+
+**Search targets**: Products (title, category), Creators (username, niche), Shops (name, URL), Niches (name).
+
+**Implementation**:
+- `tsvector` columns on searchable fields (auto-updated via trigger)
+- GIN indexes on tsvector columns
+- All search queries include `WHERE tenant_id = :id` to leverage composite index
+- Debounce: 300ms after last keystroke before querying
+- Results grouped by type: Products | Creators | Shops | Niches
+- Max 5 results per type in dropdown, "View all" link for full results page
+
+**Fallback**: If pg_trgm/tsvector proves slow at scale (>100K products), migrate to Typesense (self-hosted search engine, integrates with Supabase via webhooks).
+
+### 8.7 — Notification Centre
+
+**Bell Icon** in header — shows unread count badge.
+
+**Notification Types**:
+
+| Type | Trigger | Delivery |
+|------|---------|----------|
+| Trend alert | Product crosses alert threshold | In-app + email (per S-4 preferences) |
+| Pre-trend alert | predictive_score > 65 on product age < 7d | In-app + email |
+| Outreach reply | Creator replies to outreach email | In-app + email |
+| System update | Worker failure, budget alert, plan expiry | In-app |
+| Team activity | @mention in annotation, invitation accepted | In-app |
+
+**Notification Preferences** (`★ NEW: S-4`):
+
+| Setting | Options | Default |
+|---------|---------|---------|
+| Trend alerts | In-app only / In-app + Email / Off | In-app + Email |
+| Pre-trend alerts | In-app only / In-app + Email / Off | In-app + Email |
+| Outreach replies | In-app only / In-app + Email / Off | In-app + Email |
+| System updates | In-app only / Off | In-app only |
+| Team activity | In-app only / In-app + Email / Off | In-app only |
+| Email digest frequency | Instant / Daily summary / Weekly summary | Instant |
+| Global mute | On / Off | Off |
+
+Stored in `notification_preferences` table (see Section 6.9).
+
+### 8.8 — Bulk Actions
+
+`★ NEW: S-5 — bulk actions on product lists`
+
+**Activation**: Appears when 2+ product checkboxes are selected.
+
+**Toolbar Actions**:
+
+| Action | Behaviour | Limit |
+|--------|----------|-------|
+| Save to Collection | Add selected to existing or new collection | No limit |
+| Set Alert | Configure alert threshold for all selected | No limit |
+| Export Selected | Download CSV/Excel of selected products | Plan export limit |
+| Compare | Open side-by-side comparison view | 2–4 products max |
+| Archive | Move to "Archived" (hidden from default view) | No limit |
+| Dismiss | Move to "Dismissed" (hidden, user-specific) | No limit |
+
+**Select All**: Applies to current filter results (not entire database).
+
+### 8.9 — Product Archiving & Dismissal
+
+`★ NEW: S-16`
+
+| Action | Scope | Effect | Reversible? |
+|--------|-------|--------|-------------|
+| Dismiss | Per-user | Hidden from default view for this user only. Accessible via "Dismissed" filter tab. | Yes — "Restore" button |
+| Archive | Per-tenant | Hidden from default view for all users. Accessible via "Archived" filter tab. | Yes — "Unarchive" button |
+
+Stored in `product_user_status` table:
+```sql
+product_user_status (
+    id uuid PK,
+    tenant_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    product_id uuid NOT NULL FK → products(id),
+    status text NOT NULL DEFAULT 'active', -- 'active', 'dismissed', 'archived'
+    updated_at timestamptz DEFAULT now(),
+    UNIQUE(tenant_id, user_id, product_id)
+)
+```
+
+### 8.10 — Saved Views
+
+`★ NEW: S-6`
+
+Users can save current filter + sort + column configuration as a named view.
+
+```sql
+saved_views (
+    id uuid PK,
+    tenant_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    name text NOT NULL,
+    config jsonb NOT NULL,  -- { filters: {...}, sort: {...}, columns: [...] }
+    is_default boolean DEFAULT false,
+    is_shared boolean DEFAULT false,  -- visible to all team members
+    created_at timestamptz DEFAULT now()
+)
+```
+
+- Max 20 views per user
+- One default view per user (loads automatically)
+- Shared views visible to all team members (read-only — owner can edit)
+
+### 8.11 — Accessibility
+
+`★ NEW: S-3 — WCAG 2.1 AA compliance target`
+
+| Requirement | Implementation |
+|------------|----------------|
+| Keyboard navigation | All interactive elements focusable via Tab. Enter/Space to activate. |
+| ARIA labels | All badges (trend, lifecycle, freshness) have `aria-label` describing their meaning |
+| Colour contrast | All freshness badge colours verified against white background: Green #22C55E (4.5:1 ✓), Blue #3B82F6 (4.5:1 ✓), Amber #F59E0B (3.1:1 — use dark text), Red #EF4444 (4.5:1 ✓) |
+| Focus management | Focus trapped in modals. Focus returns to trigger on modal close. |
+| Skip-to-content | Hidden "Skip to main content" link as first focusable element |
+| Screen reader | All charts have text alternatives. All images have alt text. |
+
+### 8.12 — Keyboard Shortcuts
+
+`★ NEW: S-18`
+
+| Shortcut | Action |
+|----------|--------|
+| Cmd+K (Ctrl+K) | Open global search |
+| J / K | Next / previous product in list |
+| S | Save selected product to collection |
+| A | Set alert on selected product |
+| R | Refresh current view |
+| / | Focus search bar |
+| Esc | Close modal / deselect |
+| Cmd+? (Ctrl+?) | Open keyboard shortcuts help modal |
+
+### 8.13 — What's New / Changelog
+
+`★ NEW: S-17`
+
+- "What's New" link in header (shows dot indicator when new entries exist)
+- In-app modal triggered on first login after a new release
+- Content managed externally (Notion page or simple JSON file in repo)
+- Shows last 5 updates with title + date + short description
+
+### 8.14 — Help & Contextual Tooltips
+
+`★ NEW: S-7 — P0 launch blocker`
+
+**Contextual Tooltips** (hover/focus on [?] icon):
+
+| Element | Tooltip Text |
+|---------|-------------|
+| Trend Score | "Measures viral momentum across platforms. Scale: 0–100. Above 75 = hot product. Updated every 3 hours." |
+| Predictive Score | "AI confidence that this product will trend in the next 3–7 days. Above 65 = pre-trend opportunity." |
+| Saturation Score | "Market saturation level. Above 80 = oversaturated. Consider exiting or avoiding." |
+| Lifecycle badge | "Shows where this product is in its market lifecycle: Emerging → Growing → Peak → Declining → Saturated." |
+| Freshness badge | "How recently this data was scraped. LIVE = within 3 hours. OUTDATED = over 24 hours." |
+| Match Score | "How well a creator matches this product. Based on niche alignment, engagement, and past performance." |
+
+**External Links** (in footer):
+- Help Centre: link to external knowledge base (Notion or Intercom)
+- Status Page: link to BetterUptime status page
+- Feedback: link to feedback form (Canny or simple form)
+
+### 8.15 — Activity Log
+
+`★ NEW: S-10 — team activity feed`
+
+Accessible to `agency_owner` and `super_admin` roles.
+
+| Column | Description |
+|--------|------------|
+| User avatar + name | Who performed the action |
+| Action | "saved product", "triggered scrape", "sent outreach", "exported report", "created alert" |
+| Target | Product/creator/collection name (linked) |
+| Timestamp | Relative ("2 min ago") and absolute on hover |
+
+**Filters**: By user, action type, date range.
+**Source**: `api_usage_log` table with user-friendly UI layer.
+
+---
 <!-- Section 9: Platform Sections — PENDING -->
 <!-- Section 10: Algorithms — PENDING -->
