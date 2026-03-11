@@ -101,40 +101,53 @@ This is the critical decision. Here is my definitive analysis.
 
 | Tool | Monthly Cost | Videos/Mo | API? | n8n? | Lip-sync Quality | Verdict |
 |------|-------------|----------|------|------|-----------------|---------|
-| **HeyGen** | **$29** | **~6-10 (200 credits)** | **Yes** | **HTTP** | **Best in class** | **REJECTED (too few videos)** |
-| Creatify | $39 (100 credits) | ~5 | Yes | No | Very good | REJECTED (expensive) |
-| Synthesia | $29 | ~10 | Yes | No | Good (corporate) | REJECTED (corporate feel) |
-| D-ID | Pay-as-you-go | Varies | Yes | No | Good | REJECTED (expensive at scale) |
-| **NanoBanana + VEO3** | **~$8-15/mo** | **20-40** | **Yes** | **Yes (template #8270/#11204)** | **Good (improving fast)** | **PRIMARY** |
+| **HeyGen** | **$29** | **Unlimited (AvatarIII) / ~10-20 (AvatarIV)** | **Yes** | **Yes (community node + templates)** | **Best in class** | **PRIMARY** |
+| NanoBanana + VEO3 | ~$5-15/mo | 10-30 short clips (8s) | Yes | Yes (#8270/#11204) | No lip-sync (cinematic only) | SUPPLEMENTARY (B-roll) |
+| Creatify | $39-49/mo (100 credits) | ~5-25 | Yes (Pro only) | No native | Very good UGC-style | REJECTED (expensive, no n8n) |
+| Synthesia | $18-89/mo | 3-30 min/mo | Yes | Yes (dedicated) | Good (corporate feel) | REJECTED (not UGC/TikTok style) |
+| D-ID | $6-48/mo | 10+ min | Yes | No | Good | REJECTED (uncanny with poor sources) |
 
-### The Critical Comparison: HeyGen vs NanoBanana+VEO3
+### The Critical Comparison: HeyGen vs NanoBanana+VEO3 (REVISED)
 
-**HeyGen ($29/mo Creator):**
-- 200 credits/month → approximately 6-10 one-minute videos (Avatar IV costs 20 credits/minute)
-- Best lip-sync quality in the market (Avatar IV)
-- Polished, professional output
-- BUT: 20 videos/month target requires $87+/mo (Business plan) — **blows the budget**
-- API exists but is a separate billing system ($5+ wallet top-ups)
+**IMPORTANT CORRECTION:** My initial analysis underestimated VEO3 costs for full-length presenter content. VEO3 generates **cinematic video** (product showcase, B-roll), NOT talking-head presenters with lip sync. For 30-60 second presenter reels, VEO3 Fast costs $4.50-9/video — making 20 videos = $90-180/month. This blows the budget and still doesn't produce lip-synced talking heads.
 
-**NanoBanana + VEO3 Pipeline (~$8-15/mo):**
-- NanoBanana 2 generates character-consistent images ($0.067/image at 1K) — use as "avatar frame"
-- Nano Banana Pro for high-quality hero images ($0.134/image at 2K)
-- VEO3/3.1 generates video from reference image ($0.10-0.40/sec via Gemini API)
-- For a 30-second clip: ~$3-12 depending on quality settings (VEO3 Fast vs standard)
-- Using VEO3 Fast at $0.10/sec: 8-second clips = $0.80 each → 20 clips = $16/mo
-- Pre-built n8n templates (#8270, #11204) handle the full pipeline
-- Lip-sync less polished than HeyGen but rapidly improving
-- **Free tier**: 500 Nano Banana images/day via Google AI Studio!
+**HeyGen ($29/mo Creator) — REVISED ASSESSMENT:**
+- **Avatar III: UNLIMITED videos** on all paid plans — decent quality, good enough for social media
+- Avatar IV: 200 credits/month = ~10 minutes = 10-20 reels at 30-60 seconds each
+- Best lip-sync quality in the market (Avatar IV), G2 rating 4.8/5
+- **Dedicated n8n community node** + 6+ workflow templates (including product review automation)
+- 175+ languages, natural micro-expressions, eye contact, gesture alignment
+- API available as separate pay-as-you-go wallet ($5+ top-ups)
+- Per-video cost (Avatar IV): ~$2-4 per 30-60 second reel
 
-**My verdict: NanoBanana + VEO3 for avatar content.** Here's why:
-1. At $8-15/mo it produces 2-4x more content than HeyGen at $29/mo
-2. The n8n templates (#8270, #11204) already exist — zero custom dev needed
-3. Google's models are improving faster than HeyGen's (Nano Banana 2 launched Feb 2026)
-4. The free tier (500 images/day) means character images cost effectively $0
-5. VEO3 Fast at $0.10/sec makes 8-second clips under $1 each
-6. Quality is "good enough" for TikTok/Reels — these platforms reward authenticity over polish
+**NanoBanana + VEO3 — REVISED ASSESSMENT:**
+- **NOT a talking-head/presenter tool** — generates cinematic product showcase video
+- Excellent for product B-roll, lifestyle scenes, UGC-style product clips
+- VEO3 Fast at $0.15/sec: 8-second clips = $1.20 each (good for short B-roll)
+- Cost for full 30-60 second videos: $4.50-9/video (too expensive at 20/month volume)
+- n8n templates (#8270, #11204) work well for short-clip production
+- Best used as supplementary B-roll alongside HeyGen presenter content
 
-**Fallback:** If avatar quality becomes a bottleneck impacting sales, HeyGen Creator ($29/mo) can be added later for the highest-performing products only.
+**My revised verdict: HeyGen for talking-head content + NanoBanana+VEO3 for product B-roll.**
+
+The winning strategy is a **hybrid approach**:
+1. **HeyGen Avatar III (unlimited)** for the bulk of presenter content (~15-20 reels/month) — $29/mo flat
+2. **HeyGen Avatar IV** for hero/flagship product reviews (5-10 reels from 200 credits) — included in $29
+3. **NanoBanana + VEO3 (short clips)** for supplementary product B-roll and cinematic showcase clips — ~$5-10/mo
+4. Total avatar/video budget: **~$34-39/month** (vs $135-180 for VEO3-only or $87+ for HeyGen Business)
+
+**Why this hybrid wins:**
+1. HeyGen Avatar III unlimited = no per-video cost anxiety for presenter content
+2. Avatar IV for 5-10 premium reels gives best-in-class quality where it matters most
+3. VEO3 short clips (8s, $1.20 each) add visual variety without breaking budget
+4. HeyGen has a **dedicated n8n node** — better automation than HTTP-only
+5. The n8n HeyGen templates already demonstrate the exact product-review-to-social-post pattern
+6. HeyGen handles voiceover internally — potentially reduces ElevenLabs dependency
+
+**What I explicitly rejected:**
+- **Creatify ($39-49/mo):** URL-to-video is impressive but credits expire every 2 months, credit costs are unpredictable (2-20/video), no n8n integration, and API requires Pro plan ($49/mo minimum)
+- **Synthesia ($18-89/mo):** Corporate/professional feel doesn't suit TikTok/Instagram UGC aesthetic. Express-2 avatars are good but not optimized for short-form social content
+- **D-ID ($6-48/mo):** Quality depends heavily on source photo. Less expressive than HeyGen. Pricing transparency complaints
 
 ### 3C. PRODUCT IMAGES
 
@@ -202,22 +215,26 @@ Blotato's $29/mo Starter plan includes:
 
 | Service | Purpose | Monthly Cost |
 |---------|---------|-------------|
-| **Existing platform** | Frontend, Backend, DB, Auth, etc. | $139 |
+| **Existing platform** | Frontend, Backend, DB, Auth, etc. | $80 |
 | **CJDropshipping API** | Primary supplier lookups | $0 |
-| **Apify (free tier)** | AliExpress secondary lookups | $0 |
+| **AliExpress Affiliate API** | Co-primary supplier lookups | $0 |
+| **Apify (free tier)** | Supplier lookup fallback | $0 |
 | **Claude API (incremental)** | Profitability AI analysis | ~$8 |
 | **Blotato Starter** | Faceless video + publishing | $29 |
-| **VEO3 API (Google)** | Avatar video generation | ~$12 |
-| **Nano Banana 2/Pro** | Product images + avatar frames | ~$2 |
-| **ElevenLabs Starter** | AI voiceover | $5 |
+| **HeyGen Creator** | AI avatar presenter reels | $29 |
+| **VEO3 API (Google)** | Product B-roll short clips | ~$8 |
+| **Nano Banana 2/Pro** | Product images (mostly free tier) | ~$2 |
+| **ElevenLabs Starter** | AI voiceover (hero content) | $5 |
+| **OpenAI TTS** | AI voiceover (day-to-day) | ~$0.20 |
 | | | |
-| **TOTAL** | | **~$195/month** |
+| **TOTAL** | | **~$161/month** |
 
-**vs. Budget ceiling of $300/month — $105 under budget.**
+**vs. Budget ceiling of $300/month — $139 under budget.**
 
-This leaves a $105/month buffer for:
-- Scaling VEO3 usage for more videos
-- Adding HeyGen Creator ($29) if avatar quality needs upgrading
+This leaves a $139/month buffer for:
+- Scaling HeyGen to Pro tier ($99) for more Avatar IV content
+- Scaling VEO3 usage for longer product videos
+- Adding Creatify ($39) for URL-to-video ad testing
 - Scaling Apify for more supplier lookups
 - Unexpected API costs
 
@@ -407,20 +424,31 @@ Trigger: Webhook from W4 (content_priority HIGH or MEDIUM)
 → Queue for publishing (W10) or human review
 ```
 
-**W6: Avatar Video Pipeline (based on template #8270/#11204)**
+**W6: Avatar Presenter Pipeline (HeyGen)**
 ```
 Trigger: Webhook from W4 (content_priority HIGH only)
 → Read avatar script from content_queue
-→ Nano Banana 2: Generate character-consistent presenter image
-  → Prompt: "professional product reviewer, [demographics], holding [product]"
-  → Uses character seed for consistency across videos
-→ VEO3 API: Generate video from reference image + script
-  → Input: Nano Banana image + motion prompt
-  → Format: 9:16 vertical, 8 seconds
-  → Generate 3-4 clips, concatenate
-→ ElevenLabs: Generate voiceover from script
-→ Assemble: video + voiceover (via Blotato or n8n binary merge)
+→ Determine avatar tier:
+  → STRONG + hero product: Avatar IV (premium, 20 credits/min)
+  → STRONG + standard: Avatar III (unlimited, good quality)
+→ HeyGen API (via n8n community node):
+  → Create video from script + selected avatar
+  → Format: 9:16 vertical, 30-60 seconds
+  → Avatar speaks the script with lip sync + gestures
+  → Built-in voiceover (HeyGen handles TTS internally)
+→ Poll for completion → download rendered video
 → Queue for publishing (W10) or human review
+```
+
+**W6B: Product B-Roll Pipeline (NanoBanana + VEO3, based on template #8270)**
+```
+Trigger: Webhook from W4 (content_priority HIGH, supplementary)
+→ Nano Banana 2: Generate product lifestyle image (free tier)
+→ VEO3 Fast API: Generate 8-second cinematic clip from image
+  → Format: 9:16 vertical
+  → Motion: product showcase, slow pan, lifestyle context
+→ Download clip → store as supplementary B-roll asset
+→ Can be combined with HeyGen presenter clips in content assembly
 ```
 
 **W7: Product Image Generator (based on template #8226)**
@@ -503,7 +531,8 @@ Trigger: Cron daily (6 AM)
 | W24 | profitability_analysis_worker | intelligence_jobs | P1 | W23 completion | W25 | AI viability assessment |
 | W25 | content_script_worker | content_jobs | P1 | W24 (verdict != NOT_VIABLE) | W26-W29 | AI script generation |
 | W26 | faceless_video_worker | content_jobs | P2 | W25 (priority HIGH/MEDIUM) | W30 | Blotato video creation |
-| W27 | avatar_video_worker | content_jobs | P2 | W25 (priority HIGH) | W30 | NanoBanana + VEO3 pipeline |
+| W27 | avatar_presenter_worker | content_jobs | P2 | W25 (priority HIGH) | W30 | HeyGen avatar presenter reels |
+| W27B | product_broll_worker | content_jobs | P2 | W25 (priority HIGH, supplementary) | W30 | NanoBanana + VEO3 B-roll clips |
 | W28 | product_image_worker | content_jobs | P2 | W25 (all priorities) | W30 | Nano Banana image gen |
 | W29 | voiceover_worker | content_jobs | P2 | W25 (priority HIGH/MEDIUM) | W30 | ElevenLabs TTS |
 | W30 | content_assembly_worker | content_jobs | P1 | W26-W29 completion | W31 | Combine assets |
@@ -851,12 +880,14 @@ The existing product detail page (7-row chain) gets 3 new sections:
 | | | | | |
 | | **ENGINE 3: CONTENT & MARKETING** | | | |
 | 13 | Blotato | Starter | $29 | Faceless video + publishing |
-| 14 | Google AI (VEO3) | Pay-as-you-go | ~$12 | Avatar video generation |
-| 15 | Google AI (Nano Banana) | Free tier + Pro API | ~$2 | Product images |
-| 16 | ElevenLabs | Starter | $5 | AI voiceover |
-| | **Engine 3 subtotal** | | **~$48** | |
+| 14 | HeyGen | Creator | $29 | AI avatar presenter reels |
+| 15 | Google AI (VEO3) | Pay-as-you-go | ~$8 | Product B-roll short clips |
+| 16 | Google AI (Nano Banana) | Free tier + Pro API | ~$2 | Product images |
+| 17 | ElevenLabs | Starter | $5 | AI voiceover (hero content) |
+| 18 | OpenAI TTS | Pay-as-you-go | ~$0.20 | AI voiceover (day-to-day) |
+| | **Engine 3 subtotal** | | **~$73** | |
 | | | | | |
-| | **GRAND TOTAL** | | **~$136/month** | |
+| | **GRAND TOTAL** | | **~$161/month** | |
 
 ### Comparison With Previous Estimates
 
@@ -865,31 +896,35 @@ The existing product detail page (7-row chain) gets 3 new sections:
 | Previous Config A (base only) | $139 | No content engines |
 | Previous Config B (full featured) | $415 | Over budget |
 | Previous Config C (optimized) | $291 | Near budget ceiling |
-| **This Blueprint** | **~$136** | **All 3 engines included** |
+| **This Blueprint** | **~$161** | **All 3 engines included** |
 
-**This blueprint delivers ALL 3 engines for LESS than the previous base-only configuration.** The key savings:
-1. CJDropshipping API replaces TopDawg ($35/mo saved)
-2. NanoBanana+VEO3 replaces HeyGen ($29/mo saved if HeyGen was planned)
-3. Nano Banana free tier replaces paid image generation (~$10-20/mo saved)
-4. Blotato bundles video creation + publishing (vs separate tools ~$50-70/mo saved)
-5. Previous baseline estimate of $139 appears to have included TopDawg ($35) and possibly over-estimated Apify usage
+**This blueprint delivers ALL 3 engines for $139 under budget.** The key savings:
+1. CJDropshipping + AliExpress Official APIs replace TopDawg ($35/mo saved)
+2. HeyGen Avatar III (unlimited) provides bulk presenter content without per-video anxiety
+3. NanoBanana+VEO3 provides supplementary B-roll, not primary presenter content
+4. Nano Banana free tier replaces paid image generation (~$10-20/mo saved)
+5. Blotato bundles faceless video creation + 9-platform publishing (vs separate tools ~$50-70/mo saved)
+6. Dual voiceover strategy (OpenAI TTS day-to-day + ElevenLabs hero) optimizes quality vs cost
 
 ### Break-Even Analysis
 
-**Fixed costs:** ~$136/month
+**Fixed costs:** ~$161/month
 **Variable costs per product (full content suite):**
 - Supplier lookup: $0
 - AI analysis: ~$0.01
 - Faceless video (Blotato): ~$0.50/video (est. 25 credits)
-- Avatar video (VEO3): ~$3-4/video
+- Avatar reel (HeyGen Avatar III): $0 (unlimited on Creator plan)
+- Avatar reel (HeyGen Avatar IV, hero only): ~$2-4/video
+- Product B-roll (VEO3 Fast, 8s clip): ~$1.20/clip
 - Product images (free tier): $0
-- Voiceover (ElevenLabs): ~$0.10/clip
-- Total per STRONG product: ~$4-5 for full content suite
+- Voiceover (OpenAI TTS): ~$0.01/clip
+- Voiceover (ElevenLabs, hero): ~$0.10/clip
+- Total per STRONG product: ~$4-6 for full content suite
 - Total per MODERATE product: ~$1-2 for reduced content
 - Total per WEAK product: ~$0.01 for images only
 
-**At 30 STRONG products/month:** $136 fixed + $150 variable = ~$286/month
-**At 20 STRONG products/month:** $136 fixed + $100 variable = ~$236/month
+**At 30 STRONG products/month:** $161 fixed + $150 variable = ~$311/month (near ceiling)
+**At 20 STRONG products/month:** $161 fixed + $100 variable = ~$261/month (comfortable)
 
 **Revenue needed to break even at $236/month:**
 - If average product profit is $10/sale: need 24 sales/month
@@ -1149,13 +1184,15 @@ Generate content → Human reviews → Approve/Reject
 
 | Factor | Previous Approach | This Blueprint |
 |--------|------------------|---------------|
-| Supplier API | TopDawg ($35/mo) | CJDropshipping (free) |
-| Avatar video | HeyGen ($29/mo, ~10 videos) | NanoBanana+VEO3 (~$12/mo, ~20 videos) |
-| Product images | Paid image gen (~$10/mo) | Nano Banana free tier ($0) |
+| Supplier API | TopDawg ($35/mo) | CJDropshipping + AliExpress Official (both free) |
+| Avatar presenter | HeyGen ($87+/mo for volume) OR VEO3-only ($135+/mo) | HeyGen Creator ($29) — Avatar III unlimited + Avatar IV for hero |
+| Product B-roll | Not planned | NanoBanana + VEO3 short clips (~$8/mo) |
+| Product images | Paid image gen (~$10/mo) | Nano Banana 2 free tier ($0) |
 | Publishing | Separate tool ($30-40/mo) | Included in Blotato ($0 extra) |
-| Content creation | Multiple tools ($70+/mo) | Blotato ($29) + Google AI (~$14) |
-| Total for engines | $160-276/mo | ~$56/mo |
-| Content volume | Limited by budget | 2-4x more content per dollar |
+| Faceless video | Multiple tools ($70+/mo) | Blotato ($29) — all-in-one |
+| Voiceover | ElevenLabs only ($5/mo) | OpenAI TTS ($0.20) + ElevenLabs ($5) — tiered quality |
+| Total for engines | $160-276/mo | ~$81/mo |
+| Content volume | Limited by budget | Unlimited presenter reels (Avatar III) + targeted premium |
 
 ---
 

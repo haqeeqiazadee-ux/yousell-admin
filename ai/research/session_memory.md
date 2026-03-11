@@ -44,7 +44,17 @@ Research and design the definitive blueprint for 3 missing engines:
 5. **ElevenLabs $5/mo** — Best voice quality, 30 min/mo, commercial rights, n8n native node
 6. **Total engine cost: ~$56/mo** — vs budget of $160/mo, leaving $104 buffer
 
-## RECOMMENDED STACK TOTAL: ~$136/month (all 3 engines included)
+## RECOMMENDED STACK TOTAL: ~$161/month (all 3 engines included)
+
+## CRITICAL REVISION (post-agent-research):
+- VEO3 cannot produce talking-head lip-synced presenter content — it generates cinematic video only
+- VEO3 costs $4.50-9/video for 30-60s content — too expensive as primary avatar tool
+- HeyGen Creator ($29/mo) added as primary avatar presenter tool:
+  - Avatar III: UNLIMITED videos (good quality, sufficient for social)
+  - Avatar IV: ~10-20 premium reels from 200 credits
+  - Has dedicated n8n community node + templates
+- VEO3 repositioned as supplementary B-roll (short 8s product showcase clips)
+- Total revised from $136 to $161 — still $139 under budget ceiling
 
 ## FILES CREATED
 - ai/research/session_memory.md (this file)
