@@ -157,10 +157,10 @@ Read these files to recover:
 
 | # | Task | Files to Read | Status |
 |---|------|---------------|--------|
-| 7.1 | Review Pinterest provider: Apify crawler actor correct? Pin data parsing? Saves count extraction? | `src/lib/providers/pinterest/index.ts` | ⬜ |
-| 7.2 | Review Shopify provider: Apify scraper correct? Variant handling? Vendor extraction? | `src/lib/providers/shopify/index.ts` | ⬜ |
-| 7.3 | Review Trends provider: Google Trends Apify scraper? Keyword batching (groups of 5)? Direction classification? | `src/lib/providers/trends/index.ts` | ⬜ |
-| 7.4 | Review provider config: All 19 providers listed? Phase assignments correct? isConfigured checks work? | `src/lib/providers/config.ts` | ⬜ |
+| 7.1 | Review Pinterest provider: Apify crawler actor correct? Pin data parsing? Saves count extraction? | `src/lib/providers/pinterest/index.ts` | ✅ 2026-03-12 |
+| 7.2 | Review Shopify provider: Apify scraper correct? Variant handling? Vendor extraction? | `src/lib/providers/shopify/index.ts` | ✅ 2026-03-12 |
+| 7.3 | Review Trends provider: Google Trends Apify scraper? Keyword batching (groups of 5)? Direction classification? | `src/lib/providers/trends/index.ts` | ✅ 2026-03-12 |
+| 7.4 | Review provider config: All 19 providers listed? Phase assignments correct? isConfigured checks work? | `src/lib/providers/config.ts` | ✅ 2026-03-12 |
 
 ---
 
