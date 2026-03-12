@@ -314,19 +314,33 @@ NOTE: Engine 2 runs TWICE — once in Phase 1 (preliminary) and once
       in Phase 3 (confirmed). The preliminary run informs the human
       reviewer. The confirmed run triggers marketing.
 
-ENGINE 3: CONTENT & MARKETING ENGINE
+ENGINE 3: CONTENT & MARKETING ENGINE (Two-Stage with Human Gate)
         ↓
-n8n Workflow: Script Generation (Claude Haiku)
+STAGE A — MARKETING PLAN GENERATION (automated)
         ↓
-Branching by content_priority:
-  STRONG → Full suite (faceless reels + avatar reels + product images)
-  MODERATE → Reduced (1 faceless reel + product images)
-  WEAK → Minimal (product images only, organic)
+Claude Sonnet: Generate complete marketing plan
+  → Content pieces (scripts, image prompts, voiceover text)
+  → Budget allocation (per content type + paid promotion)
+  → Platform strategy (where + when to post)
+  → Messaging strategy (angles, audience, urgency hooks)
+  → Timeline (production schedule)
+  → Estimated ROI
+        ↓
+MARKETING APPROVAL QUEUE (human checkpoint)
+  → Admin reviews complete plan in dashboard
+  → Actions: Approve / Modify / Reject / Hold
+  → Can edit scripts, remove pieces, adjust budgets
+  → ONLY after approval does production begin
+        ↓
+STAGE B — CONTENT PRODUCTION (fires after approval)
         ↓
 Faceless Reels: Blotato API → AI video from product data
-Avatar Reels: Nano Banana (image) → VEO3 (video) → Blotato (publish)
+Avatar Reels: HeyGen API → lip-synced presenter videos
+Product B-Roll: NanoBanana + VEO3 → cinematic short clips
 Product Images: Nano Banana 2 (free tier) / Pro (hero images)
-Voiceover: ElevenLabs → audio clips for reels
+Voiceover: OpenAI TTS (day-to-day) + ElevenLabs (hero)
+        ↓
+Content Assembly → combine video + voiceover + B-roll
         ↓
 Human Review Queue (default) / Auto-post (trusted toggle)
         ↓
@@ -355,13 +369,19 @@ platform weighting, scoring model adjustment
 | Final viability classification | Yes (Claude AI, confirmed data) | Override verdict | Phase 3 |
 | Final pricing recommendation | Yes (algorithm, confirmed data) | Set price manually | Phase 3 |
 | Content creation trigger | Yes (gated by CONFIRMED verdict) | Force content for any product | Phase 3 |
-| Script generation | Yes (Claude AI) | Edit before production | Engine 3 |
-| Content production | Yes (automated pipeline) | Review queue (default ON) | Engine 3 |
+| **Marketing plan generation** | **Yes (Claude Sonnet AI)** | **—** | **Engine 3 Plan** |
+| **Marketing plan approval** | **NO — requires human** | **Approve / Modify / Reject / Hold** | **Engine 3 Gate** |
+| **Budget allocation** | **Yes (AI-recommended)** | **Modify in plan before approving** | **Engine 3 Gate** |
+| Script finalization | Yes (from approved plan) | Edit individual scripts in plan | Engine 3 |
+| Content production | Yes (after plan approved) | — | Engine 3 |
 | Publishing | **No (human review default)** | Toggle to auto-post per account | Engine 3 |
-| Budget allocation | Yes (% of gross profit) | Set manual budget caps | Engine 3 |
 | Performance tracking | Yes (automated ingestion) | Manual data correction | Feedback |
 
-**The critical insight:** The system does maximum automated work BEFORE asking for human input, then STOPS and waits for confirmation before spending any marketing dollars. This means the admin sees a fully-analyzed product with preliminary margins, supplier options, and delivery estimates — making the confirm/override decision fast and informed.
+**The critical insight:** The system has TWO human checkpoints:
+1. **Sourcing Queue (Phase 2):** Confirm pricing before any analysis money is spent
+2. **Marketing Approval Queue (Engine 3):** Approve the complete marketing plan before any content/marketing money is spent
+
+Between these checkpoints, the AI does maximum automated work — price discovery, cost calculation, viability analysis, marketing plan generation, budget allocation, script writing — so the admin's decisions are fast, informed, and based on complete data rather than guesswork.
 
 ### What The System Learns Over Time
 
@@ -391,15 +411,19 @@ platform weighting, scoring model adjustment
 | | **PHASE 3: Confirmed Pricing** | | | | |
 | W3C | Confirmed Cost Recalculation | P3 | Admin confirms in Sourcing Queue | Yes | Internal calculation |
 | W3D | Final Profitability Analysis | P3 | W3C completion | Yes | Claude API (Haiku/Sonnet) |
-| | **ENGINE 3: Content & Marketing** | | | | |
-| W4 | Content Script Generator | E3 | W3D completion (confirmed, not NOT_VIABLE) | Yes | Claude API (Haiku) |
-| W5 | Faceless Video Pipeline | E3 | W4 completion (HIGH/MEDIUM) | Partial | Blotato API |
-| W6 | Avatar Presenter Pipeline | E3 | W4 completion (HIGH only) | Partial | HeyGen API (n8n node) |
-| W6B | Product B-Roll Pipeline | E3 | W4 completion (HIGH, supplementary) | Partial | Nano Banana, VEO3 |
-| W7 | Product Image Generator | E3 | W4 completion (all priorities) | Partial | Nano Banana 2/Pro |
-| W8 | Voiceover Generator | E3 | W4 completion (HIGH/MEDIUM) | Yes | ElevenLabs, OpenAI TTS |
-| W9 | Content Assembly | E3 | W5/W6/W6B/W7/W8 completion | Yes | FFmpeg, Blotato |
-| W10 | Publishing Pipeline | E3 | W9 completion OR manual trigger | Partial | Blotato (native node) |
+| | **ENGINE 3A: Marketing Plan** | | | | |
+| W4 | Marketing Plan Generator | E3-Plan | W3D completion (confirmed, not NOT_VIABLE) | Yes | Claude API (Sonnet) |
+| W4B | Marketing Approval Queue | E3-Gate | W4 completion | Yes | Supabase Realtime, notifications |
+| — | (Dashboard UI: Approve/Modify/Reject) | E3-Gate | Admin action | Yes | Supabase |
+| W4C | Plan Execution Trigger | E3-Gate | Admin approves plan | Yes | Supabase |
+| | **ENGINE 3B: Content Production** | | | | |
+| W5 | Faceless Video Pipeline | E3-Prod | W4C (approved faceless pieces) | Partial | Blotato API |
+| W6 | Avatar Presenter Pipeline | E3-Prod | W4C (approved avatar pieces) | Partial | HeyGen API (n8n node) |
+| W6B | Product B-Roll Pipeline | E3-Prod | W4C (approved B-roll pieces) | Partial | Nano Banana, VEO3 |
+| W7 | Product Image Generator | E3-Prod | W4C (approved image sets) | Partial | Nano Banana 2/Pro |
+| W8 | Voiceover Generator | E3-Prod | W4C (approved voiceover scripts) | Yes | ElevenLabs, OpenAI TTS |
+| W9 | Content Assembly | E3-Prod | W5/W6/W6B/W7/W8 completion | Yes | FFmpeg, Blotato |
+| W10 | Publishing Pipeline | E3-Pub | W9 completion OR manual trigger | Partial | Blotato (native node) |
 | | **FEEDBACK & MONITORING** | | | | |
 | W11 | Performance Tracker | — | Cron (every 6 hours) | Yes | Platform APIs, Supabase |
 | W12 | Feedback Processor | — | Cron (weekly) | Yes | Claude API, Supabase |
@@ -608,33 +632,213 @@ It has been replaced by the three-phase model above:
 - W3C (Phase 3): Confirmed cost recalculation
 - W3D (Phase 3): Final profitability analysis → gates Engine 3
 
-**W4: Content Script Generator**
+---
+
+### ENGINE 3: Marketing Plan Generation + Human Approval
+
+**W4: Marketing Plan Generator (REDESIGNED — formerly "Content Script Generator")**
 ```
-Trigger: Webhook from W3
-→ Read profitability_analysis + product data
-→ Claude Haiku: Generate content scripts
-  → For STRONG: 3 faceless scripts + 2 avatar scripts + image prompts + voiceover scripts
-  → For MODERATE: 1 faceless script + image prompts
-  → For WEAK: image prompts only
-→ Store scripts in content_queue table
-→ Trigger W5/W6/W7/W8 based on content_priority
+Trigger: Webhook from W3D (confirmed verdict != NOT_VIABLE)
+→ Read: confirmed profitability_analysis + product data + supplier data
+→ Read: historical performance data (if any — from W12 feedback loop)
+→ Read: current budget utilization (from W34 budget monitor)
+
+→ Claude Sonnet: Generate COMPLETE marketing plan
+  → Input:
+    - Product: title, category, price, images, unique selling points
+    - Confirmed margins per platform
+    - Delivery time (affects urgency messaging)
+    - Historical performance of similar products (if available)
+    - Remaining monthly content budget
+    - Current platform engagement rates
+
+  → Output: marketing_plan (JSONB) containing:
+
+    1. CONTENT STRATEGY
+       → content_pieces: array of planned content items
+         → For STRONG: 3 faceless scripts + 2 avatar scripts + image set + voiceover scripts
+         → For MODERATE: 1 faceless script + 1 avatar script + image set
+         → For WEAK: image set only
+       → Each piece includes: type, script/prompt, target_platform, estimated_cost, rationale
+
+    2. BUDGET ALLOCATION
+       → total_marketing_budget: $ amount (from profitability analysis)
+       → content_production_budget: breakdown per content type
+         → faceless_video: $X (Blotato credits)
+         → avatar_reel: $X (HeyGen credits — $0 for Avatar III, ~$2-4 for Avatar IV)
+         → product_broll: $X (VEO3 Fast)
+         → product_images: $X (~$0 for free tier, $0.13/hero)
+         → voiceover: $X (OpenAI TTS ~$0.01 or ElevenLabs ~$0.10)
+       → paid_promotion_budget: $ amount (if applicable)
+       → influencer_budget: $ amount (if applicable, for STRONG only)
+       → estimated_total_spend: sum of all above
+       → estimated_ROI: projected based on similar product performance
+
+    3. PLATFORM STRATEGY
+       → primary_platform: best selling platform (from profitability)
+       → content_platforms: where to post (TikTok, IG, YT Shorts, Pinterest, etc.)
+       → posting_schedule: specific dates/times for each piece
+       → platform_rationale: why these platforms for this product
+
+    4. MESSAGING STRATEGY
+       → key_angles: 2-3 marketing angles to test
+       → target_audience: demographic + psychographic
+       → urgency_hooks: based on delivery speed + trend velocity
+         → Fast shipping (2-5 days): emphasize "Ships from US, arrives in days"
+         → Trending product: emphasize "Selling fast, limited availability"
+       → competitor_differentiation: how to position vs similar products
+
+    5. TIMELINE
+       → Day 1-2: Image generation + script finalization
+       → Day 3-4: Video production (faceless + avatar)
+       → Day 5: Content review (human or auto-approved)
+       → Day 6-7: Staggered publishing across platforms
+       → Day 8-14: Performance monitoring + optional boost
+
+→ Store marketing_plan in marketing_plans table (status = 'pending_approval')
+→ Add to Marketing Approval Queue (W4B)
+→ DO NOT trigger content production yet
 ```
+
+**W4B: Marketing Approval Queue (Human Checkpoint — NEW)**
+```
+Trigger: W4 completion
+→ Create marketing_approval_queue record
+→ Send notification to admin:
+  → Supabase Realtime → dashboard notification
+  → Optional: email summary of pending plans
+
+THE ADMIN SEES IN THE DASHBOARD:
+
+┌─────────────────────────────────────────────────────────────┐
+│ MARKETING PLAN: [Product Title]                             │
+│ Status: AWAITING APPROVAL                                   │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│ PRODUCT SUMMARY                                             │
+│ Price: $24.99 | Cost: $6.50 (confirmed) | Margin: 58%      │
+│ Supplier: CJ US Warehouse (3-day delivery)                  │
+│ Verdict: STRONG | Best Platform: TikTok Shop                │
+│                                                             │
+│ CONTENT PLAN                                          Cost  │
+│ ─────────────────────────────────────────────────────────── │
+│ ☐ 3x Faceless Reels (30-45s each)                    $1.50 │
+│   └─ Scripts: [expandable preview of each script]           │
+│ ☐ 2x Avatar Presenter Reels (45-60s each)            $0.00 │
+│   └─ Using: Avatar III (unlimited) | Scripts: [preview]     │
+│ ☐ 1x Avatar IV Hero Reel (60s, premium quality)      $4.00 │
+│   └─ Script: [expandable preview]                           │
+│ ☐ Product B-Roll (2x 8s clips)                       $2.40 │
+│ ☐ Product Image Set (6 images, free tier)             $0.00 │
+│ ☐ 1x Hero Image (Nano Banana Pro)                    $0.13 │
+│ ☐ Voiceover Clips (OpenAI TTS for 3, ElevenLabs 1)  $0.13 │
+│                                                             │
+│ BUDGET BREAKDOWN                                            │
+│ ─────────────────────────────────────────────────────────── │
+│ Content Production:     $8.16                               │
+│ Paid Promotion:         $0.00 (organic first)               │
+│ Influencer Outreach:    $15.00 (max CPA)                    │
+│ ───────────────────────────────                             │
+│ Total Estimated Spend:  $23.16                              │
+│ Expected Revenue (30d): $125-250 (based on similar products)│
+│ Projected ROI:          5.4x - 10.8x                        │
+│                                                             │
+│ PLATFORM STRATEGY                                           │
+│ ─────────────────────────────────────────────────────────── │
+│ Primary: TikTok (3 reels) → Instagram (2 reels) → Pinterest│
+│ Schedule: Mon/Wed/Fri at 6pm EST (peak engagement)          │
+│ Angles: "US shipping in 3 days" + "Trending on TikTok"     │
+│                                                             │
+│ AI REASONING                                                │
+│ ─────────────────────────────────────────────────────────── │
+│ "This product has strong trend signals (score 85) and       │
+│  excellent margins at confirmed pricing. The fast US        │
+│  shipping is a major competitive advantage — recommend      │
+│  leading with delivery speed in all content. Avatar III     │
+│  reels are free so we can produce volume. One Avatar IV     │
+│  hero reel for the highest-quality piece."                  │
+│                                                             │
+│ ACTIONS                                                     │
+│ ─────────────────────────────────────────────────────────── │
+│ [✅ APPROVE PLAN]  — Start content production as planned    │
+│ [✏️ MODIFY PLAN]   — Edit budget, remove content pieces,   │
+│                      change platforms, adjust scripts        │
+│ [❌ REJECT PLAN]   — Cancel marketing for this product      │
+│ [⏸️ HOLD]          — Pause for later review                 │
+│                                                             │
+│ Quick toggles (within MODIFY):                              │
+│ ☐ Remove Avatar IV hero reel (saves $4.00)                  │
+│ ☐ Add paid TikTok boost ($10-50 budget)                     │
+│ ☐ Change posting schedule                                   │
+│ ☐ Edit individual scripts before production                 │
+│ ☐ Change target platforms                                   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+
+ADMIN ACTIONS:
+  → [APPROVE] — Sets plan status to 'approved'
+    → Triggers W5/W6/W6B/W7/W8 content production workers
+    → Content is produced according to the approved plan
+
+  → [MODIFY] — Admin edits the plan
+    → Can remove content pieces (unchecking items)
+    → Can adjust budgets up/down
+    → Can edit scripts directly
+    → Can change platform selection
+    → Modified plan saved → status = 'approved_modified'
+    → Triggers content production with modifications
+
+  → [REJECT] — No marketing for this product
+    → status = 'rejected'
+    → Product stays in database but no content produced
+    → Admin can add notes (e.g., "seasonal — revisit in Q4")
+
+  → [HOLD] — Pause for later
+    → status = 'on_hold'
+    → Stays in queue, can be revisited
+    → Optional: set reminder date
+
+  → [BULK APPROVE] — For batch operations
+    → Select multiple plans → Approve All
+    → Useful when plans look good and admin trusts AI recommendations
+```
+
+**W4C: Plan Execution Trigger (NEW)**
+```
+Trigger: Admin approves or modifies marketing plan
+→ Read approved marketing_plan from marketing_plans table
+→ Create content_queue records for each approved content piece
+  → Each record references the marketing_plan_id
+  → Each record includes: script, budget cap, target platform, priority
+→ Trigger content production workers in parallel:
+  → W5 (faceless videos) — for approved faceless content pieces
+  → W6 (avatar reels) — for approved avatar content pieces
+  → W6B (product B-roll) — for approved B-roll pieces
+  → W7 (product images) — for approved image sets
+  → W8 (voiceover) — for approved voiceover scripts
+→ Track overall plan execution progress in marketing_plans table
+```
+
+---
+
+### ENGINE 3: Content Production (fires only after W4B approval)
 
 **W5: Faceless Video Pipeline (based on template #5035)**
 ```
-Trigger: Webhook from W4 (content_priority HIGH or MEDIUM)
-→ Read script from content_queue
+Trigger: W4C (approved faceless content pieces)
+→ Read approved script from content_queue
 → Blotato API: Create Visual (video template)
   → Input: script, product images, brand colors
   → Template: faceless product showcase
 → Poll for completion
 → Download rendered video
-→ Queue for publishing (W10) or human review
+→ Update content_queue status → 'produced'
+→ Queue for content assembly (W9)
 ```
 
 **W6: Avatar Presenter Pipeline (HeyGen)**
 ```
-Trigger: Webhook from W4 (content_priority HIGH only)
+Trigger: W4C (approved avatar content pieces, priority HIGH only)
 → Read avatar script from content_queue
 → Determine avatar tier:
   → STRONG + hero product: Avatar IV (premium, 20 credits/min)
@@ -650,7 +854,7 @@ Trigger: Webhook from W4 (content_priority HIGH only)
 
 **W6B: Product B-Roll Pipeline (NanoBanana + VEO3, based on template #8270)**
 ```
-Trigger: Webhook from W4 (content_priority HIGH, supplementary)
+Trigger: W4C (approved B-roll pieces, priority HIGH, supplementary)
 → Nano Banana 2: Generate product lifestyle image (free tier)
 → VEO3 Fast API: Generate 8-second cinematic clip from image
   → Format: 9:16 vertical
@@ -661,7 +865,7 @@ Trigger: Webhook from W4 (content_priority HIGH, supplementary)
 
 **W7: Product Image Generator (based on template #8226)**
 ```
-Trigger: Webhook from W4 (all content priorities)
+Trigger: W4C (approved image sets, all content priorities)
 → Read image prompts from content_queue
 → FOR each image prompt:
   → Nano Banana 2 (free tier via Google AI Studio):
@@ -744,23 +948,27 @@ Trigger: Cron daily (6 AM)
 | | **PHASE 3: Confirmed Pricing** | | | | | |
 | W24C | confirmed_cost_worker | intelligence_jobs | P3 | Admin confirms in queue | W24D | Recalculates with confirmed prices |
 | W24D | final_profitability_worker | intelligence_jobs | P3 | W24C completion | W25 | Final AI verdict (gates Engine 3) |
-| | **ENGINE 3: Content & Marketing** | | | | | |
-| W25 | content_script_worker | content_jobs | E3 | W24D (confirmed, not NOT_VIABLE) | W26-W29 | AI script generation |
-| W26 | faceless_video_worker | content_jobs | E3 | W25 (priority HIGH/MEDIUM) | W30 | Blotato video creation |
-| W27 | avatar_presenter_worker | content_jobs | E3 | W25 (priority HIGH) | W30 | HeyGen avatar presenter reels |
-| W27B | product_broll_worker | content_jobs | E3 | W25 (priority HIGH, supplementary) | W30 | NanoBanana + VEO3 B-roll clips |
-| W28 | product_image_worker | content_jobs | E3 | W25 (all priorities) | W30 | Nano Banana image gen |
-| W29 | voiceover_worker | content_jobs | E3 | W25 (priority HIGH/MEDIUM) | W30 | ElevenLabs + OpenAI TTS |
-| W30 | content_assembly_worker | content_jobs | E3 | W26-W29 completion | W31 | Combine assets |
-| W31 | publishing_worker | publishing_jobs | E3 | W30 OR manual approval | W32 | Blotato multi-platform post |
+| | **ENGINE 3A: Marketing Plan** | | | | | |
+| W25 | marketing_plan_worker | content_jobs | E3-Plan | W24D (confirmed, not NOT_VIABLE) | W25B | Claude Sonnet marketing plan gen |
+| W25B | marketing_queue_worker | content_jobs | E3-Gate | W25 completion | — | Places plan in approval queue |
+| — | (Dashboard UI) | — | E3-Gate | Admin action | W25C | Admin approves/modifies/rejects |
+| W25C | plan_execution_worker | content_jobs | E3-Gate | Admin approves plan | W26-W29 | Creates content_queue from plan |
+| | **ENGINE 3B: Content Production** | | | | | |
+| W26 | faceless_video_worker | content_jobs | E3-Prod | W25C (approved faceless) | W30 | Blotato video creation |
+| W27 | avatar_presenter_worker | content_jobs | E3-Prod | W25C (approved avatar) | W30 | HeyGen avatar presenter reels |
+| W27B | product_broll_worker | content_jobs | E3-Prod | W25C (approved B-roll) | W30 | NanoBanana + VEO3 B-roll clips |
+| W28 | product_image_worker | content_jobs | E3-Prod | W25C (approved images) | W30 | Nano Banana image gen |
+| W29 | voiceover_worker | content_jobs | E3-Prod | W25C (approved voiceover) | W30 | ElevenLabs + OpenAI TTS |
+| W30 | content_assembly_worker | content_jobs | E3-Prod | W26-W29 completion | W31 | Combine assets |
+| W31 | publishing_worker | publishing_jobs | E3-Pub | W30 OR manual approval | W32 | Blotato multi-platform post |
 | | **FEEDBACK & MONITORING** | | | | | |
 | W32 | performance_tracking_worker | analytics_jobs | — | Cron (6h) | W33 | Collect engagement data |
 | W33 | feedback_processor_worker | analytics_jobs | — | Cron (weekly) | scoring engine | Learn from performance |
 | W34 | budget_monitor_worker | system_jobs | — | Cron (daily) | alerts | Enforce spending limits |
 | W35 | price_optimization_worker | intelligence_jobs | — | competitor price change | W24C | Re-evaluate pricing |
 
-**Total new workers: 17** (was 14, added W24B, W24C, W24D)
-**Total workers (existing 21 + new 17): 38**
+**Total new workers: 19** (added W24B, W24C, W24D for sourcing + W25B, W25C for marketing approval)
+**Total workers (existing 21 + new 19): 40**
 
 ### New BullMQ Queues
 
@@ -941,12 +1149,76 @@ CREATE INDEX idx_profitability_verdict ON profitability_analysis(viability_verdi
 CREATE INDEX idx_profitability_priority ON profitability_analysis(content_priority);
 CREATE INDEX idx_profitability_confirmed ON profitability_analysis(is_confirmed);
 
--- ENGINE 3: Content
+-- ENGINE 3: Marketing Plans (AI-generated, human-approved)
+CREATE TABLE marketing_plans (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID NOT NULL REFERENCES products(id),
+  profitability_id UUID REFERENCES profitability_analysis(id),
+
+  -- Plan status (human approval gate)
+  status TEXT DEFAULT 'pending_approval',
+  -- 'pending_approval', 'approved', 'approved_modified', 'rejected', 'on_hold'
+
+  -- AI-generated marketing plan (complete strategy)
+  plan JSONB NOT NULL,
+  -- Structure:
+  -- {
+  --   content_strategy: {
+  --     pieces: [{type, script, prompt, target_platform, estimated_cost, rationale}]
+  --   },
+  --   budget_allocation: {
+  --     content_production: {faceless, avatar, broll, images, voiceover},
+  --     paid_promotion: number,
+  --     influencer: number,
+  --     total_estimated: number,
+  --     projected_roi: {low: number, high: number}
+  --   },
+  --   platform_strategy: {
+  --     primary_selling: text,
+  --     content_platforms: text[],
+  --     posting_schedule: [{platform, datetime, content_piece_index}],
+  --     rationale: text
+  --   },
+  --   messaging_strategy: {
+  --     key_angles: text[],
+  --     target_audience: text,
+  --     urgency_hooks: text[],
+  --     competitor_differentiation: text
+  --   },
+  --   timeline: {
+  --     production_start: date,
+  --     production_end: date,
+  --     publishing_start: date,
+  --     monitoring_end: date
+  --   }
+  -- }
+
+  -- Admin modifications (if approved_modified)
+  admin_modifications JSONB,     -- diff of what admin changed
+  admin_notes TEXT,
+
+  -- AI reasoning
+  ai_model_used TEXT,            -- 'sonnet'
+  ai_reasoning TEXT,
+
+  -- Tracking
+  approved_by TEXT,
+  approved_at TIMESTAMPTZ,
+  total_actual_spend DECIMAL(10,2) DEFAULT 0, -- updated as content is produced
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_marketing_plans_product ON marketing_plans(product_id);
+CREATE INDEX idx_marketing_plans_status ON marketing_plans(status);
+
+-- ENGINE 3: Content Queue (items from approved marketing plans)
 CREATE TABLE content_queue (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id UUID NOT NULL REFERENCES products(id),
   profitability_id UUID REFERENCES profitability_analysis(id),
-  content_type TEXT NOT NULL, -- faceless_reel, avatar_reel, product_image, voiceover
+  marketing_plan_id UUID REFERENCES marketing_plans(id), -- links back to approved plan
+  content_type TEXT NOT NULL, -- faceless_reel, avatar_reel, avatar_reel_premium, product_broll, product_image, voiceover
   content_priority TEXT NOT NULL, -- HIGH, MEDIUM, LOW
   -- Script/Prompt
   script TEXT,
