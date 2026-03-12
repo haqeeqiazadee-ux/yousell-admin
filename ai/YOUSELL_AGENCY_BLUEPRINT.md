@@ -1822,6 +1822,792 @@ The n8n templates (#8270, #11204) use **fal.ai** as the API gateway for NanoBana
 
 ---
 
+---
+
+# PART 4: INTELLIGENT PRODUCT RANKING SYSTEM
+
+---
+
+## 4A. The Problem
+
+The system continuously discovers products across 7+ platforms (TikTok, Amazon, Shopify, Pinterest, Digital, AI Affiliate, Physical Affiliate). Each platform has different search criteria, different signals, and different product types (physical vs digital). Currently:
+
+- Products are scored by the 3-pillar model (trend 40% + viral 35% + profit 25%)
+- But **there is no intelligent ranking** that combines discovery scores WITH purchasing engine data
+- Products sit in the database with a `final_score` but no dynamic ranking that reflects:
+  - Confirmed vs unconfirmed pricing
+  - Delivery speed advantages
+  - Supplier reliability
+  - Marketing plan approval status
+  - Historical performance of similar products
+  - Time decay (trending products lose value over time)
+  - Platform-specific ranking criteria
+
+## 4B. The Intelligent Ranking Architecture
+
+### Core Principle: Products Are Ranked Differently At Each Stage
+
+A product's "rank" isn't a single number — it's a **context-dependent position** that changes based on WHERE in the pipeline you're looking:
+
+| Stage | Ranking Purpose | Key Factors |
+|-------|----------------|-------------|
+| Discovery Feed | "Which products should I review first?" | Discovery score, trend velocity, time-sensitivity |
+| Sourcing Queue | "Which products should I price-confirm first?" | Preliminary margin, delivery speed, supplier confidence |
+| Marketing Queue | "Which marketing plans should I approve first?" | Confirmed margin, content ROI estimate, trend momentum |
+| Client Allocation | "Which products should clients see first?" | Final score, delivery speed, content readiness, client niche match |
+| Performance Dashboard | "Which products are performing best?" | Revenue, engagement, ROI, conversion rate |
+
+### The Unified Ranking Score (URS)
+
+While context-specific rankings exist, we also compute a **Unified Ranking Score** that represents the overall "opportunity quality" of a product at any moment. This is what powers the admin dashboard default sort.
+
+```
+URS = (
+  discovery_component    × 0.25   +   // How strong are the discovery signals?
+  purchasing_component   × 0.30   +   // How good is the sourcing situation?
+  marketing_component    × 0.20   +   // How ready is the marketing pipeline?
+  momentum_component     × 0.15   +   // How fresh/urgent is this opportunity?
+  performance_component  × 0.10       // How has it performed so far? (0 if new)
+) × platform_multiplier × type_multiplier
+```
+
+### Component Breakdown
+
+**1. Discovery Component (25% of URS)**
+```
+discovery_component = final_score  // Already calculated: trend×0.40 + viral×0.35 + profit×0.25
+```
+This is the existing 3-pillar score. Range: 0-100.
+
+**2. Purchasing Component (30% of URS) — NEW**
+```
+purchasing_component = (
+  margin_score        × 0.35 +   // Gross margin percentile
+  delivery_score      × 0.30 +   // Delivery speed advantage
+  supplier_score      × 0.20 +   // Supplier reliability + warehouse location
+  confirmation_bonus  × 0.15     // Confirmed pricing vs approximate
+)
+```
+
+Where:
+- `margin_score`:
+  - confirmed_margin >= 60%: 100
+  - confirmed_margin >= 50%: 85
+  - confirmed_margin >= 40%: 70
+  - confirmed_margin >= 30%: 50
+  - confirmed_margin >= 15%: 30
+  - unconfirmed: use preliminary margin × 0.7 (30% confidence penalty)
+
+- `delivery_score`:
+  - 1-3 days (local/US warehouse): 100
+  - 4-5 days (fast): 85
+  - 6-10 days (medium): 60
+  - 11-15 days (standard): 35
+  - 16+ days (slow): 15
+  - Unknown: 25
+
+- `supplier_score`:
+  - Local supplier (from local_suppliers table): 100
+  - CJ US warehouse: 90
+  - CJ China + AliExpress Choice: 60
+  - AliExpress standard: 40
+  - No supplier found: 10
+
+- `confirmation_bonus`:
+  - Price confirmed by admin: 100
+  - Price approximate (auto-fetched): 40
+  - No pricing data yet: 0
+
+**3. Marketing Component (20% of URS) — NEW**
+```
+marketing_component = (
+  content_readiness   × 0.40 +   // Has content been created?
+  plan_status         × 0.30 +   // Marketing plan approved?
+  estimated_roi       × 0.30     // AI-projected ROI
+)
+```
+
+Where:
+- `content_readiness`:
+  - All content produced + published: 100
+  - Content produced, awaiting publish: 80
+  - Content in production: 60
+  - Marketing plan approved, content not started: 40
+  - Plan pending approval: 20
+  - No plan yet: 0
+
+- `plan_status`:
+  - Approved: 100
+  - Approved with modifications: 90
+  - Pending approval: 40
+  - No plan: 0
+  - Rejected: 0
+
+- `estimated_roi`:
+  - ROI >= 10x: 100
+  - ROI >= 5x: 80
+  - ROI >= 3x: 60
+  - ROI >= 1.5x: 40
+  - ROI < 1.5x: 20
+  - Unknown: 30
+
+**4. Momentum Component (15% of URS) — NEW**
+```
+momentum_component = (
+  freshness_score     × 0.40 +   // How recently discovered?
+  trend_velocity      × 0.35 +   // Is the trend accelerating?
+  urgency_factor      × 0.25     // Time-sensitive opportunity?
+)
+```
+
+Where:
+- `freshness_score` (time decay):
+  - Discovered < 24 hours ago: 100
+  - Discovered < 3 days ago: 85
+  - Discovered < 7 days ago: 65
+  - Discovered < 14 days ago: 40
+  - Discovered < 30 days ago: 20
+  - Discovered > 30 days ago: 5
+  - EXCEPTION: Evergreen products (category flag) decay at 0.5x rate
+
+- `trend_velocity`:
+  - trend_stage = 'exploding': 100
+  - trend_stage = 'rising': 75
+  - trend_stage = 'emerging': 50
+  - trend_stage = 'saturated': 10
+
+- `urgency_factor`:
+  - Platform = tiktok (fast-moving trends): 90
+  - Platform = pinterest (seasonal): 70
+  - Platform = amazon (stable but competitive): 50
+  - Platform = shopify (moderate): 40
+  - Platform = digital/ai_affiliate (evergreen): 30
+
+**5. Performance Component (10% of URS)**
+```
+performance_component = (
+  revenue_score       × 0.40 +   // Actual revenue generated
+  engagement_score    × 0.30 +   // Social media engagement
+  conversion_score    × 0.30     // Click-to-sale conversion
+)
+```
+
+Only populated AFTER the product has been marketed. New products get 0 (the weight shifts to other components).
+
+### Platform Multiplier
+
+Different platforms have different baseline opportunity quality:
+
+```
+platform_multiplier = {
+  tiktok:             1.15    // Highest viral potential, fast trend cycles
+  amazon:             1.10    // Highest purchase intent, stable demand
+  shopify:            1.00    // Baseline
+  pinterest:          0.95    // Good for visual products, slower conversion
+  digital:            1.05    // High margins, no shipping
+  ai_affiliate:       1.00    // Recurring revenue potential
+  physical_affiliate: 0.90    // Lower margins than direct
+}
+```
+
+### Product Type Multiplier
+
+Physical and digital products are fundamentally different opportunities:
+
+```
+type_multiplier = {
+  physical_direct:    1.00    // Standard physical product (CJ/AliExpress)
+  physical_local:     1.15    // Physical with local supplier (fast shipping bonus)
+  digital_product:    1.10    // Digital product (no shipping, high margin)
+  ai_tool:            1.05    // AI tool/SaaS affiliate
+  affiliate:          0.85    // Affiliate (lower margin, less control)
+}
+```
+
+## 4C. Platform-Specific Ranking Criteria
+
+Each discovery platform has different signals that matter. The ranking system weighs these differently per platform:
+
+### TikTok Products
+```
+tiktok_ranking_factors = {
+  sales_velocity:       weight 0.25   // How fast sales are growing
+  creator_count:        weight 0.20   // How many creators are promoting
+  hashtag_acceleration: weight 0.20   // Trend keyword growth rate
+  engagement_rate:      weight 0.15   // Likes/comments per view
+  price_point_fit:      weight 0.10   // $15-50 sweet spot for impulse buy
+  trend_freshness:      weight 0.10   // How new is this trend
+}
+```
+**TikTok-specific auto-boost:** Products with creator_count > 50 AND trend_stage = 'rising' get +15 bonus to discovery_component. This catches products just before they explode.
+
+### Amazon Products
+```
+amazon_ranking_factors = {
+  bsr_rank:             weight 0.25   // Best Seller Rank (lower = better)
+  bsr_velocity:         weight 0.20   // BSR improvement rate
+  review_count:         weight 0.15   // Social proof depth
+  rating:               weight 0.15   // Quality signal
+  price_competition:    weight 0.15   // Gap between our price and competitors
+  fba_eligible:         weight 0.10   // Can we use FBA?
+}
+```
+**Amazon-specific auto-boost:** Products in top 100 BSR of subcategory AND margin > 40% get +10 bonus. Proven demand with room to profit.
+
+### Shopify Products
+```
+shopify_ranking_factors = {
+  store_traffic_rank:   weight 0.25   // Estimated store traffic
+  product_review_count: weight 0.20   // Social proof
+  price_point:          weight 0.20   // Higher AOV preferred ($25-100)
+  brand_strength:       weight 0.15   // Store reputation signals
+  product_uniqueness:   weight 0.20   // Less competition = more opportunity
+}
+```
+
+### Pinterest Products
+```
+pinterest_ranking_factors = {
+  pin_saves:            weight 0.30   // Strongest purchase intent signal on Pinterest
+  pin_velocity:         weight 0.25   // How fast saves are growing
+  visual_appeal:        weight 0.20   // (AI-assessed from image)
+  seasonal_relevance:   weight 0.15   // Seasonal products spike on Pinterest
+  category_fit:         weight 0.10   // Home, fashion, beauty perform best
+}
+```
+
+### Digital Products
+```
+digital_ranking_factors = {
+  sales_count:          weight 0.20   // Proof of demand
+  creator_reputation:   weight 0.20   // Creator track record
+  recurring_revenue:    weight 0.20   // Subscription > one-time
+  market_gap:           weight 0.20   // Underserved niche?
+  affiliate_commission: weight 0.20   // Commission rate
+}
+```
+**Digital-specific bonus:** Recurring revenue products (SaaS, subscription) get +20 bonus because lifetime value is much higher.
+
+### AI Affiliate Products
+```
+ai_affiliate_ranking_factors = {
+  tool_growth_rate:     weight 0.25   // How fast is the tool growing?
+  commission_rate:      weight 0.25   // Revenue per referral
+  cookie_duration:      weight 0.15   // Longer attribution = more revenue
+  market_awareness:     weight 0.15   // Is the market educated on this tool?
+  content_angle_count:  weight 0.20   // How many ways can we promote it?
+}
+```
+
+## 4D. Ranking Recalculation Triggers
+
+The URS isn't static — it recalculates when any input changes:
+
+| Event | What Changes | Recalculation |
+|-------|-------------|---------------|
+| New product discovered | discovery_component | Immediate |
+| Product re-scored (scheduled) | discovery_component | Every 6 hours |
+| Supplier found (W1) | purchasing_component | Immediate |
+| Price confirmed (Phase 2) | purchasing_component (confirmation_bonus) | Immediate |
+| Local supplier added | purchasing_component (supplier_score + delivery_score) | Immediate |
+| Marketing plan generated | marketing_component (plan_status) | Immediate |
+| Marketing plan approved | marketing_component (plan_status + content_readiness) | Immediate |
+| Content produced | marketing_component (content_readiness) | Immediate |
+| Content published | marketing_component (content_readiness) | Immediate |
+| Performance data received | performance_component | Every 6 hours |
+| 24 hours pass | momentum_component (freshness decay) | Daily cron |
+| Trend stage changes | momentum_component (trend_velocity) | Immediate |
+
+### Implementation: Database Trigger + Worker
+
+```sql
+-- Add URS fields to products table
+ALTER TABLE products ADD COLUMN urs DECIMAL(6,2) DEFAULT 0;
+ALTER TABLE products ADD COLUMN urs_components JSONB DEFAULT '{}';
+ALTER TABLE products ADD COLUMN urs_calculated_at TIMESTAMPTZ;
+ALTER TABLE products ADD COLUMN product_type TEXT DEFAULT 'physical_direct';
+  -- 'physical_direct', 'physical_local', 'digital_product', 'ai_tool', 'affiliate'
+
+CREATE INDEX idx_products_urs ON products(urs DESC);
+CREATE INDEX idx_products_urs_platform ON products(platform, urs DESC);
+CREATE INDEX idx_products_type ON products(product_type);
+```
+
+### New Worker: W36 (ranking_worker)
+
+```
+W36: ranking_recalculation_worker
+Queue: system_jobs
+Priority: P1 (high — affects all dashboard views)
+Triggers:
+  - Immediate: product_costs change, sourcing_queue change, marketing_plans change, content_queue change
+  - Scheduled: Daily cron for freshness decay + every 6 hours for performance data
+Process:
+  → Read product + all related data (costs, profitability, marketing plans, content, performance)
+  → Calculate each URS component
+  → Apply platform_multiplier and type_multiplier
+  → Store: urs, urs_components (JSONB breakdown), urs_calculated_at
+  → Update product record
+Downstream: Dashboard queries ORDER BY urs DESC
+```
+
+## 4E. Dashboard Ranking Views
+
+The admin dashboard shows rankings in multiple contexts:
+
+### 1. Global Ranking (Default Dashboard View)
+```
+SELECT p.*, pc.is_confirmed, pa.viability_verdict, mp.status as plan_status
+FROM products p
+LEFT JOIN product_costs pc ON pc.product_id = p.id AND pc.is_confirmed = true
+LEFT JOIN profitability_analysis pa ON pa.product_id = p.id AND pa.is_confirmed = true
+LEFT JOIN marketing_plans mp ON mp.product_id = p.id
+WHERE p.status = 'active'
+ORDER BY p.urs DESC
+LIMIT 50;
+```
+
+Shows: Rank #, Product, Platform, URS Score, Tier Badge, Pipeline Stage, Key Action Needed
+
+### 2. Platform-Specific Rankings
+```
+-- "Show me the top TikTok products right now"
+WHERE p.platform = 'tiktok' ORDER BY p.urs DESC
+
+-- "Show me the top digital products"
+WHERE p.platform = 'digital' ORDER BY p.urs DESC
+```
+
+### 3. Pipeline Stage Rankings
+```
+-- "Which products need pricing confirmation most urgently?"
+WHERE sq.queue_status = 'pending_review'
+ORDER BY sq.priority_rank DESC  -- priority_rank = URS at time of queue entry
+
+-- "Which marketing plans should I approve first?"
+WHERE mp.status = 'pending_approval'
+ORDER BY p.urs DESC
+```
+
+### 4. Opportunity Leaderboard (NEW Dashboard Widget)
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ TOP OPPORTUNITIES RIGHT NOW                    Last updated: │
+│                                                    2 min ago │
+├──┬────────────────────┬──────┬──────┬────────┬──────────────┤
+│# │ Product            │ URS  │ Tier │ Stage  │ Next Action  │
+├──┼────────────────────┼──────┼──────┼────────┼──────────────┤
+│1 │ LED Sunset Lamp    │ 92.4 │ HOT  │ Rising │ Approve Plan │
+│2 │ AI Writing Tool    │ 89.1 │ HOT  │ Explod │ Confirm Price│
+│3 │ Yoga Mat Premium   │ 84.7 │ HOT  │ Rising │ Review Mktg  │
+│4 │ Phone Grip Stand   │ 78.3 │ WARM │ Emerging│ Find Supplier│
+│5 │ Resin Art Kit      │ 75.6 │ WARM │ Rising │ Approve Plan │
+│6 │ AI Photo Editor    │ 73.2 │ WARM │ Explod │ Published ✓  │
+│7 │ Portable Blender   │ 71.8 │ WARM │ Emerging│ Confirm Price│
+│8 │ Course Template    │ 68.4 │ WARM │ Stable │ Need Content │
+│9 │ Magnetic Charger   │ 65.1 │ WARM │ Rising │ In Production│
+│10│ Candle Making Kit  │ 61.3 │ WARM │ Emerging│ Find Supplier│
+└──┴────────────────────┴──────┴──────┴────────┴──────────────┘
+│ Filters: [All] [TikTok] [Amazon] [Digital] [Physical] [AI] │
+│ Sort: [URS ▼] [Margin] [Freshness] [Delivery] [Score]      │
+└──────────────────────────────────────────────────────────────┘
+```
+
+## 4F. Physical vs Digital Product Handling
+
+The ranking system treats physical and digital products differently at every stage:
+
+### Physical Products (TikTok, Amazon, Shopify, Pinterest, Physical Affiliate)
+
+| Metric | Weight | Why |
+|--------|--------|-----|
+| Delivery speed | HIGH | Customers expect fast shipping, affects conversion |
+| Supplier reliability | HIGH | Stockouts kill momentum |
+| Gross margin | MEDIUM | Must cover shipping + platform fees + returns |
+| Trend velocity | HIGH | Physical trends have shorter lifecycles |
+| Inventory risk | MEDIUM | Unsold inventory = loss |
+
+**Physical products auto-rejection rules:**
+- No supplier found within 48 hours of discovery → demote by 20 URS points
+- Delivery > 15 days AND trend_stage = 'exploding' → flag as "shipping too slow for trend"
+- Margin < 30% after confirmed pricing → demote to MODERATE or WEAK
+
+### Digital Products (Digital, AI Affiliate)
+
+| Metric | Weight | Why |
+|--------|--------|-----|
+| Delivery speed | N/A | Instant delivery |
+| Recurring revenue | HIGH | LTV multiplier |
+| Commission rate | HIGH | Determines profitability |
+| Market education | MEDIUM | New categories need more content |
+| Content angle diversity | HIGH | More angles = more content = more reach |
+
+**Digital products advantages in ranking:**
+- No delivery penalty (delivery_score always = 100)
+- No supplier_score concern (supplier_score = 80 baseline for established platforms)
+- confirmation_bonus defaults to 80 (pricing is usually transparent)
+- This means digital products naturally score higher on purchasing_component
+- Balanced by lower platform_multiplier for affiliates (0.85-1.00)
+
+### Blended Rankings
+
+When showing ALL products together, the type_multiplier ensures fair comparison:
+- A physical product with $6 cost, 58% margin, 3-day delivery, confirmed pricing → URS ~82
+- A digital product with 30% affiliate commission, recurring, growing → URS ~79
+- An AI tool with 40% commission, cookie 90 days, exploding → URS ~85
+
+The multipliers are calibrated so the **best opportunities surface regardless of type**, while accounting for the structural differences between physical shipping products and digital/affiliate products.
+
+---
+
+# PART 5: FINAL-STAGE INTEGRATION BLUEPRINT PROMPT
+
+---
+
+## 5A. The Integration Prompt
+
+This prompt is designed to be given to Claude in a NEW session to produce the final implementation-ready blueprint that merges all new components (Engines 1-3, Ranking System, Two Human Checkpoints) with the existing tested codebase.
+
+---
+
+### PROMPT: YOUSELL Final-Stage Blueprint Integration
+
+```
+You are tasked with producing the FINAL IMPLEMENTATION BLUEPRINT for the YOUSELL platform.
+This blueprint will be used by developers to integrate new components into the existing,
+tested codebase WITHOUT breaking anything that currently works.
+
+## YOUR TASK
+
+Produce a single, comprehensive, implementation-ready document that:
+
+1. Maps every new component to exact file locations in the existing codebase
+2. Specifies the exact integration points (which existing files change, which new files are created)
+3. Defines the execution order (what gets built first, what depends on what)
+4. Identifies every potential conflict between new and existing code
+5. Provides migration scripts for all database changes
+6. Includes test specifications for every new component
+7. Specifies rollback procedures for each integration step
+
+## EXISTING CODEBASE (TESTED & WORKING)
+
+Read and understand these files before making any decisions:
+
+### Core Architecture
+- /home/user/yousell-admin/CLAUDE.md (project context)
+- /home/user/yousell-admin/ai/architecture.md (system architecture)
+- /home/user/yousell-admin/ai/project_state.md (current development state)
+- /home/user/yousell-admin/ai/task_board.md (task tracking)
+
+### Scoring Engine (TESTED — DO NOT BREAK)
+- /home/user/yousell-admin/src/lib/scoring/composite.ts
+  → calculateCompositeScore(), calculateTrendScore(), calculateViralScore(),
+    calculateProfitScore(), calculateFinalScore(), shouldRejectProduct()
+  → INTEGRATION POINT: URS calculation wraps around these existing functions
+  → RULE: These functions MUST NOT be modified. URS builds ON TOP of them.
+
+- /home/user/yousell-admin/backend/src/lib/scoring.ts
+  → Backend scoring implementation
+  → INTEGRATION POINT: Worker pipeline applies scoring before URS
+
+### Type System (TESTED — EXTEND ONLY)
+- /home/user/yousell-admin/src/lib/types/product.ts
+  → ProductPlatform, ProductChannel, TrendStage, TierBadge, Product interface
+  → INTEGRATION POINT: Add new fields (urs, urs_components, product_type)
+    to Product interface. DO NOT remove or rename existing fields.
+
+### Provider Config (TESTED — EXTEND ONLY)
+- /home/user/yousell-admin/src/lib/providers/config.ts
+  → 18 provider definitions with phases 1-15
+  → INTEGRATION POINT: Add new providers (CJDropshipping API, AliExpress
+    Affiliate API) at appropriate phases. DO NOT modify existing providers.
+
+### Platform Providers (TESTED — EXTEND ONLY)
+- /home/user/yousell-admin/src/lib/providers/tiktok.ts
+- /home/user/yousell-admin/src/lib/providers/amazon.ts
+- /home/user/yousell-admin/src/lib/providers/shopify.ts
+- /home/user/yousell-admin/src/lib/providers/pinterest.ts
+- /home/user/yousell-admin/src/lib/providers/digital/index.ts
+- /home/user/yousell-admin/src/lib/providers/affiliate/index.ts
+  → RULE: Existing scraping logic must continue to work unchanged.
+  → New supplier lookup logic is SEPARATE (new files, not modifications).
+
+### API Routes (TESTED — EXTEND WITH NEW ROUTES)
+- /home/user/yousell-admin/src/app/api/admin/products/route.ts
+  → INTEGRATION POINT: Add URS sorting option, add pipeline stage filters
+  → RULE: Existing sort/filter options must continue to work.
+
+- /home/user/yousell-admin/src/app/api/admin/allocations/route.ts
+  → INTEGRATION POINT: Client allocation should factor in URS ranking
+  → RULE: Existing allocation logic must not break.
+
+- /home/user/yousell-admin/src/app/api/dashboard/products/route.ts
+  → INTEGRATION POINT: Client view should show ranked products
+  → RULE: Existing client queries must not break.
+
+### Database Migrations (EXISTING)
+- /home/user/yousell-admin/supabase/migrations/005_complete_schema.sql
+  → Current schema including: products, product_allocations, viral_signals,
+    product_requests, automation_jobs
+  → INTEGRATION POINT: New migration files for: product_costs, sourcing_queue,
+    local_suppliers, profitability_analysis, marketing_plans, content_queue,
+    published_content, content_performance + ALTER products ADD urs columns
+
+### Backend Worker (TESTED — EXTEND)
+- /home/user/yousell-admin/backend/src/worker.ts
+  → Current scan job processing pipeline
+  → INTEGRATION POINT: After scoring, trigger Engine 1 (supplier lookup)
+  → RULE: Existing scan→score→upsert pipeline must not break.
+
+### Admin Dashboard (TESTED — EXTEND)
+- /home/user/yousell-admin/src/app/admin/clients/page.tsx
+  → PACKAGE_TIERS defined here
+  → INTEGRATION POINT: Sourcing Queue page, Marketing Approval page,
+    Opportunity Leaderboard widget
+
+## NEW COMPONENTS TO INTEGRATE
+
+Read the complete specification from:
+- /home/user/yousell-admin/ai/YOUSELL_AGENCY_BLUEPRINT.md
+
+Specifically integrate:
+
+### Engine 1: Three-Phase Smart Sourcing
+- W1 (Supplier Lookup with delivery intelligence)
+- W2 (Preliminary Cost Calculator)
+- W3 (Preliminary Profitability Screen)
+- W3B (Sourcing Queue Placement)
+- W3C (Confirmed Cost Recalculation)
+- W3D (Final Profitability Analysis)
+- Sourcing Queue UI (admin dashboard page)
+- Database: product_costs, sourcing_queue, local_suppliers tables
+
+### Engine 2: Profitability Intelligence
+- Dual-pass analysis (preliminary in Phase 1, final in Phase 3)
+- Claude Haiku batch + Sonnet escalation
+- Database: profitability_analysis table
+
+### Engine 3: Content & Marketing with Approval Gate
+- W4 (Marketing Plan Generator — Claude Sonnet)
+- W4B (Marketing Approval Queue)
+- W4C (Plan Execution Trigger)
+- W5-W10 (Content production + publishing)
+- Marketing Approval UI (admin dashboard page)
+- Database: marketing_plans, content_queue, published_content tables
+
+### Intelligent Product Ranking System
+- Unified Ranking Score (URS) calculation
+- 5-component ranking model
+- Platform-specific ranking criteria
+- Physical vs digital product handling
+- URS recalculation triggers
+- Opportunity Leaderboard dashboard widget
+- W36 (ranking_recalculation_worker)
+
+## OUTPUT FORMAT
+
+Produce your blueprint in these sections:
+
+### SECTION 1: Dependency Graph
+Show which components depend on which others. Identify the critical path.
+Show which existing tested components are affected and HOW.
+
+### SECTION 2: Database Migration Plan
+- Exact SQL for each new table and ALTER statement
+- Migration ordering (which tables must exist before others)
+- Rollback SQL for each migration
+- Data backfill strategy for existing products (URS initial calculation)
+
+### SECTION 3: File-by-File Integration Map
+For EVERY file that changes, specify:
+- File path
+- What changes (new exports, modified functions, new imports)
+- What MUST NOT change (existing tested functionality)
+- New files to create and their exact locations
+
+### SECTION 4: Implementation Phases
+Break the work into phases that can be deployed incrementally:
+- Phase A: Database schema + types (no functional changes)
+- Phase B: Engine 1 backend (supplier lookup + cost calc)
+- Phase C: Sourcing Queue UI
+- Phase D: Engine 2 backend (profitability analysis)
+- Phase E: URS ranking system
+- Phase F: Engine 3 backend (marketing plans)
+- Phase G: Marketing Approval UI
+- Phase H: Content production workers (n8n)
+- Phase I: Publishing + performance tracking
+
+Each phase must be deployable independently without breaking previous phases.
+
+### SECTION 5: Test Specifications
+For each new component:
+- Unit tests (function-level)
+- Integration tests (API route + database)
+- E2E tests (full workflow)
+- Regression tests (ensure existing functionality unaffected)
+
+### SECTION 6: Conflict Risk Assessment
+Identify every place where new code could break existing code:
+- Shared database tables (products table gets new columns)
+- Shared API routes (new query params on existing routes)
+- Shared types (Product interface extensions)
+- Shared worker pipeline (post-scoring trigger)
+- Frontend shared state (dashboard layout changes)
+
+For each conflict, specify:
+- Risk level (LOW/MEDIUM/HIGH)
+- Mitigation strategy
+- Rollback procedure
+
+### SECTION 7: n8n Workflow Configuration
+- Which workflows run on n8n vs Express backend
+- BullMQ bridge configuration
+- Webhook endpoints needed
+- Environment variables needed
+- Worker concurrency settings
+
+### SECTION 8: Deployment Checklist
+Step-by-step deployment order with verification at each step.
+Include smoke tests to run after each deployment step.
+```
+
+---
+
+## 5B. QA Session Prompt
+
+This prompt is for a SEPARATE Claude session focused exclusively on QA — verifying that new components don't break existing tested functionality.
+
+---
+
+### PROMPT: YOUSELL Integration QA Audit
+
+```
+You are a QA architect tasked with auditing the integration of new components into
+the YOUSELL platform. Your job is to find every potential synchronization issue,
+conflict, and regression risk BEFORE any code is written.
+
+## CRITICAL CONTEXT
+
+The YOUSELL platform has a TESTED, WORKING codebase. New components are being added:
+- Engine 1: Three-Phase Smart Sourcing (supplier lookup, cost calc, sourcing queue)
+- Engine 2: Profitability Intelligence (AI viability analysis)
+- Engine 3: Content & Marketing with Approval Gate
+- Intelligent Product Ranking System (Unified Ranking Score)
+
+## YOUR QA AUDIT TASKS
+
+### TASK 1: Existing Component Inventory
+Read every file in the codebase and create a complete inventory of:
+- Tested functions and their signatures
+- Database queries and which tables/columns they reference
+- API endpoints and their request/response contracts
+- Frontend components and their prop interfaces
+- Worker pipeline stages and their data flow
+
+Files to audit:
+- /home/user/yousell-admin/src/lib/scoring/composite.ts
+- /home/user/yousell-admin/src/lib/types/product.ts
+- /home/user/yousell-admin/src/lib/providers/*.ts
+- /home/user/yousell-admin/src/app/api/**/*.ts
+- /home/user/yousell-admin/src/app/admin/**/*.tsx
+- /home/user/yousell-admin/backend/src/**/*.ts
+- /home/user/yousell-admin/supabase/migrations/*.sql
+
+### TASK 2: New Component Specification Review
+Read the complete blueprint:
+- /home/user/yousell-admin/ai/YOUSELL_AGENCY_BLUEPRINT.md
+
+For each new component, identify:
+- Which existing functions it calls
+- Which existing database tables it reads/writes
+- Which existing API routes it extends
+- Which existing types it depends on
+
+### TASK 3: Conflict Detection Matrix
+Create a matrix mapping every NEW component to every EXISTING component it touches.
+Rate each intersection as:
+- GREEN: No interaction
+- YELLOW: Read-only interaction (new reads existing data)
+- ORANGE: Extend interaction (new adds columns/routes/types to existing)
+- RED: Modify interaction (new changes existing behavior)
+
+For every ORANGE and RED intersection, specify:
+- What exactly changes
+- What could break
+- How to test it
+- How to roll back
+
+### TASK 4: Database Synchronization Audit
+- Do new tables have proper foreign keys to existing tables?
+- Do ALTER statements on existing tables affect existing queries?
+- Do new indexes conflict with existing query performance?
+- Are existing UNIQUE constraints preserved?
+- Do new columns have safe defaults for existing rows?
+
+### TASK 5: Worker Pipeline Synchronization
+- Does the new post-scoring trigger (Engine 1) affect existing scan timing?
+- Could new BullMQ queues (intelligence_jobs, content_jobs) starve existing queues?
+- Are Redis connection limits adequate for new queue count?
+- Does n8n webhook communication create timing dependencies?
+
+### TASK 6: Frontend Synchronization
+- Do new dashboard pages affect existing navigation/layout?
+- Do Product interface additions break existing component renders?
+- Do new API query params on existing routes affect current frontend calls?
+- Are Supabase Realtime subscriptions compatible with new table changes?
+
+### TASK 7: Regression Test Plan
+Write a complete test plan covering:
+- Every existing feature that could be affected
+- Specific test cases with expected results
+- Data setup requirements
+- Environment requirements
+- Pass/fail criteria
+
+### TASK 8: Safe Integration Sequence
+Based on all findings, produce a recommended integration sequence that:
+- Minimizes risk at each step
+- Allows rollback at each step
+- Can be verified independently at each step
+- Never leaves the system in a broken intermediate state
+
+## OUTPUT FORMAT
+
+Produce a structured report with:
+1. Executive Summary (critical risks found)
+2. Conflict Detection Matrix
+3. Risk items ranked by severity
+4. Recommended integration sequence
+5. Complete regression test plan
+6. Rollback procedures for each integration step
+```
+
+---
+
+## 5C. When To Run Each Prompt
+
+| Prompt | When | Purpose |
+|--------|------|---------|
+| **Integration Blueprint (5A)** | Before coding starts | Produces the implementation plan |
+| **QA Audit (5B)** | After blueprint is approved, before coding starts | Validates the plan won't break anything |
+| **QA Re-Audit** | After each implementation phase deploys | Verifies nothing broke |
+
+### Recommended Workflow:
+
+1. **Run Integration Blueprint prompt (5A)** → produces implementation plan
+2. **Run QA Audit prompt (5B)** → identifies risks in the plan
+3. Fix any issues found by QA
+4. **Implement Phase A** (database + types)
+5. **Run QA Re-Audit** on Phase A
+6. **Implement Phase B** (Engine 1 backend)
+7. **Run QA Re-Audit** on Phase B
+8. Continue pattern for each phase...
+
+This ensures no phase introduces regressions.
+
+---
+
 **END OF BLUEPRINT**
 
-*This document should be treated as the authoritative architecture reference for Engines 1-3 of the YOUSELL platform. All implementation sessions should reference this document.*
+*This document should be treated as the authoritative architecture reference for the YOUSELL platform. All implementation sessions should reference this document.*
