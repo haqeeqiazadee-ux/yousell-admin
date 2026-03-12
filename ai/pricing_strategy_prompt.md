@@ -83,7 +83,7 @@ For EACH of the 5 platforms YOUSELL supports, conduct individual market research
 - What is the realistic monthly earning potential from AI affiliates?
 - What does it cost to automate affiliate content creation?
 - How can YOUSELL automate the affiliate promotion process for clients?
-- **Key insight:** Every YOUSELL subscriber who promotes AI tools through our platform generates affiliate commission for US (YOUSELL) as well. This is built-in recurring revenue on top of subscription fees. Factor this into pricing strategy.
+- **Key insight:** Affiliate programs pay on SIGNUPS/CONVERSIONS, not on marketing activity. YOUSELL does NOT earn affiliate commissions from client activity. Instead, YOUSELL earns subscription revenue by providing: (a) a curated, frequently updated database of affiliate opportunities, (b) an automated marketing engine that creates and distributes promotional content across social media, and (c) performance tracking. The CLIENT earns affiliate commissions directly — 100% theirs. They pay us for the platform that finds opportunities and automates the marketing work. This is a pure SaaS model, not a revenue-share model.
 
 ---
 
@@ -103,6 +103,7 @@ Map every feature/automation YOUSELL offers (or will offer). Categorize them int
 - **TikTok Shop:** Product listing via TikTok Seller API / Product Upload Accelerator, bulk upload, category mapping
 - **Amazon:** Listing creation via SP-API (Listings Items API), ASIN matching, pricing sync
 - **Digital:** Product page generation for digital goods, download delivery setup
+- **Order Tracking & Notifications:** Pull order/shipment data from connected stores (Shopify webhooks, TikTok Shop API, Amazon SP-API) and send automated tracking emails to end customers via Resend. Includes: order confirmation, shipping confirmation with tracking number/link, delivery confirmation, and review request follow-up. Email orchestration handled by existing Resend + Railway infrastructure.
 - Note: Each platform integration has different technical feasibility and legal considerations. Research and document these.
 
 ### Engine 3: Marketing & Ads Engine
@@ -118,13 +119,15 @@ Map every feature/automation YOUSELL offers (or will offer). Categorize them int
 - Social media content calendar generation
 - Video script generation for TikTok/Reels
 - Blog/SEO content for Shopify stores
-- Email marketing templates
+- Email marketing templates and automated sequences (powered by Resend + Railway)
 - Affiliate review content for AI tools
+- Post-purchase email flows: order confirmation, shipping updates, delivery confirmation, review requests (via Resend, orchestrated by Railway BullMQ workers)
 
 ### Engine 5: Influencer & Outreach Engine
 - Influencer discovery across platforms
 - Influencer scoring and ranking
-- **One-click influencer invitation buttons** (send templated outreach via email/DM)
+- **One-click influencer invitation buttons** (send templated outreach emails via Resend — no manual copy-paste)
+- Automated follow-up sequences for non-responders (Resend + Railway scheduler)
 - Campaign brief generation
 - Performance tracking per influencer
 - Commission/payment management
@@ -136,13 +139,14 @@ Map every feature/automation YOUSELL offers (or will offer). Categorize them int
 - Supplier communication templates
 - Cost-of-goods tracking
 
-### Engine 7: AI Affiliate Revenue Engine
-- Curated list of high-commission AI affiliate programs
-- Auto-generated affiliate content (reviews, comparisons, tutorials)
-- Affiliate link management and tracking
-- Commission dashboard
-- Automated social media posting for affiliate promotions
-- **Revenue share model:** YOUSELL earns a percentage of affiliate commissions generated through the platform
+### Engine 7: AI Affiliate Discovery & Marketing Engine
+- Curated, frequently updated database of high-commission AI affiliate programs
+- Auto-generated affiliate promotional content (reviews, comparisons, tutorials, social posts)
+- Client manages their OWN affiliate links — YOUSELL does not touch commissions
+- Automated social media content distribution for affiliate promotions
+- Performance tracking dashboard (clicks, signups, estimated commissions)
+- New opportunity alerts when high-value affiliate programs launch or change terms
+- **Business model:** Client earns 100% of their affiliate commissions. YOUSELL earns purely from the subscription fee for providing the discovery platform + automated marketing engine. No revenue share, no commission split.
 
 ### Engine 8: Analytics & Profit Engine
 - Real-time sales tracking across all platforms
@@ -165,7 +169,7 @@ Key principles:
 - **Volume over margin** — more customers at reasonable prices beats fewer at high prices
 - **Per-platform modularity** — let clients start with one platform and expand
 - **Engine-based toggles** — clients can enable/disable engines they want
-- **Built-in affiliate revenue** offsets our costs and can subsidize lower pricing
+- **Affiliate engine as value-add** — clients earn passive income through our platform, justifying subscription pricing (YOUSELL does NOT take a cut of their commissions)
 - **Predictable ROI messaging** — for each package, calculate and show the client what they can realistically earn
 
 ### 3.2 Pricing Structure Requirements
@@ -229,7 +233,7 @@ For each engine and platform combination, estimate:
 - Email sending costs (Resend)
 - Infrastructure costs (Supabase, Railway, Redis, Netlify)
 - Human support time (if any)
-- **Affiliate commission revenue earned** (offset against costs)
+- Note: YOUSELL does NOT earn affiliate commissions from client activity — revenue is purely subscription-based
 
 ### 3.4 Competitor Pricing Comparison Table
 
@@ -314,39 +318,212 @@ Research and document the technical and legal feasibility of importing product d
 - **Approach:** Generate landing pages / product pages hosted on YOUSELL or integrated with client's existing site
 - **Delivery:** Automated download links, email delivery via Resend
 
----
+### 5.5 Order Tracking & Customer Email Automation
 
-## SECTION 6: AFFILIATE REVENUE MODEL
+**Infrastructure:** Already built — Resend (email) + Railway (backend processing). This is NOT new infrastructure — it extends the existing email orchestration system.
 
-### 6.1 How YOUSELL Earns From Client Activity
+**How it works per platform:**
 
-Every client who uses YOUSELL to promote AI tools generates affiliate revenue for YOUSELL itself:
+| Platform | Order/Tracking Data Source | Method |
+|----------|--------------------------|--------|
+| **Shopify** | Shopify Webhooks (`orders/create`, `orders/fulfilled`, `fulfillments/create`) | Real-time push — Shopify fires webhook to YOUSELL when order status changes. Includes tracking number, carrier, and tracking URL. |
+| **TikTok Shop** | TikTok Shop API — Order Management endpoints | Poll or webhook for order status updates. TikTok provides shipment tracking info via API. |
+| **Amazon** | SP-API — Orders API + Shipping API | Pull order status and tracking details. Note: Amazon handles most customer communication itself, so this is supplementary. |
+
+**Automated email sequence (via Resend, orchestrated by Railway workers):**
 
 ```
-Client subscribes to YOUSELL
-    → Uses AI Affiliate Engine to promote AI tools
-    → Generates signups for Jasper, Copy.ai, etc.
-    → Those tools pay affiliate commission
-    → YOUSELL earns a share of that commission (platform fee)
-    → This revenue offsets YOUSELL's operating costs
-    → Allows YOUSELL to price subscriptions LOWER
+Order placed → [Instant] Order Confirmation Email
+    → Thank you, order summary, estimated delivery window
+
+Order shipped → [Instant] Shipping Confirmation Email
+    → Tracking number, carrier name, clickable tracking link
+    → Estimated delivery date
+
+In transit → [Optional] Delivery Update Email
+    → "Your package is on its way!" with live tracking link
+
+Delivered → [24hr after delivery] Delivery Confirmation Email
+    → "Your order has been delivered!"
+
+Post-delivery → [3–5 days later] Review Request Email
+    → "How was your experience? Leave a review"
+    → Links to review on the relevant platform (TikTok Shop, Amazon, Shopify store)
 ```
 
-### 6.2 Revenue Share Structure
+**Implementation approach:**
+- Railway BullMQ workers listen for store webhooks / poll APIs on schedule
+- On order event: generate email from branded templates via Resend
+- Templates are white-labeled with client's store name and branding
+- Client can customize email templates from dashboard (toggle emails on/off, edit subject lines)
+- All emails sent FROM the client's configured sender address (via Resend verified domain)
 
-Design a fair split:
-- Client gets X% of affiliate commissions generated
-- YOUSELL keeps Y% as platform fee
-- Research industry standards for affiliate revenue sharing
-- This should be a WIN-WIN — the client earns passive income they wouldn't have without YOUSELL, and YOUSELL earns recurring revenue beyond subscriptions
-
-### 6.3 Tools We Use Internally
-
-YOUSELL uses tools like Apify, Supabase, Resend, etc. If any of these have affiliate programs, each client rollout generates affiliate commission for YOUSELL when clients sign up for their own accounts. Document which tools have affiliate programs and estimated commission per client.
+**Why this matters for retention:**
+- Clients who connect their stores for order tracking are deeply integrated — high switching cost
+- Professional post-purchase emails increase repeat purchases 20–30%
+- Review request emails drive platform ratings (critical for TikTok Shop and Amazon ranking)
+- This is a feature clients expect from a premium automation platform
 
 ---
 
-## SECTION 7: THE "MONEY MACHINE" NARRATIVE
+## SECTION 6: AFFILIATE ENGINE — BUSINESS MODEL & RETENTION STRATEGY
+
+### 6.1 The Retention Problem
+
+The affiliate database alone is a one-time value — a client could sign up, grab all the affiliate links, and cancel. The **ongoing value that prevents churn** must be the content creation and marketing automation. Without YOUSELL running, their affiliate promotion stops, their content pipeline dries up, and their income drops. This makes the subscription sticky.
+
+### 6.2 Three Monetization Models — Analyze All Three
+
+Claude must analyze all three approaches and recommend the best one (or a hybrid):
+
+**Model A: Pure Subscription**
+```
+Client pays $X/mo subscription
+    → Gets affiliate database + AI content engine + automated distribution
+    → Client keeps 100% of affiliate commissions
+    → YOUSELL earns from subscription only
+    → Retention driver: content + distribution automation stops if they cancel
+```
+- Pro: Simple, predictable revenue
+- Con: Client may try to replicate the content process themselves and cancel
+- Retention lever: Make the AI content quality and posting frequency so high that doing it manually is not worth it
+
+**Model B: Commission-Based (Free Platform + Revenue Share)**
+```
+Client pays $0/mo
+    → Gets full access to affiliate database + content engine + distribution
+    → YOUSELL takes X% of affiliate commissions earned
+    → Problem: HOW do we collect? Affiliate programs pay the link owner directly
+```
+- Technical challenge: We CANNOT intercept payments between the affiliate program and the client. Options to explore:
+  - **Sub-affiliate/referral networks** — some affiliate platforms allow a "super affiliate" structure where we enroll under our master account and the client promotes through our tracking links. Research which programs support this.
+  - **Honor system with tracking** — client self-reports earnings, we invoice a %. Unreliable and hard to enforce.
+  - **YOUSELL-managed affiliate links** — we own the affiliate accounts, client promotes through our links, we collect commission and pass their share. Legally and operationally complex but technically possible.
+- Pro: No upfront cost for client = lower barrier to entry = more users
+- Con: Complex to manage, hard to enforce payment, AI content creation costs fall entirely on YOUSELL with no guaranteed revenue
+
+**Model C: Hybrid (Recommended for analysis)**
+```
+Client pays a reduced subscription ($X/mo) for the platform + content engine
+    → Subscription covers YOUSELL's costs for AI content creation + infrastructure
+    → Client keeps 100% of their affiliate commissions
+    → The subscription is justified because:
+        1. Fresh content is generated DAILY (they can't replicate this manually)
+        2. Distribution to their channels happens automatically (stops if they cancel)
+        3. New affiliate opportunities are added weekly (ongoing discovery value)
+        4. Analytics and optimization improve over time (compound value)
+    → If client cancels: content stops, distribution stops, new opportunities stop
+    → Their existing affiliate links still work, but growth stops without fresh promotion
+```
+
+Claude must evaluate all three models with:
+- Revenue projections for each
+- Cost-to-serve analysis (AI content generation costs per client)
+- Churn risk assessment
+- Operational complexity comparison
+- Final recommendation with reasoning
+
+### 6.3 Making the Subscription Sticky (Anti-Churn Design)
+
+The affiliate engine subscription MUST include these retention hooks:
+
+1. **Daily fresh content** — New AI-generated posts, reviews, and promotions. If you cancel, this stream stops immediately. Old content goes stale fast in social media algorithms.
+2. **Connected channel automation** — Content is auto-posted to client's TikTok, Instagram, YouTube, Twitter/X, LinkedIn, blog, etc. Cancel = manual posting = hours of work per week.
+3. **Weekly new opportunities** — New affiliate programs, rate changes, seasonal promotions. Cancel = you're stuck with whatever you found before.
+4. **Performance optimization** — AI learns which content converts best for this specific client and optimizes over time. Cancel = lose all that learning.
+5. **Trend-aware content** — Content references current trends, news, and viral moments. Can't be pre-generated or stockpiled. Must be live.
+6. **Seasonal campaigns** — Black Friday, New Year, back-to-school affiliate pushes with pre-built campaign packages. Miss these = miss biggest earning months.
+
+**The message to the client:** "You can find affiliate programs yourself. But can you create 30 pieces of optimized promotional content per month, post them across 5 channels on an optimized schedule, track what's converting, adjust your strategy weekly, and catch every new high-commission program before your competitors? That's what your subscription pays for."
+
+### 6.4 YOUSELL's Own Affiliate Revenue (Secondary Stream)
+
+Separately from the client-facing engine, YOUSELL itself can earn affiliate commissions by recommending tools that clients need for their e-commerce operations (Shopify, hosting, email marketing, etc.) within the platform. This is standard practice (every SaaS does this) and is a secondary revenue stream — but it should NOT be factored into subscription pricing or conflated with the client's affiliate engine.
+
+---
+
+## SECTION 7: CLIENT CHANNEL INTEGRATIONS (SECURE, NO PASSWORDS)
+
+### 7.1 Core Principle
+
+Clients will NEVER enter store passwords or social media login credentials on YOUSELL. All integrations must use **OAuth 2.0 or API keys** — industry-standard secure methods where the client grants limited, revocable permissions without sharing their password.
+
+### 7.2 Store Integrations (Product Export)
+
+| Platform | Integration Method | How It Works | Permissions Needed |
+|----------|-------------------|-------------|-------------------|
+| **Shopify** | OAuth 2.0 via Shopify App | Client installs YOUSELL as a Shopify App from their admin. Grants specific scopes (write_products, read_orders). No password ever shared. Revocable anytime from Shopify admin. | `write_products`, `read_products`, `read_orders` |
+| **TikTok Shop** | OAuth 2.0 via TikTok Shop Open API | Client authorizes YOUSELL in TikTok Seller Center. Grants product management permissions. Token-based, revocable. | Product management, order read |
+| **Amazon** | SP-API OAuth (Selling Partner API) | Client authorizes YOUSELL as a Selling Partner app. Amazon handles auth flow. Client never shares MWS keys or passwords. Revocable from Seller Central. | Listings, catalog, pricing |
+
+### 7.3 Marketing Channel Integrations (Content Distribution)
+
+| Channel | Integration Method | What YOUSELL Can Do | Client Setup |
+|---------|-------------------|-------------------|-------------|
+| **TikTok** | TikTok Content Posting API (OAuth 2.0) | Post videos, schedule content | Client clicks "Connect TikTok" → OAuth redirect → grants posting permission |
+| **Instagram/Facebook** | Meta Graph API (OAuth 2.0) | Post images, reels, stories, schedule content | Client clicks "Connect Instagram" → Facebook OAuth → grants pages/publishing permission |
+| **YouTube** | YouTube Data API v3 (OAuth 2.0) | Upload videos, manage playlists | Client clicks "Connect YouTube" → Google OAuth → grants upload permission |
+| **Twitter/X** | X API v2 (OAuth 2.0) | Post tweets, schedule threads | Client clicks "Connect X" → OAuth redirect → grants tweet permission |
+| **Pinterest** | Pinterest API (OAuth 2.0) | Create pins, manage boards | Client clicks "Connect Pinterest" → OAuth → grants pin creation permission |
+| **LinkedIn** | LinkedIn Marketing API (OAuth 2.0) | Post articles, share content | Client clicks "Connect LinkedIn" → OAuth → grants posting permission |
+| **Blog/Website** | Webhook or WordPress REST API | Push blog posts to client's site | Client provides webhook URL or WordPress API key |
+| **Email Newsletter** | Resend / Mailchimp / ConvertKit API | Send affiliate promotional emails | Client provides API key from their email platform |
+| **Order Tracking Emails** | Resend (built-in, no extra setup) | Order confirmation, shipping updates, delivery confirmation, review requests | Auto-enabled when store is connected — uses YOUSELL's Resend infrastructure with client's verified sender domain |
+
+### 7.4 Security & Trust
+
+- **No passwords stored, ever.** All integrations use OAuth tokens that grant specific, limited permissions.
+- **Revocable anytime.** Client can disconnect any channel from their YOUSELL dashboard or from the platform itself (Shopify admin, TikTok Seller Center, etc.)
+- **Scoped permissions.** YOUSELL only requests the minimum permissions needed (e.g., "post content" not "manage account settings")
+- **Token encryption.** All OAuth tokens stored encrypted in the database
+- **Transparency.** Dashboard shows exactly which channels are connected and what permissions are granted
+- **Compliance.** Follow each platform's API terms of service and rate limits
+
+### 7.5 Dashboard UX for Channel Management
+
+Design a "Connected Channels" section in the client dashboard:
+
+```
+┌────────────────────────────────────────────────────┐
+│  Connected Channels                                │
+├────────────────────────────────────────────────────┤
+│                                                    │
+│  STORES                                            │
+│  ✅ Shopify — mystore.myshopify.com   [Disconnect] │
+│  ⬚ TikTok Shop                       [Connect]    │
+│  ⬚ Amazon Seller                     [Connect]    │
+│                                                    │
+│  MARKETING CHANNELS                                │
+│  ✅ TikTok — @myhandle (42K followers) [Disconnect]│
+│  ✅ Instagram — @mybrand (18K)         [Disconnect]│
+│  ⬚ YouTube                            [Connect]   │
+│  ⬚ Twitter/X                          [Connect]   │
+│  ⬚ Pinterest                          [Connect]   │
+│  ⬚ LinkedIn                           [Connect]   │
+│                                                    │
+│  EMAIL                                             │
+│  ⬚ Mailchimp / ConvertKit / Resend    [Connect]   │
+│                                                    │
+│  Content Engine Status: ✅ ACTIVE                  │
+│  Next scheduled post: Today 6:00 PM → TikTok      │
+│  Posts this week: 12 sent, 8 scheduled             │
+│                                                    │
+└────────────────────────────────────────────────────┘
+```
+
+### 7.6 Research Required
+
+For each marketing channel integration, Claude must research:
+- API availability and access requirements (some require app review/approval)
+- Rate limits for posting frequency
+- Content format requirements per platform
+- Any costs associated with API access
+- Approval timeline (e.g., Meta app review can take weeks)
+- Whether automated posting is allowed by platform ToS
+
+---
+
+## SECTION 8: THE "MONEY MACHINE" NARRATIVE
 
 ### 7.1 Client Perspective
 
@@ -358,7 +535,7 @@ Write a clear narrative that answers: "What does a YOUSELL subscriber get?"
 3. GENERATES all your marketing content (ad creatives, product descriptions, social posts, email campaigns)
 4. FINDS AND CONTACTS influencers for you (one-click outreach, not just a list of names)
 5. RUNS your ads with AI optimization (not just suggests — actually creates and manages campaigns)
-6. EARNS you passive affiliate income (promote AI tools, earn commissions while you sleep)
+6. EARNS you passive affiliate income (discovers high-commission AI programs, auto-generates promotional content, distributes it — you earn commissions directly, 100% yours)
 7. TRACKS everything (profit per product, ROI per platform, what's working, what's not)
 8. TELLS you what to do next (AI-generated launch blueprints and recommendations)
 
@@ -373,7 +550,7 @@ Write a clear narrative that answers: "What does a YOUSELL subscriber get?"
 
 ---
 
-## SECTION 8: DUAL-PLATFORM ARCHITECTURE (RETAIN FROM PREVIOUS STRATEGY)
+## SECTION 9: DUAL-PLATFORM ARCHITECTURE (RETAIN FROM PREVIOUS STRATEGY)
 
 Keep the dual-platform separability design from `/ai/platform_strategy.md`:
 - admin.yousell.online = Intelligence/Admin platform (sellable to agencies)
@@ -397,13 +574,14 @@ Produce a single, comprehensive markdown document saved to `/ai/platform_strateg
 8. Database schema changes needed
 9. Dashboard modification specifications
 10. Store integration feasibility report
-11. Affiliate revenue model
-12. Implementation roadmap (phased)
-13. Risk analysis and mitigation
+11. Affiliate engine business model (all 3 models analyzed + recommendation)
+12. Client channel integration specifications (OAuth/API for all platforms)
+13. Implementation roadmap (phased)
+14. Risk analysis and mitigation
 
 **Remember:** Be GENEROUS with data shown to clients. The paywall is on AUTOMATION and ACTIONS, not on visibility. A client on the cheapest plan should still see impressive amounts of data — they just can't automate actions on it without upgrading.
 
-**Remember:** Factor in that each subscription generates built-in affiliate commission revenue for YOUSELL. This is a significant revenue multiplier that can subsidize pricing.
+**Remember:** YOUSELL earns purely from subscription fees — NOT from client affiliate commissions. The affiliate engine is a value-add that justifies higher subscription pricing because it helps clients earn passive income. The client keeps 100% of their affiliate earnings.
 
 **Remember:** Think like an ecommerce entrepreneur who wants a fully automated system making money 24/7 with minimal input. Price for the VALUE of that outcome, not for the cost of the features.
 
