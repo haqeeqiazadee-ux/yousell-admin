@@ -388,3 +388,146 @@
 **Bugs Found:** 7 new (BUG-051 through BUG-057)
 
 **Next:** Sprint S16 — Error Handling & Chaos
+
+---
+
+## Session 12 — 2026-03-12 (Sprint S16 + S17)
+
+**Sprint:** S16 + S17 — Error Handling & Chaos + Data Integrity
+**Tasks Completed:** 16.1-16.5, 17.1-17.5 (all 10 tasks)
+
+**Key Findings:**
+
+### S16 — Error Handling
+
+#### 16.1 — Supabase Unreachable
+- All API routes use try/catch with 500 response — correct
+- Dashboard `safeCount()` catches errors and returns 0 — no cascading failures
+- Worker catches errors and updates scan status to 'failed' — correct
+- PASS
+
+#### 16.2 — Scan Job Failure
+- Worker catch block updates scan to `status: 'failed'` with error string — correct
+- Re-throws error so BullMQ marks job as failed — correct
+- `worker.on('failed')` logs error — correct
+- PASS
+
+#### 16.3 — Redis Down
+- IORedis has `maxRetriesPerRequest: null` — infinite reconnect attempts (BullMQ requirement)
+- Connection error event logged — correct
+- BUG-058: If Redis is down when scan POST is called, `scanQueue.add()` will throw. The catch handler returns 500 but doesn't distinguish Redis errors from other errors.
+- Queue creation happens at startup (`new Queue('scan', { connection })`) — if Redis is completely unavailable at startup, the backend process won't crash but queue operations will fail
+
+#### 16.4 — All API Keys Missing
+- Each provider function checks for key, returns `[]` with console.warn if missing — correct
+- Worker continues to next step even if a platform returns empty — correct
+- Scan completes with 0 products, status set to 'completed' — correct
+- PASS
+
+#### 16.5 — Email Failure
+- `sendScanCompleteAlert` and `sendProductAlert` both wrapped in try/catch — correct
+- Failures logged with `console.error` — correct
+- Email errors don't crash the worker or prevent scan completion — correct
+- Missing RESEND_API_KEY results in early return with console.warn — correct
+- PASS
+
+### S17 — Data Integrity
+
+#### 17.1 — Uniqueness Constraint
+- Worker uses `.upsert()` with `{ onConflict: 'source,external_id' }` — correct
+- On conflict, existing record is updated with new data — correct
+- Frontend products route inserts do NOT use upsert (BUG-059: could create duplicates if same product imported via CSV)
+
+#### 17.2 — Orphan Risks
+- Product DELETE uses simple `.delete().eq('id', id)` — no cascade
+- BUG-060: Deleting a product can leave orphaned records in `product_allocations`, `launch_blueprints`, `financial_models`, and `viral_signals` tables
+- Fix: Need ON DELETE CASCADE in Supabase FK constraints, or application-level cleanup
+
+#### 17.3 — Score Ranges
+- All scoring functions use `Math.min(100, Math.max(0, ...))` — clamped to [0, 100]
+- Verified for: calculateTrendScore, calculateViralScore, calculateProfitScore, calculateFinalScore, calculateInfluencerConversionScore
+- PASS
+
+#### 17.4 — Audit Trails
+- Products POST/PATCH: sets `created_by`/`updated_by` — correct
+- CSV import: sets `created_by`/`updated_by` — correct
+- Allocation POST: sets `allocated_by` — correct
+- BUG-061: Blueprint POST does NOT set `created_by` or any audit field (only `generated_by: 'sonnet'`)
+- Financial model POST does NOT set `created_by` — missing
+- Notifications, automation, trends, competitors, suppliers POSTs do NOT set audit fields
+
+#### 17.5 — Plan Tier Limits
+- Allocation POST correctly: (1) fetches client's `default_product_limit`, (2) counts active allocations, (3) rejects if `current + requested > limit`
+- Uses admin client (service role) to bypass RLS — correct for admin operations
+- PASS
+
+**Bugs Found:** 4 new (BUG-058 LOW, BUG-059 MEDIUM, BUG-060 MEDIUM, BUG-061 LOW)
+
+**Next:** Sprint S18-S24
+
+---
+
+## Session 13 — 2026-03-12 (Sprint S18-S24)
+
+**Sprint:** S18-S24 — Allocation, BullMQ, CSV, Financial, Blueprints, Notifications, Influencer
+**Tasks Completed:** 18.1-18.5, 19.1-19.4, 20.1-20.4, 21.1-21.5, 22.1-22.4, 23.1-23.4, 24.1-24.4 (all 30 tasks)
+
+**Key Findings:**
+
+### S18 — Client Allocation
+- POST: Validates clientId, productIds, checks plan limit, uses admin client — correct
+- GET: Returns pending requests with client names, recent allocations with product titles — correct
+- Client-side product fetch uses allocation join with visible_to_client filter — correct
+- Full flow: Client creates request → Admin sees in pending → Admin allocates → Client sees in dashboard — works end-to-end
+- PASS
+
+### S19 — BullMQ Job Queue
+- Redis connection with event handlers — correct
+- Worker concurrency: 2 — correct
+- Job status polling returns all states (waiting, active, completed, failed) — correct
+- Cancel: Handles both active (moveToFailed) and waiting/delayed (remove) states — correct
+- BUG-062: Cancel on active job calls `moveToFailed` but worker's in-memory for loop continues processing remaining platforms. No signal to abort mid-scan.
+- PASS (except cancellation mid-scan)
+
+### S20 — CSV Import
+- RFC 4180 parser handles quoted fields and escaped quotes — correct
+- Column mapping: title (5 variants), price (4), url (4), image (4), category (3) — good coverage
+- Missing title column detected and rejected — correct
+- Excel files rejected with helpful message — correct
+- Empty file detected (<=1 line) — correct
+- Import UI reviewed in S14 — functional
+- PASS
+
+### S21 — Financial Model & Auto-Rejection
+- Financial model calculation: totalCost, grossMargin, breakEvenUnits formulas correct
+- API route implements 5 of 8 rejection rules (missing: IP risk, price <$10, 100+ competitors)
+- BUG-063: Financial route implements only 5 rejection rules vs 8 in frontend/backend scoring functions. Missing: IP/trademark risk, retail price <$10, competitor count >100
+- Backend `shouldRejectProduct()` implements all 8 rules — correct and matches frontend `composite.ts`
+- Revenue projections (30/60/90 day) are simple linear extrapolations — noted, not a bug
+
+### S22 — Blueprint & PDF
+- POST: Accepts all 7 content fields, validates product_id, sets generated_by='sonnet' — correct
+- GET: Product join includes id, title, platform, final_score, trend_stage — correct
+- PDF: HTML escaping thorough (5 chars), Content-Type correct, print CSS with @page margins — correct
+- PASS
+
+### S23 — Notifications + Automation
+- Notification GET: Filters by user_id — correct ownership enforcement
+- Notification PATCH: Double-checks user_id match on update — correct, prevents marking other users' notifications as read
+- Automation GET: Lists all jobs sorted by name — correct
+- Automation PATCH kill switch: Updates all non-disabled jobs to disabled, returns refreshed list — correct
+- Automation PATCH single toggle: Validates job_name + status, updates single row — correct
+- BUG-064: Automation PATCH accepts arbitrary status value (no whitelist). Should only accept 'enabled' or 'disabled'.
+- PASS (except status whitelist)
+
+### S24 — Influencer Scoring
+- Conversion score formula: 5 components (follower 0-20, engagement 0-30, views 0-20, conversion 0-15, niche 0-15) — max 100
+- Tier classification: nano <10K, micro 10-100K, mid 100K-1M, macro 1M+ — correct boundaries
+- CPP ranges: nano $20-100, micro $100-500, mid $500-5000, macro $5000-50000 — correct
+- Influencer API: Sort whitelist (4 fields), pagination (limit+offset), platform filter — correct
+- POST has no field whitelist (BUG-046, already tracked)
+- PASS
+
+**Bugs Found:** 3 new (BUG-062 MEDIUM, BUG-063 MEDIUM, BUG-064 LOW)
+
+**Next:** Sprint S25 — Final Sign-off

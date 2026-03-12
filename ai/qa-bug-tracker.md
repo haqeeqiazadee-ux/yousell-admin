@@ -45,6 +45,13 @@
 | BUG-055 | LOW | Settings Page | Automation toggle doesn't refetch state. Stale if another admin changes it concurrently. | S14 | Open |
 | BUG-056 | LOW | Client Dashboard | Non-client users redirected to `/admin/unauthorized` instead of client-appropriate error page. | S15 | Open |
 | BUG-057 | MEDIUM | Client Products | "View Blueprint" button is non-functional — doesn't link anywhere or open a modal. | S15 | Open |
+| BUG-059 | MEDIUM | CSV Import / Products | CSV import uses `.insert()` not `.upsert()`. Can create duplicate products if same item imported twice. | S17 | Open |
+| BUG-060 | MEDIUM | Product Delete | Deleting a product leaves orphaned records in `product_allocations`, `launch_blueprints`, `financial_models`, `viral_signals`. No cascade. | S17 | Open |
+| BUG-062 | MEDIUM | Scan Cancel | Cancel on active job calls `moveToFailed` but worker's in-memory for loop continues. No signal to abort mid-scan. | S19 | Open |
+| BUG-063 | MEDIUM | Financial Route | Financial route implements only 5 of 8 rejection rules. Missing: IP risk, price <$10, 100+ competitors. | S21 | Open |
+| BUG-058 | LOW | Scan Queue | Redis failure indistinguishable from other 500 errors in scan POST endpoint. | S16 | Open |
+| BUG-061 | LOW | Audit Trails | Blueprint, financial, notification, automation, trends, competitor, supplier POSTs don't set `created_by` audit field. | S17 | Open |
+| BUG-064 | LOW | Automation Route | PATCH accepts arbitrary status value with no whitelist. Should only accept 'enabled' or 'disabled'. | S23 | Open |
 
 ---
 
@@ -62,6 +69,6 @@
 |----------|------|----------|-------|
 | CRITICAL | 0 | 0 | 0 |
 | HIGH | 2 | 0 | 2 |
-| MEDIUM | 16 | 0 | 16 |
-| LOW | 19 | 0 | 19 |
-| **Total** | **37** | **0** | **37** |
+| MEDIUM | 20 | 0 | 20 |
+| LOW | 22 | 0 | 22 |
+| **Total** | **44** | **0** | **44** |

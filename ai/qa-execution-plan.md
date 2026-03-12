@@ -277,11 +277,11 @@ Read these files to recover:
 
 | # | Task | Files to Read | Status |
 |---|------|---------------|--------|
-| 16.1 | Trace: What happens when Supabase is unreachable? Do API routes handle it? Does the dashboard show an error? | Multiple route files, dashboard page | ⬜ |
-| 16.2 | Trace: What happens when a scan job fails mid-execution? Is scan status updated to 'failed'? Is error stored? | `backend/src/worker.ts` | ⬜ |
-| 16.3 | Trace: What happens when Redis is down? Does the scan queue endpoint fail gracefully? | `backend/src/lib/queue.ts`, `backend/src/index.ts` | ⬜ |
-| 16.4 | Trace: What happens when all provider API keys are missing? Does the scan still complete with empty results? | `backend/src/lib/providers.ts` | ⬜ |
-| 16.5 | Trace: What happens when email sending fails? Does it crash the scan or log and continue? | `backend/src/lib/email.ts`, `backend/src/worker.ts` | ⬜ |
+| 16.1 | Trace: What happens when Supabase is unreachable? Do API routes handle it? Does the dashboard show an error? | Multiple route files, dashboard page | ✅ 2026-03-12 |
+| 16.2 | Trace: What happens when a scan job fails mid-execution? Is scan status updated to 'failed'? Is error stored? | `backend/src/worker.ts` | ✅ 2026-03-12 |
+| 16.3 | Trace: What happens when Redis is down? Does the scan queue endpoint fail gracefully? | `backend/src/lib/queue.ts`, `backend/src/index.ts` | ✅ 2026-03-12 |
+| 16.4 | Trace: What happens when all provider API keys are missing? Does the scan still complete with empty results? | `backend/src/lib/providers.ts` | ✅ 2026-03-12 |
+| 16.5 | Trace: What happens when email sending fails? Does it crash the scan or log and continue? | `backend/src/lib/email.ts`, `backend/src/worker.ts` | ✅ 2026-03-12 |
 
 ---
 
@@ -291,11 +291,11 @@ Read these files to recover:
 
 | # | Task | Files to Read | Status |
 |---|------|---------------|--------|
-| 17.1 | Verify UNIQUE(source, external_id) constraint: Does the upsert handle duplicates? What happens on conflict? | `backend/src/worker.ts` (upsert section) | ⬜ |
-| 17.2 | Check for orphan risks: Can deleting a product leave orphaned allocations, blueprints, or financial models? | Product delete route, allocation routes | ⬜ |
-| 17.3 | Verify score range: Can any scoring formula produce values outside 0-100? Test edge cases. | Scoring files | ⬜ |
-| 17.4 | Verify audit trails: Do all write operations set created_by or updated_by? List any that don't. | All POST/PATCH routes | ⬜ |
-| 17.5 | Verify plan tier limits: Does the allocation endpoint correctly count active allocations before allowing new ones? | `src/app/api/admin/allocations/route.ts` | ⬜ |
+| 17.1 | Verify UNIQUE(source, external_id) constraint: Does the upsert handle duplicates? What happens on conflict? | `backend/src/worker.ts` (upsert section) | ✅ 2026-03-12 |
+| 17.2 | Check for orphan risks: Can deleting a product leave orphaned allocations, blueprints, or financial models? | Product delete route, allocation routes | ✅ 2026-03-12 |
+| 17.3 | Verify score range: Can any scoring formula produce values outside 0-100? Test edge cases. | Scoring files | ✅ 2026-03-12 |
+| 17.4 | Verify audit trails: Do all write operations set created_by or updated_by? List any that don't. | All POST/PATCH routes | ✅ 2026-03-12 |
+| 17.5 | Verify plan tier limits: Does the allocation endpoint correctly count active allocations before allowing new ones? | `src/app/api/admin/allocations/route.ts` | ✅ 2026-03-12 |
 
 ---
 
@@ -305,11 +305,11 @@ Read these files to recover:
 
 | # | Task | Files to Read | Status |
 |---|------|---------------|--------|
-| 18.1 | Review allocation POST: Client validation? Limit check? Insert fields correct? | `src/app/api/admin/allocations/route.ts` | ⬜ |
-| 18.2 | Review allocation GET: Pending requests shape? Recent allocations query? Client filter? | `src/app/api/admin/allocations/route.ts` | ⬜ |
-| 18.3 | Review client-side product fetch: visible_to_client filter? Product join fields? | `src/app/api/dashboard/products/route.ts` | ⬜ |
-| 18.4 | Review product request flow: Client creates request → Admin sees pending → Admin fulfills | Request routes, allocation routes | ⬜ |
-| 18.5 | Review allocate page: Quick-select UI? Visibility toggle? Plan limit display? | `src/app/admin/allocate/page.tsx` | ⬜ |
+| 18.1 | Review allocation POST: Client validation? Limit check? Insert fields correct? | `src/app/api/admin/allocations/route.ts` | ✅ 2026-03-12 |
+| 18.2 | Review allocation GET: Pending requests shape? Recent allocations query? Client filter? | `src/app/api/admin/allocations/route.ts` | ✅ 2026-03-12 |
+| 18.3 | Review client-side product fetch: visible_to_client filter? Product join fields? | `src/app/api/dashboard/products/route.ts` | ✅ 2026-03-12 |
+| 18.4 | Review product request flow: Client creates request → Admin sees pending → Admin fulfills | Request routes, allocation routes | ✅ 2026-03-12 |
+| 18.5 | Review allocate page: Quick-select UI? Visibility toggle? Plan limit display? | `src/app/admin/allocate/page.tsx` | ✅ 2026-03-12 |
 
 ---
 
@@ -319,10 +319,10 @@ Read these files to recover:
 
 | # | Task | Files to Read | Status |
 |---|------|---------------|--------|
-| 19.1 | Review queue setup: Redis connection config? Error handling? Connection events? | `backend/src/lib/queue.ts` | ⬜ |
-| 19.2 | Review worker config: Concurrency=2? Job processing events? Failure handling? | `backend/src/worker.ts` (worker setup) | ⬜ |
-| 19.3 | Review job status polling: Does GET /api/scan/:jobId return all states correctly? Progress calculation? | `backend/src/index.ts` (scan status route) | ⬜ |
-| 19.4 | Review job cancellation: Does cancel update job state? Does worker stop processing? | `backend/src/index.ts` (cancel route), worker | ⬜ |
+| 19.1 | Review queue setup: Redis connection config? Error handling? Connection events? | `backend/src/lib/queue.ts` | ✅ 2026-03-12 |
+| 19.2 | Review worker config: Concurrency=2? Job processing events? Failure handling? | `backend/src/worker.ts` (worker setup) | ✅ 2026-03-12 |
+| 19.3 | Review job status polling: Does GET /api/scan/:jobId return all states correctly? Progress calculation? | `backend/src/index.ts` (scan status route) | ✅ 2026-03-12 |
+| 19.4 | Review job cancellation: Does cancel update job state? Does worker stop processing? | `backend/src/index.ts` (cancel route), worker | ✅ 2026-03-12 |
 
 ---
 
@@ -332,10 +332,10 @@ Read these files to recover:
 
 | # | Task | Files to Read | Status |
 |---|------|---------------|--------|
-| 20.1 | Review CSV parser: RFC 4180 compliance? Quoted fields? Commas inside quotes? | `src/app/api/admin/import/route.ts` | ⬜ |
-| 20.2 | Review column mapping: All fuzzy names handled? Missing required columns detected? | `src/app/api/admin/import/route.ts` | ⬜ |
-| 20.3 | Review file type validation: Excel rejected? Empty file handled? | `src/app/api/admin/import/route.ts` | ⬜ |
-| 20.4 | Review import UI: File picker? Progress? Success/error display? | `src/app/admin/import/page.tsx` | ⬜ |
+| 20.1 | Review CSV parser: RFC 4180 compliance? Quoted fields? Commas inside quotes? | `src/app/api/admin/import/route.ts` | ✅ 2026-03-12 |
+| 20.2 | Review column mapping: All fuzzy names handled? Missing required columns detected? | `src/app/api/admin/import/route.ts` | ✅ 2026-03-12 |
+| 20.3 | Review file type validation: Excel rejected? Empty file handled? | `src/app/api/admin/import/route.ts` | ✅ 2026-03-12 |
+| 20.4 | Review import UI: File picker? Progress? Success/error display? | `src/app/admin/import/page.tsx` | ✅ 2026-03-12 |
 
 ---
 
@@ -345,11 +345,11 @@ Read these files to recover:
 
 | # | Task | Files to Read | Status |
 |---|------|---------------|--------|
-| 21.1 | Review financial model POST: totalCost, grossMargin, breakEvenUnits calculations correct? | `src/app/api/admin/financial/route.ts` | ⬜ |
-| 21.2 | Review rejection rule 1-3: Margin <40%, Shipping >30%, Break-even >2mo. Boundary values? | `src/app/api/admin/financial/route.ts` | ⬜ |
-| 21.3 | Review rejection rule 4-6: Fragile/hazmat, no US delivery <15d, IP risk. Input validation? | `src/app/api/admin/financial/route.ts` | ⬜ |
-| 21.4 | Review rejection rule 7-8: Price <$10, 100+ competitors. Edge cases? | `src/app/api/admin/financial/route.ts` | ⬜ |
-| 21.5 | Review backend rejection rules: Do they match frontend rules? Are there discrepancies? | `backend/src/lib/scoring.ts` (rejection section) | ⬜ |
+| 21.1 | Review financial model POST: totalCost, grossMargin, breakEvenUnits calculations correct? | `src/app/api/admin/financial/route.ts` | ✅ 2026-03-12 |
+| 21.2 | Review rejection rule 1-3: Margin <40%, Shipping >30%, Break-even >2mo. Boundary values? | `src/app/api/admin/financial/route.ts` | ✅ 2026-03-12 |
+| 21.3 | Review rejection rule 4-6: Fragile/hazmat, no US delivery <15d, IP risk. Input validation? | `src/app/api/admin/financial/route.ts` | ✅ 2026-03-12 |
+| 21.4 | Review rejection rule 7-8: Price <$10, 100+ competitors. Edge cases? | `src/app/api/admin/financial/route.ts` | ✅ 2026-03-12 |
+| 21.5 | Review backend rejection rules: Do they match frontend rules? Are there discrepancies? | `backend/src/lib/scoring.ts` (rejection section) | ✅ 2026-03-12 |
 
 ---
 
@@ -359,10 +359,10 @@ Read these files to recover:
 
 | # | Task | Files to Read | Status |
 |---|------|---------------|--------|
-| 22.1 | Review blueprint POST: All 7 content fields accepted? generated_by set? product_id validated? | `src/app/api/admin/blueprints/route.ts` | ⬜ |
-| 22.2 | Review blueprint GET: Product join works? List query correct? | `src/app/api/admin/blueprints/route.ts` | ⬜ |
-| 22.3 | Review PDF endpoint: HTML escaping covers all dynamic fields? Content-Type correct? Print CSS present? | `src/app/api/admin/blueprints/[id]/pdf/route.ts` | ⬜ |
-| 22.4 | Review blueprint UI: Create form? PDF download/view? Blueprint list display? | `src/app/admin/blueprints/page.tsx` | ⬜ |
+| 22.1 | Review blueprint POST: All 7 content fields accepted? generated_by set? product_id validated? | `src/app/api/admin/blueprints/route.ts` | ✅ 2026-03-12 |
+| 22.2 | Review blueprint GET: Product join works? List query correct? | `src/app/api/admin/blueprints/route.ts` | ✅ 2026-03-12 |
+| 22.3 | Review PDF endpoint: HTML escaping covers all dynamic fields? Content-Type correct? Print CSS present? | `src/app/api/admin/blueprints/[id]/pdf/route.ts` | ✅ 2026-03-12 |
+| 22.4 | Review blueprint UI: Create form? PDF download/view? Blueprint list display? | `src/app/admin/blueprints/page.tsx` | ✅ 2026-03-12 |
 
 ---
 
@@ -372,10 +372,10 @@ Read these files to recover:
 
 | # | Task | Files to Read | Status |
 |---|------|---------------|--------|
-| 23.1 | Review notification GET: Only user's notifications? Ordered by date? | `src/app/api/admin/notifications/route.ts` | ⬜ |
-| 23.2 | Review notification PATCH: Ownership check (user_id match)? Read state update? | `src/app/api/admin/notifications/route.ts` | ⬜ |
-| 23.3 | Review automation GET/PATCH: List jobs? Toggle individual? Master kill switch? | `src/app/api/admin/automation/route.ts` | ⬜ |
-| 23.4 | Review notification/automation UI: Display, interaction, state management correct? | Notification + Settings pages | ⬜ |
+| 23.1 | Review notification GET: Only user's notifications? Ordered by date? | `src/app/api/admin/notifications/route.ts` | ✅ 2026-03-12 |
+| 23.2 | Review notification PATCH: Ownership check (user_id match)? Read state update? | `src/app/api/admin/notifications/route.ts` | ✅ 2026-03-12 |
+| 23.3 | Review automation GET/PATCH: List jobs? Toggle individual? Master kill switch? | `src/app/api/admin/automation/route.ts` | ✅ 2026-03-12 |
+| 23.4 | Review notification/automation UI: Display, interaction, state management correct? | Notification + Settings pages | ✅ 2026-03-12 |
 
 ---
 
@@ -385,10 +385,10 @@ Read these files to recover:
 
 | # | Task | Files to Read | Status |
 |---|------|---------------|--------|
-| 24.1 | Review conversion score formula: 5 components sum to 100? Weights correct? | `src/lib/scoring/composite.ts` or relevant file | ⬜ |
-| 24.2 | Review tier classification: nano <10K, micro 10-100K, mid 100K-1M, macro 1M+. Boundary values? | Influencer provider | ⬜ |
-| 24.3 | Review CPP estimation: Ranges per tier correct? (Nano $20-100, Micro $100-500, etc.) | Influencer provider | ⬜ |
-| 24.4 | Review influencer API: Sort whitelist? Pagination? Filter by platform? | `src/app/api/admin/influencers/route.ts` | ⬜ |
+| 24.1 | Review conversion score formula: 5 components sum to 100? Weights correct? | `src/lib/scoring/composite.ts` or relevant file | ✅ 2026-03-12 |
+| 24.2 | Review tier classification: nano <10K, micro 10-100K, mid 100K-1M, macro 1M+. Boundary values? | Influencer provider | ✅ 2026-03-12 |
+| 24.3 | Review CPP estimation: Ranges per tier correct? (Nano $20-100, Micro $100-500, etc.) | Influencer provider | ✅ 2026-03-12 |
+| 24.4 | Review influencer API: Sort whitelist? Pagination? Filter by platform? | `src/app/api/admin/influencers/route.ts` | ✅ 2026-03-12 |
 
 ---
 
@@ -398,9 +398,9 @@ Read these files to recover:
 
 | # | Task | Description | Status |
 |---|------|-------------|--------|
-| 25.1 | Compile bug summary: Total bugs found by severity (CRITICAL/HIGH/MEDIUM/LOW). | Read `ai/qa-bug-tracker.md` | ⬜ |
-| 25.2 | Generate coverage report: How many test cases passed/failed/blocked across all sprints? | Read this file + session log | ⬜ |
-| 25.3 | Write final verdict: APPROVED / BLOCKED with blockers list and accepted risks. | Write to `ai/qa-final-report.md` | ⬜ |
+| 25.1 | Compile bug summary: Total bugs found by severity (CRITICAL/HIGH/MEDIUM/LOW). | Read `ai/qa-bug-tracker.md` | ✅ 2026-03-12 |
+| 25.2 | Generate coverage report: How many test cases passed/failed/blocked across all sprints? | Read this file + session log | ✅ 2026-03-12 |
+| 25.3 | Write final verdict: APPROVED / BLOCKED with blockers list and accepted risks. | Write to `ai/qa-final-report.md` | ✅ 2026-03-12 |
 
 ---
 
