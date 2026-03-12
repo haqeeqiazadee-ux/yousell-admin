@@ -253,31 +253,66 @@ Product Discovery (14 scraping workers)
 Scoring Engine (trend 40% + viral 35% + profit 25%)
         ↓ triggers when final_score >= 60 (WARM/HOT)
 
-ENGINE 1: PURCHASING ENGINE
+ENGINE 1: PURCHASING ENGINE (Three-Phase Smart Sourcing)
         ↓
-CJDropshipping API → product search by title/keywords
+PHASE 1 — AUTO-DISCOVERY (fully automated)
         ↓
-AliExpress (Apify) → price validation/comparison
+CJDropshipping API → search by title/keywords
+   → Flag US warehouse products (2-5 day shipping) separately
         ↓
-Cost Calculator → landed cost per platform
+AliExpress Affiliate API → price validation/comparison
+   → Flag "Choice" products (7-15 day shipping) separately
         ↓
-Stores results in `product_costs` table
+Cost Calculator → preliminary landed cost per platform
+   → Delivery-weighted scoring (penalizes slow shipping)
+        ↓
+Claude Haiku → preliminary viability screening
+        ↓
+Stores PRELIMINARY results in `product_costs` table (is_confirmed = false)
+        ↓
+PHASE 2 — SOURCING QUEUE (human-in-the-loop checkpoint)
+        ↓
+Products land in admin dashboard "Sourcing Queue"
+   → Shows: auto-fetched prices, estimated margins, delivery times, supplier options
+   → Admin can: Confirm / Override price / Add local supplier / Reject / Snooze
+   → Admin inputs: actual_buy_price, actual_shipping_cost, actual_delivery_days, supplier_name
+        ↓
+On CONFIRM: system recalculates with confirmed prices (is_confirmed = true)
+On REJECT: product archived, no marketing spend
+On SNOOZE: stays in queue for later review
+        ↓
+PHASE 3 — CONFIRMED PRICING (recalculation with real numbers)
+        ↓
+Cost Calculator (re-run) → final landed cost per platform using confirmed prices
+        ↓
+Claude AI → final viability verdict using confirmed data
+        ↓
+Updates `profitability_analysis` with is_confirmed = true
+        ↓
+ONLY NOW triggers Engine 3 (content/marketing)
+        ↓
+No marketing dollars spent on unconfirmed pricing
 
 ENGINE 2: PROFITABILITY INTELLIGENCE ENGINE (THE BRAIN)
         ↓
-Reads: product_costs + competitor_prices + platform_fees
+Reads: CONFIRMED product_costs + competitor_prices + platform_fees
+   → Only processes products where is_confirmed = true
         ↓
-Calculates: gross margin per platform
+Calculates: final gross margin per platform (using confirmed prices)
         ↓
-Claude Haiku batch → viability verdict (STRONG/MODERATE/WEAK/NOT_VIABLE)
+Claude Haiku batch → final viability verdict (STRONG/MODERATE/WEAK/NOT_VIABLE)
         ↓
 Claude Sonnet (STRONG only) → deep analysis + content strategy
         ↓
 Outputs: pricing, marketing budget, platform selection, content priority
         ↓
-Stores results in `profitability_analysis` table
+Stores results in `profitability_analysis` table (is_confirmed = true)
         ↓
 Gates Engine 3 (NOT_VIABLE = no content created)
+        ↓
+NOTE: Engine 2 runs TWICE — once in Phase 1 (preliminary) and once
+      in Phase 3 (confirmed). The preliminary run informs the human
+      reviewer. The confirmed run triggers marketing.
 
 ENGINE 3: CONTENT & MARKETING ENGINE
         ↓
@@ -309,18 +344,24 @@ platform weighting, scoring model adjustment
 
 ### Decision Points: Autonomous vs Human Input
 
-| Decision | Autonomous? | Human Override? |
-|----------|------------|----------------|
-| Supplier lookup trigger | Yes (score >= 60) | Manual trigger for any product |
-| Cost calculation | Yes (formula-based) | Override cost inputs |
-| Viability classification | Yes (Claude AI) | Override verdict |
-| Pricing recommendation | Yes (algorithm) | Set price manually |
-| Content creation trigger | Yes (gated by verdict) | Force content for any product |
-| Script generation | Yes (Claude AI) | Edit before production |
-| Content production | Yes (automated pipeline) | Review queue (default ON) |
-| Publishing | **No (human review default)** | Toggle to auto-post per account |
-| Budget allocation | Yes (% of gross profit) | Set manual budget caps |
-| Performance tracking | Yes (automated ingestion) | Manual data correction |
+| Decision | Autonomous? | Human Override? | Phase |
+|----------|------------|----------------|-------|
+| Supplier lookup trigger | Yes (score >= 60) | Manual trigger for any product | Phase 1 |
+| Auto price discovery | Yes (API-based) | — | Phase 1 |
+| Preliminary cost calculation | Yes (formula-based) | — | Phase 1 |
+| Preliminary viability screen | Yes (Claude AI) | — | Phase 1 |
+| **Price confirmation** | **NO — requires human** | **Confirm / Override / Add local supplier** | **Phase 2** |
+| **Supplier selection** | **NO — requires human** | **Choose supplier, input actual price + delivery time** | **Phase 2** |
+| Final viability classification | Yes (Claude AI, confirmed data) | Override verdict | Phase 3 |
+| Final pricing recommendation | Yes (algorithm, confirmed data) | Set price manually | Phase 3 |
+| Content creation trigger | Yes (gated by CONFIRMED verdict) | Force content for any product | Phase 3 |
+| Script generation | Yes (Claude AI) | Edit before production | Engine 3 |
+| Content production | Yes (automated pipeline) | Review queue (default ON) | Engine 3 |
+| Publishing | **No (human review default)** | Toggle to auto-post per account | Engine 3 |
+| Budget allocation | Yes (% of gross profit) | Set manual budget caps | Engine 3 |
+| Performance tracking | Yes (automated ingestion) | Manual data correction | Feedback |
+
+**The critical insight:** The system does maximum automated work BEFORE asking for human input, then STOPS and waits for confirmation before spending any marketing dollars. This means the admin sees a fully-analyzed product with preliminary margins, supplier options, and delivery estimates — making the confirm/override decision fast and informed.
 
 ### What The System Learns Over Time
 
@@ -338,67 +379,234 @@ platform weighting, scoring model adjustment
 
 ### Workflow Registry
 
-| # | Workflow Name | Trigger | Template Base | Custom? | Services Used |
-|---|-------------|---------|-------------|---------|--------------|
-| W1 | Supplier Lookup | BullMQ webhook (product scored >= 60) | Custom | Yes | CJDropshipping API, Apify |
-| W2 | Cost Calculator | W1 completion webhook | Custom | Yes | Internal calculation |
-| W3 | Profitability Analysis | W2 completion webhook | Custom | Yes | Claude API (Haiku/Sonnet) |
-| W4 | Content Script Generator | W3 completion (verdict != NOT_VIABLE) | Custom | Yes | Claude API (Haiku) |
-| W5 | Faceless Video Pipeline | W4 completion (priority HIGH/MEDIUM) | **#5035** modified | Partial | Blotato API, VEO3 |
-| W6 | Avatar Video Pipeline | W4 completion (priority HIGH only) | **#8270/#11204** modified | Partial | Nano Banana, VEO3, Blotato |
-| W7 | Product Image Generator | W4 completion (all priorities) | **#8226** modified | Partial | Nano Banana 2/Pro |
-| W8 | Voiceover Generator | W4 completion (priority HIGH/MEDIUM) | Custom | Yes | ElevenLabs |
-| W9 | Content Assembly | W5/W6/W7/W8 completion | Custom | Yes | FFmpeg (optional), Blotato |
-| W10 | Publishing Pipeline | W9 completion OR manual trigger | **#7187** modified | Partial | Blotato (native node) |
-| W11 | Performance Tracker | Cron (every 6 hours) | Custom | Yes | Platform APIs, Supabase |
-| W12 | Feedback Processor | Cron (weekly) | Custom | Yes | Claude API, Supabase |
-| W13 | Budget Monitor | Cron (daily) | Custom | Yes | Supabase, Slack/email alerts |
+| # | Workflow Name | Phase | Trigger | Custom? | Services Used |
+|---|-------------|-------|---------|---------|--------------|
+| | **PHASE 1: Auto-Discovery** | | | | |
+| W1 | Supplier Lookup (Multi-Source) | P1 | BullMQ webhook (score >= 60) | Yes | CJDropshipping, AliExpress, Apify |
+| W2 | Cost Calculator (Preliminary) | P1 | W1 completion | Yes | Internal calculation |
+| W3 | Profitability Screen (Preliminary) | P1 | W2 completion | Yes | Claude API (Haiku) |
+| W3B | Sourcing Queue Placement | P1→P2 | W3 completion (ALL products) | Yes | Supabase, notifications |
+| | **PHASE 2: Human Checkpoint** | | | | |
+| — | Sourcing Queue (Dashboard UI) | P2 | Admin opens dashboard | Yes | Supabase Realtime |
+| | **PHASE 3: Confirmed Pricing** | | | | |
+| W3C | Confirmed Cost Recalculation | P3 | Admin confirms in Sourcing Queue | Yes | Internal calculation |
+| W3D | Final Profitability Analysis | P3 | W3C completion | Yes | Claude API (Haiku/Sonnet) |
+| | **ENGINE 3: Content & Marketing** | | | | |
+| W4 | Content Script Generator | E3 | W3D completion (confirmed, not NOT_VIABLE) | Yes | Claude API (Haiku) |
+| W5 | Faceless Video Pipeline | E3 | W4 completion (HIGH/MEDIUM) | Partial | Blotato API |
+| W6 | Avatar Presenter Pipeline | E3 | W4 completion (HIGH only) | Partial | HeyGen API (n8n node) |
+| W6B | Product B-Roll Pipeline | E3 | W4 completion (HIGH, supplementary) | Partial | Nano Banana, VEO3 |
+| W7 | Product Image Generator | E3 | W4 completion (all priorities) | Partial | Nano Banana 2/Pro |
+| W8 | Voiceover Generator | E3 | W4 completion (HIGH/MEDIUM) | Yes | ElevenLabs, OpenAI TTS |
+| W9 | Content Assembly | E3 | W5/W6/W6B/W7/W8 completion | Yes | FFmpeg, Blotato |
+| W10 | Publishing Pipeline | E3 | W9 completion OR manual trigger | Partial | Blotato (native node) |
+| | **FEEDBACK & MONITORING** | | | | |
+| W11 | Performance Tracker | — | Cron (every 6 hours) | Yes | Platform APIs, Supabase |
+| W12 | Feedback Processor | — | Cron (weekly) | Yes | Claude API, Supabase |
+| W13 | Budget Monitor | — | Cron (daily) | Yes | Supabase, alerts |
 
 ### Workflow Details
 
-**W1: Supplier Lookup**
+---
+
+### PHASE 1 WORKFLOWS: Auto-Discovery (Fully Automated)
+
+**W1: Supplier Lookup (Multi-Source + Delivery Intelligence)**
 ```
 Trigger: Webhook from Express backend (product scored >= 60)
-→ Extract product title, category, price range
-→ PARALLEL:
-  → CJDropshipping API: Search by keyword → extract price, shipping, variants
-  → AliExpress Affiliate API: Search by keyword → extract price, ratings, sales volume
-→ IF both found: use lowest price, cross-reference data
+→ Extract product title, category, price range from product record
+
+→ PARALLEL supplier search:
+  → CJDropshipping API: Search by keyword
+    → Extract: buy_price, shipping_cost, variants, supplier_rating
+    → KEY: Check warehouse_country field
+      → If "US" (CA/NJ/TX/IN): flag as LOCAL_SUPPLIER, delivery = 2-5 days
+      → If "CN": flag as OVERSEAS_SUPPLIER, delivery = 10-20 days
+    → Return multiple matches ranked by price + warehouse location
+
+  → AliExpress Affiliate API: Search by keyword
+    → Extract: price, ratings, sales_volume, shipping_info
+    → KEY: Check for "Choice" badge → delivery = 7-15 days
+    → Standard AliExpress → delivery = 15-30 days
+
+→ IF both found: cross-reference and rank by DELIVERY-WEIGHTED SCORE
 → IF only one found: use available source
 → IF neither found: fallback to Apify AliExpress scraper
-→ Store results in product_costs table via Supabase
+
+→ Delivery-Weighted Ranking Formula:
+  effective_cost = buy_price + shipping_cost + (delivery_days × $0.50 penalty)
+
+  Example:
+  Option A: $4 buy + $2 ship + (14 days × $0.50) = $13.00 effective
+  Option B: $6 buy + $3 ship + (3 days × $0.50)  = $10.50 effective ← WINS
+
+  The $0.50/day penalty is configurable per product category.
+  Fast-fashion/trending items: $1.00/day (time-sensitivity premium)
+  Evergreen products: $0.25/day (less urgency)
+
+→ Store ALL supplier options in product_costs table (is_confirmed = false)
+  → Multiple rows per product — one per supplier option found
+  → Include: supplier_source, warehouse_location, estimated_delivery_days
+→ Flag best auto-selected option as is_auto_recommended = true
 → Trigger W2 via webhook
 ```
 
-**W2: Cost Calculator**
+**W2: Cost Calculator (Preliminary)**
 ```
 Trigger: Webhook from W1
-→ Read product_costs record
-→ For each selling platform (TikTok Shop, Amazon FBA, Amazon FBM, Shopify):
-  → Calculate: landed_cost = buy_price + shipping + (buy_price × customs_rate)
-  → Calculate: platform_fee = selling_price × fee_rate
-  → Calculate: payment_fee = selling_price × processing_rate + fixed_fee
-  → Calculate: fulfillment_cost (FBA fee table OR shipping estimate)
-  → Calculate: gross_margin = (selling_price - total_cost) / selling_price × 100
-→ Store per-platform cost breakdown in product_costs table
+→ Read product_costs records (all supplier options for this product)
+→ For the auto-recommended option AND top 3 alternatives:
+  → For each selling platform (TikTok Shop, Amazon FBA, Amazon FBM, Shopify):
+    → Calculate: landed_cost = buy_price + shipping + (buy_price × customs_rate)
+    → Calculate: platform_fee = selling_price × fee_rate
+    → Calculate: payment_fee = selling_price × processing_rate + fixed_fee
+    → Calculate: fulfillment_cost (FBA fee table OR shipping estimate)
+    → Calculate: gross_margin = (selling_price - total_cost) / selling_price × 100
+    → Calculate: delivery_adjusted_margin = gross_margin × delivery_factor
+      → delivery_factor = 1.0 if delivery <= 5 days
+      → delivery_factor = 0.85 if delivery 6-10 days
+      → delivery_factor = 0.70 if delivery 11-15 days
+      → delivery_factor = 0.50 if delivery > 15 days
+→ Store per-platform cost breakdowns in product_costs table
 → Trigger W3 via webhook
 ```
 
-**W3: Profitability Analysis**
+**W3: Profitability Analysis (Preliminary — Phase 1)**
 ```
 Trigger: Webhook from W2
-→ Read product data + cost data + competitor prices
-→ IF highest margin < 15%: verdict = NOT_VIABLE, skip AI
+→ Read product data + cost data (auto-recommended option) + competitor prices
+→ IF highest delivery_adjusted_margin < 15%:
+    → preliminary_verdict = NOT_VIABLE
+    → Still add to Sourcing Queue (admin might know a better supplier)
+    → Flag as "auto-screened: margins too low at discovered prices"
 → ELSE: Call Claude Haiku API with structured prompt
-  → Input: product data, costs, competitor prices, category benchmarks
-  → Output: viability_verdict, recommended_price, marketing_budget,
+  → Input: product data, costs, competitor prices, category benchmarks, delivery times
+  → Output: preliminary_verdict, recommended_price, estimated_marketing_budget,
             best_platform, content_priority, reasoning
-→ IF verdict == STRONG: Escalate to Claude Sonnet for deep analysis
-  → Additional output: content_strategy, influencer_budget, target_audience
-→ Store in profitability_analysis table
-→ IF verdict != NOT_VIABLE: Trigger W4
-→ IF verdict == NOT_VIABLE: Update product status to archived
+  → NOTE: This is a PRELIMINARY verdict — subject to change after price confirmation
+→ Store in profitability_analysis table (is_confirmed = false)
+→ Add product to SOURCING QUEUE (W3B) for human review
+→ DO NOT trigger Engine 3 yet
 ```
+
+**W3B: Sourcing Queue Placement (NEW)**
+```
+Trigger: W3 completion (ALL products, including NOT_VIABLE)
+→ Create sourcing_queue record:
+  → product_id
+  → auto_recommended_supplier (best option from W1)
+  → all_supplier_options (array of all found options)
+  → preliminary_verdict (from W3)
+  → preliminary_best_margin (from W2)
+  → preliminary_best_platform (from W3)
+  → estimated_delivery_days (from W1)
+  → queue_status = 'pending_review'
+  → queued_at = now()
+→ Send notification to admin:
+  → Supabase Realtime → dashboard notification badge
+  → Optional: email/Slack webhook for high-value products (final_score >= 80)
+```
+
+---
+
+### PHASE 2: Sourcing Queue (Human-in-the-Loop)
+
+**This is a dashboard UI, not an n8n workflow.**
+
+The admin sees the Sourcing Queue in the YOUSELL dashboard and can:
+
+```
+FOR EACH product in sourcing_queue WHERE queue_status = 'pending_review':
+
+DISPLAY:
+  → Product: title, image, platform, final_score (from discovery)
+  → Auto-Found Suppliers:
+    → [1] CJ US Warehouse: $6.50 buy + $3.00 ship = $9.50 landed | 3 days | Margin: 62%
+    → [2] CJ China:        $4.00 buy + $2.00 ship = $6.00 landed | 14 days | Margin: 71%
+    → [3] AliExpress:       $3.80 buy + $1.50 ship = $5.30 landed | 18 days | Margin: 74%
+    → [4] AliExpress Choice: $4.20 buy + $0 ship   = $4.20 landed | 10 days | Margin: 78%
+  → Delivery-Adjusted Rankings (penalty applied):
+    → [1] CJ US Warehouse: $11.00 effective → Adj. Margin: 62% ← RECOMMENDED
+    → [4] AliExpress Choice: $9.20 effective → Adj. Margin: 66%
+    → [2] CJ China:         $13.00 effective → Adj. Margin: 60%
+    → [3] AliExpress:        $14.30 effective → Adj. Margin: 52%
+  → AI Preliminary Verdict: STRONG (based on CJ US warehouse pricing)
+  → AI Notes: "High demand + good margins + fast shipping available"
+
+ADMIN ACTIONS:
+  → [CONFIRM] — Accept auto-recommended supplier and price
+      → Sets is_confirmed = true on selected product_cost record
+      → Triggers Phase 3 (W3C)
+
+  → [OVERRIDE PRICE] — Input manual price from a known supplier
+      → Admin enters: supplier_name, buy_price, shipping_cost, delivery_days
+      → Creates new product_cost record with source = 'manual_input'
+      → Triggers Phase 3 (W3C) with manual data
+
+  → [ADD LOCAL SUPPLIER] — Input a local/known supplier
+      → Admin enters: supplier_name, contact_info, buy_price, shipping_cost,
+                      delivery_days, moq, notes
+      → Stores in local_suppliers table (builds a supplier database over time)
+      → Creates new product_cost record with source = 'local_supplier'
+      → Triggers Phase 3 (W3C) with local supplier data
+
+  → [REJECT] — Not worth pursuing
+      → queue_status = 'rejected'
+      → product status = 'archived'
+      → No marketing spend triggered
+
+  → [SNOOZE] — Check again later
+      → queue_status = 'snoozed'
+      → snooze_until = admin-selected date
+      → Re-appears in queue after snooze period
+
+  → [BULK CONFIRM] — Confirm multiple products at once
+      → For batch operations when auto-recommendations look good
+      → Checkbox selection → Confirm All Selected
+```
+
+---
+
+### PHASE 3 WORKFLOWS: Confirmed Pricing (Recalculation)
+
+**W3C: Confirmed Cost Recalculation (NEW)**
+```
+Trigger: Admin confirms/overrides in Sourcing Queue (Supabase webhook or API call)
+→ Read confirmed product_cost record (is_confirmed = true)
+→ IF admin overrode price: recalculate all platform margins with new data
+→ IF admin added local supplier: recalculate with local supplier data
+→ IF admin confirmed auto-recommendation: use existing calculations
+→ Update product_costs with confirmed values
+→ Trigger W3D
+```
+
+**W3D: Final Profitability Analysis (Phase 3)**
+```
+Trigger: W3C completion
+→ Read CONFIRMED cost data + competitor prices
+→ IF highest margin < 15%: final_verdict = NOT_VIABLE
+  → Notify admin: "Confirmed prices result in sub-15% margins"
+  → Admin can: adjust price upward OR archive
+→ ELSE: Call Claude Haiku with confirmed data
+  → Input: confirmed costs, delivery time, competitor prices
+  → Output: final_verdict, recommended_price, marketing_budget,
+            best_platform, content_priority
+→ IF final_verdict == STRONG: Escalate to Claude Sonnet
+→ Store in profitability_analysis table (is_confirmed = true)
+→ IF final_verdict != NOT_VIABLE: NOW trigger W4 (Engine 3 — Content)
+→ THIS IS THE GATE: No marketing content created until human has confirmed pricing
+```
+
+---
+
+### Legacy W3 Reference (REPLACED)
+
+The old W3 was a single-pass fully-automated profitability analysis.
+It has been replaced by the three-phase model above:
+- W3 (Phase 1): Preliminary AI screening
+- W3B: Sourcing Queue placement
+- W3C (Phase 3): Confirmed cost recalculation
+- W3D (Phase 3): Final profitability analysis → gates Engine 3
 
 **W4: Content Script Generator**
 ```
@@ -524,26 +732,35 @@ Trigger: Cron daily (6 AM)
 
 ### New Workers (Beyond Existing 21)
 
-| # | Worker Name | Queue | Priority | Trigger | Downstream | Purpose |
-|---|-----------|-------|----------|---------|------------|---------|
-| W22 | supplier_lookup_worker | intelligence_jobs | P1 | product scored >= 60 | W23 | CJDropshipping + AliExpress lookup |
-| W23 | cost_calculator_worker | intelligence_jobs | P1 | W22 completion | W24 | Per-platform cost calculation |
-| W24 | profitability_analysis_worker | intelligence_jobs | P1 | W23 completion | W25 | AI viability assessment |
-| W25 | content_script_worker | content_jobs | P1 | W24 (verdict != NOT_VIABLE) | W26-W29 | AI script generation |
-| W26 | faceless_video_worker | content_jobs | P2 | W25 (priority HIGH/MEDIUM) | W30 | Blotato video creation |
-| W27 | avatar_presenter_worker | content_jobs | P2 | W25 (priority HIGH) | W30 | HeyGen avatar presenter reels |
-| W27B | product_broll_worker | content_jobs | P2 | W25 (priority HIGH, supplementary) | W30 | NanoBanana + VEO3 B-roll clips |
-| W28 | product_image_worker | content_jobs | P2 | W25 (all priorities) | W30 | Nano Banana image gen |
-| W29 | voiceover_worker | content_jobs | P2 | W25 (priority HIGH/MEDIUM) | W30 | ElevenLabs TTS |
-| W30 | content_assembly_worker | content_jobs | P1 | W26-W29 completion | W31 | Combine assets |
-| W31 | publishing_worker | publishing_jobs | P1 | W30 OR manual approval | W32 | Blotato multi-platform post |
-| W32 | performance_tracking_worker | analytics_jobs | P2 | Cron (6h) | W33 | Collect engagement data |
-| W33 | feedback_processor_worker | analytics_jobs | P2 | Cron (weekly) | scoring engine | Learn from performance |
-| W34 | budget_monitor_worker | system_jobs | P0 | Cron (daily) | alerts | Enforce spending limits |
-| W35 | price_optimization_worker | intelligence_jobs | P2 | competitor price change | W24 | Re-evaluate pricing |
+| # | Worker Name | Queue | Phase | Trigger | Downstream | Purpose |
+|---|-----------|-------|-------|---------|------------|---------|
+| | **PHASE 1: Auto-Discovery** | | | | | |
+| W22 | supplier_lookup_worker | intelligence_jobs | P1 | product scored >= 60 | W23 | CJ + AliExpress + delivery intelligence |
+| W23 | cost_calculator_worker | intelligence_jobs | P1 | W22 completion | W24 | Preliminary cost + delivery-weighted scoring |
+| W24 | profitability_screen_worker | intelligence_jobs | P1 | W23 completion | W24B | Preliminary AI viability screen |
+| W24B | sourcing_queue_worker | intelligence_jobs | P1→P2 | W24 completion | — | Places product in Sourcing Queue for review |
+| | **PHASE 2: Human Checkpoint** | | | | | |
+| — | (Dashboard UI — no worker) | — | P2 | Admin action | W24C | Admin confirms/overrides/adds local supplier |
+| | **PHASE 3: Confirmed Pricing** | | | | | |
+| W24C | confirmed_cost_worker | intelligence_jobs | P3 | Admin confirms in queue | W24D | Recalculates with confirmed prices |
+| W24D | final_profitability_worker | intelligence_jobs | P3 | W24C completion | W25 | Final AI verdict (gates Engine 3) |
+| | **ENGINE 3: Content & Marketing** | | | | | |
+| W25 | content_script_worker | content_jobs | E3 | W24D (confirmed, not NOT_VIABLE) | W26-W29 | AI script generation |
+| W26 | faceless_video_worker | content_jobs | E3 | W25 (priority HIGH/MEDIUM) | W30 | Blotato video creation |
+| W27 | avatar_presenter_worker | content_jobs | E3 | W25 (priority HIGH) | W30 | HeyGen avatar presenter reels |
+| W27B | product_broll_worker | content_jobs | E3 | W25 (priority HIGH, supplementary) | W30 | NanoBanana + VEO3 B-roll clips |
+| W28 | product_image_worker | content_jobs | E3 | W25 (all priorities) | W30 | Nano Banana image gen |
+| W29 | voiceover_worker | content_jobs | E3 | W25 (priority HIGH/MEDIUM) | W30 | ElevenLabs + OpenAI TTS |
+| W30 | content_assembly_worker | content_jobs | E3 | W26-W29 completion | W31 | Combine assets |
+| W31 | publishing_worker | publishing_jobs | E3 | W30 OR manual approval | W32 | Blotato multi-platform post |
+| | **FEEDBACK & MONITORING** | | | | | |
+| W32 | performance_tracking_worker | analytics_jobs | — | Cron (6h) | W33 | Collect engagement data |
+| W33 | feedback_processor_worker | analytics_jobs | — | Cron (weekly) | scoring engine | Learn from performance |
+| W34 | budget_monitor_worker | system_jobs | — | Cron (daily) | alerts | Enforce spending limits |
+| W35 | price_optimization_worker | intelligence_jobs | — | competitor price change | W24C | Re-evaluate pricing |
 
-**Total new workers: 14**
-**Total workers (existing 21 + new 14): 35**
+**Total new workers: 17** (was 14, added W24B, W24C, W24D)
+**Total workers (existing 21 + new 17): 38**
 
 ### New BullMQ Queues
 
@@ -561,32 +778,58 @@ Trigger: Cron daily (6 AM)
 ### New Tables
 
 ```sql
--- ENGINE 1: Purchasing
+-- ENGINE 1: Purchasing (Three-Phase Smart Sourcing)
+
+-- Stores ALL supplier options per product (multiple rows per product)
 CREATE TABLE product_costs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id UUID NOT NULL REFERENCES products(id),
-  supplier_platform TEXT NOT NULL, -- 'cjdropshipping', 'aliexpress', 'alibaba'
+
+  -- Supplier identification
+  supplier_platform TEXT NOT NULL, -- 'cjdropshipping', 'aliexpress', 'manual_input', 'local_supplier'
   supplier_product_id TEXT,
   supplier_url TEXT,
+  supplier_name TEXT,            -- human-readable name (esp. for manual/local)
+  supplier_source TEXT NOT NULL DEFAULT 'auto', -- 'auto', 'manual_input', 'local_supplier'
+
+  -- Pricing (auto-fetched or manually entered)
   buy_price DECIMAL(10,2),
   shipping_cost_us DECIMAL(10,2),
   shipping_cost_uk DECIMAL(10,2),
   shipping_cost_eu DECIMAL(10,2),
-  shipping_time_days INTEGER,
   moq INTEGER DEFAULT 1,
   supplier_rating DECIMAL(3,2),
   variants JSONB, -- [{color, size, price, stock}]
-  is_approximate BOOLEAN DEFAULT true,
-  confidence_level TEXT DEFAULT 'low', -- low, medium, high
-  -- Per-platform cost breakdown
+
+  -- Delivery intelligence
+  warehouse_location TEXT,       -- 'US-CA', 'US-NJ', 'US-TX', 'US-IN', 'CN', 'LOCAL', etc.
+  estimated_delivery_days INTEGER,
+  delivery_category TEXT,        -- 'local' (1-5d), 'fast' (6-10d), 'standard' (11-15d), 'slow' (16+d)
+  delivery_penalty_per_day DECIMAL(5,2) DEFAULT 0.50, -- configurable per product category
+  effective_cost DECIMAL(10,2),  -- buy + ship + (delivery_days × penalty)
+
+  -- Confirmation status (THREE-PHASE MODEL)
+  is_confirmed BOOLEAN DEFAULT false,     -- Phase 2: admin confirmed this price
+  is_auto_recommended BOOLEAN DEFAULT false, -- Phase 1: system's best pick
+  is_approximate BOOLEAN DEFAULT true,    -- false after manual input
+  confidence_level TEXT DEFAULT 'low',    -- low, medium, high
+  confirmed_by TEXT,                       -- admin user who confirmed
+  confirmed_at TIMESTAMPTZ,
+
+  -- Per-platform cost breakdown (calculated in W2/W3C)
   tiktok_landed_cost DECIMAL(10,2),
   tiktok_gross_margin DECIMAL(5,2),
+  tiktok_delivery_adjusted_margin DECIMAL(5,2),
   amazon_fba_landed_cost DECIMAL(10,2),
   amazon_fba_gross_margin DECIMAL(5,2),
+  amazon_fba_delivery_adjusted_margin DECIMAL(5,2),
   amazon_fbm_landed_cost DECIMAL(10,2),
   amazon_fbm_gross_margin DECIMAL(5,2),
+  amazon_fbm_delivery_adjusted_margin DECIMAL(5,2),
   shopify_landed_cost DECIMAL(10,2),
   shopify_gross_margin DECIMAL(5,2),
+  shopify_delivery_adjusted_margin DECIMAL(5,2),
+
   fetched_at TIMESTAMPTZ DEFAULT NOW(),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -594,20 +837,89 @@ CREATE TABLE product_costs (
 
 CREATE INDEX idx_product_costs_product ON product_costs(product_id);
 CREATE INDEX idx_product_costs_platform ON product_costs(supplier_platform);
+CREATE INDEX idx_product_costs_confirmed ON product_costs(is_confirmed);
+CREATE INDEX idx_product_costs_warehouse ON product_costs(warehouse_location);
+
+-- Sourcing Queue: human review checkpoint between Phase 1 and Phase 3
+CREATE TABLE sourcing_queue (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID NOT NULL REFERENCES products(id),
+
+  -- Auto-discovery results summary
+  auto_recommended_cost_id UUID REFERENCES product_costs(id),
+  supplier_options_count INTEGER DEFAULT 0,
+  best_auto_margin DECIMAL(5,2),
+  best_auto_delivery_days INTEGER,
+  best_auto_platform TEXT,
+
+  -- Preliminary AI verdict (from Phase 1)
+  preliminary_verdict TEXT, -- STRONG, MODERATE, WEAK, NOT_VIABLE
+  preliminary_notes TEXT,   -- AI reasoning summary
+
+  -- Queue management
+  queue_status TEXT DEFAULT 'pending_review',
+  -- 'pending_review', 'confirmed', 'overridden', 'local_supplier_added', 'rejected', 'snoozed'
+  snooze_until TIMESTAMPTZ,
+  priority_rank INTEGER,     -- auto-calculated: higher score = review first
+
+  -- Admin actions
+  confirmed_cost_id UUID REFERENCES product_costs(id), -- which option was confirmed
+  admin_notes TEXT,
+  reviewed_by TEXT,
+  reviewed_at TIMESTAMPTZ,
+
+  queued_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_sourcing_queue_status ON sourcing_queue(queue_status);
+CREATE INDEX idx_sourcing_queue_product ON sourcing_queue(product_id);
+CREATE INDEX idx_sourcing_queue_priority ON sourcing_queue(priority_rank DESC);
+
+-- Local Suppliers: builds a reusable supplier database over time
+CREATE TABLE local_suppliers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  supplier_name TEXT NOT NULL,
+  contact_info JSONB,          -- {email, phone, website, whatsapp}
+  location TEXT,               -- city/state/country
+  categories TEXT[],           -- ['electronics', 'fashion', 'beauty']
+  avg_delivery_days INTEGER,
+  reliability_rating DECIMAL(3,2), -- 0-5, updated over time
+  total_orders INTEGER DEFAULT 0,
+  successful_orders INTEGER DEFAULT 0,
+  notes TEXT,
+  is_active BOOLEAN DEFAULT true,
+  added_by TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_local_suppliers_active ON local_suppliers(is_active);
+CREATE INDEX idx_local_suppliers_categories ON local_suppliers USING GIN(categories);
 
 -- ENGINE 2: Profitability
 CREATE TABLE profitability_analysis (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id UUID NOT NULL REFERENCES products(id),
   product_cost_id UUID REFERENCES product_costs(id),
+
+  -- Phase tracking
+  is_confirmed BOOLEAN DEFAULT false,  -- false = Phase 1 preliminary, true = Phase 3 final
+  analysis_phase TEXT DEFAULT 'preliminary', -- 'preliminary', 'confirmed'
+
   -- Viability
   viability_verdict TEXT NOT NULL, -- STRONG, MODERATE, WEAK, NOT_VIABLE
   best_margin DECIMAL(5,2),
+  best_delivery_adjusted_margin DECIMAL(5,2),
   best_platform TEXT, -- tiktok_shop, amazon_fba, amazon_fbm, shopify
   -- Pricing
   recommended_price DECIMAL(10,2),
   competitor_median_price DECIMAL(10,2),
   price_strategy TEXT, -- undercut, match, premium
+  -- Delivery context
+  selected_supplier_delivery_days INTEGER,
+  delivery_category TEXT, -- local, fast, standard, slow
   -- Marketing
   marketing_budget DECIMAL(10,2) DEFAULT 0,
   content_priority TEXT, -- HIGH, MEDIUM, LOW, SKIP
@@ -627,6 +939,7 @@ CREATE TABLE profitability_analysis (
 CREATE INDEX idx_profitability_product ON profitability_analysis(product_id);
 CREATE INDEX idx_profitability_verdict ON profitability_analysis(viability_verdict);
 CREATE INDEX idx_profitability_priority ON profitability_analysis(content_priority);
+CREATE INDEX idx_profitability_confirmed ON profitability_analysis(is_confirmed);
 
 -- ENGINE 3: Content
 CREATE TABLE content_queue (
