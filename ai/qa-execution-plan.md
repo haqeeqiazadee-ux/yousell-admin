@@ -170,10 +170,10 @@ Read these files to recover:
 
 | # | Task | Files to Read | Status |
 |---|------|---------------|--------|
-| 8.1 | Review Influencer provider: Instagram scraper? Tier classification? CPP estimation? Fallback chain? | `src/lib/providers/influencer/index.ts` | ⬜ |
-| 8.2 | Review Supplier provider: Alibaba scraper? MOQ/shipping parsing? CJ Dropshipping fallback? | `src/lib/providers/supplier/index.ts` | ⬜ |
-| 8.3 | Review Digital provider: Gumroad scraper? Category mapping? Price extraction? | `src/lib/providers/digital/index.ts` | ⬜ |
-| 8.4 | Review provider index: Does the main provider index correctly route to sub-providers? Error isolation? | `src/lib/providers/index.ts` | ⬜ |
+| 8.1 | Review Influencer provider: Instagram scraper? Tier classification? CPP estimation? Fallback chain? | `src/lib/providers/influencer/index.ts` | ✅ 2026-03-12 |
+| 8.2 | Review Supplier provider: Alibaba scraper? MOQ/shipping parsing? CJ Dropshipping fallback? | `src/lib/providers/supplier/index.ts` | ✅ 2026-03-12 |
+| 8.3 | Review Digital provider: Gumroad scraper? Category mapping? Price extraction? | `src/lib/providers/digital/index.ts` | ✅ 2026-03-12 |
+| 8.4 | Review provider index: Does the main provider index correctly route to sub-providers? Error isolation? | `src/lib/providers/index.ts` | ✅ 2026-03-12 |
 
 ---
 
@@ -183,9 +183,9 @@ Read these files to recover:
 
 | # | Task | Files to Read | Status |
 |---|------|---------------|--------|
-| 9.1 | Review Affiliate provider: Are 10 AI + 5 physical programs correct? Commission rates accurate? Cookie durations? | `src/lib/providers/affiliate/index.ts` | ⬜ |
-| 9.2 | Review caching layer: 24h TTL implementation? Cache key strategy? Stale data handling? | `src/lib/providers/cache.ts` | ⬜ |
-| 9.3 | Review provider types: Are TypeScript types consistent across all providers? Any missing fields? | `src/lib/providers/types.ts` | ⬜ |
+| 9.1 | Review Affiliate provider: Are 10 AI + 5 physical programs correct? Commission rates accurate? Cookie durations? | `src/lib/providers/affiliate/index.ts` | ✅ 2026-03-12 |
+| 9.2 | Review caching layer: 24h TTL implementation? Cache key strategy? Stale data handling? | `src/lib/providers/cache.ts` | ✅ 2026-03-12 |
+| 9.3 | Review provider types: Are TypeScript types consistent across all providers? Any missing fields? | `src/lib/providers/types.ts` | ✅ 2026-03-12 |
 
 ---
 

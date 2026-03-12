@@ -28,6 +28,7 @@
 | BUG-005 | LOW | Scan API | Misleading code comment about jobId param. | S01 | Reclassified (LOW) |
 | BUG-037 | LOW | Scoring Engine | Legacy `overall_score` in frontend composite uses different formula (60/40) vs `final_score` (40/35/25). Risk if ever used for DB writes. | S05 | Open |
 | BUG-039 | LOW | TikTok Provider | Frontend TikTok provider has no fallback when Apify not configured, even if TIKTOK_API_KEY is set. Backend has official API fallback but frontend doesn't. | S06 | Open |
+| BUG-043 | LOW | Influencer Provider | `getInfluencerConfig()` returns `isConfigured: true` for "ainfluencer" but `searchInfluencers()` requires APIFY_API_TOKEN. Same pattern as BUG-041. | S08 | Open |
 | BUG-041 | LOW | Trends Provider | `getTrendsConfig()` returns `isConfigured: true` (pytrends comment) but `searchTrends()` requires APIFY_API_TOKEN. Misleading status. | S07 | Open |
 | BUG-031 | LOW | Backend Providers | `fetchTrends` silent empty catch block. | S02 | Open |
 
@@ -48,5 +49,5 @@
 | CRITICAL | 0 | 0 | 0 |
 | HIGH | 2 | 0 | 2 |
 | MEDIUM | 11 | 0 | 11 |
-| LOW | 9 | 0 | 9 |
-| **Total** | **22** | **0** | **22** |
+| LOW | 10 | 0 | 10 |
+| **Total** | **23** | **0** | **23** |

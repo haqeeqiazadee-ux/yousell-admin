@@ -216,3 +216,23 @@
 **Bugs Found:** 2 new (BUG-041 LOW, BUG-042 MEDIUM)
 
 **Next:** Sprint S08 — Integration: Influencer + Supplier + Digital
+
+---
+
+## Session 8 — 2026-03-12 (Sprint S08 + S09)
+
+**Sprint:** S08 + S09 — Remaining Providers + Affiliates + Caching
+**Tasks Completed:** 8.1-8.4, 9.1-9.3 (all 7 tasks)
+
+**Key Findings:**
+- Influencer provider: Instagram scraper, tier/CPP correct. BUG-043: same misleading isConfigured pattern
+- Supplier provider: Alibaba scraper with MOQ/shipping/certification parsing — correct
+- Digital provider: Gumroad scraper — correct
+- Affiliate programs: 10 AI + 5 physical hardcoded with commission rates — correct
+- Cache: 24h TTL via timestamp comparison, uses supabaseAdmin (service role) — correct
+- Provider types: Clean and consistent
+- Cache import of supabaseAdmin verified working correctly
+
+**Bugs Found:** 1 new (BUG-043 LOW)
+
+**Next:** Sprint S10 — Security: Auth & Access Control
