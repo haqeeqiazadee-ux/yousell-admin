@@ -161,3 +161,22 @@
 **Bugs Found:** 2 new (BUG-035 HIGH, BUG-036 MEDIUM)
 
 **Next:** Sprint S05 — Scoring Engine: Classification
+
+---
+
+## Session 5 — 2026-03-12 (Sprint S05)
+
+**Sprint:** S05 — Scoring Engine: Classification
+**Tasks Completed:** 5.1, 5.2, 5.3, 5.4, 5.5 (all 5 tasks)
+
+**Key Findings:**
+- Tier boundaries (HOT/WARM/WATCH/COLD) identical between frontend and backend
+- Trend stages (exploding/rising/emerging/saturated) consistent
+- AI insight tiers correctly defined (Sonnet>=75, Haiku>=60, None<60)
+- score_overall backward compat correctly set in all write paths
+- Viral signals table correctly stores all 7 fields
+- BUG-037 (LOW): Legacy overall_score uses wrong formula, risk if used for DB writes
+
+**Bugs Found:** 1 new (BUG-037 LOW)
+
+**Next:** Sprint S06 — Integration: TikTok + Amazon Providers

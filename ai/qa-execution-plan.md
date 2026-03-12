@@ -130,11 +130,11 @@ Read these files to recover:
 
 | # | Task | Files to Read | Status |
 |---|------|---------------|--------|
-| 5.1 | Verify tier boundaries: HOT>=80, WARM>=60, WATCH>=40, COLD<40. Test boundary values (79, 80, 59, 60, 39, 40). | Scoring files | ⬜ |
-| 5.2 | Verify trend stage from viral_score: exploding>=80, rising>=60, emerging>=40, saturated<40. | Scoring files | ⬜ |
-| 5.3 | Verify AI insight tier: Sonnet>=75, Haiku>=60, None<60. | Scoring files | ⬜ |
-| 5.4 | Verify score_overall backward compatibility field is set correctly alongside final_score. | `src/app/api/admin/scoring/route.ts` | ⬜ |
-| 5.5 | Verify viral_signals table storage: Are all 7 signal fields stored correctly when viralInputs provided? | `src/app/api/admin/scoring/route.ts` | ⬜ |
+| 5.1 | Verify tier boundaries: HOT>=80, WARM>=60, WATCH>=40, COLD<40. Test boundary values (79, 80, 59, 60, 39, 40). | Scoring files | ✅ 2026-03-12 |
+| 5.2 | Verify trend stage from viral_score: exploding>=80, rising>=60, emerging>=40, saturated<40. | Scoring files | ✅ 2026-03-12 |
+| 5.3 | Verify AI insight tier: Sonnet>=75, Haiku>=60, None<60. | Scoring files | ✅ 2026-03-12 |
+| 5.4 | Verify score_overall backward compatibility field is set correctly alongside final_score. | `src/app/api/admin/scoring/route.ts` | ✅ 2026-03-12 |
+| 5.5 | Verify viral_signals table storage: Are all 7 signal fields stored correctly when viralInputs provided? | `src/app/api/admin/scoring/route.ts` | ✅ 2026-03-12 |
 
 ---
 

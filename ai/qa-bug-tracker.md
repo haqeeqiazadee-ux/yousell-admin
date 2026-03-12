@@ -23,6 +23,7 @@
 | BUG-024 | LOW | Types | `viral_signals` and `imported_files` tables missing type definitions. | S01 | Open |
 | BUG-025 | LOW | Types | `Database` type only maps 2 of 13+ tables. | S01 | Open |
 | BUG-005 | LOW | Scan API | Misleading code comment about jobId param. | S01 | Reclassified (LOW) |
+| BUG-037 | LOW | Scoring Engine | Legacy `overall_score` in frontend composite uses different formula (60/40) vs `final_score` (40/35/25). Risk if ever used for DB writes. | S05 | Open |
 | BUG-031 | LOW | Backend Providers | `fetchTrends` silent empty catch block. | S02 | Open |
 
 ---
@@ -42,5 +43,5 @@
 | CRITICAL | 0 | 0 | 0 |
 | HIGH | 2 | 0 | 2 |
 | MEDIUM | 8 | 0 | 8 |
-| LOW | 6 | 0 | 6 |
-| **Total** | **16** | **0** | **16** |
+| LOW | 7 | 0 | 7 |
+| **Total** | **17** | **0** | **17** |
