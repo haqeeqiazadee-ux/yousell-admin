@@ -4377,6 +4377,781 @@ All ad platform APIs are **FREE** to access. Costs are only the ad spend itself,
 
 ---
 
+# PART 10: MANUAL INPUT, BREAK-EVEN ANALYSIS, MULTI-REGION & SCRAPING STRATEGY
+
+---
+
+## 10.1 — Manual Product Input & Import
+
+### 10.1.1 — The Need
+
+The automated discovery pipeline finds products via scrapers. But many high-value opportunities come from human knowledge:
+- Admin spots a product at a trade show or from a supplier catalog
+- A supplier sends a product list via email/spreadsheet
+- Admin finds a product on a platform the scrapers don't cover yet
+- Historical products need to be imported from another system
+
+The platform needs first-class manual product entry alongside automated discovery.
+
+### 10.1.2 — Single Product Entry
+
+```
+Route: /admin/products/new
+
+Form Fields:
+  ── REQUIRED ──
+  Title: [text]
+  Category: [dropdown: digital_ai_saas | branded_physical | white_label_physical | physical_affiliate]
+  Platform: [dropdown: tiktok | amazon | shopify | pinterest | digital | ai_affiliate | physical_affiliate | manual]
+
+  ── PRICING (optional — can be added later in Sourcing Queue) ──
+  Selling Price: [number] + [currency: USD | GBP]
+  Buy Price: [number] (if known)
+  Shipping Cost: [number] (if known)
+  Supplier: [searchable dropdown from local_suppliers + "Add New"]
+
+  ── DETAILS ──
+  Description: [textarea]
+  External URL: [url] (product listing link)
+  Image URL: [url] or [file upload → Supabase Storage]
+  Tags: [tag input]
+  Brand Name: [text] (triggers brand gating check if filled)
+
+  ── OPTIONAL SIGNALS ──
+  Estimated Sales/Month: [number]
+  Rating: [number 1-5]
+  Review Count: [number]
+  Trend Stage: [dropdown: emerging | rising | exploding | saturated]
+
+On Submit:
+  1. Create product record with platform = source platform OR 'manual'
+  2. If buy_price provided → create product_costs record (supplier_source = 'manual_input')
+  3. If brand_name provided → trigger W1B (brand gating check)
+  4. Run scoring engine on available signals
+  5. If enough data: auto-place in Sourcing Queue
+  6. If minimal data: status = 'draft', admin enriches later
+```
+
+### 10.1.3 — Bulk CSV/Spreadsheet Import
+
+```
+Route: /admin/products/import
+
+Supported Formats: CSV, XLSX, JSON
+
+Step 1: Upload File
+  → Admin uploads spreadsheet
+  → System parses and previews first 10 rows
+
+Step 2: Column Mapping
+  → Auto-detect columns where possible
+  → Admin maps columns to fields:
+    Column A "Product Name" → title
+    Column B "Price" → price
+    Column C "Supplier Cost" → buy_price (→ product_costs)
+    Column D "Source URL" → external_url
+    Column E "Category" → product_category
+    ...
+  → Show unmatched columns (can be stored in metadata JSONB)
+
+Step 3: Validation Preview
+  → For each row, show:
+    ✓ Valid | ⚠ Warning (missing optional fields) | ✗ Error (missing required fields)
+  → Duplicate detection: match on (title + platform) or external_url
+    → "Product X already exists — Skip / Update / Create Duplicate"
+
+Step 4: Import Configuration
+  → [x] Run scoring engine on imported products
+  → [x] Auto-place in Sourcing Queue if pricing provided
+  → [x] Trigger brand gating check for branded products
+  → [ ] Auto-match to existing suppliers (see §10.1.5)
+  → Region: [USA | UK]
+
+Step 5: Execute Import
+  → Batch insert via Supabase bulk upsert
+  → Progress bar: "Importing 247 products... 89/247"
+  → Summary: "Imported 240, Skipped 5 duplicates, 2 errors"
+```
+
+### 10.1.4 — Manual Supplier Database
+
+The existing `local_suppliers` table stores supplier contacts. Extend it to be a full supplier management system:
+
+```sql
+-- Extend local_suppliers for richer data
+ALTER TABLE local_suppliers ADD COLUMN website TEXT;
+ALTER TABLE local_suppliers ADD COLUMN region TEXT DEFAULT 'usa';  -- 'usa', 'uk', 'global'
+ALTER TABLE local_suppliers ADD COLUMN specialties TEXT[];  -- ['electronics', 'beauty', 'kitchen']
+ALTER TABLE local_suppliers ADD COLUMN min_order_value DECIMAL(10,2);
+ALTER TABLE local_suppliers ADD COLUMN payment_terms TEXT;  -- 'net30', 'prepaid', 'cod'
+ALTER TABLE local_suppliers ADD COLUMN lead_time_days INTEGER;
+ALTER TABLE local_suppliers ADD COLUMN catalog_url TEXT;
+ALTER TABLE local_suppliers ADD COLUMN catalog_import_at TIMESTAMPTZ;  -- last catalog sync
+```
+
+**Manual Supplier Entry:**
+```
+Route: /admin/suppliers/new
+
+Fields:
+  Supplier Name, Contact (email/phone/whatsapp), Location, Website
+  Categories/Specialties, Avg Delivery Days, MOQ, Payment Terms
+  Region: [USA | UK | Global]
+  Notes
+
+On Submit → local_suppliers record created
+```
+
+**Supplier Catalog Import:**
+```
+Route: /admin/suppliers/[id]/import-catalog
+
+Admin uploads supplier's product catalog (CSV/XLSX).
+System maps columns and imports products linked to that supplier.
+Each product gets a product_costs record with:
+  supplier_source = 'local_supplier'
+  supplier_name = supplier.name
+  is_confirmed = true (admin provided the price)
+  confidence_level = 'high'
+```
+
+### 10.1.5 — Automatic Supplier-Product Matching
+
+When new products enter the system (from any source), the platform can auto-match them to known suppliers:
+
+```
+Worker: W46_supplier_matcher
+Queue: intelligence_jobs
+Trigger:
+  - New product imported (manual or automated)
+  - New supplier catalog imported
+  - Admin clicks "Find Suppliers" on a product
+  - Scheduled: weekly for unmatched products
+
+Logic:
+  1. For each unmatched product:
+     a. Search local_suppliers by category overlap
+     b. For matching suppliers with catalog data:
+        → Fuzzy title match against supplier catalog products
+        → Match by category + price range proximity
+     c. For matching suppliers without catalog:
+        → Flag as "potential match — admin verify"
+
+  2. Search external supplier APIs:
+     a. CJDropshipping API → search by product title
+     b. AliExpress API → search by product title
+     c. Compare found prices with local supplier prices
+
+  3. Create product_costs records for each match:
+     → Local supplier matches: is_confirmed = true (trusted source)
+     → API matches: is_confirmed = false (needs admin review)
+     → Rank all options by effective_cost (delivery-weighted)
+
+  4. Auto-link: If local supplier price beats API price by >10%:
+     → Auto-recommend local supplier
+     → Flag in Sourcing Queue: "Local supplier [X] offers better price"
+
+Output:
+  → product_costs records created per match
+  → Sourcing Queue updated with supplier options
+  → Admin notified of auto-matches
+```
+
+### 10.1.6 — Import Sources Summary
+
+| Source | Method | Enters Pipeline At | Auto-Score? | Auto-Source? |
+|--------|--------|-------------------|-------------|-------------|
+| Scrapers (existing) | Automated | Discovery → full pipeline | Yes | Yes |
+| Single product form | Manual | Draft or Sourcing Queue | If signals provided | Yes (W22 + W46) |
+| CSV/XLSX import | Bulk manual | Draft or Sourcing Queue | If signals provided | Yes (W46) |
+| Supplier catalog import | Bulk manual | Sourcing Queue (pre-priced) | Yes | Pre-matched |
+| API webhook | Automated | Discovery → full pipeline | Yes | Yes |
+
+---
+
+## 10.2 — Break-Even Analysis Engine
+
+### 10.2.1 — The Need
+
+Before spending money on marketing, the admin needs to know: "How many units do I need to sell to break even?" — and this answer is different for EVERY combination of:
+- Selling platform (TikTok Shop vs Amazon FBA vs Shopify)
+- Marketing channel (organic vs TikTok Spark vs Meta Ads vs influencer)
+- Supplier (CJ US warehouse vs AliExpress vs local supplier)
+- Region (USA vs UK — different fees, shipping, taxes)
+
+### 10.2.2 — Break-Even Formula
+
+```
+For a given product + platform + channel + supplier + region:
+
+REVENUE PER UNIT
+  revenue = selling_price
+
+COST PER UNIT
+  cogs = buy_price + shipping_cost
+  platform_fee = selling_price × platform_fee_rate
+  payment_processing = (selling_price × processing_rate) + fixed_fee
+  fulfillment = fulfillment_cost_per_unit  (FBA fee, or shipping to customer)
+  returns = selling_price × estimated_return_rate × return_cost_multiplier
+  vat_tax = selling_price × tax_rate  (UK: 20% VAT, USA: varies)
+
+  total_cost_per_unit = cogs + platform_fee + payment_processing + fulfillment + returns + vat_tax
+
+PROFIT PER UNIT
+  profit_per_unit = revenue - total_cost_per_unit
+
+FIXED COSTS (one-time per product launch)
+  content_production_cost = cost of all content pieces (from marketing plan)
+  ad_testing_budget = initial testing spend across selected channels
+  influencer_cost = total influencer CPA budget
+  listing_setup = photography, copywriting, A+ content (Amazon)
+
+  total_fixed_costs = content_production + ad_testing + influencer_cost + listing_setup
+
+BREAK-EVEN
+  break_even_units = CEIL(total_fixed_costs / profit_per_unit)
+  break_even_revenue = break_even_units × selling_price
+  break_even_days = break_even_units / estimated_daily_sales
+
+ONGOING MARKETING COST (post break-even)
+  If using paid ads:
+    cpa = channel_avg_cpa  (cost per acquisition from channel_performance data)
+    marketing_cost_per_unit = cpa
+    adjusted_profit = profit_per_unit - marketing_cost_per_unit
+    adjusted_break_even = CEIL(total_fixed_costs / adjusted_profit)
+
+  If using organic only:
+    marketing_cost_per_unit = 0
+    break_even = total_fixed_costs / profit_per_unit
+```
+
+### 10.2.3 — Platform Fee Reference
+
+```
+PLATFORM FEES (USA):
+  TikTok Shop:     commission 2-8% (category dependent) + payment 2.9%
+  Amazon FBA:       referral 8-15% + FBA fee ($3-6/unit) + storage
+  Amazon FBM:       referral 8-15% + shipping to customer
+  Shopify:          0% marketplace fee + Shopify Payments 2.9% + $0.30
+  Pinterest:        N/A (drives to Shopify/Amazon)
+
+PLATFORM FEES (UK):
+  TikTok Shop UK:  commission 2-8% + payment ~2.5%
+  Amazon FBA UK:   referral 7-15% + FBA fee (£2-5/unit) + storage
+  Amazon FBM UK:   referral 7-15% + shipping
+  Shopify UK:      0% + Shopify Payments 2.2% + £0.20
+  VAT:             20% on all UK sales (must be registered)
+
+PAYMENT PROCESSING:
+  Stripe:          USA: 2.9% + $0.30  |  UK: 1.5% + £0.20 (EU cards), 2.5% + £0.20 (non-EU)
+  PayPal:          USA: 2.99% + $0.49  |  UK: 2.9% + £0.30
+```
+
+### 10.2.4 — Break-Even Scenarios Matrix
+
+For each product, the system generates a matrix of scenarios:
+
+```
+Product: LED Sunset Lamp
+Selling Price: $24.99 (USA) / £19.99 (UK)
+Buy Price: $6.50 (CJ US) / $4.00 (CJ China) / £5.00 (UK local)
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ BREAK-EVEN SCENARIOS                                                        │
+├───────────┬──────────┬────────────────┬──────────┬──────────┬──────────────┤
+│ Platform  │ Supplier │ Marketing      │ Profit/  │ Fixed    │ Break-Even   │
+│           │          │                │ Unit     │ Costs    │ Units / Days │
+├───────────┼──────────┼────────────────┼──────────┼──────────┼──────────────┤
+│ TikTok US │ CJ US    │ Organic only   │ $12.41   │ $5.50    │ 1 / <1 day  │
+│ TikTok US │ CJ US    │ Spark Ads      │ $9.41    │ $55.50   │ 6 / 3 days  │
+│ TikTok US │ CJ US    │ Influencer     │ $7.41    │ $20.50   │ 3 / 2 days  │
+│ TikTok US │ CJ China │ Organic only   │ $14.91   │ $5.50    │ 1 / <1 day  │
+│ Amazon US │ CJ US    │ PPC            │ $6.23    │ $75.50   │ 13 / 7 days │
+│ Amazon US │ CJ China │ PPC            │ $8.73    │ $75.50   │ 9 / 5 days  │
+│ Shopify US│ CJ US    │ Meta Ads       │ $10.91   │ $105.50  │ 10 / 5 days │
+│ Shopify US│ CJ US    │ Organic+Email  │ $12.41   │ $5.50    │ 1 / <1 day  │
+│ TikTok UK │ UK Local │ Organic only   │ £8.21    │ £4.50    │ 1 / <1 day  │
+│ TikTok UK │ UK Local │ Spark Ads      │ £5.21    │ £44.50   │ 9 / 5 days  │
+│ Amazon UK │ UK Local │ PPC            │ £3.43    │ £64.50   │ 19 / 10 days│
+│ Shopify UK│ UK Local │ Meta Ads       │ £6.21    │ £84.50   │ 14 / 7 days │
+├───────────┴──────────┴────────────────┴──────────┴──────────┴──────────────┤
+│ 🏆 BEST SCENARIO: TikTok US + CJ China + Organic = 1 unit break-even     │
+│ ⚡ BEST PAID: TikTok US + CJ US + Influencer = 3 units / 2 days          │
+│ ⚠️ WORST: Amazon UK + UK Local + PPC = 19 units / 10 days                │
+│                                                                             │
+│ RECOMMENDATION: Start with TikTok organic, add Spark Ads after 5 sales    │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 10.2.5 — Database Schema
+
+```sql
+CREATE TABLE break_even_scenarios (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID NOT NULL REFERENCES products(id),
+  product_cost_id UUID REFERENCES product_costs(id),
+  region TEXT NOT NULL CHECK (region IN ('usa', 'uk')),
+  -- Scenario parameters
+  selling_platform TEXT NOT NULL,   -- 'tiktok_shop', 'amazon_fba', 'amazon_fbm', 'shopify'
+  supplier_name TEXT,
+  marketing_channel TEXT NOT NULL,  -- 'organic', 'tiktok_spark', 'meta_ads', 'google_ads', 'influencer', 'combined'
+  -- Revenue
+  selling_price DECIMAL(10,2) NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'USD',
+  -- Per-unit costs
+  cogs DECIMAL(10,2),              -- buy_price + shipping
+  platform_fee DECIMAL(10,2),
+  payment_processing DECIMAL(10,2),
+  fulfillment_cost DECIMAL(10,2),
+  return_cost DECIMAL(10,2),
+  tax_vat DECIMAL(10,2),
+  total_cost_per_unit DECIMAL(10,2),
+  profit_per_unit DECIMAL(10,2),
+  -- Fixed costs
+  content_production DECIMAL(10,2),
+  ad_testing_budget DECIMAL(10,2),
+  influencer_budget DECIMAL(10,2),
+  listing_setup DECIMAL(10,2),
+  total_fixed_costs DECIMAL(10,2),
+  -- Break-even results
+  break_even_units INTEGER,
+  break_even_revenue DECIMAL(10,2),
+  break_even_days INTEGER,
+  -- With ongoing marketing
+  marketing_cpa DECIMAL(10,2),
+  adjusted_profit_per_unit DECIMAL(10,2),
+  adjusted_break_even_units INTEGER,
+  -- Meta
+  is_recommended BOOLEAN DEFAULT false,
+  recommendation_reason TEXT,
+  calculated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_breakeven_product ON break_even_scenarios(product_id);
+CREATE INDEX idx_breakeven_region ON break_even_scenarios(region);
+CREATE INDEX idx_breakeven_recommended ON break_even_scenarios(is_recommended) WHERE is_recommended = true;
+```
+
+### 10.2.6 — Worker
+
+```
+Worker: W47_breakeven_calculator
+Queue: intelligence_jobs
+Trigger:
+  - W24C completion (confirmed pricing)
+  - W24D completion (profitability verdict includes platform recommendation)
+  - W25 completion (marketing plan includes channel + budget data)
+  - Admin requests recalculation
+  - Supplier price changes
+
+Logic:
+  1. Read: product, confirmed product_costs, profitability_analysis, marketing_plan (if exists)
+  2. For EACH combination of (region × platform × supplier × channel):
+     → Calculate full break-even using formula (§10.2.2)
+     → Use actual channel CPA from channel_performance if available
+     → Use default platform fee rates per region
+  3. Rank all scenarios by break_even_units ASC
+  4. Mark top scenario as is_recommended = true
+  5. Store all scenarios in break_even_scenarios table
+  6. Include best scenario summary in marketing_plan.plan JSONB
+  7. Surface in Sourcing Queue + Marketing Approval dashboards
+```
+
+### 10.2.7 — Dashboard Integration
+
+**Sourcing Queue**: Show best break-even scenario next to each product:
+"Break-even: 3 units / 2 days (TikTok + CJ US + Influencer)"
+
+**Marketing Approval**: Show full scenarios matrix. Admin can see which channel/platform combo is most efficient before approving spend.
+
+**Product Detail Page (Row 9 extension)**: Add "Break-Even Analysis" expandable section showing full matrix.
+
+---
+
+## 10.3 — Multi-Region Architecture (USA + UK)
+
+### 10.3.1 — Design Principle: Region Column, Not Separate Databases
+
+Running two separate databases would double infrastructure costs and create synchronization nightmares. Instead, add a `region` column to ALL region-sensitive tables and filter in queries.
+
+**Benefits:**
+- Single Supabase instance ($25/mo, not $50)
+- Single codebase, single deployment
+- Shared learning system (lessons from one region inform the other)
+- Products discovered in one region can be evaluated for the other
+- Admin sees both regions or filters to one
+
+### 10.3.2 — Region-Sensitive Tables
+
+Every table that contains region-specific data gets a `region` column:
+
+```sql
+-- Add region to all relevant tables
+ALTER TABLE products ADD COLUMN region TEXT NOT NULL DEFAULT 'usa' CHECK (region IN ('usa', 'uk'));
+ALTER TABLE product_costs ADD COLUMN region TEXT NOT NULL DEFAULT 'usa' CHECK (region IN ('usa', 'uk'));
+ALTER TABLE sourcing_queue ADD COLUMN region TEXT NOT NULL DEFAULT 'usa';
+ALTER TABLE local_suppliers ADD COLUMN region TEXT DEFAULT 'usa';  -- already added in §10.1.4
+ALTER TABLE profitability_analysis ADD COLUMN region TEXT NOT NULL DEFAULT 'usa';
+ALTER TABLE marketing_plans ADD COLUMN region TEXT NOT NULL DEFAULT 'usa';
+ALTER TABLE content_queue ADD COLUMN region TEXT NOT NULL DEFAULT 'usa';
+ALTER TABLE published_content ADD COLUMN region TEXT NOT NULL DEFAULT 'usa';
+ALTER TABLE content_performance ADD COLUMN region TEXT NOT NULL DEFAULT 'usa';
+ALTER TABLE ad_accounts ADD COLUMN region TEXT NOT NULL DEFAULT 'usa';
+ALTER TABLE ad_campaigns ADD COLUMN region TEXT NOT NULL DEFAULT 'usa';
+ALTER TABLE channel_performance ADD COLUMN region TEXT NOT NULL DEFAULT 'usa';
+ALTER TABLE channel_recommendations ADD COLUMN region TEXT NOT NULL DEFAULT 'usa';
+ALTER TABLE break_even_scenarios ADD COLUMN region TEXT NOT NULL DEFAULT 'usa';  -- already has it
+ALTER TABLE affiliate_programs ADD COLUMN region TEXT DEFAULT 'global';
+ALTER TABLE affiliate_links ADD COLUMN region TEXT NOT NULL DEFAULT 'usa';
+ALTER TABLE budget_tracking ADD COLUMN region TEXT NOT NULL DEFAULT 'usa';
+
+-- Indexes for region filtering
+CREATE INDEX idx_products_region ON products(region);
+CREATE INDEX idx_product_costs_region ON product_costs(region);
+CREATE INDEX idx_sourcing_queue_region ON sourcing_queue(region);
+CREATE INDEX idx_marketing_plans_region ON marketing_plans(region);
+CREATE INDEX idx_ad_campaigns_region ON ad_campaigns(region);
+```
+
+### 10.3.3 — Region-INDEPENDENT Tables (Shared)
+
+These tables are global — the data is useful across regions:
+
+| Table | Why Shared |
+|-------|-----------|
+| `brand_gating` | Brand gating status is global (Nike is Nike everywhere) |
+| `memory_lessons` | Lessons learned in one region may apply to the other |
+| `memory_aggregates` | But with region dimension for region-specific patterns |
+| `prediction_log` | Global prediction tracking (has product_platform dimension) |
+| `score_recalibrations` | Weight adjustments can be global or per-region |
+| `template_performance` | Content templates work across regions |
+| `scoring_adjustments` | May be global or region-specific |
+
+### 10.3.4 — Dashboard: Region Switcher
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  YOUSELL Admin Dashboard                                │
+│  ┌──────┐ ┌──────┐ ┌──────┐                           │
+│  │ 🇺🇸 USA │ │ 🇬🇧 UK  │ │ ALL  │  ← Region selector   │
+│  └──┬───┘ └──────┘ └──────┘                           │
+│     ▼                                                   │
+│  Everything below filters to selected region:           │
+│  - Product list                                         │
+│  - Sourcing Queue                                       │
+│  - Marketing Plans                                      │
+│  - Content Studio                                       │
+│  - Analytics                                            │
+│  - Ad Accounts                                          │
+│  - Budget Tracking                                      │
+│                                                         │
+│  "ALL" shows combined view with region column visible   │
+└─────────────────────────────────────────────────────────┘
+```
+
+Implementation: A React context `RegionContext` stores selected region. All Supabase queries filter by region. All API routes accept `?region=usa|uk|all` parameter.
+
+```typescript
+// src/lib/region/context.ts
+export type Region = 'usa' | 'uk' | 'all';
+
+// Every API call includes region filter
+const { data } = await supabase
+  .from('products')
+  .select('*')
+  .eq(region !== 'all' ? 'region' : undefined, region)  // filter if not 'all'
+  .order('urs', { ascending: false });
+```
+
+### 10.3.5 — Region-Specific Configuration
+
+```typescript
+export const REGION_CONFIG = {
+  usa: {
+    currency: 'USD',
+    currencySymbol: '$',
+    locale: 'en-US',
+    vatRate: 0,  // varies by state, not included in base calc
+    defaultShippingDays: { local: 3, standard: 7, international: 14 },
+    platforms: {
+      tiktok_shop: { feeRate: 0.05, paymentRate: 0.029 },
+      amazon_fba: { referralRate: 0.15, avgFbaFee: 4.50 },
+      amazon_fbm: { referralRate: 0.15 },
+      shopify: { feeRate: 0, paymentRate: 0.029, fixedFee: 0.30 },
+    },
+    suppliers: {
+      cj_us_warehouse: { avgDelivery: 3, available: true },
+      cj_china: { avgDelivery: 14, available: true },
+      aliexpress_choice: { avgDelivery: 10, available: true },
+      aliexpress_standard: { avgDelivery: 20, available: true },
+    },
+    adPlatforms: ['meta', 'tiktok', 'google', 'pinterest', 'reddit'],
+  },
+  uk: {
+    currency: 'GBP',
+    currencySymbol: '£',
+    locale: 'en-GB',
+    vatRate: 0.20,  // 20% VAT on all sales
+    defaultShippingDays: { local: 2, standard: 5, international: 14 },
+    platforms: {
+      tiktok_shop: { feeRate: 0.05, paymentRate: 0.025 },
+      amazon_fba: { referralRate: 0.15, avgFbaFee: 3.50 },  // in GBP
+      amazon_fbm: { referralRate: 0.15 },
+      shopify: { feeRate: 0, paymentRate: 0.022, fixedFee: 0.20 },
+    },
+    suppliers: {
+      cj_uk_warehouse: { avgDelivery: 3, available: false },  // check availability
+      cj_china: { avgDelivery: 14, available: true },
+      aliexpress_choice: { avgDelivery: 12, available: true },
+      local_uk: { avgDelivery: 2, available: true },
+    },
+    adPlatforms: ['meta', 'tiktok', 'google', 'pinterest'],
+  },
+} as const;
+```
+
+### 10.3.6 — Cross-Region Product Evaluation
+
+A product discovered for USA can be evaluated for UK viability and vice versa:
+
+```
+Worker: W48_cross_region_evaluator
+Queue: intelligence_jobs
+Trigger: Product confirmed in one region with verdict STRONG
+
+Logic:
+  1. Product confirmed STRONG in USA → check UK viability:
+     a. Can the supplier ship to UK? (check CJ warehouses)
+     b. Are there UK-specific suppliers available? (search local_suppliers where region='uk')
+     c. Calculate UK margins (different fees, VAT, shipping)
+     d. Check UK platform availability (TikTok Shop UK, Amazon UK)
+  2. If viable in other region:
+     → Create product record for other region (region = 'uk')
+     → Link to same product via cross_region_product_id
+     → Add to other region's Sourcing Queue
+     → Admin can confirm independently per region
+  3. Products can be linked but have separate:
+     → Pricing (different buy/sell prices)
+     → Suppliers
+     → Marketing plans
+     → Content (different currency in videos, different language nuances)
+     → Ad accounts
+```
+
+```sql
+-- Cross-region linking
+ALTER TABLE products ADD COLUMN cross_region_product_id UUID REFERENCES products(id);
+  -- Points to the same product in the other region
+  -- NULL if no cross-region equivalent exists
+
+CREATE INDEX idx_products_cross_region ON products(cross_region_product_id)
+  WHERE cross_region_product_id IS NOT NULL;
+```
+
+### 10.3.7 — Region Impact on Existing Pipeline
+
+| Pipeline Stage | Region Impact |
+|---------------|---------------|
+| Discovery | Run separate scans: TikTok US vs TikTok UK, Amazon.com vs Amazon.co.uk |
+| Supplier Lookup | Different suppliers per region, different shipping costs |
+| Cost Calculator | Different platform fees, VAT (UK), fulfillment costs |
+| Sourcing Queue | Filtered by region, different supplier options |
+| Profitability | Different margins per region due to fees/taxes |
+| Break-Even | Region-specific scenarios (§10.2) |
+| Marketing Plan | Different ad accounts, different audience targeting |
+| Content | Same product images, but text may reference currency/shipping differently |
+| Publishing | Different social accounts per region (optional) |
+| Ad Campaigns | Separate ad accounts per region, different budgets |
+| Channel Performance | Tracked per region (same channel may perform differently) |
+| Learning | Region dimension added to memory_aggregates |
+
+---
+
+## 10.4 — APIs vs Custom Scraping: Strategic Analysis
+
+### 10.4.1 — Current API Costs (at operating scale)
+
+| Service | Free Tier | At 500 products/day | At 2000 products/day |
+|---------|-----------|--------------------|--------------------|
+| **CJDropshipping API** | 1K req/day free | $0 | $0 (within limits) |
+| **AliExpress Affiliate API** | ~5K req/day free | $0 | $0 (within limits) |
+| **Apify (TikTok/Amazon/Pinterest)** | $5/mo free tier | ~$25-40/mo | ~$80-120/mo |
+| **RapidAPI (Amazon)** | 500/mo free | ~$10-20/mo | ~$50-80/mo |
+| **ScrapeCreators (TikTok)** | 100/mo free | ~$15/mo | ~$40/mo |
+| **TOTAL** | **~$5/mo** | **~$50-75/mo** | **~$170-240/mo** |
+
+### 10.4.2 — Custom Scraping Costs
+
+| Cost Category | Monthly Estimate | Notes |
+|--------------|-----------------|-------|
+| **Residential Proxies** | $75-200/mo | Bright Data $10/GB, need ~5-15GB for 2K products/day |
+| **Server Infrastructure** | $30-50/mo | Railway/VPS for headless Chrome instances |
+| **CAPTCHA Solving** | $20-50/mo | 2Captcha at $3/1K solves, Amazon heavy on CAPTCHAs |
+| **Maintenance Time** | 8-20 hours/mo | Sites change HTML structure 2-4x/year per platform |
+| **Initial Development** | 100-200 hours | One-time: build scrapers for 5+ platforms |
+| **TOTAL (monthly)** | **$125-300/mo** | Plus 8-20 hours maintenance |
+| **TOTAL (with dev time at $50/hr)** | **$525-1,300/mo** | Including maintenance labor |
+
+### 10.4.3 — Comparison Matrix
+
+| Factor | APIs (Current) | Custom Scraping |
+|--------|---------------|----------------|
+| **Monthly cost (scale)** | $50-240 | $125-300 (infra only) |
+| **Maintenance time** | ~0 hours | 8-20 hours/month |
+| **Reliability** | 95-99% (provider handles issues) | 70-85% (sites block, HTML changes) |
+| **Setup time** | Hours (API keys) | Weeks to months |
+| **Legal risk** | Low (using official APIs + ToS-compliant actors) | Medium-High (ToS violations, CFAA risk) |
+| **Data freshness** | Real-time (API calls) | Depends on crawl schedule |
+| **Flexibility** | Limited to API fields | Full page data access |
+| **Scale ceiling** | Rate-limited but generous | Limited by proxy pool + server capacity |
+| **Solo operator friendly** | Yes | No (requires constant monitoring) |
+
+### 10.4.4 — Recommendation: Hybrid API-First Strategy
+
+**DO NOT build custom scrapers.** For a solo operator with $300/mo budget:
+
+1. **Use official APIs wherever possible** (CJDropshipping, AliExpress — both free)
+2. **Use Apify for everything else** — they handle proxy rotation, CAPTCHA solving, HTML changes
+3. **Scale Apify budget as revenue grows** — start at $5 free tier, move to $49 Starter when needed
+4. **Only consider custom scraping when:**
+   - Revenue exceeds $5K/month (can absorb the maintenance time)
+   - A specific data source has no API or Apify actor
+   - You need data at a frequency/volume that exceeds API limits
+
+**Cost at realistic operating scale (500 products/day, both regions):**
+
+| Approach | Monthly Cost | Maintenance | Risk |
+|----------|-------------|-------------|------|
+| API-first (recommended) | ~$75-100 | ~0 hours | Low |
+| Hybrid (API + some custom) | ~$100-150 | ~5 hours | Medium |
+| Full custom scraping | ~$200-400 | ~15 hours | High |
+
+**The $75-100/mo API cost is well within the $139 budget buffer** and requires zero maintenance time — letting you focus on growing the business instead of fixing scrapers.
+
+### 10.4.5 — Apify Scaling Plan
+
+| Revenue Stage | Monthly Scan Volume | Apify Plan | Cost |
+|--------------|--------------------|-----------|----- |
+| Pre-revenue | 100-500/day | Free ($5 credits) | $0 |
+| $500/mo revenue | 500-1000/day | Starter ($49) | $49 |
+| $2K/mo revenue | 1000-3000/day | Scale ($249) | $249 |
+| $5K+ revenue | 3000+/day | Consider custom scrapers for high-volume sources | Varies |
+
+---
+
+## 10.5 — Updated System Totals
+
+### New Workers (This Section)
+
+| Worker | Purpose |
+|--------|---------|
+| **W46** | Supplier-product auto-matcher |
+| **W47** | Break-even calculator (multi-scenario) |
+| **W48** | Cross-region product evaluator |
+
+### New Tables (This Section)
+
+| Table | Purpose |
+|-------|---------|
+| **break_even_scenarios** | Per-product break-even across all scenario combos |
+
+### Modified Tables (This Section)
+
+| Table | Changes |
+|-------|---------|
+| `products` | +region, +cross_region_product_id |
+| `product_costs` | +region |
+| `local_suppliers` | +website, +region, +specialties, +min_order_value, +payment_terms, +lead_time_days, +catalog_url, +catalog_import_at |
+| `sourcing_queue` | +region |
+| `profitability_analysis` | +region |
+| `marketing_plans` | +region |
+| `content_queue` | +region |
+| `published_content` | +region |
+| `content_performance` | +region |
+| `ad_accounts` | +region |
+| `ad_campaigns` | +region |
+| `channel_performance` | +region |
+| `channel_recommendations` | +region |
+| `affiliate_programs` | +region |
+| `affiliate_links` | +region |
+| `budget_tracking` | +region |
+
+### New Dashboard Pages
+
+| Page | Route | Purpose |
+|------|-------|---------|
+| Add Product | `/admin/products/new` | Single manual product entry |
+| Import Products | `/admin/products/import` | CSV/XLSX bulk import |
+| Supplier Management | `/admin/suppliers` (extended) | Full CRUD + catalog import |
+| Break-Even Analysis | (Product detail extension) | Scenario matrix per product |
+
+### Updated Totals
+
+**Workers: 52** (was 49, added W46, W47, W48)
+**New tables: 27** (was 26, added break_even_scenarios)
+**Region columns added to: 16 tables**
+**New product columns: +region, +cross_region_product_id (total 12 new columns on products)**
+
+---
+
+# PART 8: UPDATED SYSTEM TOTALS (REVISED)
+
+---
+
+## Worker Summary
+
+| Area | Workers | New This Session |
+|------|---------|-----------------|
+| Phase 1: Auto-Discovery | W22, W23, W24, W24B | W1B (gating check) |
+| Phase 2: Human Checkpoint | Dashboard UI | — |
+| Phase 3: Confirmed Pricing | W24C, W24D | — |
+| Engine 3A: Marketing Plans | W25 (extended), W25B, W25C | W25 extended |
+| Engine 3B: Content Production | W26-W31 | — |
+| Feedback & Monitoring | W32-W35 | — |
+| Ranking | W36 | — |
+| Learning/Memory | W37, W38, W39, W40 | W37, W38, W40 |
+| Brand Gating | W1B | W1B |
+| Channel Intelligence | W41, W42, W43, W44, W45 | W41-W45 |
+| **Manual Input & Matching** | **W46** | **W46** |
+| **Break-Even Analysis** | **W47** | **W47** |
+| **Cross-Region** | **W48** | **W48** |
+
+**Total new workers: 31** (was 28, added W46, W47, W48)
+**Total workers (existing 21 + new 31): 52**
+
+## Database Table Summary
+
+| Table | Purpose | New This Session |
+|-------|---------|-----------------|
+| products | Core product data (extended) | +region, +cross_region_product_id |
+| product_costs | Supplier options + pricing | +region |
+| sourcing_queue | Human review checkpoint | +region |
+| local_suppliers | Reusable supplier database | +website, +region, +specialties, etc. |
+| profitability_analysis | AI viability verdicts | +region |
+| marketing_plans | AI-generated marketing plans (extended) | +region |
+| content_queue | Content production pipeline | +region |
+| published_content | Published content tracking | +region |
+| content_performance | Engagement metrics | +region |
+| brand_gating | Platform gating status per brand | — |
+| affiliate_programs | AI/SaaS affiliate program details | +region |
+| affiliate_links | Tracking links per product/platform | +region |
+| prediction_log | Every prediction for outcome tracking | — |
+| memory_aggregates | Statistical patterns | — |
+| memory_lessons | Semantic lessons with pgvector | — |
+| score_recalibrations | Proposed weight adjustments | — |
+| ad_accounts | OAuth tokens for ad platforms | +region |
+| ad_campaigns | Campaign lifecycle management | +region |
+| campaign_decisions | Automated optimization log | — |
+| channel_performance | Per-channel metrics & ROAS | +region |
+| channel_recommendations | AI channel picks per product | +region |
+| **break_even_scenarios** | **Per-scenario break-even calculations** | **NEW** |
+
+**Total new tables: 27** (was 21, added 1)
+**Region column added to: 16 tables**
+
+---
+
 **END OF BLUEPRINT**
 
 *This document should be treated as the authoritative architecture reference for the YOUSELL platform. All implementation sessions should reference this document.*

@@ -1513,6 +1513,170 @@ Each phase is independently deployable without breaking previous phases.
 
 ---
 
+# 14. MANUAL INPUT & IMPORT
+
+## 14.1 — Single Product Entry
+
+Route: `/admin/products/new`
+
+Required: title, category, platform. Optional: pricing (triggers Sourcing Queue), brand name (triggers gating check), external URL, image, tags, signals (sales, rating, trend stage).
+
+If buy_price provided → creates `product_costs` record (source = 'manual_input', is_confirmed = true).
+
+## 14.2 — Bulk CSV/XLSX Import
+
+Route: `/admin/products/import`
+
+5-step flow: Upload → Column Mapping → Validation Preview → Config (region, auto-score, auto-match) → Execute.
+
+Duplicate detection on (title + platform) or external_url. Summary report on completion.
+
+## 14.3 — Supplier Catalog Import
+
+Route: `/admin/suppliers/[id]/import-catalog`
+
+Upload supplier's product catalog. Products created with pre-matched supplier and confirmed pricing.
+
+## 14.4 — Auto Supplier-Product Matching (W46)
+
+```
+Trigger: New product imported, new supplier catalog, or weekly for unmatched products
+Logic:
+  1. Fuzzy title match against local supplier catalogs
+  2. Search CJDropshipping + AliExpress APIs by title
+  3. Compare all options, rank by effective_cost
+  4. If local beats API by >10% → auto-recommend local
+  5. Create product_costs records, update Sourcing Queue
+```
+
+---
+
+# 15. BREAK-EVEN ANALYSIS
+
+## 15.1 — Formula
+
+```
+profit_per_unit = selling_price - (cogs + platform_fee + payment + fulfillment + returns + vat)
+break_even_units = CEIL(total_fixed_costs / profit_per_unit)
+break_even_days = break_even_units / estimated_daily_sales
+
+With ongoing paid marketing:
+  adjusted_profit = profit_per_unit - channel_cpa
+  adjusted_break_even = CEIL(total_fixed_costs / adjusted_profit)
+```
+
+## 15.2 — Scenarios Matrix
+
+For each product, calculate ALL combinations of:
+- Region: USA / UK
+- Platform: TikTok Shop / Amazon FBA / Amazon FBM / Shopify
+- Supplier: each available supplier option
+- Channel: Organic / TikTok Spark / Meta Ads / Google Ads / Influencer / Combined
+
+Mark best scenario as recommended. Surface in Sourcing Queue + Marketing Approval + Product Detail.
+
+## 15.3 — Worker (W47)
+
+Triggers on: confirmed pricing (W24C), profitability verdict (W24D), marketing plan (W25), price changes.
+
+## 15.4 — Platform Fee Reference
+
+| Platform | USA Fee | UK Fee |
+|----------|---------|--------|
+| TikTok Shop | 2-8% + 2.9% payment | 2-8% + 2.5% payment |
+| Amazon FBA | 8-15% referral + $3-6 FBA | 7-15% referral + £2-5 FBA |
+| Amazon FBM | 8-15% referral + shipping | 7-15% referral + shipping |
+| Shopify | 0% + 2.9% + $0.30 | 0% + 2.2% + £0.20 |
+| UK VAT | — | 20% on all sales |
+
+---
+
+# 16. MULTI-REGION (USA + UK)
+
+## 16.1 — Architecture: Region Column (NOT separate databases)
+
+Single Supabase instance. `region` column (`'usa'` | `'uk'`) added to **16 tables**. All queries filter by region. Shared learning system.
+
+## 16.2 — Dashboard Region Switcher
+
+Three modes: USA / UK / ALL. React context `RegionContext` flows through all components. Every API route accepts `?region=usa|uk|all`.
+
+## 16.3 — Region-Specific Configuration
+
+```typescript
+REGION_CONFIG = {
+  usa: { currency: 'USD', vatRate: 0, ... },
+  uk:  { currency: 'GBP', vatRate: 0.20, ... }
+}
+```
+
+Covers: currency, VAT, platform fees, payment processing, supplier availability, ad platforms.
+
+## 16.4 — Cross-Region Evaluation (W48)
+
+Product confirmed STRONG in one region → auto-evaluate for the other:
+- Check supplier availability for other region
+- Calculate margins with region-specific fees/taxes
+- If viable → create linked product (via `cross_region_product_id`)
+- Add to other region's Sourcing Queue
+
+## 16.5 — Region Impact Summary
+
+| Stage | Impact |
+|-------|--------|
+| Discovery | Separate scans (Amazon.com vs Amazon.co.uk, etc.) |
+| Suppliers | Different warehouse locations, shipping costs |
+| Costs | Different platform fees, VAT (UK 20%), fulfillment |
+| Break-Even | Region-specific scenarios |
+| Marketing | Separate ad accounts, targeting, budgets |
+| Content | Same images, currency/shipping text differs |
+| Learning | Region dimension in memory_aggregates |
+
+---
+
+# 17. SCRAPING STRATEGY
+
+## 17.1 — Recommendation: API-FIRST
+
+**Do NOT build custom scrapers.** Use official APIs + Apify actors.
+
+| Approach | Monthly Cost | Maintenance | Risk |
+|----------|-------------|-------------|------|
+| **API-first (recommended)** | **~$75-100** | **~0 hours** | **Low** |
+| Hybrid (API + custom) | ~$100-150 | ~5 hours | Medium |
+| Full custom | ~$200-400 | ~15 hours | High |
+
+## 17.2 — Why Not Custom
+
+- Residential proxies: $75-200/mo
+- CAPTCHA solving: $20-50/mo
+- Server infrastructure: $30-50/mo
+- Maintenance: 8-20 hours/month (sites change HTML frequently)
+- Legal risk: ToS violations, CFAA
+
+## 17.3 — Scaling Plan
+
+| Revenue | Volume | Apify Plan | Cost |
+|---------|--------|-----------|------|
+| Pre-revenue | 100-500/day | Free ($5) | $0 |
+| $500/mo | 500-1K/day | Starter ($49) | $49 |
+| $2K/mo | 1K-3K/day | Scale ($249) | $249 |
+| $5K+ | 3K+/day | Consider custom for high-volume sources | Varies |
+
+---
+
+# UPDATED TOTALS
+
+| Metric | Previous | Now |
+|--------|----------|-----|
+| Workers | 49 | **52** (+W46, W47, W48) |
+| New tables | 26 | **27** (+break_even_scenarios) |
+| New columns on products | 10 | **12** (+region, +cross_region_product_id) |
+| Region columns added | 0 | **16 tables** |
+| Implementation phases | A-K (11) | **A-L (12)** (+Phase L: Multi-Region) |
+
+---
+
 # APPENDIX: QA INTEGRATION PROMPTS
 
 Two pre-built prompts for QA sessions are available in the main blueprint:

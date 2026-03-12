@@ -81,12 +81,30 @@ Research and design the definitive blueprint for 3 missing engines:
 10. **Multi-armed bandit for channel exploration** — 10% budget reserved for testing new channels even with historical data
 11. **All ad platform APIs are FREE** — No additional fixed costs; variable cost = actual ad spend (human-approved)
 
+### Phase 7: Manual Input, Break-Even, Multi-Region, Scraping Strategy — COMPLETE
+- [x] Manual product entry (single + bulk CSV/XLSX import)
+- [x] Supplier catalog import with auto-matching (W46)
+- [x] Break-even calculator with multi-scenario matrix (W47)
+- [x] Multi-region architecture (USA + UK) with region column on 16 tables
+- [x] Cross-region product evaluator (W48)
+- [x] APIs vs custom scraping analysis → API-first recommended ($75-100/mo vs $200-400/mo custom)
+
+## KEY DECISIONS (continued)
+
+12. **Region column, not separate databases** — single Supabase instance, region filter on queries
+13. **API-first scraping strategy** — Apify scales from $0 to $249/mo with revenue, zero maintenance
+14. **Break-even per scenario** — every product gets a matrix of (region × platform × supplier × channel) combinations
+15. **Auto supplier-product matching** — W46 fuzzy-matches products to local supplier catalogs + API results
+
 ## UPDATED SYSTEM TOTALS
-- **Total workers: 49** (21 existing + 28 new)
-- **Total new database tables: 21** (16 previous + 5 channel intelligence)
-- **Blueprint sections: PART 1-9** complete
+- **Total workers: 52** (21 existing + 31 new)
+- **Total new database tables: 27** (21 previous + 1 break_even_scenarios + 5 from channel intel)
+- **Region columns added to: 16 tables**
+- **Blueprint sections: PART 1-10** complete
+- **Final Working Design: COMPLETE** (ai/FINAL_WORKING_DESIGN.md)
 
 ## FILES CREATED
 - ai/research/session_memory.md (this file)
 - ai/research/engine2_profitability_design.md
-- ai/YOUSELL_AGENCY_BLUEPRINT.md (main deliverable — now includes PART 9)
+- ai/YOUSELL_AGENCY_BLUEPRINT.md (main deliverable — now includes PART 10)
+- ai/FINAL_WORKING_DESIGN.md (consolidated implementation-ready build spec)
