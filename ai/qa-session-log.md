@@ -236,3 +236,90 @@
 **Bugs Found:** 1 new (BUG-043 LOW)
 
 **Next:** Sprint S10 — Security: Auth & Access Control
+
+---
+
+## Session 9 — 2026-03-12 (Sprint S10 + S11)
+
+**Sprint:** S10 + S11 — Security: Auth & Access Control + Input Validation
+**Tasks Completed:** 10.1-10.5, 11.1-11.5 (all 10 tasks)
+
+**Key Findings:**
+
+### S10 — Auth & Access Control
+
+#### 10.1 — getUser()
+- Correctly creates server Supabase client and calls `getUser()` (secure — validates JWT server-side)
+- Fetches role from `profiles` table via `.single()` query
+- Defaults to `'viewer'` if no profile found — safe default
+- Catches all errors and returns null — no error leakage
+- PASS: No issues found
+
+#### 10.2 — requireAdmin()
+- Throws `'Unauthorized'` if no user (not authenticated)
+- Throws `'Forbidden: admin role required'` if user exists but not admin
+- Returns user object on success for downstream use
+- `isAdmin()` and `isAuthenticated()` helper functions correctly implemented
+- PASS: No issues found
+
+#### 10.3 — OAuth Callback
+- Correctly exchanges auth code for session via `exchangeCodeForSession()`
+- On success: redirects to `next` param (default `/admin`) using same `origin`
+- On error: redirects to `/admin/login?error=auth`
+- No open redirect vulnerability: uses `${origin}${next}` which keeps redirect on same domain
+- PASS: No issues found
+
+#### 10.4 — Signout
+- Uses `supabase.auth.signOut()` to clear session
+- Redirects to `/admin/login` with 302 status
+- Uses POST method (correct — side-effecting operation)
+- PASS: No issues found
+
+#### 10.5 — Admin Routes requireAdmin() Audit
+- **22 route files** checked under `src/app/api/admin/`
+- **21 of 22** correctly call `requireAdmin()` as first operation in every handler
+- **1 route MISSING requireAdmin()**: `settings/route.ts` — implements its own inline auth check (getUser + profile role query) instead of using the shared `requireAdmin()` function
+- While settings route IS functionally protected (does auth inline), this is a BUG: inconsistent pattern, double DB query (getUser is called but profile is queried separately), and risk of auth bypass if the inline check has subtle differences
+- BUG-044: settings route uses inline auth instead of requireAdmin()
+
+### S11 — Input Validation & Injection
+
+#### 11.1 — Product Field Whitelist
+- POST and PATCH both use explicit `allowedFields` whitelist (14 fields)
+- Sanitization loop only copies whitelisted keys from body to insert/update object
+- `created_by`/`updated_by` set from authenticated user, not from body — correct
+- GET has sort field from query param passed directly to `.order()` with NO whitelist — BUG-045
+- DELETE uses `id` from query param — correct
+- PASS for POST/PATCH, FAIL for GET sort injection
+
+#### 11.2 — Influencer Sort Whitelist
+- GET: Has explicit `allowedSortFields` whitelist with fallback to safe default — correct
+- POST: Body is passed directly to `.insert(body)` with NO field whitelist — BUG-046
+- An attacker with admin auth could inject arbitrary fields into the influencers table
+- PASS for GET, FAIL for POST
+
+#### 11.3 — CSV Import
+- RFC 4180 parser handles quoted fields and escaped quotes correctly
+- Column mapping uses fuzzy matching (title/name/product variants) — good
+- Values are stored as-is in database — no CSV formula sanitization
+- BUG-047: Malicious CSV with `=CMD("calc")` in title field would be stored verbatim. If data is later exported to Excel, formula injection could execute
+- Platform field comes from form data, not from CSV — acceptable
+- File type validation only accepts CSV — correct
+
+#### 11.4 — Blueprint PDF XSS
+- `escapeHtml()` function properly escapes &, <, >, ", ' — all 5 critical characters
+- Applied to: title, platform, section labels, section values
+- `score` is inserted without escaping but it's a numeric value from DB — acceptable
+- `generated_at` goes through `new Date().toLocaleDateString()` — safe
+- PASS: XSS prevention is thorough
+
+#### 11.5 — Settings API Exposure
+- Shows `set: !!process.env[key]` (boolean) — does NOT expose actual values
+- Shows env key names (e.g., `APIFY_API_TOKEN`) — acceptable for admin view
+- Auth is present (inline check, not requireAdmin — see BUG-044)
+- POST allows arbitrary key/value upsert to admin_settings with no key whitelist — BUG-048
+- PASS for API key exposure, FAIL for settings key validation
+
+**Bugs Found:** 5 new (BUG-044 LOW, BUG-045 MEDIUM, BUG-046 MEDIUM, BUG-047 LOW, BUG-048 LOW)
+
+**Next:** Sprint S12 — Performance Review

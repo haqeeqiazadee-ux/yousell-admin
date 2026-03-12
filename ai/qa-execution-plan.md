@@ -195,11 +195,11 @@ Read these files to recover:
 
 | # | Task | Files to Read | Status |
 |---|------|---------------|--------|
-| 10.1 | Review getUser(): Does it correctly fetch profile role? Handle missing profile? Handle Supabase errors? | `src/lib/auth/get-user.ts` | ⬜ |
-| 10.2 | Review requireAdmin(): Does it throw on non-admin? Does it return user on success? Error messages appropriate? | `src/lib/auth/roles.ts` | ⬜ |
-| 10.3 | Review OAuth callback: Code exchange flow correct? Error redirect to login? Session establishment? | `src/app/api/auth/callback/route.ts` | ⬜ |
-| 10.4 | Review signout: Session cleared? Redirect to login? | `src/app/api/auth/signout/route.ts` | ⬜ |
-| 10.5 | Check all admin routes: Does every admin API route call requireAdmin() as first operation? List any that don't. | All `src/app/api/admin/*/route.ts` | ⬜ |
+| 10.1 | Review getUser(): Does it correctly fetch profile role? Handle missing profile? Handle Supabase errors? | `src/lib/auth/get-user.ts` | ✅ 2026-03-12 |
+| 10.2 | Review requireAdmin(): Does it throw on non-admin? Does it return user on success? Error messages appropriate? | `src/lib/auth/roles.ts` | ✅ 2026-03-12 |
+| 10.3 | Review OAuth callback: Code exchange flow correct? Error redirect to login? Session establishment? | `src/app/api/auth/callback/route.ts` | ✅ 2026-03-12 |
+| 10.4 | Review signout: Session cleared? Redirect to login? | `src/app/api/auth/signout/route.ts` | ✅ 2026-03-12 |
+| 10.5 | Check all admin routes: Does every admin API route call requireAdmin() as first operation? List any that don't. | All `src/app/api/admin/*/route.ts` | ✅ 2026-03-12 |
 
 ---
 
@@ -209,11 +209,11 @@ Read these files to recover:
 
 | # | Task | Files to Read | Status |
 |---|------|---------------|--------|
-| 11.1 | Review product field whitelist: Does POST/PATCH only accept allowed fields? Can an attacker inject additional fields? | `src/app/api/admin/products/route.ts` | ⬜ |
-| 11.2 | Review influencer sort whitelist: Are only approved sort fields accepted? What happens with invalid sort? | `src/app/api/admin/influencers/route.ts` | ⬜ |
-| 11.3 | Review CSV import: Can malicious CSV formulas (=CMD) be injected? Are values sanitized before DB insert? | `src/app/api/admin/import/route.ts` | ⬜ |
-| 11.4 | Review blueprint PDF: Is HTML escaping applied to all dynamic content? Test with `<script>` in product title. | `src/app/api/admin/blueprints/[id]/pdf/route.ts` | ⬜ |
-| 11.5 | Review settings API: Does it expose actual API key values or just configured/unconfigured status? | `src/app/api/admin/settings/route.ts` | ⬜ |
+| 11.1 | Review product field whitelist: Does POST/PATCH only accept allowed fields? Can an attacker inject additional fields? | `src/app/api/admin/products/route.ts` | ✅ 2026-03-12 |
+| 11.2 | Review influencer sort whitelist: Are only approved sort fields accepted? What happens with invalid sort? | `src/app/api/admin/influencers/route.ts` | ✅ 2026-03-12 |
+| 11.3 | Review CSV import: Can malicious CSV formulas (=CMD) be injected? Are values sanitized before DB insert? | `src/app/api/admin/import/route.ts` | ✅ 2026-03-12 |
+| 11.4 | Review blueprint PDF: Is HTML escaping applied to all dynamic content? Test with `<script>` in product title. | `src/app/api/admin/blueprints/[id]/pdf/route.ts` | ✅ 2026-03-12 |
+| 11.5 | Review settings API: Does it expose actual API key values or just configured/unconfigured status? | `src/app/api/admin/settings/route.ts` | ✅ 2026-03-12 |
 
 ---
 

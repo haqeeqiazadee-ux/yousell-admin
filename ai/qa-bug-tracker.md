@@ -31,6 +31,11 @@
 | BUG-043 | LOW | Influencer Provider | `getInfluencerConfig()` returns `isConfigured: true` for "ainfluencer" but `searchInfluencers()` requires APIFY_API_TOKEN. Same pattern as BUG-041. | S08 | Open |
 | BUG-041 | LOW | Trends Provider | `getTrendsConfig()` returns `isConfigured: true` (pytrends comment) but `searchTrends()` requires APIFY_API_TOKEN. Misleading status. | S07 | Open |
 | BUG-031 | LOW | Backend Providers | `fetchTrends` silent empty catch block. | S02 | Open |
+| BUG-045 | MEDIUM | Products Route | GET `/api/admin/products` passes user-supplied `sort` param directly to `.order()` with no whitelist. Potential sort field injection. | S11 | Open |
+| BUG-046 | MEDIUM | Influencers Route | POST `/api/admin/influencers` passes raw body to `.insert(body)` with no field whitelist. Admin-authed attacker could inject arbitrary DB fields. | S11 | Open |
+| BUG-044 | LOW | Settings Route | `settings/route.ts` uses inline auth instead of shared `requireAdmin()`. Inconsistent pattern, double DB query. | S10 | Open |
+| BUG-047 | LOW | CSV Import | No CSV formula sanitization. Values like `=CMD("calc")` stored verbatim. Risk if exported to Excel. | S11 | Open |
+| BUG-048 | LOW | Settings Route | POST allows arbitrary key/value upsert to `admin_settings` with no key whitelist. | S11 | Open |
 
 ---
 
@@ -48,6 +53,6 @@
 |----------|------|----------|-------|
 | CRITICAL | 0 | 0 | 0 |
 | HIGH | 2 | 0 | 2 |
-| MEDIUM | 11 | 0 | 11 |
-| LOW | 10 | 0 | 10 |
-| **Total** | **23** | **0** | **23** |
+| MEDIUM | 13 | 0 | 13 |
+| LOW | 13 | 0 | 13 |
+| **Total** | **28** | **0** | **28** |
