@@ -36,6 +36,15 @@
 | BUG-044 | LOW | Settings Route | `settings/route.ts` uses inline auth instead of shared `requireAdmin()`. Inconsistent pattern, double DB query. | S10 | Open |
 | BUG-047 | LOW | CSV Import | No CSV formula sanitization. Values like `=CMD("calc")` stored verbatim. Risk if exported to Excel. | S11 | Open |
 | BUG-048 | LOW | Settings Route | POST allows arbitrary key/value upsert to `admin_settings` with no key whitelist. | S11 | Open |
+| BUG-050 | MEDIUM | Scan Worker | Platform scraping is sequential (for loop). Full scan takes 5× longer than parallel. Should use `Promise.all()`. | S12 | Open |
+| BUG-049 | LOW | Products Route | Product search uses `ilike` with leading wildcard (`%search%`). Prevents index usage on large datasets. | S12 | Open |
+| BUG-051 | LOW | Admin Dashboard | Selects `channel` field not defined in Product interface. Should be `platform`. | S13 | Open |
+| BUG-052 | LOW | Admin Dashboard | "Hot Products" KPI uses `viral_score >= 80` filter instead of `final_score` for tier consistency. | S13 | Open |
+| BUG-053 | MEDIUM | Products Page | No error feedback on failed CRUD API calls. Dialogs close silently without user notification. | S13 | Open |
+| BUG-054 | LOW | Trends Page | Comma-separated keyword input doesn't trim whitespace. "kw1, kw2" stores " kw2" with leading space. | S13 | Open |
+| BUG-055 | LOW | Settings Page | Automation toggle doesn't refetch state. Stale if another admin changes it concurrently. | S14 | Open |
+| BUG-056 | LOW | Client Dashboard | Non-client users redirected to `/admin/unauthorized` instead of client-appropriate error page. | S15 | Open |
+| BUG-057 | MEDIUM | Client Products | "View Blueprint" button is non-functional — doesn't link anywhere or open a modal. | S15 | Open |
 
 ---
 
@@ -53,6 +62,6 @@
 |----------|------|----------|-------|
 | CRITICAL | 0 | 0 | 0 |
 | HIGH | 2 | 0 | 2 |
-| MEDIUM | 13 | 0 | 13 |
-| LOW | 13 | 0 | 13 |
-| **Total** | **28** | **0** | **28** |
+| MEDIUM | 16 | 0 | 16 |
+| LOW | 19 | 0 | 19 |
+| **Total** | **37** | **0** | **37** |

@@ -323,3 +323,68 @@
 **Bugs Found:** 5 new (BUG-044 LOW, BUG-045 MEDIUM, BUG-046 MEDIUM, BUG-047 LOW, BUG-048 LOW)
 
 **Next:** Sprint S12 — Performance Review
+
+---
+
+## Session 10 — 2026-03-12 (Sprint S12)
+
+**Sprint:** S12 — Performance Review
+**Tasks Completed:** 12.1-12.4 (all 4 tasks)
+
+**Key Findings:**
+
+### 12.1 — Dashboard API Performance
+- Uses `Promise.all()` with 8 parallel `safeCount()` calls — excellent
+- Each uses `{ count: "exact", head: true }` — efficient count-only queries
+- PASS: Well-optimized
+
+### 12.2 — Product Listing Performance
+- Pagination with `.range()` — correct
+- `ilike` text search with leading wildcard prevents index usage — BUG-049
+
+### 12.3 — Scan Worker Performance
+- Platform scraping is SEQUENTIAL (for loop) — BUG-050
+- Full scan with 5 platforms takes 5× longer than necessary
+- Could use `Promise.all()` for parallel scraping
+
+### 12.4 — Supabase Realtime
+- Admin dashboard uses debounced (2s) refetch on table changes — correct
+- Cleanup via `removeChannel` in useEffect return — correct
+- PASS: Well-implemented
+
+**Bugs Found:** 2 new (BUG-049 LOW, BUG-050 MEDIUM)
+
+**Next:** Sprint S13 — UI/UX: Admin Core Pages
+
+---
+
+## Session 11 — 2026-03-12 (Sprint S13 + S14 + S15)
+
+**Sprint:** S13-S15 — UI/UX Review (Admin Core, Intelligence, Client Dashboard)
+**Tasks Completed:** 13.1-13.5, 14.1-14.5, 15.1-15.4 (all 14 tasks)
+
+**Key Findings:**
+
+### S13 — Admin Core Pages
+- **Dashboard (page.tsx):** KPI cards, realtime updates, scan controls all functional. BUG-051: selects `channel` field not in type. BUG-052: "Hot Products" uses viral_score>=80 instead of final_score for tier consistency.
+- **Scan page:** 3 modes render correctly, job polling (2s interval), history sidebar, cancel — all working.
+- **Products page:** CRUD works. BUG-053: no error feedback on failed API calls — dialogs close silently. Platform hardcoded to "manual".
+- **Trends page:** Keywords display with direction indicators. BUG-054: comma-split doesn't trim whitespace. No pagination for large keyword lists.
+- **Sidebar:** 4 nav groups correct, user info displays, theme toggle works. Minor: `isActive()` prefix matching could have false positives.
+
+### S14 — Intelligence + Management
+- **Platform pages:** TikTok, Amazon use shared PlatformProducts component correctly. Provider status badges work.
+- **Intelligence pages:** Competitors, Influencers, Suppliers all render and fetch correctly. None have edit functionality (add + delete only). Influencer page has suspicious engagement detection — good feature.
+- **Blueprints:** List and PDF export work. PDF uses `window.open()` which popup blockers may block.
+- **Clients:** CRUD works with plan selection. Plan limits correctly mapped. Uses `confirm()` for delete instead of modal.
+- **Settings:** 3 tabs render. Provider status correct. Automation toggles work. BUG-055: automation toggle doesn't refetch — stale state if another admin changes it.
+
+### S15 — Client Dashboard
+- **Layout:** Role check enforces client-only access. BUG-056: redirects non-clients to `/admin/unauthorized` instead of client-appropriate page.
+- **Dashboard page:** KPI cards, allocated products, request form all present. Duplicate client lookup code.
+- **Products page:** Shows allocated products. BUG-057: "View Blueprint" button is non-functional — doesn't link or open anything.
+- **Requests page:** Request form with platform selection, history table with status badges — all working.
+
+**Bugs Found:** 7 new (BUG-051 through BUG-057)
+
+**Next:** Sprint S16 — Error Handling & Chaos
