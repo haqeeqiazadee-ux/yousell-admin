@@ -103,6 +103,7 @@ Map every feature/automation YOUSELL offers (or will offer). Categorize them int
 - **TikTok Shop:** Product listing via TikTok Seller API / Product Upload Accelerator, bulk upload, category mapping
 - **Amazon:** Listing creation via SP-API (Listings Items API), ASIN matching, pricing sync
 - **Digital:** Product page generation for digital goods, download delivery setup
+- **Order Tracking & Notifications:** Pull order/shipment data from connected stores (Shopify webhooks, TikTok Shop API, Amazon SP-API) and send automated tracking emails to end customers via Resend. Includes: order confirmation, shipping confirmation with tracking number/link, delivery confirmation, and review request follow-up. Email orchestration handled by existing Resend + Railway infrastructure.
 - Note: Each platform integration has different technical feasibility and legal considerations. Research and document these.
 
 ### Engine 3: Marketing & Ads Engine
@@ -118,13 +119,15 @@ Map every feature/automation YOUSELL offers (or will offer). Categorize them int
 - Social media content calendar generation
 - Video script generation for TikTok/Reels
 - Blog/SEO content for Shopify stores
-- Email marketing templates
+- Email marketing templates and automated sequences (powered by Resend + Railway)
 - Affiliate review content for AI tools
+- Post-purchase email flows: order confirmation, shipping updates, delivery confirmation, review requests (via Resend, orchestrated by Railway BullMQ workers)
 
 ### Engine 5: Influencer & Outreach Engine
 - Influencer discovery across platforms
 - Influencer scoring and ranking
-- **One-click influencer invitation buttons** (send templated outreach via email/DM)
+- **One-click influencer invitation buttons** (send templated outreach emails via Resend — no manual copy-paste)
+- Automated follow-up sequences for non-responders (Resend + Railway scheduler)
 - Campaign brief generation
 - Performance tracking per influencer
 - Commission/payment management
@@ -315,6 +318,52 @@ Research and document the technical and legal feasibility of importing product d
 - **Approach:** Generate landing pages / product pages hosted on YOUSELL or integrated with client's existing site
 - **Delivery:** Automated download links, email delivery via Resend
 
+### 5.5 Order Tracking & Customer Email Automation
+
+**Infrastructure:** Already built — Resend (email) + Railway (backend processing). This is NOT new infrastructure — it extends the existing email orchestration system.
+
+**How it works per platform:**
+
+| Platform | Order/Tracking Data Source | Method |
+|----------|--------------------------|--------|
+| **Shopify** | Shopify Webhooks (`orders/create`, `orders/fulfilled`, `fulfillments/create`) | Real-time push — Shopify fires webhook to YOUSELL when order status changes. Includes tracking number, carrier, and tracking URL. |
+| **TikTok Shop** | TikTok Shop API — Order Management endpoints | Poll or webhook for order status updates. TikTok provides shipment tracking info via API. |
+| **Amazon** | SP-API — Orders API + Shipping API | Pull order status and tracking details. Note: Amazon handles most customer communication itself, so this is supplementary. |
+
+**Automated email sequence (via Resend, orchestrated by Railway workers):**
+
+```
+Order placed → [Instant] Order Confirmation Email
+    → Thank you, order summary, estimated delivery window
+
+Order shipped → [Instant] Shipping Confirmation Email
+    → Tracking number, carrier name, clickable tracking link
+    → Estimated delivery date
+
+In transit → [Optional] Delivery Update Email
+    → "Your package is on its way!" with live tracking link
+
+Delivered → [24hr after delivery] Delivery Confirmation Email
+    → "Your order has been delivered!"
+
+Post-delivery → [3–5 days later] Review Request Email
+    → "How was your experience? Leave a review"
+    → Links to review on the relevant platform (TikTok Shop, Amazon, Shopify store)
+```
+
+**Implementation approach:**
+- Railway BullMQ workers listen for store webhooks / poll APIs on schedule
+- On order event: generate email from branded templates via Resend
+- Templates are white-labeled with client's store name and branding
+- Client can customize email templates from dashboard (toggle emails on/off, edit subject lines)
+- All emails sent FROM the client's configured sender address (via Resend verified domain)
+
+**Why this matters for retention:**
+- Clients who connect their stores for order tracking are deeply integrated — high switching cost
+- Professional post-purchase emails increase repeat purchases 20–30%
+- Review request emails drive platform ratings (critical for TikTok Shop and Amazon ranking)
+- This is a feature clients expect from a premium automation platform
+
 ---
 
 ## SECTION 6: AFFILIATE ENGINE — BUSINESS MODEL & RETENTION STRATEGY
@@ -419,6 +468,7 @@ Clients will NEVER enter store passwords or social media login credentials on YO
 | **LinkedIn** | LinkedIn Marketing API (OAuth 2.0) | Post articles, share content | Client clicks "Connect LinkedIn" → OAuth → grants posting permission |
 | **Blog/Website** | Webhook or WordPress REST API | Push blog posts to client's site | Client provides webhook URL or WordPress API key |
 | **Email Newsletter** | Resend / Mailchimp / ConvertKit API | Send affiliate promotional emails | Client provides API key from their email platform |
+| **Order Tracking Emails** | Resend (built-in, no extra setup) | Order confirmation, shipping updates, delivery confirmation, review requests | Auto-enabled when store is connected — uses YOUSELL's Resend infrastructure with client's verified sender domain |
 
 ### 7.4 Security & Trust
 
