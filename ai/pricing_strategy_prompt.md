@@ -83,7 +83,7 @@ For EACH of the 5 platforms YOUSELL supports, conduct individual market research
 - What is the realistic monthly earning potential from AI affiliates?
 - What does it cost to automate affiliate content creation?
 - How can YOUSELL automate the affiliate promotion process for clients?
-- **Key insight:** Every YOUSELL subscriber who promotes AI tools through our platform generates affiliate commission for US (YOUSELL) as well. This is built-in recurring revenue on top of subscription fees. Factor this into pricing strategy.
+- **Key insight:** Affiliate programs pay on SIGNUPS/CONVERSIONS, not on marketing activity. YOUSELL does NOT earn affiliate commissions from client activity. Instead, YOUSELL earns subscription revenue by providing: (a) a curated, frequently updated database of affiliate opportunities, (b) an automated marketing engine that creates and distributes promotional content across social media, and (c) performance tracking. The CLIENT earns affiliate commissions directly — 100% theirs. They pay us for the platform that finds opportunities and automates the marketing work. This is a pure SaaS model, not a revenue-share model.
 
 ---
 
@@ -136,13 +136,14 @@ Map every feature/automation YOUSELL offers (or will offer). Categorize them int
 - Supplier communication templates
 - Cost-of-goods tracking
 
-### Engine 7: AI Affiliate Revenue Engine
-- Curated list of high-commission AI affiliate programs
-- Auto-generated affiliate content (reviews, comparisons, tutorials)
-- Affiliate link management and tracking
-- Commission dashboard
-- Automated social media posting for affiliate promotions
-- **Revenue share model:** YOUSELL earns a percentage of affiliate commissions generated through the platform
+### Engine 7: AI Affiliate Discovery & Marketing Engine
+- Curated, frequently updated database of high-commission AI affiliate programs
+- Auto-generated affiliate promotional content (reviews, comparisons, tutorials, social posts)
+- Client manages their OWN affiliate links — YOUSELL does not touch commissions
+- Automated social media content distribution for affiliate promotions
+- Performance tracking dashboard (clicks, signups, estimated commissions)
+- New opportunity alerts when high-value affiliate programs launch or change terms
+- **Business model:** Client earns 100% of their affiliate commissions. YOUSELL earns purely from the subscription fee for providing the discovery platform + automated marketing engine. No revenue share, no commission split.
 
 ### Engine 8: Analytics & Profit Engine
 - Real-time sales tracking across all platforms
@@ -165,7 +166,7 @@ Key principles:
 - **Volume over margin** — more customers at reasonable prices beats fewer at high prices
 - **Per-platform modularity** — let clients start with one platform and expand
 - **Engine-based toggles** — clients can enable/disable engines they want
-- **Built-in affiliate revenue** offsets our costs and can subsidize lower pricing
+- **Affiliate engine as value-add** — clients earn passive income through our platform, justifying subscription pricing (YOUSELL does NOT take a cut of their commissions)
 - **Predictable ROI messaging** — for each package, calculate and show the client what they can realistically earn
 
 ### 3.2 Pricing Structure Requirements
@@ -229,7 +230,7 @@ For each engine and platform combination, estimate:
 - Email sending costs (Resend)
 - Infrastructure costs (Supabase, Railway, Redis, Netlify)
 - Human support time (if any)
-- **Affiliate commission revenue earned** (offset against costs)
+- Note: YOUSELL does NOT earn affiliate commissions from client activity — revenue is purely subscription-based
 
 ### 3.4 Competitor Pricing Comparison Table
 
@@ -316,33 +317,43 @@ Research and document the technical and legal feasibility of importing product d
 
 ---
 
-## SECTION 6: AFFILIATE REVENUE MODEL
+## SECTION 6: AFFILIATE ENGINE — BUSINESS MODEL (CORRECTED)
 
-### 6.1 How YOUSELL Earns From Client Activity
+### 6.1 How the AI Affiliate Engine Works
 
-Every client who uses YOUSELL to promote AI tools generates affiliate revenue for YOUSELL itself:
+**IMPORTANT: YOUSELL does NOT earn affiliate commissions from client activity.** Affiliate programs pay the person whose link generates the signup — that's the CLIENT, not YOUSELL. The business model is purely SaaS:
 
 ```
-Client subscribes to YOUSELL
-    → Uses AI Affiliate Engine to promote AI tools
-    → Generates signups for Jasper, Copy.ai, etc.
-    → Those tools pay affiliate commission
-    → YOUSELL earns a share of that commission (platform fee)
-    → This revenue offsets YOUSELL's operating costs
-    → Allows YOUSELL to price subscriptions LOWER
+Client pays YOUSELL subscription ($X/mo)
+    → Gets access to curated, frequently updated affiliate program database
+    → Uses YOUSELL's AI marketing engine to auto-generate promotional content
+    → YOUSELL's automation distributes content across client's social media channels
+    → Someone clicks client's affiliate link → signs up for AI tool
+    → AI tool pays affiliate commission directly to the CLIENT (100% theirs)
+    → YOUSELL earns NOTHING from that commission
+    → YOUSELL earns from the subscription fee for providing the platform
 ```
 
-### 6.2 Revenue Share Structure
+### 6.2 What YOUSELL Provides (What the Client Pays For)
 
-Design a fair split:
-- Client gets X% of affiliate commissions generated
-- YOUSELL keeps Y% as platform fee
-- Research industry standards for affiliate revenue sharing
-- This should be a WIN-WIN — the client earns passive income they wouldn't have without YOUSELL, and YOUSELL earns recurring revenue beyond subscriptions
+1. **Discovery:** Continuously updated database of AI affiliate programs with commission rates, cookie durations, conversion rates, program terms, and application links
+2. **Opportunity scoring:** AI-ranked affiliate programs by earning potential, competition level, and trend momentum
+3. **Content automation:** Auto-generated affiliate promotional content — reviews, comparison articles, social media posts, video scripts, email templates — all optimized for conversions
+4. **Distribution automation:** Automated posting to client's connected social media channels on an optimized schedule
+5. **Tracking dashboard:** Monitor clicks, estimated signups, and estimated commissions across all affiliate programs
+6. **New opportunity alerts:** Notifications when high-value programs launch, change terms, or run promotions
 
-### 6.3 Tools We Use Internally
+### 6.3 Why This Is Valuable to Clients
 
-YOUSELL uses tools like Apify, Supabase, Resend, etc. If any of these have affiliate programs, each client rollout generates affiliate commission for YOUSELL when clients sign up for their own accounts. Document which tools have affiliate programs and estimated commission per client.
+- Finding and evaluating affiliate programs manually takes hours — YOUSELL does it automatically
+- Creating promotional content for each program is tedious — YOUSELL's AI generates it
+- Posting consistently across social channels is a full-time job — YOUSELL automates it
+- The client focuses on nothing; the system runs 24/7 generating passive affiliate income
+- Many AI affiliate programs pay 25–50% recurring commissions — a client promoting 5–10 tools can realistically earn $500–$2,000+/mo in passive income
+
+### 6.4 YOUSELL's Own Affiliate Revenue (Separate from Client Activity)
+
+YOUSELL itself can earn affiliate commissions by recommending tools that clients need for their e-commerce operations (Shopify, hosting, email tools, etc.). This is separate from the client's affiliate engine and should be documented as a secondary revenue stream — but it is NOT the primary business model and should NOT be factored into subscription pricing.
 
 ---
 
@@ -358,7 +369,7 @@ Write a clear narrative that answers: "What does a YOUSELL subscriber get?"
 3. GENERATES all your marketing content (ad creatives, product descriptions, social posts, email campaigns)
 4. FINDS AND CONTACTS influencers for you (one-click outreach, not just a list of names)
 5. RUNS your ads with AI optimization (not just suggests — actually creates and manages campaigns)
-6. EARNS you passive affiliate income (promote AI tools, earn commissions while you sleep)
+6. EARNS you passive affiliate income (discovers high-commission AI programs, auto-generates promotional content, distributes it — you earn commissions directly, 100% yours)
 7. TRACKS everything (profit per product, ROI per platform, what's working, what's not)
 8. TELLS you what to do next (AI-generated launch blueprints and recommendations)
 
@@ -403,7 +414,7 @@ Produce a single, comprehensive markdown document saved to `/ai/platform_strateg
 
 **Remember:** Be GENEROUS with data shown to clients. The paywall is on AUTOMATION and ACTIONS, not on visibility. A client on the cheapest plan should still see impressive amounts of data — they just can't automate actions on it without upgrading.
 
-**Remember:** Factor in that each subscription generates built-in affiliate commission revenue for YOUSELL. This is a significant revenue multiplier that can subsidize pricing.
+**Remember:** YOUSELL earns purely from subscription fees — NOT from client affiliate commissions. The affiliate engine is a value-add that justifies higher subscription pricing because it helps clients earn passive income. The client keeps 100% of their affiliate earnings.
 
 **Remember:** Think like an ecommerce entrepreneur who wants a fully automated system making money 24/7 with minimal input. Price for the VALUE of that outcome, not for the cost of the features.
 
