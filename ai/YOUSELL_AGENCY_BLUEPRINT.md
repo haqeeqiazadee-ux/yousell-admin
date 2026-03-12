@@ -3544,6 +3544,839 @@ More outcomes to learn from
 
 ---
 
+# PART 9: CHANNEL INTELLIGENCE ENGINE
+
+---
+
+## 9.1 — Purpose
+
+The Channel Intelligence Engine is the brain behind marketing spend allocation. For every product entering the marketing pipeline, it analyzes product category, margin, audience profile, historical performance, and available budget to recommend the optimal mix of paid and free marketing channels.
+
+**Core principle**: Every dollar spent must be traceable to revenue. The system continuously learns which channels perform best for which product types and adjusts recommendations accordingly.
+
+---
+
+## 9.2 — Complete Channel Catalog
+
+### 9.2.1 — Paid Advertising Channels
+
+| Channel | Min Budget | Avg CPC/CPM | Best For | API | n8n Integration |
+|---------|-----------|-------------|----------|-----|-----------------|
+| **TikTok Spark Ads** | $500/campaign | CPC $0.20-1.00, CPM $6-10 | White label physical, viral products | TikTok Marketing API (free) | HTTP Request node |
+| **Meta Ads** (FB + IG) | $1/day | CPC $0.50-2.00, CPM $8-14 | All categories, broadest reach | Meta Marketing API (free) | Native n8n node |
+| **Google Ads** (Shopping + PMax) | $1/day | Shopping CPC $0.66, Search $1-5 | Amazon FBA, branded physical, high-intent | Google Ads API (free) | Native n8n node |
+| **Pinterest Ads** | $1/day | CPC $0.10-1.50 (30-40% cheaper than Meta) | Visual products, home/fashion/food | Pinterest API (free) | HTTP Request node |
+| **YouTube Ads** (via Google) | $10/day | CPV $0.01-0.03 | Video-friendly products, demos | Google Ads API (same) | Native n8n node |
+| **Reddit Ads** | $5/day | CPC $0.10-0.80 (cheapest) | Niche communities, digital/SaaS | Reddit Ads API (free) | HTTP Request node |
+| **LinkedIn Ads** | $10/day | CPC $5.58+ | B2B SaaS, enterprise tools | LinkedIn Marketing API (free) | HTTP Request node |
+| **Snapchat Ads** | $5/day | CPM $2.95 (cheapest video) | Gen Z products, impulse buys | Snapchat Marketing API (free) | HTTP Request node |
+
+**Key insight from research**: TikTok Spark Ads deliver **64% higher CTR** and **37% lower CPA** than regular TikTok ads by boosting organic creator content. This makes them the primary paid channel for physical products with creator content.
+
+### 9.2.2 — Free/Organic Channels
+
+| Channel | Effort Level | Time to Results | Best For | Automation | n8n Integration |
+|---------|-------------|----------------|----------|-----------|-----------------|
+| **Pinterest Organic** | Low | 2-4 weeks | Visual products, evergreen | Full auto | Native n8n node |
+| **YouTube Shorts** | Medium | 1-2 weeks | Product demos, unboxing | Full auto | Native n8n node (upload-post) |
+| **TikTok Organic** | Medium | 1-7 days | Viral physical, trending | Full auto | upload-post community node |
+| **Instagram Reels** | Medium | 1-2 weeks | Lifestyle, fashion, beauty | Full auto | upload-post community node |
+| **Email Marketing** | Low | Immediate | All (highest ROI: $36-42 per $1) | Full auto | Native Resend + Mailchimp nodes |
+| **Blog/SEO** | High | 3-6 months | Digital products, affiliate | Semi-auto | Native WordPress node |
+| **Reddit Organic** | Medium | 1-4 weeks | Niche physical, SaaS launches | Manual only (ban risk) | Monitor only |
+| **Quora** | Medium | 2-8 weeks | Digital/SaaS (high SEO/GEO value) | Manual only (no API) | Monitor only |
+| **Telegram Communities** | Low | Immediate | Deal-oriented, digital | Full auto | Native n8n node |
+| **Product Hunt** | High | 1 day spike | SaaS/digital launches | Semi-auto | HTTP Request node |
+| **Discord Communities** | Medium | Ongoing | Gaming, tech, niche | Semi-auto | Native n8n node |
+| **Indie Hackers / HN** | High | 1 day spike | B2B SaaS, dev tools | Manual only | None |
+| **X (Twitter)** | Medium | 1-7 days | Tech, trending topics | Full auto | upload-post community node |
+| **Facebook Groups** | Medium | 1-2 weeks | Niche communities | Semi-auto | upload-post community node |
+| **LinkedIn Organic** | Medium | 1-2 weeks | B2B, professional tools | Full auto | upload-post community node |
+| **Threads** | Low | 1-7 days | Lifestyle, casual | Full auto | upload-post community node |
+| **Bluesky** | Low | 1-7 days | Tech-savvy audience | Full auto | upload-post community node |
+
+---
+
+## 9.3 — Channel-Product Fit Matrix
+
+The engine uses a pre-computed affinity matrix to shortlist channels per product category before running the full scoring algorithm.
+
+### 9.3.1 — Paid Channel Affinity
+
+| Product Category | Primary Paid | Secondary Paid | Avoid |
+|-----------------|-------------|---------------|-------|
+| **Digital/AI/SaaS** | Meta Ads, Google Ads | Reddit Ads, LinkedIn Ads | Snapchat |
+| **Branded Physical** | Google Shopping, Meta Ads | Pinterest Ads, YouTube Ads | Reddit, LinkedIn |
+| **White Label Physical** | TikTok Spark Ads, Meta Ads | Pinterest Ads, Snapchat Ads | LinkedIn |
+| **Physical Affiliate** | TikTok Spark Ads, Pinterest Ads | Meta Ads | LinkedIn, Google Shopping |
+
+### 9.3.2 — Free Channel Affinity
+
+| Product Category | Primary Free | Secondary Free | Avoid |
+|-----------------|-------------|---------------|-------|
+| **Digital/AI/SaaS** | Email, Blog/SEO, Product Hunt | Reddit, Quora, LinkedIn Organic | — |
+| **Branded Physical** | Pinterest Organic, YouTube Shorts | Instagram Reels, Email | Reddit (ban risk) |
+| **White Label Physical** | TikTok Organic, Pinterest Organic | YouTube Shorts, Instagram Reels | Product Hunt |
+| **Physical Affiliate** | TikTok Organic, Pinterest Organic | Email, Telegram | LinkedIn, Product Hunt |
+
+---
+
+## 9.4 — Intelligent Channel Selection Algorithm
+
+### 9.4.1 — Channel Score Formula
+
+For each candidate channel `c` and product `p`:
+
+```
+channel_score(c, p) =
+    category_fit(c, p)        × 0.25    // From affinity matrix
+  + margin_compatibility(c, p) × 0.20    // Can margin support CPA?
+  + audience_match(c, p)       × 0.20    // Target demo alignment
+  + historical_roas(c, p)      × 0.20    // Past performance (from memory)
+  + budget_efficiency(c, p)    × 0.15    // Cost relative to budget
+```
+
+Each component is normalized to 0–100.
+
+### 9.4.2 — Component Calculations
+
+**category_fit**: Lookup from affinity matrix (§9.3).
+- Primary channel = 100
+- Secondary channel = 60
+- Neutral = 30
+- Avoid = 0
+
+**margin_compatibility**: Can the product's margin absorb the channel's typical CPA?
+```
+margin_compat = min(100, (expected_profit_per_sale / channel_avg_cpa) × 50)
+```
+If expected profit < channel avg CPA → score = 0 (auto-exclude).
+
+**audience_match**: Product target demographics vs channel user demographics.
+- Age bracket overlap: 0-40 points
+- Gender skew alignment: 0-20 points
+- Interest category match: 0-20 points
+- Geographic match: 0-20 points
+
+**historical_roas**: Retrieved from `channel_performance` table + memory lessons.
+- New channel (no data): default 50
+- Channels with data: `min(100, actual_roas × 25)` where ROAS 4.0+ = 100
+
+**budget_efficiency**: How much reach per dollar relative to alternatives.
+```
+budget_eff = min(100, (channel_avg_reach_per_dollar / max_reach_per_dollar_across_channels) × 100)
+```
+
+### 9.4.3 — Channel Selection Logic
+
+```
+1. Compute channel_score for ALL channels (paid + free)
+2. Filter out channels where margin_compatibility = 0
+3. Sort by channel_score DESC
+4. Select top channels subject to constraints:
+   a. Total paid budget ≤ product marketing budget
+   b. Maximum 3 paid channels simultaneously
+   c. Maximum 5 free channels simultaneously
+   d. At least 1 free channel always included
+5. Allocate budget proportionally to channel_score among selected paid channels
+6. If product is new (no historical data) → use "exploration" mix:
+   - 70% to highest-scoring channel
+   - 20% to second-highest
+   - 10% to experimental channel (for learning)
+7. If product has history → use "exploitation" mix:
+   - Allocate proportionally to historical ROAS
+   - Reserve 10% for testing new channels (multi-armed bandit)
+```
+
+### 9.4.4 — Budget Allocation Within Channels
+
+For each selected paid channel, the allocated budget is further split:
+
+```
+channel_budget_split:
+  testing_phase (first 3 days):   30% of channel budget
+  scaling_phase (days 4-14):      50% of channel budget
+  optimization_phase (day 15+):   20% of channel budget (reallocated from underperformers)
+```
+
+Auto-kill rules:
+- If ROAS < 1.0 after $50 spent → pause channel, reallocate budget
+- If CPA > 2× target after 100 impressions → reduce budget 50%
+- If CTR < 0.5% after 1000 impressions → pause creative, test new variant
+
+---
+
+## 9.5 — Ad Account Linking Architecture
+
+### 9.5.1 — OAuth Integration Flow
+
+```
+Admin Dashboard → "Connect Ad Account" button
+        ↓
+Platform OAuth consent screen
+        ↓
+Redirect back with auth code
+        ↓
+/api/auth/callback/[platform]
+        ↓
+Exchange code for access + refresh tokens
+        ↓
+Store encrypted in ad_accounts table
+        ↓
+Verify connection with test API call
+        ↓
+Display "Connected ✓" in dashboard
+```
+
+### 9.5.2 — Supported Platforms & OAuth Details
+
+| Platform | OAuth Version | Scopes Required | Token Lifetime | Refresh |
+|----------|--------------|-----------------|----------------|---------|
+| **Meta** | OAuth 2.0 | ads_management, ads_read, pages_read | 60 days | System user token (no expiry) |
+| **TikTok** | OAuth 2.0 | advertiser_management, campaign_creation | 24 hours | Refresh token (365 days) |
+| **Google** | OAuth 2.0 | adwords, content | 1 hour | Refresh token (no expiry) |
+| **Pinterest** | OAuth 2.0 | ads:read, ads:write, pins:read | 30 days | Refresh token (365 days) |
+
+### 9.5.3 — Token Management
+
+```
+Worker: W41_token_refresh
+
+Schedule: Every 6 hours
+
+Logic:
+  1. Query ad_accounts WHERE token_expires_at < NOW() + interval '12 hours'
+  2. For each expiring token:
+     a. Call platform refresh endpoint
+     b. Update encrypted tokens in DB
+     c. Log refresh in ad_account_events
+  3. If refresh fails:
+     a. Mark account status = 'token_expired'
+     b. Send admin alert via Resend
+     c. Show "Reconnect Required" in dashboard
+```
+
+### 9.5.4 — Database Schema — Ad Accounts
+
+```sql
+CREATE TABLE ad_accounts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id),
+  platform TEXT NOT NULL CHECK (platform IN (
+    'meta', 'tiktok', 'google', 'pinterest',
+    'reddit', 'linkedin', 'snapchat'
+  )),
+  platform_account_id TEXT NOT NULL,
+  account_name TEXT,
+  -- Encrypted tokens (use Supabase Vault or pgcrypto)
+  access_token_encrypted TEXT NOT NULL,
+  refresh_token_encrypted TEXT,
+  token_expires_at TIMESTAMPTZ,
+  -- Status
+  status TEXT DEFAULT 'active' CHECK (status IN (
+    'active', 'token_expired', 'suspended', 'disconnected'
+  )),
+  -- Metadata
+  currency TEXT DEFAULT 'USD',
+  timezone TEXT DEFAULT 'America/New_York',
+  daily_budget_limit DECIMAL(10,2),
+  monthly_budget_limit DECIMAL(10,2),
+  -- Tracking
+  last_synced_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(platform, platform_account_id)
+);
+
+-- Row-level security: users can only see their own accounts
+ALTER TABLE ad_accounts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users see own ad accounts" ON ad_accounts
+  FOR ALL USING (auth.uid() = user_id);
+```
+
+---
+
+## 9.6 — Campaign Management Workers
+
+### 9.6.1 — W42: Campaign Creator
+
+```
+Worker: W42_campaign_creator
+Trigger: marketing_plan approved AND has paid channel recommendations
+Queue: campaign_jobs
+
+Input:
+  - marketing_plan_id
+  - approved_channels[] (with budget allocations)
+  - product data
+  - creative assets (from content_queue)
+
+Logic:
+  FOR each approved paid channel:
+    1. Retrieve ad_account for platform
+    2. Validate account status = 'active' and budget available
+    3. Create campaign via platform API:
+
+       Meta:
+         - Campaign: Conversions objective
+         - Ad Set: Auto-targeting (Advantage+) or custom audience
+         - Ad: Image/video from content_queue + AI-generated copy
+
+       TikTok:
+         - Campaign: Product Sales / Website Conversions
+         - Ad Group: Spark Ads (boost creator content) or standard
+         - Ad: Video creative + landing page
+
+       Google:
+         - Campaign: Performance Max or Shopping
+         - Asset Group: Product images + descriptions
+         - Auto-generated ads from product feed
+
+       Pinterest:
+         - Campaign: Conversions / Catalog Sales
+         - Ad Group: Interest + keyword targeting
+         - Pin: Product image + description
+
+    4. Store campaign details in ad_campaigns table
+    5. Set initial budget = testing_phase allocation (30%)
+    6. Enable conversion tracking pixel/API
+
+Output:
+  - Campaign IDs per platform
+  - Status: 'live' or 'pending_review' (platform approval)
+```
+
+### 9.6.2 — W43: Campaign Optimizer
+
+```
+Worker: W43_campaign_optimizer
+Schedule: Every 4 hours (for active campaigns)
+Queue: optimization_jobs
+
+Logic:
+  1. Fetch all active campaigns from ad_campaigns
+  2. For each campaign, pull metrics from platform API:
+     - Spend, impressions, clicks, CTR, CPC, conversions, ROAS
+  3. Store metrics in channel_performance table
+  4. Apply optimization rules:
+
+     TESTING PHASE (days 1-3):
+       - Monitor only, do not change
+       - Flag if CTR < 0.3% (likely creative issue)
+
+     SCALING PHASE (days 4-14):
+       - If ROAS > 2.0 → increase budget 20%
+       - If ROAS 1.0-2.0 → hold steady
+       - If ROAS < 1.0 → reduce budget 50%
+       - If ROAS < 0.5 after $50 → pause campaign
+
+     OPTIMIZATION PHASE (day 15+):
+       - Reallocate budget from worst to best performing
+       - Test new creatives on underperforming campaigns
+       - If ROAS < 1.0 sustained 7 days → kill campaign
+
+  5. Budget reallocation across channels:
+     - Kill worst performer → redistribute to best performer
+     - Always keep minimum 2 channels active for comparison
+
+  6. Record decisions in campaign_decisions log
+  7. Feed results to learning system (W37 outcome capture)
+```
+
+### 9.6.3 — W44: Conversion Tracker
+
+```
+Worker: W44_conversion_tracker
+Trigger: Purchase/signup event on storefront
+Queue: conversion_jobs
+
+Logic:
+  1. Receive conversion event (webhook from Shopify/Stripe/platform)
+  2. Match to originating campaign via:
+     - UTM parameters
+     - Click ID (fbclid, ttclid, gclid, epik)
+     - Server-side event matching
+  3. Send conversion data BACK to ad platforms:
+
+     Meta: Conversions API (CAPI) — server-side event
+     TikTok: Events API — server-side event
+     Google: Offline Conversion Upload
+     Pinterest: Conversions API (CAPI)
+
+  4. Update channel_performance with confirmed conversion
+  5. Calculate true ROAS per channel
+  6. Store in prediction_log for learning system
+
+Why server-side tracking:
+  - Cookie deprecation makes pixel-only tracking unreliable
+  - Server-side events have 20-30% higher match rates
+  - Required for accurate campaign optimization
+  - All 4 major platforms support + recommend it
+```
+
+---
+
+## 9.7 — Social Media Posting Automation
+
+### 9.7.1 — Posting Architecture
+
+```
+Content Production (W26-W31)
+        ↓
+content_queue (status: 'ready')
+        ↓
+Marketing Plan Approval (human checkpoint)
+        ↓
+Posting Orchestrator (W45)
+        ↓
+┌──────────────────────────────────────────┐
+│          Distribution Layer              │
+│                                          │
+│  Blotato (primary):                      │
+│    Instagram, Facebook, X, LinkedIn,     │
+│    Pinterest, TikTok, YouTube,           │
+│    Threads, Bluesky                      │
+│    → 9 platforms via single n8n node     │
+│                                          │
+│  Direct API (supplementary):             │
+│    Telegram → native n8n node            │
+│    Discord → native n8n node             │
+│    Reddit → monitoring only (ban risk)   │
+│    Email → Resend native n8n node        │
+│    Blog/WordPress → native n8n node      │
+│                                          │
+│  upload-post (fallback/parallel):        │
+│    TikTok, IG, YouTube, LinkedIn,        │
+│    X, FB, Pinterest, Threads,            │
+│    Reddit, Bluesky                       │
+│    → community n8n node                  │
+└──────────────────────────────────────────┘
+        ↓
+published_content table
+        ↓
+Performance tracking (W43)
+```
+
+### 9.7.2 — W45: Posting Orchestrator
+
+```
+Worker: W45_posting_orchestrator
+Trigger: Marketing plan approved AND content ready
+Queue: posting_jobs
+
+Input:
+  - marketing_plan_id
+  - content_items[] (video, image, copy per platform)
+  - channel_recommendations (free channels from selection engine)
+  - posting_schedule (optimal times from plan)
+
+Logic:
+  1. For each recommended free channel:
+     a. Retrieve platform credentials/connection
+     b. Adapt content format:
+        - Pinterest: vertical image + description + link
+        - TikTok: vertical video + caption + hashtags
+        - YouTube Shorts: vertical video + title + description
+        - Instagram: image/reel + caption + hashtags
+        - X: short text + image/video + link
+        - LinkedIn: professional copy + image
+        - Email: HTML template via Resend
+        - Blog: SEO-optimized article via WordPress
+        - Telegram: message + media to channel
+     c. Schedule post at optimal time per platform:
+        - TikTok: Tue-Thu 7-9pm EST
+        - Instagram: Mon-Fri 11am-1pm EST
+        - Pinterest: Sat 8-11pm EST
+        - LinkedIn: Tue-Thu 8-10am EST
+        - Email: Tue/Thu 10am recipient timezone
+     d. Post via Blotato (primary) or direct API
+
+  2. Record all posts in published_content
+  3. Set up engagement monitoring schedule
+```
+
+---
+
+## 9.8 — Database Schema — Channel Intelligence
+
+### 9.8.1 — Channel Performance Table
+
+```sql
+CREATE TABLE channel_performance (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID REFERENCES products(id),
+  channel TEXT NOT NULL,
+  channel_type TEXT NOT NULL CHECK (channel_type IN ('paid', 'free')),
+  -- Campaign reference (null for organic)
+  campaign_id UUID REFERENCES ad_campaigns(id),
+  -- Metrics
+  impressions INTEGER DEFAULT 0,
+  clicks INTEGER DEFAULT 0,
+  conversions INTEGER DEFAULT 0,
+  revenue DECIMAL(10,2) DEFAULT 0,
+  spend DECIMAL(10,2) DEFAULT 0,
+  -- Computed
+  ctr DECIMAL(6,4) GENERATED ALWAYS AS (
+    CASE WHEN impressions > 0 THEN clicks::DECIMAL / impressions ELSE 0 END
+  ) STORED,
+  cpc DECIMAL(10,4) GENERATED ALWAYS AS (
+    CASE WHEN clicks > 0 THEN spend / clicks ELSE 0 END
+  ) STORED,
+  roas DECIMAL(10,4) GENERATED ALWAYS AS (
+    CASE WHEN spend > 0 THEN revenue / spend ELSE 0 END
+  ) STORED,
+  cpa DECIMAL(10,4) GENERATED ALWAYS AS (
+    CASE WHEN conversions > 0 THEN spend / conversions ELSE 0 END
+  ) STORED,
+  -- Context
+  product_category TEXT,
+  date_range_start DATE,
+  date_range_end DATE,
+  -- Metadata
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_channel_perf_product ON channel_performance(product_id);
+CREATE INDEX idx_channel_perf_channel ON channel_performance(channel, channel_type);
+CREATE INDEX idx_channel_perf_category ON channel_performance(product_category, channel);
+```
+
+### 9.8.2 — Ad Campaigns Table
+
+```sql
+CREATE TABLE ad_campaigns (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  marketing_plan_id UUID NOT NULL REFERENCES marketing_plans(id),
+  product_id UUID NOT NULL REFERENCES products(id),
+  ad_account_id UUID NOT NULL REFERENCES ad_accounts(id),
+  -- Platform details
+  platform TEXT NOT NULL,
+  platform_campaign_id TEXT,
+  platform_adset_id TEXT,
+  platform_ad_id TEXT,
+  -- Config
+  campaign_type TEXT, -- 'spark_ads', 'shopping', 'pmax', 'promoted_pin', etc.
+  objective TEXT,     -- 'conversions', 'traffic', 'awareness'
+  -- Budget
+  daily_budget DECIMAL(10,2),
+  total_budget DECIMAL(10,2),
+  spent_to_date DECIMAL(10,2) DEFAULT 0,
+  -- Status
+  status TEXT DEFAULT 'draft' CHECK (status IN (
+    'draft', 'pending_review', 'active', 'paused',
+    'budget_exhausted', 'killed', 'completed'
+  )),
+  phase TEXT DEFAULT 'testing' CHECK (phase IN (
+    'testing', 'scaling', 'optimization', 'completed'
+  )),
+  -- Targeting
+  targeting JSONB DEFAULT '{}',
+  -- Creative references
+  creative_ids UUID[],
+  -- Performance (latest sync)
+  last_metrics JSONB DEFAULT '{}',
+  last_synced_at TIMESTAMPTZ,
+  -- Lifecycle
+  started_at TIMESTAMPTZ,
+  paused_at TIMESTAMPTZ,
+  killed_at TIMESTAMPTZ,
+  kill_reason TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_campaigns_plan ON ad_campaigns(marketing_plan_id);
+CREATE INDEX idx_campaigns_product ON ad_campaigns(product_id);
+CREATE INDEX idx_campaigns_status ON ad_campaigns(status) WHERE status = 'active';
+```
+
+### 9.8.3 — Campaign Decisions Log
+
+```sql
+CREATE TABLE campaign_decisions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  campaign_id UUID NOT NULL REFERENCES ad_campaigns(id),
+  decision_type TEXT NOT NULL CHECK (decision_type IN (
+    'budget_increase', 'budget_decrease', 'pause',
+    'resume', 'kill', 'creative_swap', 'audience_change',
+    'channel_reallocation'
+  )),
+  reason TEXT NOT NULL,
+  old_value JSONB,
+  new_value JSONB,
+  automated BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_decisions_campaign ON campaign_decisions(campaign_id);
+```
+
+### 9.8.4 — Channel Recommendations Table
+
+```sql
+CREATE TABLE channel_recommendations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  marketing_plan_id UUID NOT NULL REFERENCES marketing_plans(id),
+  product_id UUID NOT NULL REFERENCES products(id),
+  -- Recommendation
+  channel TEXT NOT NULL,
+  channel_type TEXT NOT NULL CHECK (channel_type IN ('paid', 'free')),
+  score DECIMAL(5,2) NOT NULL,
+  rank INTEGER NOT NULL,
+  -- Budget (paid only)
+  recommended_budget DECIMAL(10,2),
+  budget_split JSONB, -- {testing: 30, scaling: 50, optimization: 20}
+  -- Reasoning
+  reasoning JSONB NOT NULL, -- {category_fit: 85, margin_compat: 70, ...}
+  -- Status
+  status TEXT DEFAULT 'recommended' CHECK (status IN (
+    'recommended', 'approved', 'rejected', 'active', 'completed'
+  )),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_recommendations_plan ON channel_recommendations(marketing_plan_id);
+```
+
+---
+
+## 9.9 — Updated W25: Marketing Plan Generator (Extended)
+
+The existing W25 Marketing Plan Generator now includes channel intelligence:
+
+```
+Worker: W25_marketing_plan_generator (UPDATED)
+
+Existing responsibilities:
+  - Generate content strategy
+  - Suggest influencer outreach
+  - Create budget allocation
+  - Build posting schedule
+
+NEW additions:
+  1. Channel Selection:
+     - Run channel selection algorithm (§9.4)
+     - Include top 3 paid + top 5 free channels in plan
+     - Show channel_score breakdown for transparency
+
+  2. Paid Budget Allocation:
+     - Split marketing budget across recommended paid channels
+     - Show expected ROAS per channel (from historical data or defaults)
+     - Include testing → scaling → optimization timeline
+
+  3. Free Channel Strategy:
+     - Content format requirements per free channel
+     - Posting frequency recommendation
+     - Expected timeline to results
+
+  4. Channel Justification:
+     - Why each channel was selected (human-readable)
+     - Why rejected channels were excluded
+     - Risk factors per channel
+
+  5. Conversion Tracking Setup:
+     - Required pixels/APIs per selected channel
+     - UTM parameter templates
+     - Attribution window recommendations
+
+Updated marketing_plans.plan JSONB structure:
+{
+  "content_strategy": { ... },        // existing
+  "influencer_strategy": { ... },     // existing
+  "budget_allocation": {              // EXTENDED
+    "total_budget": 500,
+    "paid_channels": {
+      "tiktok_spark": { "budget": 250, "expected_roas": 3.2, "score": 87 },
+      "meta_ads": { "budget": 150, "expected_roas": 2.8, "score": 72 },
+      "pinterest_ads": { "budget": 100, "expected_roas": 2.5, "score": 65 }
+    },
+    "free_channels": [
+      { "channel": "pinterest_organic", "priority": 1, "score": 91 },
+      { "channel": "tiktok_organic", "priority": 2, "score": 85 },
+      { "channel": "email", "priority": 3, "score": 78 }
+    ]
+  },
+  "channel_reasoning": { ... },       // NEW
+  "conversion_tracking": { ... },     // NEW
+  "posting_schedule": { ... }         // existing (now per-channel)
+}
+```
+
+---
+
+## 9.10 — Channel Intelligence Learning Loop
+
+The channel engine feeds into the existing learning system (PART 7):
+
+```
+Campaign Results (W43)
+        ↓
+Outcome Capture (W37)
+  - Record: product_category + channel + spend + ROAS + conversions
+        ↓
+Pattern Recognition (W38)
+  - Detect: "White label kitchen products get 3.5x ROAS on TikTok Spark"
+  - Detect: "SaaS products with >$50 price get best Reddit Ads ROI"
+  - Detect: "Pinterest organic converts better than paid for home decor"
+        ↓
+Memory Storage (memory_lessons)
+  - lesson: "tiktok_spark_white_label_kitchen_high_roas"
+  - confidence: 0.82
+  - sample_size: 47
+        ↓
+Score Recalibration (W39)
+  - Adjust channel_score weights based on patterns
+  - Increase TikTok Spark weight for white label kitchen
+  - Decrease Reddit Ads weight for low-price physical
+        ↓
+Next Channel Selection
+  - historical_roas component now informed by lessons
+  - Exploration budget shifts toward proven winners
+```
+
+### 9.10.1 — Channel-Specific Lessons Table Extension
+
+The existing `memory_lessons` table already has `categories` and `platforms` arrays. For channel intelligence, lessons also use:
+
+```sql
+-- No new table needed — extend lesson_type enum
+-- lesson_type values for channel intelligence:
+--   'channel_roas_pattern'
+--   'channel_audience_insight'
+--   'channel_creative_insight'
+--   'channel_timing_insight'
+--   'channel_budget_threshold'
+```
+
+Example lessons the system would learn:
+- "TikTok Spark Ads for white label beauty products average 3.8x ROAS with UGC video creatives"
+- "Pinterest organic pins for home decor generate consistent traffic for 6+ months (evergreen)"
+- "Reddit Ads for SaaS products perform best with educational angle, avoid hard sell"
+- "Meta Ads CPA increases 40% during Q4 holiday season — shift budget to TikTok"
+- "Email sequences convert 5x better than single blast for digital products above $50"
+
+---
+
+## 9.11 — Platform-Specific Implementation Notes
+
+### TikTok Spark Ads (Priority Channel)
+- Requires creator authorization code (expires 30 days)
+- Best practice: build creator relationship pipeline
+- W42 should auto-request Spark authorization from creators who post about the product
+- Budget minimum: $500/campaign, $50/ad group/day
+
+### Meta Ads (Broadest Reach)
+- Use Advantage+ Shopping Campaigns for e-commerce
+- Conversions API (CAPI) is MANDATORY alongside pixel
+- Native n8n node simplifies campaign creation
+- Best for retargeting after organic awareness
+
+### Google Ads (High Intent)
+- Performance Max campaigns auto-optimize across Search, Display, YouTube, Gmail
+- Product feed required for Shopping campaigns (sync from Shopify/product data)
+- Conversion tracking via Google Tag + server-side upload
+
+### Pinterest Ads (Underpriced)
+- 30-40% cheaper CPCs than Meta (current market inefficiency)
+- Promoted Pins become organic pins after campaign ends (lasting value)
+- Best for visual, aspirational products (home, fashion, food, DIY)
+
+### Reddit Ads (Cheapest CPC)
+- MAX campaigns (auto-optimized) achieve 2.3-4.7x ROAS
+- Community-specific targeting is powerful
+- Authentic tone mandatory — Reddit users reject obvious ads
+- Best for niche products with dedicated subreddit audiences
+
+---
+
+## 9.12 — Updated Worker Registry
+
+### New Workers (This Section)
+
+| Worker | Purpose | Trigger | Queue |
+|--------|---------|---------|-------|
+| **W41** | Token refresh for ad accounts | Every 6 hours | token_jobs |
+| **W42** | Campaign creator (multi-platform) | Plan approved | campaign_jobs |
+| **W43** | Campaign optimizer | Every 4 hours | optimization_jobs |
+| **W44** | Conversion tracker | Purchase webhook | conversion_jobs |
+| **W45** | Posting orchestrator (free channels) | Plan approved + content ready | posting_jobs |
+
+### Updated Workers
+
+| Worker | Change |
+|--------|--------|
+| **W25** | Extended to include channel selection + paid/free recommendations |
+
+---
+
+## 9.13 — Cost Impact
+
+All ad platform APIs are **FREE** to access. Costs are only the ad spend itself, which is controlled by the human-approved marketing plan budget.
+
+| New Service | Monthly Cost | Notes |
+|-------------|-------------|-------|
+| Ad platform APIs | $0 | All free (Meta, TikTok, Google, Pinterest, Reddit, LinkedIn) |
+| upload-post n8n node | $0 | Open source community node |
+| Blotato (already budgeted) | $29 | Already in Engine 3 budget |
+| n8n-nodes-bullmq | $0 | Already in stack |
+
+**No additional fixed costs.** Variable costs = actual ad spend (controlled by per-product marketing budget approval).
+
+---
+
+# PART 8: UPDATED SYSTEM TOTALS (REVISED)
+
+---
+
+## Worker Summary
+
+| Area | Workers | New This Session |
+|------|---------|-----------------|
+| Phase 1: Auto-Discovery | W22, W23, W24, W24B | W1B (gating check) |
+| Phase 2: Human Checkpoint | Dashboard UI | — |
+| Phase 3: Confirmed Pricing | W24C, W24D | — |
+| Engine 3A: Marketing Plans | W25 (extended), W25B, W25C | W25 extended |
+| Engine 3B: Content Production | W26-W31 | — |
+| Feedback & Monitoring | W32-W35 | — |
+| Ranking | W36 | — |
+| Learning/Memory | W37, W38, W39, W40 | W37, W38, W40 |
+| Brand Gating | W1B | W1B |
+| **Channel Intelligence** | **W41, W42, W43, W44, W45** | **W41-W45 (all new)** |
+
+**Total new workers: 28** (was 23, added W41-W45)
+**Total workers (existing 21 + new 28): 49**
+
+## Database Table Summary
+
+| Table | Purpose | New This Session |
+|-------|---------|-----------------|
+| products | Core product data (extended) | +6 columns |
+| product_costs | Supplier options + pricing | — |
+| sourcing_queue | Human review checkpoint | — |
+| local_suppliers | Reusable supplier database | — |
+| profitability_analysis | AI viability verdicts | — |
+| marketing_plans | AI-generated marketing plans (extended) | plan JSONB extended |
+| content_queue | Content production pipeline | — |
+| published_content | Published content tracking | — |
+| content_performance | Engagement metrics | — |
+| brand_gating | Platform gating status per brand | — |
+| affiliate_programs | AI/SaaS affiliate program details | — |
+| affiliate_links | Tracking links per product/platform | — |
+| prediction_log | Every prediction for outcome tracking | — |
+| memory_aggregates | Statistical patterns | — |
+| memory_lessons | Semantic lessons with pgvector | — |
+| score_recalibrations | Proposed weight adjustments | — |
+| **ad_accounts** | **OAuth tokens for ad platforms** | **NEW** |
+| **ad_campaigns** | **Campaign lifecycle management** | **NEW** |
+| **campaign_decisions** | **Automated optimization log** | **NEW** |
+| **channel_performance** | **Per-channel metrics & ROAS** | **NEW** |
+| **channel_recommendations** | **AI channel picks per product** | **NEW** |
+
+**Total new tables: 21** (was 16, added 5)
+
+---
+
 **END OF BLUEPRINT**
 
 *This document should be treated as the authoritative architecture reference for the YOUSELL platform. All implementation sessions should reference this document.*

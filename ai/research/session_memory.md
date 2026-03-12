@@ -56,7 +56,37 @@ Research and design the definitive blueprint for 3 missing engines:
 - VEO3 repositioned as supplementary B-roll (short 8s product showcase clips)
 - Total revised from $136 to $161 — still $139 under budget ceiling
 
+### Phase 5: Channel Intelligence Research — COMPLETE
+- [x] Paid ad platforms — TikTok Spark (64% higher CTR), Meta, Google, Pinterest, Reddit, LinkedIn, Snapchat
+- [x] Free/organic channels — Pinterest organic, YouTube Shorts, Email ($36-42 ROI per $1), Blog/SEO, Reddit, Quora, Telegram, Product Hunt
+- [x] Ad automation — All 4 major platforms support full API campaign creation; server-side conversion tracking mandatory
+- [x] Social posting — Blotato (9 platforms) + upload-post n8n node (10 platforms) + native nodes (Telegram, Discord, WordPress, email)
+
+### Phase 6: Channel Intelligence Blueprint — COMPLETE
+- PART 9 written: Channel Intelligence Engine
+- 8 paid channels, 17 free channels cataloged
+- Channel-product fit matrix for all 4 product categories
+- 5-component channel scoring algorithm
+- Ad account OAuth linking architecture (Meta, TikTok, Google, Pinterest)
+- 5 new workers (W41-W45): token refresh, campaign creator, optimizer, conversion tracker, posting orchestrator
+- 5 new database tables: ad_accounts, ad_campaigns, campaign_decisions, channel_performance, channel_recommendations
+- W25 marketing plan generator extended with channel intelligence
+- Learning loop integrated with existing memory system (PART 7)
+
+## KEY DECISIONS (continued)
+
+7. **TikTok Spark Ads as priority paid channel** — 64% higher CTR, 37% lower CPA by boosting organic creator content
+8. **Pinterest Ads underpriced** — 30-40% cheaper CPCs than Meta, promoted pins become organic after campaign
+9. **Server-side conversion tracking mandatory** — Cookie deprecation makes pixel-only unreliable; 20-30% higher match rates
+10. **Multi-armed bandit for channel exploration** — 10% budget reserved for testing new channels even with historical data
+11. **All ad platform APIs are FREE** — No additional fixed costs; variable cost = actual ad spend (human-approved)
+
+## UPDATED SYSTEM TOTALS
+- **Total workers: 49** (21 existing + 28 new)
+- **Total new database tables: 21** (16 previous + 5 channel intelligence)
+- **Blueprint sections: PART 1-9** complete
+
 ## FILES CREATED
 - ai/research/session_memory.md (this file)
 - ai/research/engine2_profitability_design.md
-- ai/YOUSELL_AGENCY_BLUEPRINT.md (main deliverable)
+- ai/YOUSELL_AGENCY_BLUEPRINT.md (main deliverable — now includes PART 9)
