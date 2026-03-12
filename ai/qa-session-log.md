@@ -130,3 +130,34 @@
 **Bugs Found:** 3 new (BUG-032, BUG-033, BUG-034)
 
 **Next:** Sprint S04 — Scoring Engine: Formulas
+
+---
+
+## Session 4 — 2026-03-12 (Sprint S04)
+
+**Sprint:** S04 — Scoring Engine: Formulas
+**Tasks Completed:** 4.1, 4.2, 4.3, 4.4, 4.5, 4.6 (all 6 tasks)
+
+**Key Findings:**
+
+### 4.1-4.4 — Score Formula Verification
+- Trend score weights: 0.35+0.25+0.20+0.10+0.10 = 1.00 (competition is -0.10 penalty)
+- Viral score weights: 0.25+0.20+0.20+0.15+0.10+0.10 = 1.00
+- Profit score weights: 0.40+0.20+0.20+0.10+0.10 = 1.00 (risk is -0.10 penalty)
+- Final score: 0.40+0.35+0.25 = 1.00
+- All scores correctly clamped to [0, 100]
+- Edge cases (all-zero, all-100) produce expected results
+
+### 4.5 — Backend vs Frontend Scoring
+- BUG-035 (HIGH): Frontend has LEGACY `calculateCompositeScore()` using 60/40 (viral/profit) — not the 3-pillar model. Name collision with backend function.
+- BUG-036 (MEDIUM): Backend heuristic vs frontend weighted scoring produce different results, both stored in same DB fields.
+- Backend 3-pillar final_score formula matches spec (40/35/25)
+
+### 4.6 — Profitability Scoring
+- Frontend and backend profitability formulas are identical
+- Max theoretical score is 90 (30+25+20+15), clamped to 100
+- Margin estimates: >$30→40%, $15-30→30%, <$15→20% — reasonable
+
+**Bugs Found:** 2 new (BUG-035 HIGH, BUG-036 MEDIUM)
+
+**Next:** Sprint S05 — Scoring Engine: Classification

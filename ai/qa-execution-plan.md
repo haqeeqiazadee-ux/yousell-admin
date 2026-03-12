@@ -115,12 +115,12 @@ Read these files to recover:
 
 | # | Task | Files to Read | Status |
 |---|------|---------------|--------|
-| 4.1 | Trace trend_score calculation: Verify components (TikTok Growth 35%, Influencer 25%, Amazon 20%, Competition -10%, Margin 10%). Do weights sum to 100%? | `src/lib/scoring/composite.ts` | ⬜ |
-| 4.2 | Trace viral_score calculation: Verify 6 components (micro-influencer 25%, purchase intent 20%, hashtag 20%, niche expansion 15%, engagement 10%, supply 10%). Do weights sum to 100%? | `src/lib/scoring/composite.ts` | ⬜ |
-| 4.3 | Trace profit_score calculation: Verify components (margin 40%, shipping 20%, marketing 20%, supplier 10%, risk -10%). Do weights sum to 100%? | `src/lib/scoring/composite.ts` | ⬜ |
-| 4.4 | Validate final_score formula: trend(0.40) + viral(0.35) + profit(0.25) = 1.00. Test with edge values (all 0, all 100, mixed). | `src/lib/scoring/composite.ts` | ⬜ |
-| 4.5 | Validate backend scoring matches frontend scoring: Compare `backend/src/lib/scoring.ts` with `src/lib/scoring/composite.ts`. Are they consistent? | Both scoring files | ⬜ |
-| 4.6 | Review profitability scoring: Price sweet spots, sales velocity tiers, margin estimates. Are the formulas sound? | `src/lib/scoring/profitability.ts` | ⬜ |
+| 4.1 | Trace trend_score calculation: Verify components (TikTok Growth 35%, Influencer 25%, Amazon 20%, Competition -10%, Margin 10%). Do weights sum to 100%? | `src/lib/scoring/composite.ts` | ✅ 2026-03-12 |
+| 4.2 | Trace viral_score calculation: Verify 6 components (micro-influencer 25%, purchase intent 20%, hashtag 20%, niche expansion 15%, engagement 10%, supply 10%). Do weights sum to 100%? | `src/lib/scoring/composite.ts` | ✅ 2026-03-12 |
+| 4.3 | Trace profit_score calculation: Verify components (margin 40%, shipping 20%, marketing 20%, supplier 10%, risk -10%). Do weights sum to 100%? | `src/lib/scoring/composite.ts` | ✅ 2026-03-12 |
+| 4.4 | Validate final_score formula: trend(0.40) + viral(0.35) + profit(0.25) = 1.00. Test with edge values (all 0, all 100, mixed). | `src/lib/scoring/composite.ts` | ✅ 2026-03-12 |
+| 4.5 | Validate backend scoring matches frontend scoring: Compare `backend/src/lib/scoring.ts` with `src/lib/scoring/composite.ts`. Are they consistent? | Both scoring files | ✅ 2026-03-12 |
+| 4.6 | Review profitability scoring: Price sweet spots, sales velocity tiers, margin estimates. Are the formulas sound? | `src/lib/scoring/profitability.ts` | ✅ 2026-03-12 |
 
 ---
 
