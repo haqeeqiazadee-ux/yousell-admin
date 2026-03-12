@@ -2397,13 +2397,30 @@ Specifically integrate:
 - Database: marketing_plans, content_queue, published_content tables
 
 ### Intelligent Product Ranking System
-- Unified Ranking Score (URS) calculation
-- 5-component ranking model
+- Unified Ranking Score (URS) calculation with category-specific weights
+- 5-component ranking model (discovery, purchasing/commission, marketing, momentum, performance)
 - Platform-specific ranking criteria
 - Physical vs digital product handling
 - URS recalculation triggers
 - Opportunity Leaderboard dashboard widget
 - W36 (ranking_recalculation_worker)
+
+### Product Classification & Gating (PART 6)
+- Four product categories: digital/AI/SaaS, branded physical, white label physical, physical affiliate
+- Brand gating intelligence (Amazon SP-API + TikTok manual + Shopify legal assessment)
+- W1B (brand gating check worker)
+- Brand authorization upload workflow
+- Platform-specific go-to-market strategies per category
+- Database: brand_gating, affiliate_programs, affiliate_links tables
+- Products table: +product_category, +is_branded, +brand_name, +gating_decision, +selling_strategy
+
+### Intelligence Memory & Learning System (PART 7)
+- 5-layer architecture: outcome capture → pattern recognition → memory retrieval → score recalibration → confidence calibration
+- Supabase pgvector for semantic lesson retrieval
+- Memory-enhanced Claude prompts (inject relevant lessons into analysis)
+- Self-improving scoring weights with admin approval gate
+- Workers: W37 (outcome collector), W38 (pattern recognizer), W40 (score recalibrator)
+- Database: prediction_log, memory_aggregates, memory_lessons (pgvector), score_recalibrations
 
 ## OUTPUT FORMAT
 
@@ -2605,6 +2622,925 @@ Produce a structured report with:
 8. Continue pattern for each phase...
 
 This ensures no phase introduces regressions.
+
+---
+
+---
+
+# PART 6: PRODUCT CLASSIFICATION & STRATEGY OVERHAUL
+
+---
+
+## 6A. The Four Product Categories
+
+The platform previously treated all products similarly. This is wrong. There are FOUR fundamentally different product types, each requiring a different go-to-market strategy:
+
+```
+REVENUE POTENTIAL / OPERATIONAL SIMPLICITY
+
+                    HIGH MARGIN, ZERO FRICTION
+                            ↑
+    ┌───────────────────────────────────────────┐
+    │  CATEGORY 1: DIGITAL / AI / SaaS          │
+    │  Commission: 20-50% RECURRING              │
+    │  Delivery: Instant                         │
+    │  Overhead: Zero                            │
+    │  LTV: $720+ per referral (30% × $100 × 24mo)│
+    │  Examples: Copy.ai, Notion, Webflow        │
+    │  GO-TO-MARKET: Faceless content → affiliate │
+    └───────────────────────────────────────────┘
+                            │
+    ┌───────────────────────────────────────────┐
+    │  CATEGORY 2: BRANDED PHYSICAL (GATED)      │
+    │  Margin: 40-60%                            │
+    │  Delivery: Depends on supplier             │
+    │  Overhead: Moderate (sourcing, auth docs)  │
+    │  LTV: $50-200 per sale + repeat            │
+    │  Strategy: Shopify landing pages +          │
+    │            influencer traffic               │
+    │  GO-TO-MARKET: Brand auth → Shopify → ads  │
+    └───────────────────────────────────────────┘
+                            │
+    ┌───────────────────────────────────────────┐
+    │  CATEGORY 3: WHITE LABEL PHYSICAL (UNGATED)│
+    │  Margin: 30-50%                            │
+    │  Delivery: 2-14 days depending on source   │
+    │  Overhead: High (shipping, returns, trust) │
+    │  LTV: $21 per sale average                 │
+    │  Strategy: TikTok Shop / Amazon direct      │
+    │  GO-TO-MARKET: Creator partnerships → volume│
+    └───────────────────────────────────────────┘
+                            │
+    ┌───────────────────────────────────────────┐
+    │  CATEGORY 4: PHYSICAL AFFILIATE            │
+    │  Commission: 3-10% one-time                │
+    │  Delivery: Handled by merchant             │
+    │  Overhead: Minimal                         │
+    │  LTV: Low ($2-15 per sale)                 │
+    │  Strategy: Volume content → affiliate links │
+    │  GO-TO-MARKET: SEO + social content        │
+    └───────────────────────────────────────────┘
+                            ↓
+                    LOW MARGIN, HIGH FRICTION
+```
+
+### Revenue Comparison (Per Product, Per Month)
+
+| Category | Revenue/Product/Month | Effort Required | Scalability |
+|----------|----------------------|-----------------|-------------|
+| **Digital/AI/SaaS** | $50-300 (recurring) | Low (content only) | Infinite |
+| **Branded Physical** | $100-500 (per sale volume) | Medium (sourcing + Shopify) | Limited by inventory |
+| **White Label Physical** | $50-200 (per sale volume) | High (full operations) | Limited by shipping/ops |
+| **Physical Affiliate** | $5-30 (per referral) | Low (content only) | Infinite |
+
+### Strategic Priority Shift
+
+**BEFORE (old approach):**
+Physical products first → digital as afterthought
+
+**AFTER (new approach):**
+1. **Digital/AI/SaaS: PRIMARY REVENUE ENGINE** — highest margin, zero friction, recurring
+2. **Branded Physical via Shopify: HIGH-VALUE PHYSICAL** — when brand auth available
+3. **White Label Physical: VOLUME PLAY** — TikTok Shop / Amazon for ungated products
+4. **Physical Affiliate: PASSIVE INCOME** — low effort, supplementary revenue
+
+### Updated Platform-Product Matrix
+
+| Discovery Platform | Cat 1: Digital/AI | Cat 2: Branded | Cat 3: White Label | Cat 4: Phys Affiliate |
+|---|---|---|---|---|
+| **TikTok** | Promote AI tools via creators | Shopify landing page | TikTok Shop direct | Amazon affiliate links |
+| **Amazon** | N/A | Amazon (if ungated) or Shopify | Amazon direct | Amazon Associates |
+| **Shopify** | Discover trending digital stores | Shopify (our store) | Shopify (our store) | N/A |
+| **Pinterest** | Promote templates/courses | Shopify landing page | Shopify/Amazon | Affiliate pins |
+| **Product Hunt** | Discover new AI tools | N/A | N/A | N/A |
+| **Digital platforms** | Discover courses/templates | N/A | N/A | N/A |
+
+---
+
+## 6B. Digital / AI / SaaS Priority Strategy
+
+### Why This Is Now Priority #1
+
+Research confirmed:
+- **Single SaaS referral at 30% recurring on $100/mo = $720 LTV** over 24 months
+- **vs $21 profit** from a single dropshipped physical product
+- **34x more lifetime value per referral**, with zero shipping, zero returns, zero customer service
+- Copy.ai (45%), Notion (50% first year), Webflow (50% first year), ClickFunnels (30-40% lifetime)
+- Faceless creators earning **$80K+/month** with 15-20 AI-generated videos
+- 80% of affiliate marketers now use AI tools for content creation
+
+### Digital/AI Product Discovery Pipeline
+
+```
+SOURCES:
+  → Product Hunt API (trending AI tools, phase 11)
+  → Gumroad / Lemon Squeezy (trending digital products)
+  → AI tool directories (There's An AI For That, FutureTools, etc.)
+  → SaaS review platforms (G2, Capterra — trending tools)
+  → TikTok trending AI content (which tools are creators promoting?)
+  → Reddit r/SaaS, r/Entrepreneur, r/artificial (community signals)
+
+SCORING (Digital-Specific):
+  → Commission rate (higher = better)
+  → Commission type (recurring >>> one-time)
+  → Cookie duration (longer = better)
+  → Tool growth rate (Product Hunt upvotes, G2 reviews growth)
+  → Content angle count (how many ways can we promote it?)
+  → Market awareness (established enough for people to search for it)
+  → Existing affiliate competition (saturated or opportunity?)
+
+CONTENT STRATEGY:
+  → "[Tool] Review" — faceless video showing the tool in action
+  → "[Tool A] vs [Tool B]" — comparison content (highest conversion rate)
+  → "How I [achieved result] with [Tool]" — results-driven content
+  → "Best AI tools for [use case]" — listicle format
+  → Tutorial/walkthrough content — long-form value content
+
+MONETIZATION:
+  → Affiliate links in bio, description, pinned comment
+  → Shopify landing page with affiliate redirect (for branded content)
+  → Email list building → nurture → promote tools
+  → YouTube SEO content (evergreen affiliate traffic)
+```
+
+### Affiliate Link Management
+
+```
+affiliate_programs table:
+  id, program_name, platform (copy_ai, notion, etc.)
+  commission_rate, commission_type (one_time, recurring, tiered)
+  cookie_duration_days, payout_threshold, payout_frequency
+  affiliate_link_template, tracking_api_url, api_key
+  status (active, paused, pending_approval)
+  total_referrals, total_revenue, avg_ltv
+  created_at, updated_at
+
+affiliate_links table:
+  id, program_id, product_id
+  affiliate_url, short_url, utm_params
+  platform_posted (tiktok, youtube, instagram, etc.)
+  clicks, conversions, revenue
+  created_at
+```
+
+---
+
+## 6C. Brand Gating Intelligence Layer
+
+### The Problem
+
+When the system discovers a trending branded product (e.g., a viral Nike shoe), it needs to IMMEDIATELY know:
+1. Is this brand gated on Amazon? (likely yes for Nike)
+2. Is this brand gated on TikTok Shop? (maybe not)
+3. Can we sell it on Shopify? (yes, if legitimately sourced)
+4. Do we have brand authorization? (check our docs)
+5. What's the right go-to-market strategy given gating status?
+
+### Platform-Specific Gating Detection
+
+**Amazon: Programmatic (API Available)**
+```
+Amazon SP-API → Listings Restrictions API (v2021-08-01)
+  GET /listings/2021-08-01/restrictions
+  Params: asin, marketplaceIds, sellerId
+  Response:
+    → Empty restrictions = UNGATED ✓
+    → APPROVAL_REQUIRED = GATED (can apply with docs)
+    → NOT_ELIGIBLE = BLOCKED (cannot sell)
+```
+
+**TikTok Shop: Manual + Database (No API)**
+```
+No public API for gating checks.
+Strategy:
+  → Maintain curated list of known gated brands/categories
+  → Admin manually checks Seller Center when a new brand is flagged
+  → Store results in brand_gating table for future reference
+  → Flag categories known to require pre-approval:
+    Beauty, Electronics, Children's, Jewelry, Medical Devices
+```
+
+**Shopify: Always Ungated**
+```
+No platform gating on Shopify.
+Legal risk assessment instead:
+  → Is the brand known for aggressive IP enforcement? (flag)
+  → Do we have legitimate sourcing? (check)
+  → Are we using trademarks appropriately? (check)
+```
+
+### The Brand Gating Database
+
+```sql
+-- Brand gating status across platforms (one-off lookup, cached for reference)
+CREATE TABLE brand_gating (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  brand_name TEXT NOT NULL,
+  brand_normalized TEXT NOT NULL, -- lowercase, trimmed for matching
+
+  -- Platform-specific gating status
+  amazon_status TEXT DEFAULT 'unknown',
+    -- 'ungated', 'gated_approval_required', 'gated_blocked', 'unknown'
+  amazon_asin_checked TEXT,           -- ASIN used for the check
+  amazon_checked_at TIMESTAMPTZ,
+  amazon_ungating_docs_required TEXT, -- 'invoices', 'brand_letter', etc.
+
+  tiktok_status TEXT DEFAULT 'unknown',
+    -- 'ungated', 'authorization_required', 'category_restricted', 'unknown'
+  tiktok_checked_at TIMESTAMPTZ,
+  tiktok_auth_tier_needed TEXT,       -- 'trademark_owner', 'first_level', 'second_level'
+
+  shopify_status TEXT DEFAULT 'ungated', -- always ungated at platform level
+  shopify_legal_risk TEXT DEFAULT 'unknown',
+    -- 'low' (generic/small brand), 'medium' (known brand, not aggressive),
+    -- 'high' (known for IP enforcement: Nike, Apple, Disney)
+
+  -- Brand authorization status
+  has_brand_authorization BOOLEAN DEFAULT false,
+  authorization_doc_url TEXT,          -- uploaded proof document
+  authorization_platforms TEXT[],      -- which platforms the auth covers
+  authorization_expires_at TIMESTAMPTZ,
+  authorization_uploaded_by TEXT,
+  authorization_verified BOOLEAN DEFAULT false,
+
+  -- Metadata
+  category TEXT,
+  ip_enforcement_aggressiveness TEXT,  -- 'low', 'medium', 'high'
+  notes TEXT,
+  last_updated_by TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+
+  UNIQUE(brand_normalized)
+);
+
+CREATE INDEX idx_brand_gating_name ON brand_gating(brand_normalized);
+CREATE INDEX idx_brand_gating_amazon ON brand_gating(amazon_status);
+CREATE INDEX idx_brand_gating_tiktok ON brand_gating(tiktok_status);
+```
+
+### Product Gating Check Workflow (W1B — NEW)
+
+```
+W1B: Brand Gating Check (runs in parallel with W1 Supplier Lookup)
+Trigger: Product scored >= 60 AND product appears to be branded
+
+→ Extract brand name from product title/metadata
+→ Normalize brand name (lowercase, strip suffixes)
+→ CHECK brand_gating table:
+  → IF brand exists with recent check (< 30 days): use cached status
+  → IF brand NOT in table OR stale:
+    → IF product has Amazon ASIN:
+      → Call Amazon Listings Restrictions API
+      → Store result in brand_gating table
+    → For TikTok: flag as 'unknown' (admin will manually check)
+    → Shopify: always 'ungated', assess legal risk by brand recognition
+
+→ DECISION TREE:
+  ┌─────────────────────────────────────────────────────────────┐
+  │ Is it a branded product?                                    │
+  │   NO → Category 3 (White Label) → standard pipeline        │
+  │   YES ↓                                                     │
+  │                                                             │
+  │ Check gating status per platform:                           │
+  │                                                             │
+  │ Amazon: UNGATED + TikTok: UNGATED                          │
+  │   → Category 3 path (sell on both platforms directly)       │
+  │                                                             │
+  │ Amazon: GATED + TikTok: UNGATED                            │
+  │   → Sell on TikTok Shop (no auth needed)                   │
+  │   → Consider Shopify for broader reach                     │
+  │   → Flag: "Gated on Amazon, TikTok opportunity"            │
+  │                                                             │
+  │ Amazon: UNGATED + TikTok: AUTH REQUIRED                    │
+  │   → Sell on Amazon (no auth needed)                        │
+  │   → Consider Shopify for TikTok influencer traffic         │
+  │                                                             │
+  │ Amazon: GATED + TikTok: AUTH REQUIRED                      │
+  │   → Do we have brand authorization?                        │
+  │     YES → Proceed on both platforms                        │
+  │     NO  → Flag for admin: "HIGH POTENTIAL but GATED"       │
+  │           → Admin must upload brand auth docs              │
+  │           → Meanwhile: Shopify-only strategy (legal risk?) │
+  │           → DO NOT proceed with marketing until auth       │
+  │             confirmed or admin explicitly approves          │
+  │                                                             │
+  │ All platforms BLOCKED + No auth possible                   │
+  │   → Archive product OR redirect to Shopify-only strategy   │
+  └─────────────────────────────────────────────────────────────┘
+
+→ Store gating_decision on product record
+→ Route to appropriate sourcing/marketing strategy
+```
+
+### Brand Authorization Workflow
+
+When a high-potential product is gated on all desired platforms:
+
+```
+1. System flags product in Sourcing Queue:
+   "⚠️ HIGH POTENTIAL (score 87) but GATED on Amazon + TikTok.
+    Brand: [Brand Name]
+    Required: Brand authorization document
+    Options: Upload auth docs OR approve Shopify-only strategy"
+
+2. Admin actions:
+   → [UPLOAD AUTHORIZATION] — Admin uploads brand auth letter/invoice
+     → Document stored in Supabase Storage
+     → Link saved to brand_gating.authorization_doc_url
+     → authorization_platforms set (e.g., ['amazon', 'tiktok'])
+     → System rechecks: can now sell on authorized platforms
+     → Proceeds to normal pipeline
+
+   → [SHOPIFY ONLY] — Accept selling only on Shopify
+     → product.selling_strategy = 'shopify_only'
+     → Legal risk assessment applied
+     → Marketing plan targets Shopify landing page + influencer traffic
+     → No platform marketplace listings
+
+   → [SKIP] — Don't pursue this product
+     → Product archived with reason: 'brand_gated_no_auth'
+
+3. Admin uploads brand auth LATER:
+   → System re-evaluates ALL archived/gated products for that brand
+   → Automatically moves newly-eligible products back into pipeline
+   → "You uploaded Nike authorization → 7 previously-gated Nike
+      products can now be listed on Amazon"
+```
+
+---
+
+## 6D. Platform-Specific Go-To-Market Strategies
+
+### Category 1: Digital / AI / SaaS Products
+
+```
+DISCOVERY → SCORING → AFFILIATE SIGNUP → CONTENT CREATION → PUBLISH → TRACK
+
+No sourcing queue needed (no physical product to source).
+No shipping, no gating, no supplier lookup.
+
+Pipeline shortcut:
+  Discovery → Digital Scoring → Marketing Plan → Content → Publish
+
+Sourcing Queue equivalent: "Affiliate Program Verification"
+  → Is the affiliate program legitimate?
+  → What's the commission structure?
+  → Is there an API for tracking?
+  → Admin confirms: "Yes, sign up for this affiliate program"
+
+Content types (ordered by conversion rate):
+  1. "[Tool A] vs [Tool B]" comparison (highest intent)
+  2. Tutorial / walkthrough (high trust)
+  3. "Best tools for [use case]" listicle (broad reach)
+  4. Review / demo (standard)
+  5. "How I [result] with [tool]" (aspiration)
+```
+
+### Category 2: Branded Physical (Gated)
+
+```
+DISCOVERY → GATING CHECK → AUTH STATUS → SOURCING → SHOPIFY STRATEGY → CONTENT → PUBLISH
+
+Key difference: Shopify-first strategy
+  → Create branded product landing page on Shopify
+  → Drive influencer/ad traffic to Shopify page
+  → Bypass platform gating entirely
+  → Still check if ungated on any platform (bonus channel)
+
+Sourcing approach:
+  → Wholesale sourcing (legitimate brand distributors)
+  → China sourcing (branded products at wholesale from authorized factories)
+  → Admin may have personal supplier contacts for branded goods
+
+Marketing approach:
+  → Influencer partnerships with Shopify links
+  → TikTok/Instagram ads → Shopify landing page
+  → SEO content targeting "[Brand Product] buy" keywords
+  → Cannot use brand trademarks in ads without authorization
+
+Pricing strategy:
+  → Price at or slightly below retail (brand recognition carries trust)
+  → Don't undercut aggressively (MAP policies may apply)
+  → Factor in marketing costs (influencer + ads) into margin calculation
+```
+
+### Category 3: White Label Physical (Ungated)
+
+```
+DISCOVERY → SUPPLIER LOOKUP → SOURCING QUEUE → CONFIRMED PRICING → MARKETING PLAN → CONTENT → PUBLISH
+
+This is the CURRENT pipeline (no changes needed).
+The three-phase purchasing engine applies here.
+
+Key challenge: Trust
+  → No brand recognition → higher marketing spend needed
+  → Creator partnerships essential (78% of TikTok shoppers trust creator recommendations)
+  → Building basic brand identity helps (even just a name + consistent packaging)
+
+Best platforms:
+  → TikTok Shop (creator-driven trust, impulse buying)
+  → Amazon (if product fits a niche, can build organic rank)
+  → Shopify (for premium positioning with good photography)
+
+Marketing approach:
+  → High volume of creator content (more creators = more trust signals)
+  → UGC-style content (authentic feel)
+  → Price aggressively to compensate for no brand recognition
+  → "Ships from US in 2-3 days" as key differentiator
+```
+
+### Category 4: Physical Affiliate
+
+```
+DISCOVERY → AFFILIATE PROGRAM CHECK → CONTENT CREATION → PUBLISH → TRACK
+
+Similar to Category 1 but lower commissions (3-10% one-time).
+Amazon Associates, Walmart, Target, eBay partner programs.
+
+Primarily supplementary income:
+  → Create comparison/review content
+  → Embed affiliate links
+  → Volume play — many products, many pieces of content
+  → Passive income that compounds
+```
+
+---
+
+## 6E. Updated Database Fields
+
+```sql
+-- Add product classification fields to products table
+ALTER TABLE products ADD COLUMN product_category TEXT DEFAULT 'white_label_physical';
+  -- 'digital_ai_saas', 'branded_physical', 'white_label_physical', 'physical_affiliate'
+
+ALTER TABLE products ADD COLUMN is_branded BOOLEAN DEFAULT false;
+ALTER TABLE products ADD COLUMN brand_name TEXT;
+ALTER TABLE products ADD COLUMN brand_gating_id UUID REFERENCES brand_gating(id);
+
+ALTER TABLE products ADD COLUMN gating_decision JSONB DEFAULT '{}';
+  -- {
+  --   amazon: 'ungated' | 'gated' | 'blocked' | 'unknown',
+  --   tiktok: 'ungated' | 'auth_required' | 'restricted' | 'unknown',
+  --   shopify: 'ungated',
+  --   recommended_strategy: 'all_platforms' | 'tiktok_only' | 'amazon_only' | 'shopify_only' | 'needs_auth',
+  --   auth_required: boolean,
+  --   auth_uploaded: boolean
+  -- }
+
+ALTER TABLE products ADD COLUMN selling_strategy TEXT DEFAULT 'auto';
+  -- 'auto', 'all_platforms', 'tiktok_only', 'amazon_only', 'shopify_only',
+  -- 'affiliate_only', 'pending_auth', 'archived_gated'
+
+-- Index for fast category filtering
+CREATE INDEX idx_products_category ON products(product_category);
+CREATE INDEX idx_products_branded ON products(is_branded);
+CREATE INDEX idx_products_strategy ON products(selling_strategy);
+```
+
+## 6F. Updated URS Weights By Product Category
+
+The Unified Ranking Score weights change based on product category, because different things matter for different product types:
+
+```
+URS (Digital/AI/SaaS) =
+  discovery_component    × 0.20 +   // Discovery signals still matter
+  commission_component   × 0.35 +   // Commission rate + type + LTV estimate
+  marketing_component    × 0.20 +   // Content readiness
+  momentum_component     × 0.15 +   // Tool growth rate, market timing
+  performance_component  × 0.10     // Actual affiliate revenue
+
+URS (Branded Physical) =
+  discovery_component    × 0.20 +   // Trend signals
+  purchasing_component   × 0.25 +   // Sourcing + margin
+  gating_component       × 0.20 +   // Auth status, platform availability
+  marketing_component    × 0.20 +   // Content + Shopify readiness
+  momentum_component     × 0.15     // Trend freshness
+
+URS (White Label Physical) =
+  discovery_component    × 0.25 +   // Discovery signals (unchanged)
+  purchasing_component   × 0.30 +   // Margin + delivery (highest weight)
+  marketing_component    × 0.20 +   // Content readiness
+  momentum_component     × 0.15 +   // Freshness + trend velocity
+  performance_component  × 0.10     // Actual sales data
+
+URS (Physical Affiliate) =
+  discovery_component    × 0.25 +   // Product demand signals
+  commission_component   × 0.30 +   // Commission rate + program quality
+  marketing_component    × 0.25 +   // Content readiness (content is everything)
+  momentum_component     × 0.20     // Freshness + seasonal relevance
+```
+
+### New: Commission Component (for Digital/AI/SaaS + Physical Affiliate)
+
+```
+commission_component = (
+  commission_rate_score   × 0.30 +   // Higher commission = better
+  commission_type_score   × 0.30 +   // Recurring >>> one-time
+  cookie_duration_score   × 0.15 +   // Longer cookie = more conversions
+  program_reliability     × 0.15 +   // Payment history, program stability
+  ltv_estimate            × 0.10     // Projected lifetime revenue per referral
+)
+```
+
+Where:
+- `commission_rate_score`: 50%+ = 100, 30-49% = 80, 20-29% = 60, 10-19% = 40, <10% = 20
+- `commission_type_score`: lifetime_recurring = 100, first_year_recurring = 80, one_time = 40
+- `cookie_duration_score`: 180+ days = 100, 90-179 = 80, 60-89 = 60, 30-59 = 40, <30 = 20
+
+### New: Gating Component (for Branded Physical)
+
+```
+gating_component = (
+  platform_availability   × 0.40 +   // How many platforms can we sell on?
+  auth_status             × 0.35 +   // Do we have brand authorization?
+  legal_risk              × 0.25     // IP enforcement aggressiveness
+)
+```
+
+Where:
+- `platform_availability`: ungated everywhere = 100, ungated on 2+ = 75, shopify_only = 40, blocked = 0
+- `auth_status`: authorized = 100, pending_upload = 50, not_authorized = 20, not_needed = 100
+- `legal_risk`: low risk = 100, medium = 60, high risk = 20
+
+---
+
+# PART 7: INTELLIGENCE MEMORY & LEARNING SYSTEM
+
+---
+
+## 7A. Architecture Overview
+
+The platform builds institutional knowledge over time, like a human analyst who gets better at their job with experience. Five layers:
+
+```
+LAYER 1: OUTCOME CAPTURE
+  Every prediction the system makes is logged.
+  Every outcome is recorded when it arrives.
+  "We predicted this product would be STRONG. What actually happened?"
+
+LAYER 2: PATTERN RECOGNITION
+  Weekly/monthly jobs compare predictions vs outcomes.
+  Statistically significant patterns are extracted.
+  "Beauty products on TikTok have 3.2x higher engagement than Amazon (n=142)"
+
+LAYER 3: MEMORY RETRIEVAL (pgvector)
+  When analyzing a new product, retrieve relevant lessons.
+  Inject into Claude prompt as historical context.
+  "Based on 142 similar products, here's what we've learned..."
+
+LAYER 4: SCORE RECALIBRATION
+  When enough data accumulates, propose weight adjustments.
+  Admin approves before any changes take effect.
+  "Our trend scores have been 12% optimistic for electronics. Propose adjustment."
+
+LAYER 5: CONFIDENCE CALIBRATION
+  Track prediction accuracy per category/platform bucket.
+  Express appropriate confidence (or lack thereof) in predictions.
+  "We're 78% confident in beauty product predictions but only 45% for electronics."
+```
+
+## 7B. What The System Remembers
+
+### Tier 1: Outcome Memories (Highest Value)
+- **Score-to-sales correlation:** "Products we scored 85+ actually converted at X rate"
+- **Category-platform performance:** "Beauty on TikTok: avg engagement 4.2%, avg conversion 2.1%"
+- **Pricing accuracy:** "Auto-fetched prices for electronics are typically 15% below actual"
+- **Supplier reliability:** "CJ US warehouse delivered on time 94% of the time"
+- **Gating accuracy:** "89% of products we flagged as potentially gated were indeed gated"
+
+### Tier 2: Pattern Memories (High Value)
+- **Seasonal patterns:** "Fitness products spike 3x in January, home decor 2x in October"
+- **Content performance:** "Faceless comparison reels outperform single-product reviews by 2.1x in AI tools"
+- **Marketing plan effectiveness:** "Plans with 3+ content pieces convert 40% better"
+- **Affiliate program patterns:** "AI tools with free trials convert 3x better than direct-purchase tools"
+
+### Tier 3: Decision Memories (Medium Value)
+- **Admin override patterns:** "Admin rejects 80% of products under $12 — implicit preference"
+- **Marketing plan modifications:** "Admin always removes Avatar IV hero reel for products under $20"
+- **Sourcing preferences:** "Admin prefers local suppliers even at 15% higher cost"
+
+### Tier 4: Meta-Memories (System Self-Awareness)
+- **Prediction confidence calibration per bucket**
+- **Data quality observations:** "Amazon price data from RapidAPI has 15% error rate"
+- **System performance:** "Our marketing plans take 3.2 days average from approval to first publish"
+
+## 7C. Database Schema
+
+```sql
+-- LAYER 1: Prediction logging
+CREATE TABLE prediction_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  -- What was predicted
+  context_type TEXT NOT NULL,       -- 'product_score', 'viability', 'marketing_roi', 'price_estimate'
+  context_id UUID NOT NULL,         -- product_id or marketing_plan_id
+  prediction_type TEXT NOT NULL,    -- 'final_score', 'verdict', 'estimated_roi', 'delivery_days'
+  predicted_value TEXT NOT NULL,    -- the prediction (stored as text for flexibility)
+  predicted_numeric DECIMAL(10,2), -- numeric predictions for easy comparison
+  confidence DECIMAL(3,2),          -- 0.00-1.00
+  -- Context at prediction time
+  product_category TEXT,
+  product_platform TEXT,
+  model_version TEXT,               -- scoring formula version / AI model used
+  input_snapshot JSONB,             -- what data went into the prediction
+  -- Outcome (filled later)
+  actual_value TEXT,
+  actual_numeric DECIMAL(10,2),
+  outcome_delta DECIMAL(10,2),      -- predicted - actual
+  outcome_recorded_at TIMESTAMPTZ,
+  -- Metadata
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_prediction_log_context ON prediction_log(context_type, context_id);
+CREATE INDEX idx_prediction_log_category ON prediction_log(product_category, product_platform);
+CREATE INDEX idx_prediction_log_outcome ON prediction_log(outcome_recorded_at) WHERE outcome_recorded_at IS NOT NULL;
+
+-- LAYER 2: Aggregate pattern statistics
+CREATE TABLE memory_aggregates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  -- Dimension (what are we aggregating by?)
+  dimension TEXT NOT NULL,          -- 'category', 'platform', 'supplier', 'content_type', 'category_platform'
+  dimension_value TEXT NOT NULL,    -- 'beauty', 'tiktok', 'cj_us_warehouse', 'faceless_reel', 'beauty_tiktok'
+  -- Metric
+  metric_name TEXT NOT NULL,        -- 'avg_engagement_rate', 'score_accuracy', 'delivery_ontime_pct'
+  metric_value DECIMAL(10,4),
+  metric_stddev DECIMAL(10,4),      -- standard deviation for confidence intervals
+  sample_size INTEGER NOT NULL DEFAULT 0,
+  -- Significance
+  is_significant BOOLEAN DEFAULT false, -- true when sample_size >= 30
+  confidence_interval_low DECIMAL(10,4),
+  confidence_interval_high DECIMAL(10,4),
+  -- Metadata
+  last_updated TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+
+  UNIQUE(dimension, dimension_value, metric_name)
+);
+
+CREATE INDEX idx_memory_agg_dimension ON memory_aggregates(dimension, dimension_value);
+CREATE INDEX idx_memory_agg_significant ON memory_aggregates(is_significant) WHERE is_significant = true;
+
+-- LAYER 3: Semantic lessons (with pgvector embeddings)
+CREATE TABLE memory_lessons (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  -- Lesson content
+  content TEXT NOT NULL,            -- natural language lesson
+  lesson_type TEXT NOT NULL,        -- 'category_insight', 'platform_pattern', 'pricing_accuracy',
+                                    -- 'content_performance', 'seasonal', 'admin_preference', 'supplier'
+  -- Context tags for filtered retrieval
+  categories TEXT[],                -- ['beauty', 'electronics']
+  platforms TEXT[],                 -- ['tiktok', 'amazon']
+  product_types TEXT[],             -- ['digital_ai_saas', 'white_label_physical']
+  -- Confidence
+  confidence DECIMAL(3,2),          -- 0.00-1.00
+  sample_size INTEGER DEFAULT 0,
+  -- Embedding for semantic search
+  embedding VECTOR(384),            -- using all-MiniLM-L6-v2 (384 dimensions, runs locally)
+  -- Lifecycle
+  times_retrieved INTEGER DEFAULT 0,   -- how often this lesson was used
+  times_validated INTEGER DEFAULT 0,   -- how often outcome confirmed this lesson
+  times_contradicted INTEGER DEFAULT 0, -- how often outcome contradicted this lesson
+  last_validated_at TIMESTAMPTZ,
+  is_active BOOLEAN DEFAULT true,   -- false if consistently contradicted
+  superseded_by UUID REFERENCES memory_lessons(id), -- when a better lesson replaces this one
+  -- Metadata
+  source_prediction_ids UUID[],     -- which predictions generated this insight
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable pgvector extension (if not already)
+-- CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE INDEX idx_memory_lessons_embedding ON memory_lessons
+  USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+CREATE INDEX idx_memory_lessons_type ON memory_lessons(lesson_type);
+CREATE INDEX idx_memory_lessons_categories ON memory_lessons USING GIN(categories);
+CREATE INDEX idx_memory_lessons_platforms ON memory_lessons USING GIN(platforms);
+CREATE INDEX idx_memory_lessons_active ON memory_lessons(is_active) WHERE is_active = true;
+
+-- LAYER 4: Score recalibration proposals
+CREATE TABLE score_recalibrations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  -- Current vs proposed weights
+  current_weights JSONB NOT NULL,   -- {trend: 0.40, viral: 0.35, profit: 0.25}
+  proposed_weights JSONB NOT NULL,  -- {trend: 0.38, viral: 0.32, profit: 0.30}
+  -- Context
+  scope TEXT NOT NULL,              -- 'global', 'beauty', 'tiktok', 'beauty_tiktok'
+  sample_size INTEGER NOT NULL,
+  regression_r_squared DECIMAL(5,4), -- how well the proposed weights fit outcomes
+  improvement_pct DECIMAL(5,2),     -- % improvement over current weights
+  -- Evidence
+  evidence_summary TEXT,            -- natural language explanation
+  evidence_data JSONB,              -- raw regression data
+  -- Approval
+  status TEXT DEFAULT 'proposed',   -- 'proposed', 'approved', 'rejected', 'applied'
+  reviewed_by TEXT,
+  reviewed_at TIMESTAMPTZ,
+  applied_at TIMESTAMPTZ,
+  -- Metadata
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_recalibrations_status ON score_recalibrations(status);
+```
+
+## 7D. Learning Loop Workflows
+
+### W37: Outcome Collector (NEW)
+
+```
+Trigger: Cron (daily)
+→ Find prediction_log records WHERE outcome_recorded_at IS NULL
+→ For each:
+  → Check if outcome data is now available:
+    → Product scores: check admin decisions (accepted/rejected/modified)
+    → Viability verdicts: check actual sales data (if enough time has passed)
+    → Marketing ROI: check content performance data
+    → Price estimates: check confirmed prices from sourcing queue
+    → Delivery estimates: check actual delivery times from orders
+  → If outcome found: update prediction_log with actual_value + delta
+→ Summary: "Collected 47 new outcomes today"
+```
+
+### W38: Pattern Recognizer (NEW)
+
+```
+Trigger: Cron (weekly, Sunday midnight)
+→ Query prediction_log for outcomes recorded in last 30 days
+→ Group by (product_category, product_platform, prediction_type)
+→ For each group with sample_size >= 30:
+  → Calculate: mean accuracy, stddev, confidence interval
+  → Update memory_aggregates
+  → If new statistically significant pattern found:
+    → Generate natural-language lesson via Claude Haiku:
+      "Based on 47 beauty products on TikTok, our trend scores
+       are 12% optimistic on average (95% CI: 8-16%)"
+    → Generate embedding (local model or OpenAI)
+    → Store in memory_lessons
+→ Check existing lessons for contradictions:
+  → If lesson contradicted by recent data (3+ contradictions):
+    → Mark is_active = false
+    → Generate updated lesson
+```
+
+### W39: Memory-Enhanced Analysis (Integration Point)
+
+```
+This is NOT a separate workflow — it's integrated into W3 and W3D
+(profitability analysis) and W4 (marketing plan generation).
+
+When Claude analyzes a product:
+
+1. Determine context: product_category, platform, price_range
+
+2. Retrieve relevant memories:
+   → pgvector: SELECT content FROM memory_lessons
+     WHERE is_active = true
+     AND (categories && ARRAY[product_category] OR platforms && ARRAY[platform])
+     ORDER BY embedding <=> query_embedding
+     LIMIT 5
+
+   → Structured: SELECT * FROM memory_aggregates
+     WHERE dimension_value IN (category, platform, category_platform)
+     AND is_significant = true
+
+3. Format as historical context block:
+   "SYSTEM MEMORY (based on platform experience):
+    - Beauty products on TikTok average 4.2% engagement (n=142, high confidence)
+    - Our trend scores for beauty are 12% optimistic — adjust expectations
+    - Faceless comparison reels outperform single-product reviews by 2.1x
+    - Seasonal factor: beauty peaks in Q4 (current month: March, neutral)"
+
+4. Include in Claude prompt alongside product data
+
+5. Log prediction in prediction_log (for future outcome tracking)
+```
+
+### W40: Score Recalibrator (NEW)
+
+```
+Trigger: Cron (monthly, 1st of month) OR when prediction_log reaches 100+ outcomes
+
+→ Query prediction_log for all outcomes in scope
+→ Group by scope (global, per-category, per-platform)
+→ For each scope with sample_size >= 50:
+  → Run linear regression: outcome = w1*trend + w2*viral + w3*profit
+  → Compare learned weights vs current weights
+  → If improvement > 5% (significant):
+    → Create score_recalibrations record (status = 'proposed')
+    → Notify admin:
+      "Proposed scoring adjustment for beauty products:
+       Current: trend 40%, viral 35%, profit 25%
+       Proposed: trend 35%, viral 30%, profit 35%
+       Based on 87 outcomes, this improves prediction accuracy by 12%.
+       [APPROVE] [REJECT] [REVIEW DATA]"
+→ If admin approves:
+  → Update scoring formula for that scope
+  → Store in memory_lessons: "Beauty scoring weights updated from
+    (40/35/25) to (35/30/35) based on 87 outcomes"
+```
+
+## 7E. How Memory Improves Over Time
+
+### Month 1: Cold Start
+- System uses default weights and heuristics
+- prediction_log fills with predictions but no outcomes yet
+- memory_lessons is empty
+- Claude prompts include no historical context
+
+### Month 2-3: Early Learning
+- First outcomes arrive (admin decisions, early sales data)
+- memory_aggregates begins populating
+- First statistically significant patterns emerge (sample_size >= 30)
+- First memory_lessons generated
+- Claude prompts start including 1-2 relevant lessons
+
+### Month 6: Intermediate Intelligence
+- 500+ outcomes recorded
+- Strong patterns per category/platform
+- Score recalibration proposals begin
+- Admin decision patterns learned
+- Claude prompts include 5+ highly relevant lessons
+- System expresses calibrated confidence in predictions
+
+### Month 12+: Mature Intelligence
+- Thousands of outcomes
+- Per-category scoring weights optimized
+- Seasonal patterns well-established
+- Content strategy recommendations data-driven
+- Supplier reliability scored from actual experience
+- System identifies its own blind spots
+- New product types trigger "low confidence" warnings
+- The system genuinely knows more about your product niche than any individual could remember
+
+### The Memory Flywheel
+
+```
+More products analyzed
+        ↓
+More predictions logged
+        ↓
+More outcomes collected
+        ↓
+Better pattern recognition
+        ↓
+More accurate lessons
+        ↓
+Better Claude analysis
+        ↓
+Better decisions
+        ↓
+More outcomes to learn from
+        ↓ (cycle repeats, getting smarter each rotation)
+```
+
+---
+
+# PART 8: UPDATED SYSTEM TOTALS
+
+---
+
+## Worker Summary
+
+| Area | Workers | New This Session |
+|------|---------|-----------------|
+| Phase 1: Auto-Discovery | W22, W23, W24, W24B | W1B (gating check) |
+| Phase 2: Human Checkpoint | Dashboard UI | — |
+| Phase 3: Confirmed Pricing | W24C, W24D | — |
+| Engine 3A: Marketing Plans | W25, W25B, W25C | — |
+| Engine 3B: Content Production | W26-W31 | — |
+| Feedback & Monitoring | W32-W35 | — |
+| Ranking | W36 | — |
+| Learning/Memory | W37, W38, W39 (integrated), W40 | W37, W38, W40 |
+| Brand Gating | W1B | W1B |
+
+**Total new workers: 23** (was 19, added W1B, W37, W38, W40)
+**Total workers (existing 21 + new 23): 44**
+
+## Database Table Summary
+
+| Table | Purpose | New This Session |
+|-------|---------|-----------------|
+| products | Core product data (extended) | +6 columns |
+| product_costs | Supplier options + pricing | — |
+| sourcing_queue | Human review checkpoint | — |
+| local_suppliers | Reusable supplier database | — |
+| profitability_analysis | AI viability verdicts | — |
+| marketing_plans | AI-generated marketing plans | — |
+| content_queue | Content production pipeline | — |
+| published_content | Published content tracking | — |
+| content_performance | Engagement metrics | — |
+| **brand_gating** | **Platform gating status per brand** | **NEW** |
+| **affiliate_programs** | **AI/SaaS affiliate program details** | **NEW** |
+| **affiliate_links** | **Tracking links per product/platform** | **NEW** |
+| **prediction_log** | **Every prediction for outcome tracking** | **NEW** |
+| **memory_aggregates** | **Statistical patterns** | **NEW** |
+| **memory_lessons** | **Semantic lessons with pgvector** | **NEW** |
+| **score_recalibrations** | **Proposed weight adjustments** | **NEW** |
+
+**Total new tables: 16** (was 9, added 7)
 
 ---
 
