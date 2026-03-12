@@ -102,10 +102,10 @@ Read these files to recover:
 
 | # | Task | Files to Read | Status |
 |---|------|---------------|--------|
-| 3.1 | Review Next.js middleware: Does it protect /admin/* and /dashboard/* correctly? What about /api/* routes? | `src/middleware.ts` | ⬜ |
-| 3.2 | Review admin layout auth: Does it check role from profiles table? Does it redirect non-admins? | `src/app/admin/layout.tsx` | ⬜ |
-| 3.3 | Review client dashboard layout auth: Does it enforce client role? What happens if admin accesses /dashboard? | `src/app/dashboard/layout.tsx` | ⬜ |
-| 3.4 | Review Supabase client setup: Are admin/server/client clients correctly configured? Any token refresh issues? | `src/lib/supabase/admin.ts`, `server.ts`, `client.ts` | ⬜ |
+| 3.1 | Review Next.js middleware: Does it protect /admin/* and /dashboard/* correctly? What about /api/* routes? | `src/middleware.ts` | ✅ 2026-03-12 |
+| 3.2 | Review admin layout auth: Does it check role from profiles table? Does it redirect non-admins? | `src/app/admin/layout.tsx` | ✅ 2026-03-12 |
+| 3.3 | Review client dashboard layout auth: Does it enforce client role? What happens if admin accesses /dashboard? | `src/app/dashboard/layout.tsx` | ✅ 2026-03-12 |
+| 3.4 | Review Supabase client setup: Are admin/server/client clients correctly configured? Any token refresh issues? | `src/lib/supabase/admin.ts`, `server.ts`, `client.ts` | ✅ 2026-03-12 |
 
 ---
 

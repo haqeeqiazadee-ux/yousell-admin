@@ -100,3 +100,33 @@
 **Bugs Found:** 5 new (BUG-027 through BUG-031)
 
 **Next:** Sprint S03 — Architecture: Frontend & Middleware
+
+---
+
+## Session 3 — 2026-03-12 (Sprint S03)
+
+**Sprint:** S03 — Architecture: Frontend & Middleware
+**Tasks Completed:** 3.1, 3.2, 3.3, 3.4 (all 4 tasks)
+
+**Key Findings:**
+
+### 3.1 — Next.js Middleware
+- Correctly protects /admin/* and /dashboard/* with auth checks
+- Properly excludes /admin/login and /admin/unauthorized
+- API routes not covered by middleware (correct — use requireAdmin() internally)
+
+### 3.2 — Admin Layout
+- BUG-032: Layout does NOT check admin role — client users see full admin UI but APIs fail 403
+
+### 3.3 — Client Dashboard Layout
+- Correctly enforces client role
+- BUG-033: Admin users get confusing "Access Denied" redirect instead of /admin
+
+### 3.4 — Supabase Clients
+- Three clients correctly differentiated (browser/server/admin)
+- Admin client marked server-only with service role key
+- BUG-034: 'viewer' role in auth code but not in database type
+
+**Bugs Found:** 3 new (BUG-032, BUG-033, BUG-034)
+
+**Next:** Sprint S04 — Scoring Engine: Formulas
