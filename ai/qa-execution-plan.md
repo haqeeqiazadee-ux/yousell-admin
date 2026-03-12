@@ -75,10 +75,10 @@ Read these files to recover:
 
 | # | Task | Files to Read | Status |
 |---|------|---------------|--------|
-| 1.1 | Inventory all database tables referenced in code vs actually used in API routes. Document mismatches. | `src/lib/types/database.ts`, all `route.ts` files | ⬜ |
-| 1.2 | Verify Bug #22: Check if scan API route uses 'scans' or 'scan_history' table name. Document finding. | `src/app/api/admin/scan/route.ts` | ⬜ |
-| 1.3 | Verify Bug #5: Check scan cancel endpoint — does it read jobId from query param or request body? Document mismatch with backend. | `src/app/api/admin/scan/route.ts`, `backend/src/index.ts` | ⬜ |
-| 1.4 | List all environment variables required across frontend and backend. Check for undocumented dependencies. | `backend/src/index.ts`, `src/lib/providers/config.ts`, all route files using `process.env` | ⬜ |
+| 1.1 | Inventory all database tables referenced in code vs actually used in API routes. Document mismatches. | `src/lib/types/database.ts`, all `route.ts` files | ✅ 2026-03-12 |
+| 1.2 | Verify Bug #22: Check if scan API route uses 'scans' or 'scan_history' table name. Document finding. | `src/app/api/admin/scan/route.ts` | ✅ 2026-03-12 |
+| 1.3 | Verify Bug #5: Check scan cancel endpoint — does it read jobId from query param or request body? Document mismatch with backend. | `src/app/api/admin/scan/route.ts`, `backend/src/index.ts` | ✅ 2026-03-12 |
+| 1.4 | List all environment variables required across frontend and backend. Check for undocumented dependencies. | `backend/src/index.ts`, `src/lib/providers/config.ts`, all route files using `process.env` | ✅ 2026-03-12 |
 
 ---
 
