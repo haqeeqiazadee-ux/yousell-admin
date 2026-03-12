@@ -62,3 +62,41 @@
 **Bugs Reclassified:** BUG-005 downgraded from HIGH to LOW
 
 **Next:** Sprint S02 — Architecture: Backend Server
+
+---
+
+## Session 2 — 2026-03-12 (Sprint S02)
+
+**Sprint:** S02 — Architecture: Backend Server
+**Tasks Completed:** 2.1, 2.2, 2.3, 2.4, 2.5 (all 5 tasks)
+
+**Key Findings:**
+
+### 2.1 — Auth Middleware
+- JWT validation correct: creates per-request Supabase client, calls getUser()
+- Expired token handling: returns 401
+- User attachment: works but uses `any` cast
+- BUG-027: Auth uses anon key (RLS-bound) vs worker uses service role key — inconsistent
+- BUG-028: userId from request body instead of authenticated user — allows spoofing
+
+### 2.2 — Rate Limiting
+- General 100/min globally applied — correct
+- Scan 10/min on POST endpoints — correct
+- GET endpoints have only general limiter — acceptable
+
+### 2.3 — CORS
+- Single-origin only — BUG-029: will block Netlify preview URLs
+
+### 2.4 — Helmet
+- Default config applied — all standard headers set — no issues
+
+### 2.5 — Error Handling
+- Consistent try/catch + console.error + 500 pattern across all routes
+- Missing API keys handled gracefully (empty results + console.warn)
+- Email failures don't crash worker
+- BUG-030: Amazon API key exposed in URL, may leak in error logs
+- BUG-031: fetchTrends has silent empty catch block
+
+**Bugs Found:** 5 new (BUG-027 through BUG-031)
+
+**Next:** Sprint S03 — Architecture: Frontend & Middleware

@@ -88,11 +88,11 @@ Read these files to recover:
 
 | # | Task | Files to Read | Status |
 |---|------|---------------|--------|
-| 2.1 | Review auth middleware: Does it correctly validate JWT? Does it handle expired tokens? Does it attach user to request? | `backend/src/index.ts` (auth middleware section) | ⬜ |
-| 2.2 | Review rate limiting config: General (100/min) and scan (10/min). Are they applied to correct routes? | `backend/src/index.ts` (rate limiter setup) | ⬜ |
-| 2.3 | Review CORS configuration: Is FRONTEND_URL used correctly? Default fallback? | `backend/src/index.ts` (CORS section) | ⬜ |
-| 2.4 | Review Helmet security headers: Which headers are set? Are defaults sufficient? | `backend/src/index.ts` (Helmet config) | ⬜ |
-| 2.5 | Review error handling: Do all routes return proper status codes? Are errors logged with context? | `backend/src/index.ts` (all route handlers) | ⬜ |
+| 2.1 | Review auth middleware: Does it correctly validate JWT? Does it handle expired tokens? Does it attach user to request? | `backend/src/index.ts` (auth middleware section) | ✅ 2026-03-12 |
+| 2.2 | Review rate limiting config: General (100/min) and scan (10/min). Are they applied to correct routes? | `backend/src/index.ts` (rate limiter setup) | ✅ 2026-03-12 |
+| 2.3 | Review CORS configuration: Is FRONTEND_URL used correctly? Default fallback? | `backend/src/index.ts` (CORS section) | ✅ 2026-03-12 |
+| 2.4 | Review Helmet security headers: Which headers are set? Are defaults sufficient? | `backend/src/index.ts` (Helmet config) | ✅ 2026-03-12 |
+| 2.5 | Review error handling: Do all routes return proper status codes? Are errors logged with context? | `backend/src/index.ts` (all route handlers) | ✅ 2026-03-12 |
 
 ---
 
