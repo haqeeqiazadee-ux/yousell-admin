@@ -180,3 +180,22 @@
 **Bugs Found:** 1 new (BUG-037 LOW)
 
 **Next:** Sprint S06 — Integration: TikTok + Amazon Providers
+
+---
+
+## Session 6 — 2026-03-12 (Sprint S06)
+
+**Sprint:** S06 — Integration: TikTok + Amazon Providers
+**Tasks Completed:** 6.1, 6.2, 6.3, 6.4 (all 4 tasks)
+
+**Key Findings:**
+- TikTok Apify actor (`clockworks~tiktok-scraper`) correctly configured with robust field parsing
+- Amazon RapidAPI + Apify fallback chain working correctly
+- BUG-038: All Apify calls include API token in URL query string (leak risk in logs)
+- BUG-039: Frontend TikTok has no fallback when Apify unavailable
+- BUG-040: Frontend (Apify) and backend (official APIs) use completely different data sources for same platforms
+- All providers handle missing keys gracefully (empty results, no crashes)
+
+**Bugs Found:** 3 new (BUG-038 MEDIUM, BUG-039 LOW, BUG-040 MEDIUM)
+
+**Next:** Sprint S07 — Integration: Pinterest + Shopify + Trends

@@ -144,10 +144,10 @@ Read these files to recover:
 
 | # | Task | Files to Read | Status |
 |---|------|---------------|--------|
-| 6.1 | Review TikTok provider: Apify actor ID correct? Response parsing handles all fields? Fallback to official API works? | `src/lib/providers/tiktok/index.ts` | ⬜ |
-| 6.2 | Review Amazon provider: RapidAPI integration correct? ASIN extraction? Fallback to Apify bestsellers? | `src/lib/providers/amazon/index.ts` | ⬜ |
-| 6.3 | Review provider error handling: What happens when API key is missing? When Apify returns empty dataset? When rate limited? | Both provider files | ⬜ |
-| 6.4 | Review backend scraping functions: `scrapePlatform()` and `fetchTrends()` — are URLs correct? Auth headers set? Response validated? | `backend/src/lib/providers.ts` | ⬜ |
+| 6.1 | Review TikTok provider: Apify actor ID correct? Response parsing handles all fields? Fallback to official API works? | `src/lib/providers/tiktok/index.ts` | ✅ 2026-03-12 |
+| 6.2 | Review Amazon provider: RapidAPI integration correct? ASIN extraction? Fallback to Apify bestsellers? | `src/lib/providers/amazon/index.ts` | ✅ 2026-03-12 |
+| 6.3 | Review provider error handling: What happens when API key is missing? When Apify returns empty dataset? When rate limited? | Both provider files | ✅ 2026-03-12 |
+| 6.4 | Review backend scraping functions: `scrapePlatform()` and `fetchTrends()` — are URLs correct? Auth headers set? Response validated? | `backend/src/lib/providers.ts` | ✅ 2026-03-12 |
 
 ---
 
