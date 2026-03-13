@@ -41,7 +41,6 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
 import { useUser } from "@/components/user-context";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -82,13 +81,13 @@ const managementNav = [
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const user = useUser();
 
   const handleSignOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/admin/login");
+    // Full page reload to clear server-side session and re-render layout without sidebar
+    window.location.href = "/admin/login";
   };
 
   const isActive = (href: string) =>
