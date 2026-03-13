@@ -1,0 +1,62 @@
+/**
+ * Job queue names and shared data interfaces for the worker orchestration layer.
+ *
+ * Each queue handles one concern.  Jobs can be enqueued independently or
+ * chained (e.g. product-scan → enrich-product).
+ */
+
+// ── Queue names ──────────────────────────────────────────────
+export const QUEUES = {
+  PRODUCT_SCAN: "product-scan",
+  ENRICH_PRODUCT: "enrich-product",
+  TREND_SCAN: "trend-scan",
+  INFLUENCER_DISCOVERY: "influencer-discovery",
+  SUPPLIER_DISCOVERY: "supplier-discovery",
+} as const;
+
+export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
+
+// ── Job data interfaces ──────────────────────────────────────
+
+export interface ProductScanJobData {
+  mode: "quick" | "full" | "client";
+  query: string;
+  userId: string;
+  scanId?: string; // set after scan record creation
+}
+
+export interface EnrichProductJobData {
+  scanId: string;
+  products: RawProduct[];
+}
+
+export interface RawProduct {
+  external_id: string;
+  title: string;
+  price: number;
+  url: string;
+  image_url: string;
+  sales_count: number;
+  review_count: number;
+  rating: number;
+  source: string;
+}
+
+export interface TrendScanJobData {
+  query: string;
+  scanId?: string;
+  userId: string;
+}
+
+export interface InfluencerDiscoveryJobData {
+  niche: string;
+  scanId?: string;
+  userId: string;
+}
+
+export interface SupplierDiscoveryJobData {
+  productName: string;
+  category?: string;
+  scanId?: string;
+  userId: string;
+}

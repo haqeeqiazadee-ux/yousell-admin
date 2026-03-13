@@ -1,4 +1,5 @@
 import type { ProductResult, ProviderConfig } from "../types";
+import { getCachedTrends } from "../cache";
 
 const PROVIDER = process.env.TIKTOK_PROVIDER || "apify";
 
@@ -67,6 +68,44 @@ async function searchViaApify(query: string): Promise<ProductResult[]> {
     }));
   } catch (err) {
     console.error("Apify TikTok search failed:", err);
+    return [];
+  }
+}
+
+/**
+ * Search TikTok-specific trends via the TikTok Shop API.
+ * Requires TIKTOK_API_KEY env var.
+ */
+export async function searchTikTokTrends(
+  query?: string
+): Promise<{ keyword: string; volume: number; growth: number }[]> {
+  const cached = await getCachedTrends(query || "");
+  if (cached) {
+    return (cached as Record<string, unknown>[]).map((t) => ({
+      keyword: String(t.keyword || ""),
+      volume: Number(t.volume || 0),
+      growth: Number(t.growth || 0),
+    }));
+  }
+
+  const apiKey = process.env.TIKTOK_API_KEY;
+  if (!apiKey) return [];
+
+  try {
+    const response = await fetch(
+      `https://api.tiktok-shop.com/trends?query=${encodeURIComponent(query || "")}&limit=20`,
+      { headers: { Authorization: `Bearer ${apiKey}` } }
+    );
+
+    if (!response.ok) return [];
+    const data = await response.json();
+
+    return ((data.trends || []) as Record<string, unknown>[]).map((t) => ({
+      keyword: String(t.keyword || ""),
+      volume: Number(t.volume || 0),
+      growth: Number(t.growth_rate || 0),
+    }));
+  } catch {
     return [];
   }
 }

@@ -1,6 +1,7 @@
 import type { TrendResult, ProviderConfig } from "../types";
+import { getCachedTrends } from "../cache";
 
-const PROVIDER = process.env.TRENDS_PROVIDER || "pytrends";
+const PROVIDER = process.env.TRENDS_PROVIDER || process.env.GOOGLE_TRENDS_PROVIDER || "pytrends";
 
 export function getTrendsConfig(): ProviderConfig {
   return {
@@ -9,13 +10,57 @@ export function getTrendsConfig(): ProviderConfig {
   };
 }
 
+/**
+ * Search trends with batch processing (groups of 5 per cost rules).
+ * Provider priority: pytrends > Apify > SerpAPI
+ */
 export async function searchTrends(
   keywords: string[]
 ): Promise<TrendResult[]> {
-  if (process.env.APIFY_API_TOKEN) {
-    return searchViaApify(keywords);
+  // Check 24h cache first
+  const cacheKey = [...keywords].sort().join(",");
+  const cached = await getCachedTrends(cacheKey);
+  if (cached) return cached as unknown as TrendResult[];
+
+  // Batch keywords in groups of 5 (cost rule)
+  const batches: string[][] = [];
+  for (let i = 0; i < keywords.length; i += 5) {
+    batches.push(keywords.slice(i, i + 5));
   }
-  return [];
+
+  const results: TrendResult[] = [];
+
+  for (const batch of batches) {
+    if (process.env.APIFY_API_TOKEN) {
+      results.push(...await searchViaApify(batch));
+    } else if (PROVIDER === "serpapi" && process.env.SERPAPI_KEY) {
+      results.push(...await searchViaSerpApi(batch));
+    } else {
+      // pytrends fallback — placeholder stubs until Railway backend integration
+      results.push(...batch.map((keyword) => ({
+        keyword,
+        volume: 0,
+        trend: "stable" as const,
+        relatedKeywords: [],
+        source: "pytrends",
+      })));
+    }
+  }
+
+  return results;
+}
+
+async function searchViaSerpApi(keywords: string[]): Promise<TrendResult[]> {
+  const apiKey = process.env.SERPAPI_KEY;
+  if (!apiKey) return [];
+  // Placeholder — actual SerpAPI integration needed
+  return keywords.map((keyword) => ({
+    keyword,
+    volume: 0,
+    trend: "stable" as const,
+    relatedKeywords: [],
+    source: "serpapi",
+  }));
 }
 
 async function searchViaApify(keywords: string[]): Promise<TrendResult[]> {

@@ -1,14 +1,6 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
-
-function getSupabase() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-  );
-}
 
 interface AllocatedProduct {
   id: string;
@@ -44,67 +36,43 @@ export default function DashboardPage() {
     productsReleased: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [requestNote, setRequestNote] = useState('');
   const [requestSubmitted, setRequestSubmitted] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
-      const supabase = getSupabase();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const [productsRes, requestsRes] = await Promise.all([
+        fetch('/api/dashboard/products'),
+        fetch('/api/dashboard/requests'),
+      ]);
 
-      // Look up client record by email (client_id != auth user id)
-      const { data: client } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('email', user.email)
-        .single();
-
-      if (!client) {
+      if (!productsRes.ok || !requestsRes.ok) {
+        setError('Failed to load dashboard data.');
         setLoading(false);
-        return; // No client profile found
+        return;
       }
 
-      // Fetch allocated products for this client
-      const { data: allocations } = await supabase
-        .from('product_allocations')
-        .select('*, products(id, title, platform, final_score, trend_stage, image_url)')
-        .eq('client_id', client.id)
-        .eq('status', 'active')
-        .order('allocated_at', { ascending: false });
+      const productsData = await productsRes.json();
+      const requestsData = await requestsRes.json();
 
-      const mapped: AllocatedProduct[] = (allocations || []).map((a: Record<string, unknown>) => {
-        const p = a.products as Record<string, unknown> | null;
-        return {
-          id: (p?.id as string) || a.id as string,
-          title: (p?.title as string) || 'Untitled',
-          platform: (p?.platform as string) || 'unknown',
-          final_score: (p?.final_score as number) || null,
-          trend_stage: (p?.trend_stage as string) || null,
-          image_url: (p?.image_url as string) || null,
-          allocated_at: a.allocated_at as string,
-        };
-      });
+      const allProducts = (productsData.products || []) as AllocatedProduct[];
+      setProducts(allProducts);
 
-      setProducts(mapped);
-
-      // Count stats
-      const hotCount = mapped.filter(p => (p.final_score || 0) >= 80).length;
-
-      const { count: pendingCount } = await supabase
-        .from('product_requests')
-        .select('*', { count: 'exact', head: true })
-        .eq('client_id', client.id)
-        .eq('status', 'pending');
+      const hotCount = allProducts.filter((p: AllocatedProduct) => (p.final_score || 0) >= 80).length;
+      const pendingCount = (requestsData.requests || []).filter(
+        (r: Record<string, unknown>) => r.status === 'pending'
+      ).length;
 
       setStats({
-        productsAvailable: mapped.length,
+        productsAvailable: allProducts.length,
         hotProducts: hotCount,
-        pendingRequests: pendingCount || 0,
-        productsReleased: mapped.length,
+        pendingRequests: pendingCount,
+        productsReleased: allProducts.length,
       });
+      setError(null);
     } catch {
-      // API may not be ready
+      setError('Failed to load dashboard data. Please refresh.');
     }
     setLoading(false);
   }, []);
@@ -115,29 +83,26 @@ export default function DashboardPage() {
 
   const handleRequestProducts = async () => {
     try {
-      const supabase = getSupabase();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Look up client record by email
-      const { data: client } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('email', user.email)
-        .single();
-      if (!client) return;
-
-      await supabase.from('product_requests').insert({
-        client_id: client.id,
-        note: requestNote || 'Requesting more products',
-        status: 'pending',
+      const res = await fetch('/api/dashboard/requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platform: 'general',
+          note: requestNote || 'Requesting more products',
+        }),
       });
+
+      if (!res.ok) {
+        setError('Failed to submit request. Please try again.');
+        return;
+      }
 
       setRequestSubmitted(true);
       setRequestNote('');
+      setError(null);
       fetchData();
     } catch {
-      // handle error
+      setError('Failed to submit request. Please try again.');
     }
   };
 
@@ -154,6 +119,13 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <p className="text-gray-600 mt-1">Your product intelligence overview</p>
       </div>
+
+      {/* Error Banner */}
+      {error && (
+        <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-red-700 text-sm">
+          {error}
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

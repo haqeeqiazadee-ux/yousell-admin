@@ -82,17 +82,24 @@ export default function ProductsPage() {
   const [newCost, setNewCost] = useState("");
   const [newUrl, setNewUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    if (search) params.set("search", search);
-    params.set("limit", String(PAGE_SIZE));
-    params.set("offset", String((page - 1) * PAGE_SIZE));
-    const res = await fetch(`/api/admin/products?${params}`);
-    const data = await res.json();
-    setProducts(data.products || []);
-    setTotal(data.total || 0);
+    try {
+      const params = new URLSearchParams();
+      if (search) params.set("search", search);
+      params.set("limit", String(PAGE_SIZE));
+      params.set("offset", String((page - 1) * PAGE_SIZE));
+      const res = await fetch(`/api/admin/products?${params}`);
+      if (!res.ok) throw new Error("Failed to load products");
+      const data = await res.json();
+      setProducts(data.products || []);
+      setTotal(data.total || 0);
+      setError(null);
+    } catch {
+      setError("Failed to load products. Please refresh.");
+    }
     setLoading(false);
   }, [search, page]);
 
@@ -126,6 +133,8 @@ export default function ProductsPage() {
       setNewUrl("");
       setDialogOpen(false);
       fetchProducts();
+    } else {
+      setError("Failed to add product. Please try again.");
     }
     setSubmitting(false);
   };
@@ -159,6 +168,8 @@ export default function ProductsPage() {
     if (res.ok) {
       setEditDialogOpen(false);
       fetchProducts();
+    } else {
+      setError("Failed to update product. Please try again.");
     }
     setSubmitting(false);
   };
@@ -173,6 +184,8 @@ export default function ProductsPage() {
       setDeleteDialogOpen(false);
       setDeleteProduct(null);
       fetchProducts();
+    } else {
+      setError("Failed to delete product. Please try again.");
     }
     setSubmitting(false);
   };
@@ -259,6 +272,12 @@ export default function ProductsPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {error && (
+        <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-red-700 text-sm">
+          {error}
+        </div>
+      )}
 
       <Card>
         <CardHeader className="pb-3">

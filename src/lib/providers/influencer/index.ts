@@ -100,3 +100,35 @@ export function estimateCPP(tier: "nano" | "micro" | "mid" | "macro"): { min: nu
     case "macro": return { min: 5000, max: 50000 };
   }
 }
+
+/**
+ * Influencer Conversion Score formula (Section 8 of build brief)
+ *
+ * Conversion Score = (Engagement Rate x 30%)
+ *                  + (Purchase Intent Comment Ratio x 25%)
+ *                  + (Product Demo Quality x 20%)
+ *                  + (Audience Trust Signals x 15%)
+ *                  + (US Audience % x 10%)
+ */
+export function calculateConversionScore(inputs: {
+  engagementRate: number;
+  purchaseIntentRatio: number;
+  productDemoQuality: number;
+  audienceTrustSignals: number;
+  usAudiencePct: number;
+}): number {
+  return Math.min(100, Math.max(0, Math.round(
+    inputs.engagementRate * 0.30 +
+    inputs.purchaseIntentRatio * 0.25 +
+    inputs.productDemoQuality * 0.20 +
+    inputs.audienceTrustSignals * 0.15 +
+    inputs.usAudiencePct * 0.10
+  )));
+}
+
+/**
+ * Fake follower filter: exclude any influencer where fake_follower_pct > 30%
+ */
+export function passesFakeFollowerFilter(fakeFollowerPct: number): boolean {
+  return fakeFollowerPct <= 30;
+}

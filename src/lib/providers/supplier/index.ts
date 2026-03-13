@@ -37,6 +37,9 @@ export async function searchSuppliers(
   if (PROVIDER === "apify" && process.env.APIFY_API_TOKEN) {
     return searchViaApify(productName);
   }
+  if (PROVIDER === "cj_dropshipping" && process.env.CJ_DROPSHIPPING_API_KEY) {
+    return searchViaCJDropshipping(productName);
+  }
   return [];
 }
 
@@ -84,4 +87,11 @@ async function searchViaApify(query: string): Promise<SupplierResult[]> {
     console.error("Apify Alibaba search failed:", err);
     return [];
   }
+}
+
+async function searchViaCJDropshipping(_query: string): Promise<SupplierResult[]> {
+  const apiKey = process.env.CJ_DROPSHIPPING_API_KEY;
+  if (!apiKey) return [];
+  // Placeholder — actual CJ Dropshipping API integration needed
+  return [];
 }

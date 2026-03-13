@@ -118,7 +118,7 @@ function ScanPageContent() {
 
   async function fetchHistory() {
     const { data } = await getSupabase()
-      .from('scan_history')
+      .from('scans')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(10)

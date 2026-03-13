@@ -37,15 +37,22 @@ const trendStageColors: Record<string, string> = {
 export default function ClientProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/dashboard/products")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load products");
+        return res.json();
+      })
       .then((data) => {
         setProducts(data.products || []);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        setError("Failed to load products. Please refresh.");
+        setLoading(false);
+      });
   }, []);
 
   return (
@@ -67,6 +74,12 @@ export default function ClientProductsPage() {
           </Button>
         </Link>
       </div>
+
+      {error && (
+        <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-red-700 text-sm">
+          {error}
+        </div>
+      )}
 
       {/* Products */}
       {loading ? (

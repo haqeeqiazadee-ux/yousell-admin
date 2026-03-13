@@ -15,8 +15,8 @@ export function calculateCompositeScore(product: {
 }): CompositeScore {
   const profitability = calculateProfitability(product);
 
+  // Viral score heuristic (proxy for 6 pre-viral signals)
   let viral_score = 0;
-
   if (product.sales_count > 5000) viral_score += 40;
   else if (product.sales_count > 1000) viral_score += 30;
   else if (product.sales_count > 500) viral_score += 20;
@@ -34,7 +34,26 @@ export function calculateCompositeScore(product: {
 
   viral_score = Math.min(100, viral_score);
 
-  const overall_score = Math.round(viral_score * 0.6 + profitability.score * 0.4);
+  // Trend score heuristic (proxy when real trend data unavailable)
+  let trend_score = 0;
+  if (product.sales_count > 5000) trend_score += 35;
+  else if (product.sales_count > 1000) trend_score += 25;
+  else if (product.sales_count > 500) trend_score += 15;
+
+  if (product.source === 'tiktok') trend_score += 25;
+  else if (product.source === 'pinterest') trend_score += 15;
+  else if (product.source === 'amazon') trend_score += 10;
+
+  if (product.review_count > 1000) trend_score += 20;
+  else if (product.review_count > 100) trend_score += 10;
+
+  if (product.rating >= 4.5) trend_score += 20;
+  else if (product.rating >= 4.0) trend_score += 10;
+
+  trend_score = Math.min(100, trend_score);
+
+  // v7 3-pillar formula: Trend(0.40) + Viral(0.35) + Profit(0.25)
+  const overall_score = calculateFinalScore(trend_score, viral_score, profitability.score);
 
   return {
     viral_score,
