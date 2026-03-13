@@ -237,6 +237,51 @@ Next step: trend scoring engine
 
 ------------------------------------------------------------
 
+------------------------------------------------------------
+
+# DEVELOPMENT LOG ENTRIES
+
+------------------------------------------------------------
+
+## 2026-03-13 — Provider Directory Consolidation
+
+**Completed:** Standardized `src/lib/providers/` to folder-only structure.
+
+**Problem:** Loose `.ts` files (amazon.ts, pinterest.ts, shopify.ts, tiktok.ts,
+influencers.ts, suppliers.ts, trends.ts) coexisted with folder-based providers
+(amazon/, pinterest/, etc.), causing duplication and module resolution ambiguity.
+
+**Changes:**
+- Merged unique logic from loose files into folder `index.ts` files:
+  - `tiktok/index.ts` — added `searchTikTokTrends()` (TikTok Shop trend API)
+  - `influencer/index.ts` — added `calculateConversionScore()`,
+    `passesFakeFollowerFilter()` (build brief Section 8 scoring)
+  - `trends/index.ts` — added batch processing (groups of 5), multi-provider
+    support (pytrends/serpapi fallbacks), 24h cache integration
+  - `supplier/index.ts` — added CJ Dropshipping provider fallback
+- Deleted 7 loose provider files
+- Rewrote barrel file (`providers/index.ts`) to export from folder modules only
+
+**Files modified:**
+- `src/lib/providers/tiktok/index.ts`
+- `src/lib/providers/influencer/index.ts`
+- `src/lib/providers/trends/index.ts`
+- `src/lib/providers/supplier/index.ts`
+- `src/lib/providers/index.ts`
+
+**Files deleted:**
+- `src/lib/providers/amazon.ts`
+- `src/lib/providers/pinterest.ts`
+- `src/lib/providers/shopify.ts`
+- `src/lib/providers/tiktok.ts`
+- `src/lib/providers/influencers.ts`
+- `src/lib/providers/suppliers.ts`
+- `src/lib/providers/trends.ts`
+
+**Next step:** Continue platform development per build phases.
+
+------------------------------------------------------------
+
 # FINAL GOAL
 
 Deliver a fully operational commerce intelligence SaaS capable of discovering viral products, influencers, stores and advertising campaigns across multiple ecommerce ecosystems.

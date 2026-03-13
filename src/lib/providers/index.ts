@@ -1,24 +1,26 @@
-export { scrapeTikTokProducts, searchTrends } from './tiktok';
-export type { TikTokProduct } from './tiktok';
+// === Product Providers ===
+export { searchTikTokProducts, getTikTokConfig, searchTikTokTrends } from "./tiktok";
+export { searchAmazonProducts, getAmazonConfig } from "./amazon";
+export { searchShopifyProducts, getShopifyConfig } from "./shopify";
+export { searchPinterestProducts, getPinterestConfig } from "./pinterest";
 
-export { scrapeAmazonProducts } from './amazon';
-export type { AmazonProduct } from './amazon';
+// === Trends ===
+export { searchTrends, getTrendsConfig } from "./trends";
 
-export { scrapeShopifyProducts } from './shopify';
-export type { ShopifyProduct } from './shopify';
+// === Influencer ===
+export {
+  searchInfluencers,
+  getInfluencerConfig,
+  getInfluencerTier,
+  estimateCPP,
+  calculateConversionScore,
+  passesFakeFollowerFilter,
+} from "./influencer";
+export type { InfluencerResult } from "./influencer";
 
-export { scrapePinterestProducts } from './pinterest';
-export type { PinterestProduct } from './pinterest';
+// === Supplier ===
+export { searchSuppliers, getSupplierConfig } from "./supplier";
+export type { SupplierResult } from "./supplier";
 
-export type Product = {
-  external_id: string;
-  title: string;
-  price: number;
-  url: string;
-  image_url: string;
-  sales_count: number;
-  review_count: number;
-  rating: number;
-  source: string;
-  viral_score?: number;
-};
+// === Shared Types ===
+export type { ProductResult, TrendResult, ProviderConfig, CompetitorResult } from "./types";
