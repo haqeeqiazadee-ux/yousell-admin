@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScoreBadge } from "@/components/score-badge";
-import { Layers, Rocket, TrendingUp } from "lucide-react";
+import { Layers, Rocket } from "lucide-react";
 
 interface ProductCluster {
   id: string;

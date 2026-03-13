@@ -220,10 +220,10 @@ function ProductsTab() {
                   <TableCell className="max-w-xs truncate font-medium">{p.title}</TableCell>
                   <TableCell>${p.price?.toFixed(2) || "0.00"}</TableCell>
                   <TableCell><ScoreBadge score={p.score_overall || 0} /></TableCell>
-                  <TableCell>{p.sales_count?.toLocaleString() || 0}</TableCell>
+                  <TableCell>{(p.metadata as Record<string, unknown>)?.sales_count?.toLocaleString() || 0}</TableCell>
                   <TableCell>
-                    {p.url && (
-                      <a href={p.url} target="_blank" rel="noopener noreferrer">
+                    {p.external_url && (
+                      <a href={p.external_url} target="_blank" rel="noopener noreferrer">
                         <ExternalLink className="h-4 w-4 text-muted-foreground hover:text-foreground" />
                       </a>
                     )}
