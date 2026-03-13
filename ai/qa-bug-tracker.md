@@ -1,0 +1,74 @@
+# YOUSELL QA Bug Tracker
+
+**Started:** 2026-03-12
+
+---
+
+## Open Bugs
+
+| ID | Severity | Component | Summary | Sprint | Status |
+|----|----------|-----------|---------|--------|--------|
+| BUG-035 | HIGH | Scoring Engine | Frontend `composite.ts` has legacy `calculateCompositeScore()` using 60/40 (viral/profit) weighting — NOT the 3-pillar model. Function name collides with backend's version. Risk of wrong function being used. | S04 | Open |
+| BUG-022 | HIGH | Scan API / Backend | Table name split-brain: frontend reads `scan_history`, backend writes to `scans`. | S01 | Confirmed — Partially Fixed |
+| BUG-036 | MEDIUM | Scoring Engine | Backend heuristic scoring and frontend weighted scoring produce fundamentally different results for same product. Both stored in same DB fields without distinction. | S04 | Open |
+| BUG-032 | MEDIUM | Admin Layout | Admin layout does NOT check role. Client users see admin UI but APIs fail 403. | S03 | Open |
+| BUG-028 | MEDIUM | Backend Auth | POST `/api/scan` reads userId from body instead of authenticated user — spoofing risk. | S02 | Open |
+| BUG-029 | MEDIUM | Backend CORS | Single-origin CORS blocks Netlify preview URLs. | S02 | Open |
+| BUG-030 | MEDIUM | Backend Providers | Amazon API key in URL query string may leak in logs. | S02 | Open |
+| BUG-027 | MEDIUM | Backend Auth | Auth middleware uses anon key (RLS-bound) vs worker uses service role key. | S02 | Open |
+| BUG-023 | MEDIUM | Dashboard / Competitors | Table name mismatch: `competitors` vs `competitor_stores`. | S01 | Open |
+| BUG-038 | MEDIUM | All Providers | Apify API token included in URL query strings across all providers. Token may leak in error logs. | S06 | Open |
+| BUG-040 | MEDIUM | Providers | Frontend (Apify) and backend (official APIs) use different data sources for same platforms, producing inconsistent product records in same table. | S06 | Open |
+| BUG-042 | MEDIUM | Providers | Two sets of provider files coexist: old (tiktok.ts) and new (tiktok/index.ts). index.ts re-exports old files. Confusion about which to use. | S07 | Open |
+| BUG-026 | MEDIUM | Email | Duplicate email config in frontend and backend. | S01 | Open |
+| BUG-034 | LOW | Auth Types | Role type mismatch: 'viewer' in auth code but not in DB type. | S03 | Open |
+| BUG-033 | LOW | Dashboard Layout | Admin users on /dashboard get "Access Denied" instead of redirect to /admin. | S03 | Open |
+| BUG-024 | LOW | Types | `viral_signals` and `imported_files` tables missing type definitions. | S01 | Open |
+| BUG-025 | LOW | Types | `Database` type only maps 2 of 13+ tables. | S01 | Open |
+| BUG-005 | LOW | Scan API | Misleading code comment about jobId param. | S01 | Reclassified (LOW) |
+| BUG-037 | LOW | Scoring Engine | Legacy `overall_score` in frontend composite uses different formula (60/40) vs `final_score` (40/35/25). Risk if ever used for DB writes. | S05 | Open |
+| BUG-039 | LOW | TikTok Provider | Frontend TikTok provider has no fallback when Apify not configured, even if TIKTOK_API_KEY is set. Backend has official API fallback but frontend doesn't. | S06 | Open |
+| BUG-043 | LOW | Influencer Provider | `getInfluencerConfig()` returns `isConfigured: true` for "ainfluencer" but `searchInfluencers()` requires APIFY_API_TOKEN. Same pattern as BUG-041. | S08 | Open |
+| BUG-041 | LOW | Trends Provider | `getTrendsConfig()` returns `isConfigured: true` (pytrends comment) but `searchTrends()` requires APIFY_API_TOKEN. Misleading status. | S07 | Open |
+| BUG-031 | LOW | Backend Providers | `fetchTrends` silent empty catch block. | S02 | Open |
+| BUG-045 | MEDIUM | Products Route | GET `/api/admin/products` passes user-supplied `sort` param directly to `.order()` with no whitelist. Potential sort field injection. | S11 | Open |
+| BUG-046 | MEDIUM | Influencers Route | POST `/api/admin/influencers` passes raw body to `.insert(body)` with no field whitelist. Admin-authed attacker could inject arbitrary DB fields. | S11 | Open |
+| BUG-044 | LOW | Settings Route | `settings/route.ts` uses inline auth instead of shared `requireAdmin()`. Inconsistent pattern, double DB query. | S10 | Open |
+| BUG-047 | LOW | CSV Import | No CSV formula sanitization. Values like `=CMD("calc")` stored verbatim. Risk if exported to Excel. | S11 | Open |
+| BUG-048 | LOW | Settings Route | POST allows arbitrary key/value upsert to `admin_settings` with no key whitelist. | S11 | Open |
+| BUG-050 | MEDIUM | Scan Worker | Platform scraping is sequential (for loop). Full scan takes 5× longer than parallel. Should use `Promise.all()`. | S12 | Open |
+| BUG-049 | LOW | Products Route | Product search uses `ilike` with leading wildcard (`%search%`). Prevents index usage on large datasets. | S12 | Open |
+| BUG-051 | LOW | Admin Dashboard | Selects `channel` field not defined in Product interface. Should be `platform`. | S13 | Open |
+| BUG-052 | LOW | Admin Dashboard | "Hot Products" KPI uses `viral_score >= 80` filter instead of `final_score` for tier consistency. | S13 | Open |
+| BUG-053 | MEDIUM | Products Page | No error feedback on failed CRUD API calls. Dialogs close silently without user notification. | S13 | Open |
+| BUG-054 | LOW | Trends Page | Comma-separated keyword input doesn't trim whitespace. "kw1, kw2" stores " kw2" with leading space. | S13 | Open |
+| BUG-055 | LOW | Settings Page | Automation toggle doesn't refetch state. Stale if another admin changes it concurrently. | S14 | Open |
+| BUG-056 | LOW | Client Dashboard | Non-client users redirected to `/admin/unauthorized` instead of client-appropriate error page. | S15 | Open |
+| BUG-057 | MEDIUM | Client Products | "View Blueprint" button is non-functional — doesn't link anywhere or open a modal. | S15 | Open |
+| BUG-059 | MEDIUM | CSV Import / Products | CSV import uses `.insert()` not `.upsert()`. Can create duplicate products if same item imported twice. | S17 | Open |
+| BUG-060 | MEDIUM | Product Delete | Deleting a product leaves orphaned records in `product_allocations`, `launch_blueprints`, `financial_models`, `viral_signals`. No cascade. | S17 | Open |
+| BUG-062 | MEDIUM | Scan Cancel | Cancel on active job calls `moveToFailed` but worker's in-memory for loop continues. No signal to abort mid-scan. | S19 | Open |
+| BUG-063 | MEDIUM | Financial Route | Financial route implements only 5 of 8 rejection rules. Missing: IP risk, price <$10, 100+ competitors. | S21 | Open |
+| BUG-058 | LOW | Scan Queue | Redis failure indistinguishable from other 500 errors in scan POST endpoint. | S16 | Open |
+| BUG-061 | LOW | Audit Trails | Blueprint, financial, notification, automation, trends, competitor, supplier POSTs don't set `created_by` audit field. | S17 | Open |
+| BUG-064 | LOW | Automation Route | PATCH accepts arbitrary status value with no whitelist. Should only accept 'enabled' or 'disabled'. | S23 | Open |
+
+---
+
+## Resolved Bugs
+
+| ID | Severity | Component | Summary | Sprint | Resolution |
+|----|----------|-----------|---------|--------|------------|
+| (none yet) | | | | | |
+
+---
+
+## Bug Statistics
+
+| Severity | Open | Resolved | Total |
+|----------|------|----------|-------|
+| CRITICAL | 0 | 0 | 0 |
+| HIGH | 2 | 0 | 2 |
+| MEDIUM | 20 | 0 | 20 |
+| LOW | 22 | 0 | 22 |
+| **Total** | **44** | **0** | **44** |
