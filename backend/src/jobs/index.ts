@@ -12,6 +12,7 @@ import { processEnrichProduct } from "./enrich-product";
 import { processTrendScan } from "./trend-scan";
 import { processInfluencerDiscovery } from "./influencer-discovery";
 import { processSupplierDiscovery } from "./supplier-discovery";
+import { processTikTokDiscovery } from "./tiktok-discovery";
 
 function logEvents(worker: Worker, label: string) {
   worker.on("completed", (job) => {
@@ -58,6 +59,13 @@ export const supplierDiscoveryWorker = new Worker(
   { connection, concurrency: 1 }
 );
 logEvents(supplierDiscoveryWorker, "supplier-discovery");
+
+export const tiktokDiscoveryWorker = new Worker(
+  QUEUES.TIKTOK_DISCOVERY,
+  processTikTokDiscovery,
+  { connection, concurrency: 2 }
+);
+logEvents(tiktokDiscoveryWorker, "tiktok-discovery");
 
 console.log(
   "Job workers started:",

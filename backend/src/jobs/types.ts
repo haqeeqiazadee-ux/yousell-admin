@@ -12,6 +12,7 @@ export const QUEUES = {
   TREND_SCAN: "trend-scan",
   INFLUENCER_DISCOVERY: "influencer-discovery",
   SUPPLIER_DISCOVERY: "supplier-discovery",
+  TIKTOK_DISCOVERY: "tiktok-discovery",
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
@@ -59,4 +60,32 @@ export interface SupplierDiscoveryJobData {
   category?: string;
   scanId?: string;
   userId: string;
+}
+
+export interface TikTokDiscoveryJobData {
+  /** Search query or hashtag (e.g. "trending gadgets", "#tiktokmademebuyit") */
+  query: string;
+  /** Number of results to fetch (default 30, max 100) */
+  limit?: number;
+  userId: string;
+}
+
+export interface TikTokVideo {
+  video_id: string;
+  url: string;
+  description: string;
+  author_username: string;
+  author_id: string;
+  author_followers: number;
+  views: number;
+  likes: number;
+  shares: number;
+  comments: number;
+  hashtags: string[];
+  music_title: string | null;
+  create_time: string;
+  thumbnail_url: string | null;
+  /** Product signals extracted from the video */
+  product_urls: string[];
+  has_product_link: boolean;
 }

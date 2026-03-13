@@ -84,6 +84,7 @@ const scanQueue = new Queue('scan', { connection });
 const trendQueue = new Queue(QUEUES.TREND_SCAN, { connection });
 const influencerQueue = new Queue(QUEUES.INFLUENCER_DISCOVERY, { connection });
 const supplierQueue = new Queue(QUEUES.SUPPLIER_DISCOVERY, { connection });
+const tiktokDiscoveryQueue = new Queue(QUEUES.TIKTOK_DISCOVERY, { connection });
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -207,6 +208,49 @@ app.post('/api/suppliers/discover', scanLimiter, async (req, res) => {
   } catch (error) {
     console.error('Failed to queue supplier discovery:', error);
     res.status(500).json({ error: 'Failed to queue supplier discovery' });
+  }
+});
+
+app.post('/api/tiktok/discover', scanLimiter, async (req, res) => {
+  try {
+    const { query, limit, userId } = req.body;
+    if (!query) {
+      return res.status(400).json({ error: 'query is required' });
+    }
+    const job = await tiktokDiscoveryQueue.add('tiktok-discovery', {
+      query,
+      limit: Math.min(Number(limit) || 30, 100),
+      userId,
+    });
+    res.json({ jobId: job.id, status: 'queued', queue: 'tiktok-discovery' });
+  } catch (error) {
+    console.error('Failed to queue TikTok discovery:', error);
+    res.status(500).json({ error: 'Failed to queue TikTok discovery' });
+  }
+});
+
+app.get('/api/tiktok/videos', async (req, res) => {
+  try {
+    const { query, limit = '50', has_product } = req.query;
+    let q = supabase
+      .from('tiktok_videos')
+      .select('*')
+      .order('views', { ascending: false })
+      .limit(Math.min(Number(limit), 200));
+
+    if (query) {
+      q = q.eq('discovery_query', String(query));
+    }
+    if (has_product === 'true') {
+      q = q.eq('has_product_link', true);
+    }
+
+    const { data, error } = await q;
+    if (error) throw error;
+    res.json({ videos: data });
+  } catch (error) {
+    console.error('Failed to fetch TikTok videos:', error);
+    res.status(500).json({ error: 'Failed to fetch TikTok videos' });
   }
 });
 

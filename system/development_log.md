@@ -452,6 +452,38 @@ All critical flows verified:
 
 ------------------------------------------------------------
 
+## Phase 1 Batch 01 — TikTok Discovery Worker (2026-03-13)
+
+**Module:** TikTok Intelligence — Video Discovery
+
+**Completed:** Created dedicated TikTok discovery pipeline that fetches
+trending TikTok videos via Apify, extracts engagement signals (views,
+likes, shares, comments), hashtags, creator metadata, and product link
+presence, then upserts to `tiktok_videos` table.
+
+**Architecture:**
+- New queue: `tiktok-discovery` (concurrency 2)
+- Worker fetches videos via Apify `clockworks~tiktok-scraper` (video section)
+- Extracts: engagement signals, hashtags, creator info, product URLs
+- Upserts to `tiktok_videos` with dedup on `video_id`
+- Two new API endpoints:
+  - `POST /api/tiktok/discover` — enqueue discovery job
+  - `GET /api/tiktok/videos` — query stored videos (filter by query, product link)
+
+**Files created:**
+- `backend/src/jobs/tiktok-discovery.ts`
+- `supabase/migrations/010_tiktok_videos.sql`
+
+**Files modified:**
+- `backend/src/jobs/types.ts` — added TIKTOK_DISCOVERY queue, TikTokDiscoveryJobData, TikTokVideo interfaces
+- `backend/src/jobs/index.ts` — registered tiktokDiscoveryWorker
+- `backend/src/index.ts` — added 2 TikTok API endpoints
+
+**Next step:** Phase 1 Batch 02 — TikTok video product extraction worker
+(parse product signals from discovered videos, generate product candidates)
+
+------------------------------------------------------------
+
 # FINAL GOAL
 
 Deliver a fully operational commerce intelligence SaaS capable of discovering viral products, influencers, stores and advertising campaigns across multiple ecommerce ecosystems.
