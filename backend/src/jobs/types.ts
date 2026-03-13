@@ -16,6 +16,12 @@ export const QUEUES = {
   TIKTOK_PRODUCT_EXTRACT: "tiktok-product-extract",
   TIKTOK_ENGAGEMENT_ANALYSIS: "tiktok-engagement-analysis",
   TIKTOK_CROSS_MATCH: "tiktok-cross-match",
+  PRODUCT_CLUSTERING: "product-clustering",
+  TREND_DETECTION: "trend-detection",
+  CREATOR_MATCHING: "creator-matching",
+  AMAZON_INTELLIGENCE: "amazon-intelligence",
+  SHOPIFY_INTELLIGENCE: "shopify-intelligence",
+  AD_INTELLIGENCE: "ad-intelligence",
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
@@ -116,5 +122,65 @@ export interface TikTokCrossMatchJobData {
   platforms?: ("amazon" | "shopify")[];
   /** Minimum score on the TikTok side to qualify (default 40) */
   minTikTokScore?: number;
+  userId: string;
+}
+
+// ── Phase 2: Product Intelligence ──────────────────────────
+
+export interface ProductClusteringJobData {
+  /** Minimum score to include products in clustering (default 30) */
+  minScore?: number;
+  /** Similarity threshold for keyword overlap (0-1, default 0.3) */
+  similarityThreshold?: number;
+  userId: string;
+}
+
+export interface TrendDetectionJobData {
+  /** Only analyze products from this platform, or all if omitted */
+  platform?: string;
+  /** Minimum products in a cluster to flag as trending (default 3) */
+  minClusterSize?: number;
+  userId: string;
+}
+
+// ── Phase 3: Creator Intelligence ──────────────────────────
+
+export interface CreatorMatchingJobData {
+  /** Product ID to match creators for, or auto-match all 60+ products */
+  productId?: string;
+  /** Minimum product score to auto-match (default 60) */
+  minProductScore?: number;
+  /** Maximum creators to match per product (default 10) */
+  maxCreatorsPerProduct?: number;
+  userId: string;
+}
+
+// ── Phase 4: Marketplace Intelligence ──────────────────────
+
+export interface AmazonIntelligenceJobData {
+  /** Search query or category (e.g. "beauty tools", "electronics") */
+  query: string;
+  /** Number of results to fetch (default 50) */
+  limit?: number;
+  userId: string;
+}
+
+export interface ShopifyIntelligenceJobData {
+  /** Niche or category to discover stores in */
+  niche: string;
+  /** Number of stores to scan (default 20) */
+  limit?: number;
+  userId: string;
+}
+
+// ── Phase 5: Ad Intelligence ───────────────────────────────
+
+export interface AdIntelligenceJobData {
+  /** Search query for ad discovery */
+  query: string;
+  /** Platforms to search (default: tiktok, facebook) */
+  platforms?: ("tiktok" | "facebook")[];
+  /** Number of ads to fetch per platform (default 20) */
+  limit?: number;
   userId: string;
 }

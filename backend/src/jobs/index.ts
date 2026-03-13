@@ -16,6 +16,12 @@ import { processTikTokDiscovery } from "./tiktok-discovery";
 import { processTikTokProductExtract } from "./tiktok-product-extract";
 import { processTikTokEngagementAnalysis } from "./tiktok-engagement-analysis";
 import { processTikTokCrossMatch } from "./tiktok-cross-match";
+import { processProductClustering } from "./product-clustering";
+import { processTrendDetection } from "./trend-detection";
+import { processCreatorMatching } from "./creator-matching";
+import { processAmazonIntelligence } from "./amazon-intelligence";
+import { processShopifyIntelligence } from "./shopify-intelligence";
+import { processAdIntelligence } from "./ad-intelligence";
 
 function logEvents(worker: Worker, label: string) {
   worker.on("completed", (job) => {
@@ -90,6 +96,56 @@ export const tiktokCrossMatchWorker = new Worker(
   { connection, concurrency: 1 }
 );
 logEvents(tiktokCrossMatchWorker, "tiktok-cross-match");
+
+// ── Phase 2: Product Intelligence ──────────────────────────
+
+export const productClusteringWorker = new Worker(
+  QUEUES.PRODUCT_CLUSTERING,
+  processProductClustering,
+  { connection, concurrency: 1 }
+);
+logEvents(productClusteringWorker, "product-clustering");
+
+export const trendDetectionWorker = new Worker(
+  QUEUES.TREND_DETECTION,
+  processTrendDetection,
+  { connection, concurrency: 1 }
+);
+logEvents(trendDetectionWorker, "trend-detection");
+
+// ── Phase 3: Creator Intelligence ──────────────────────────
+
+export const creatorMatchingWorker = new Worker(
+  QUEUES.CREATOR_MATCHING,
+  processCreatorMatching,
+  { connection, concurrency: 1 }
+);
+logEvents(creatorMatchingWorker, "creator-matching");
+
+// ── Phase 4: Marketplace Intelligence ──────────────────────
+
+export const amazonIntelligenceWorker = new Worker(
+  QUEUES.AMAZON_INTELLIGENCE,
+  processAmazonIntelligence,
+  { connection, concurrency: 1 }
+);
+logEvents(amazonIntelligenceWorker, "amazon-intelligence");
+
+export const shopifyIntelligenceWorker = new Worker(
+  QUEUES.SHOPIFY_INTELLIGENCE,
+  processShopifyIntelligence,
+  { connection, concurrency: 1 }
+);
+logEvents(shopifyIntelligenceWorker, "shopify-intelligence");
+
+// ── Phase 5: Ad Intelligence ───────────────────────────────
+
+export const adIntelligenceWorker = new Worker(
+  QUEUES.AD_INTELLIGENCE,
+  processAdIntelligence,
+  { connection, concurrency: 1 }
+);
+logEvents(adIntelligenceWorker, "ad-intelligence");
 
 console.log(
   "Job workers started:",
