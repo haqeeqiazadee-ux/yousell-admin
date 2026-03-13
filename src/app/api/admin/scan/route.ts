@@ -74,10 +74,10 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Bug #22: table name was 'scans' but migration creates 'scan_history'
+  // Read from 'scans' table — the backend worker writes here
   const supabase = await createClient();
   const { data: scans, error } = await supabase
-    .from('scan_history')
+    .from('scans')
     .select('*')
     .order('created_at', { ascending: false })
     .limit(50);

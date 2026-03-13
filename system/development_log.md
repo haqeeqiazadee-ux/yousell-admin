@@ -333,7 +333,63 @@ the new product-scan queue via a shim worker.
 - `backend/src/worker.ts` — refactored to import jobs layer + legacy shim
 - `backend/src/index.ts` — added 3 new API endpoints
 
-**Next step:** Continue platform development per build phases.
+**Next step:** Run v7 Master QA.
+
+------------------------------------------------------------
+
+## 2026-03-13 — v7 Master QA (Batches 01–03)
+
+**QA Prompt:** `system/yousell_master_qa_prompt_v7.md`
+
+### Batch 01 — Auth Middleware & Role Enforcement
+**Verdict: PASS with 3 fixes applied**
+
+- BUG-V7-001 (Medium): Settings route used inline role check instead of
+  `requireAdmin()` — fixed for consistency
+- BUG-V7-002 (Medium): Middleware only checked auth, not admin role —
+  added profile role check for defense-in-depth
+- BUG-V7-003 (Low): Auth callback had open redirect vulnerability via
+  `next` param — added validation
+
+### Batch 02 — Admin API Routes: Inline Scraping Check
+**Verdict: PASS — 0 findings**
+
+All 24 API routes verified clean. Scan route uses valid proxy pattern
+to Express backend (which queues BullMQ jobs). No provider scraping
+functions imported in any API route.
+
+### Batch 03 — Database Schema vs v7 Required Tables
+**Verdict: CONDITIONAL PASS — 3 findings**
+
+- BUG-V7-004 (High): 8 v7-required tables missing — created migration
+  009_v7_new_tables.sql (subscriptions, platform_access, engine_toggles,
+  connected_channels, content_queue, orders, usage_tracking, addons +
+  client_addons)
+- BUG-V7-005 (Low): 3 legacy duplicate tables (scans/scan_history,
+  allocations/product_allocations, blueprints/launch_blueprints) —
+  noted for future cleanup
+- BUG-V7-006 (High): Frontend read from `scan_history`, backend wrote
+  to `scans` — aligned frontend to `scans`
+
+**Files modified:**
+- `src/app/api/admin/settings/route.ts`
+- `src/middleware.ts`
+- `src/app/api/auth/callback/route.ts`
+- `src/app/api/admin/scan/route.ts`
+
+**Files created:**
+- `supabase/migrations/009_v7_new_tables.sql`
+
+**Verified (no changes needed):**
+- 22 admin API routes use requireAdmin()
+- 2 dashboard routes scope to client data
+- RLS enabled on 24 tables with correct policies
+- No inline scraping in any API route
+- Scoring engine matches v7 formula
+- Product indexes on high-query columns
+
+**Next step:** Continue QA Phases 3–8 (business logic, billing, integrations,
+frontend, regression).
 
 ------------------------------------------------------------
 
