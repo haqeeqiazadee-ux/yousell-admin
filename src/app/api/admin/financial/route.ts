@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await request.json();
-    const { productId, retailPrice, costs, monthlyVelocity, hasUsSupplier, supplierLeadTime, isHazardous, isFragile, requiresSpecialCert } = body;
+    const { productId, retailPrice, costs, monthlyVelocity, hasUsSupplier, supplierLeadTime, isHazardous, isFragile, requiresSpecialCert, hasIPRisk, competitorCount } = body;
 
     if (!productId || !retailPrice) {
       return NextResponse.json({ error: "productId and retailPrice are required" }, { status: 400 });
@@ -90,6 +90,18 @@ export async function POST(request: Request) {
     // Rule 5: No US delivery within 15 days
     if (!hasUsSupplier && (supplierLeadTime ?? 30) > 15) {
       rejectionReasons.push("No US delivery within 15 days");
+    }
+    // Rule 6: IP or trademark infringement risk
+    if (hasIPRisk) {
+      rejectionReasons.push("IP or trademark infringement risk detected");
+    }
+    // Rule 7: Retail price below $10
+    if (retailPrice < 10) {
+      rejectionReasons.push("Retail price below $10 minimum threshold");
+    }
+    // Rule 8: Market oversaturated (100+ competitors)
+    if (competitorCount !== undefined && competitorCount > 100) {
+      rejectionReasons.push("Market oversaturated (100+ direct competitors)");
     }
     const autoRejected = rejectionReasons.length > 0;
 
