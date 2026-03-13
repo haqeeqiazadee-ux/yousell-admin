@@ -11,306 +11,43 @@ Claude must never restart the project from scratch unless explicitly instructed.
 
 
 ------------------------------------------------
-PROJECT PURPOSE
+REPOSITORY STRUCTURE
 ------------------------------------------------
 
-YOUSELL is an AI-powered product discovery and intelligence platform.
-
-The system identifies trending e-commerce products across multiple marketplaces,
-analyzes product viability, and generates actionable insights for product launches.
-
-Primary Users
-- Admin operators managing product discovery scans
-- Client businesses receiving curated product opportunities
-
-Core Capabilities
-- automated product discovery
-- AI-assisted product scoring
-- influencer and supplier analysis
-- product launch blueprint generation
-- client product allocation
-
-
-------------------------------------------------
-TECHNOLOGY STACK
-------------------------------------------------
-
-Frontend
-Next.js 14 (App Router)
-TypeScript
-TailwindCSS
-shadcn/ui
-Netlify deployment
-
-Backend
-Node.js
-Express API
-BullMQ job queue
-Redis
-
-Database
-Supabase PostgreSQL
-Supabase Auth
-Supabase Realtime
-
-Scraping / Data Sources
-Apify Actors
-
-AI
-Anthropic Claude API
-
-Email
-Resend API
-
-Version Control
-GitHub
+    yousell-admin
+    │
+    ├─ CLAUDE.md                          — This file (project rules)
+    ├─ system/
+    │   ├─ development_log.md             — Change history and session log
+    │   ├─ ai_logic.md                    — Platform operational logic
+    │   └─ yousell_master_qa_prompt_v7.md — QA execution prompt
+    │
+    ├─ docs/
+    │   └─ YouSell_Platform_Technical_Specification_v7.md — Master architecture
+    │
+    ├─ archive/                           — Old/deprecated files (reference only)
+    │
+    ├─ src/
+    │   ├─ app/                           — Next.js App Router pages and API routes
+    │   ├─ components/                    — UI components
+    │   ├─ hooks/                         — React hooks
+    │   ├─ lib/                           — Shared utilities and clients
+    │   └─ middleware.ts                  — Auth/routing middleware
+    │
+    ├─ backend/                           — Express API and workers
+    └─ supabase/                          — Database migrations
 
 
 ------------------------------------------------
-SYSTEM ARCHITECTURE
+CANONICAL ARCHITECTURE DOCUMENT
 ------------------------------------------------
 
-Admin Dashboard (Next.js)
-        ↓
-Next.js API Routes
-        ↓
-Express Backend
-        ↓
-BullMQ Job Queue
-        ↓
-Scan Worker
-        ↓
-Apify Actors
-        ↓
-Actor Dataset
-        ↓
-Dataset Fetch Layer
-        ↓
-Raw Listings Table
-        ↓
-Transformation Layer
-        ↓
-Products Table
-        ↓
-Scoring Engine
-        ↓
-Supabase Database
-        ↓
-Realtime Dashboard Updates
+The single source of truth for the platform architecture is:
 
+    docs/YouSell_Platform_Technical_Specification_v7.md
 
-------------------------------------------------
-DATA INGESTION PIPELINE
-------------------------------------------------
-
-The platform uses a multi-stage ingestion pipeline.
-
-Stage 1 — Actor Execution
-Trigger Apify actors to scrape external data sources.
-
-Stage 2 — Dataset Retrieval
-Fetch dataset results produced by the actor.
-
-Stage 3 — Raw Data Storage
-Store dataset JSON in the raw_listings table before transformation.
-
-Stage 4 — Data Transformation
-Normalize raw dataset records into structured product entries.
-
-Stage 5 — Product Scoring
-Apply the 3-pillar scoring engine.
-
-Stage 6 — Database Upsert
-Insert or update products in the products table.
-
-
-------------------------------------------------
-SCORING ENGINE
-------------------------------------------------
-
-Products are evaluated using a three-pillar scoring model.
-
-Final Score Formula
-
-final_score =
-trend_score × 0.40 +
-viral_score × 0.35 +
-profit_score × 0.25
-
-Score Tiers
-
-HOT  ≥ 80
-WARM ≥ 60
-COLD < 60
-
-
-------------------------------------------------
-DATABASE SOURCE OF TRUTH
-------------------------------------------------
-
-Primary Table
-
-products
-
-Key Fields
-
-id
-title
-platform
-external_id
-price
-cost
-trend_score
-viral_score
-profit_score
-final_score
-created_at
-
-Uniqueness Constraint
-
-UNIQUE(platform, external_id)
-
-This prevents duplicate products when the same item appears across multiple scans.
-
-
-Raw Ingestion Table
-
-raw_listings
-
-Example Fields
-
-id
-platform
-actor_run_id
-raw_json
-created_at
-
-
-------------------------------------------------
-DISCOVERY PIPELINE
-------------------------------------------------
-
-Purpose
-Identify trending products across marketplaces.
-
-Primary Sources
-
-TikTok
-Pinterest
-Amazon Movers
-Shopify stores
-
-Output
-
-products table
-
-
-------------------------------------------------
-INTELLIGENCE PIPELINE
-------------------------------------------------
-
-Purpose
-Enhance discovered products with deeper insights.
-
-Sources
-
-Influencer platforms
-Supplier APIs
-AI product analysis
-Profit calculations
-
-Output
-
-product intelligence data.
-
-
-------------------------------------------------
-JOB QUEUE SYSTEM
-------------------------------------------------
-
-BullMQ manages background jobs.
-
-Queue Types
-
-scan_jobs
-transform_jobs
-scoring_jobs
-
-Worker Pipeline
-
-scan job
-↓
-run Apify actor
-↓
-fetch dataset
-↓
-store raw data
-↓
-transform listings
-↓
-score products
-↓
-upsert to database
-
-
-------------------------------------------------
-AUTOMATION SCHEDULER
-------------------------------------------------
-
-Periodic scans should run automatically using the automation_jobs table.
-
-Recommended schedules
-
-TikTok trends — every 6 hours
-Amazon movers — every 12 hours
-Shopify stores — daily
-Pinterest trends — daily
-
-Admin dashboard scans should primarily read existing data rather than trigger scraping.
-
-
-------------------------------------------------
-DEVELOPMENT GUARDRAILS
-------------------------------------------------
-
-Claude must follow these rules.
-
-1. Do NOT rebuild completed functionality.
-2. Always inspect the repository before creating new files.
-3. Only implement missing or broken components.
-4. Always check the task board before starting work.
-5. Use the existing Supabase singleton client.
-6. Use Apify actors as the primary scraping method.
-7. Ensure compatibility with Netlify deployment constraints.
-
-
-------------------------------------------------
-PROJECT MEMORY SYSTEM
-------------------------------------------------
-
-Persistent project memory is stored in the /ai directory.
-
-Files
-
-/ai/architecture.md
-/ai/project_state.md
-/ai/task_board.md
-/ai/claude_rules.md
-
-
-File purposes
-
-architecture.md
-System architecture reference.
-
-project_state.md
-Current development progress.
-
-task_board.md
-Task tracking and priorities.
-
-claude_rules.md
-Development behavior rules.
+This document supersedes all prior build briefs.
+If any file conflicts with the v7 specification, v7 takes precedence.
 
 
 ------------------------------------------------
@@ -320,22 +57,111 @@ SESSION CONTEXT RECOVERY
 If chat history becomes compressed or context appears incomplete,
 Claude must immediately run the following protocol.
 
-1. Reload these files
+1. Read these files in order:
 
-CLAUDE.md
-/ai/architecture.md
-/ai/project_state.md
-/ai/task_board.md
+   CLAUDE.md
+   docs/YouSell_Platform_Technical_Specification_v7.md
+   system/development_log.md
+   system/ai_logic.md
 
-2. Summarize
+2. Summarize:
 
-current architecture
-completed tasks
-remaining tasks
+   current architecture
+   completed tasks
+   remaining tasks
 
-3. Continue development from the task board.
+3. Continue development from the development log.
 
 Claude must never restart the project from scratch.
+
+
+------------------------------------------------
+PROJECT PURPOSE
+------------------------------------------------
+
+YOUSELL is an AI-powered commerce intelligence SaaS platform.
+
+The system discovers trending e-commerce products across multiple marketplaces,
+scores product viability, matches influencers and suppliers, generates launch
+blueprints, provisions client stores, automates content creation and marketing,
+and tracks orders through fulfilment.
+
+The platform operates as two interconnected but separable applications:
+- YouSell Intelligence Engine (admin.yousell.online) — admin product discovery
+- YouSell Client Platform (yousell.online) — client-facing SaaS dashboard
+
+Primary Users:
+- Super admins managing the platform
+- Admin operators managing product discovery scans
+- Client businesses receiving curated product opportunities and automation
+
+
+------------------------------------------------
+TECHNOLOGY STACK
+------------------------------------------------
+
+Frontend: Next.js 14 (App Router), TypeScript, TailwindCSS, shadcn/ui, Netlify
+Backend: Node.js, Express API, BullMQ job queue, Redis (Railway)
+Database: Supabase PostgreSQL, Supabase Auth, Supabase Realtime
+Payments: Stripe (Checkout, Webhooks, Customer Portal)
+Scraping: Apify Actors
+AI: Anthropic Claude API (Haiku for bulk, Sonnet for premium)
+Email: Resend API
+Version Control: GitHub
+
+
+------------------------------------------------
+SCORING ENGINE
+------------------------------------------------
+
+Products are evaluated using a three-pillar scoring model.
+
+Final Score Formula:
+final_score = trend_score × 0.40 + viral_score × 0.35 + profit_score × 0.25
+
+Score Tiers:
+HOT   >= 80
+WARM  >= 60
+WATCH >= 40
+COLD  < 40
+
+
+------------------------------------------------
+DEVELOPMENT GUARDRAILS
+------------------------------------------------
+
+Claude must follow these rules:
+
+1. Do NOT rebuild completed functionality.
+2. Always inspect the repository before creating new files.
+3. Only implement missing or broken components.
+4. Always check the development log before starting work.
+5. Use the existing Supabase singleton client.
+6. Use Apify actors as the primary scraping method.
+7. Ensure compatibility with Netlify deployment constraints.
+8. Never run scraping logic inside API request handlers.
+9. API routes must serve stored/cached data, not trigger live scraping.
+10. All automation jobs DISABLED by default — manual-first cost control.
+11. Apply cost optimisations from day one.
+12. Use Claude Haiku for bulk operations, Sonnet only for premium insights.
+13. Store OAuth tokens encrypted; never handle client passwords.
+14. Update system/development_log.md after each meaningful implementation.
+15. Treat docs/YouSell_Platform_Technical_Specification_v7.md as the primary
+    architecture reference unless a newer canonical file explicitly replaces it.
+
+
+------------------------------------------------
+PROJECT MEMORY SYSTEM
+------------------------------------------------
+
+| File | Purpose |
+|------|---------|
+| CLAUDE.md | Project rules and guardrails (this file) |
+| docs/YouSell_Platform_Technical_Specification_v7.md | Master architecture |
+| system/development_log.md | Change history and session log |
+| system/ai_logic.md | Platform operational logic reference |
+| system/yousell_master_qa_prompt_v7.md | QA execution prompt |
+| archive/ | Old/deprecated files (reference only) |
 
 
 ------------------------------------------------
@@ -345,29 +171,8 @@ TASK EXECUTION PRINCIPLES
 Claude must complete tasks sequentially.
 
 After completing each task:
-
-1. update /ai/task_board.md
-2. update /ai/project_state.md
-3. commit changes
+1. update system/development_log.md
+2. commit changes
 
 If architecture changes:
-
-update /ai/architecture.md
-
-
-------------------------------------------------
-FINAL VERIFICATION REQUIREMENT
-------------------------------------------------
-
-After implementing the ingestion pipeline,
-the system must be tested.
-
-Run:
-
-node sync-listings.js
-
-Expected Result
-
-200 OK response from Supabase
-
-Claude must not claim completion until this verification succeeds.
+update docs/YouSell_Platform_Technical_Specification_v7.md
