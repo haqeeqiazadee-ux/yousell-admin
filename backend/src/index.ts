@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Queue } from 'bullmq';
 import { connection } from './lib/queue';
 import { supabase } from './lib/supabase';
+import { QUEUES } from './jobs/types';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -80,6 +81,9 @@ async function authMiddleware(req: express.Request, res: express.Response, next:
 app.use(authMiddleware);
 
 const scanQueue = new Queue('scan', { connection });
+const trendQueue = new Queue(QUEUES.TREND_SCAN, { connection });
+const influencerQueue = new Queue(QUEUES.INFLUENCER_DISCOVERY, { connection });
+const supplierQueue = new Queue(QUEUES.SUPPLIER_DISCOVERY, { connection });
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -162,6 +166,47 @@ app.post('/api/scan/:jobId/cancel', scanLimiter, async (req, res) => {
   } catch (error) {
     console.error('Failed to cancel job:', error);
     res.status(500).json({ error: 'Failed to cancel job' });
+  }
+});
+
+// ── New job endpoints ────────────────────────────────────────
+
+app.post('/api/trends', scanLimiter, async (req, res) => {
+  try {
+    const { query = '', userId } = req.body;
+    const job = await trendQueue.add('trend-scan', { query, userId });
+    res.json({ jobId: job.id, status: 'queued', queue: 'trend-scan' });
+  } catch (error) {
+    console.error('Failed to queue trend scan:', error);
+    res.status(500).json({ error: 'Failed to queue trend scan' });
+  }
+});
+
+app.post('/api/influencers/discover', scanLimiter, async (req, res) => {
+  try {
+    const { niche, userId } = req.body;
+    if (!niche) {
+      return res.status(400).json({ error: 'niche is required' });
+    }
+    const job = await influencerQueue.add('influencer-discovery', { niche, userId });
+    res.json({ jobId: job.id, status: 'queued', queue: 'influencer-discovery' });
+  } catch (error) {
+    console.error('Failed to queue influencer discovery:', error);
+    res.status(500).json({ error: 'Failed to queue influencer discovery' });
+  }
+});
+
+app.post('/api/suppliers/discover', scanLimiter, async (req, res) => {
+  try {
+    const { productName, category, userId } = req.body;
+    if (!productName) {
+      return res.status(400).json({ error: 'productName is required' });
+    }
+    const job = await supplierQueue.add('supplier-discovery', { productName, category, userId });
+    res.json({ jobId: job.id, status: 'queued', queue: 'supplier-discovery' });
+  } catch (error) {
+    console.error('Failed to queue supplier discovery:', error);
+    res.status(500).json({ error: 'Failed to queue supplier discovery' });
   }
 });
 

@@ -278,6 +278,61 @@ influencers.ts, suppliers.ts, trends.ts) coexisted with folder-based providers
 - `src/lib/providers/suppliers.ts`
 - `src/lib/providers/trends.ts`
 
+**Next step:** Add worker orchestration layer.
+
+------------------------------------------------------------
+
+## 2026-03-13 — Worker Orchestration Layer
+
+**Completed:** Created `backend/src/jobs/` with separated, composable BullMQ jobs.
+
+**Problem:** `backend/src/worker.ts` was a monolithic file handling all scan
+logic in a single job processor. As the platform adds influencer discovery,
+supplier matching, and enrichment, a single worker becomes unmaintainable.
+
+**Architecture:**
+```
+backend/src/jobs/
+├── types.ts                — Queue names, job data interfaces
+├── product-scan.ts         — Platform scraping (TikTok, Amazon, Shopify, Pinterest)
+├── enrich-product.ts       — Scoring, DB upsert, HOT product alerts
+├── trend-scan.ts           — Trend keyword fetching + storage
+├── influencer-discovery.ts — Apify-based influencer search + DB storage
+├── supplier-discovery.ts   — Apify Alibaba scraper + DB storage
+└── index.ts                — Registers all BullMQ workers
+```
+
+**Queues (5):**
+- `product-scan` — scrapes platforms, chains → enrich-product + trend-scan
+- `enrich-product` — scores products, upserts to DB, sends HOT alerts
+- `trend-scan` — fetches trend keywords, stores in trend_keywords table
+- `influencer-discovery` — discovers influencers for a niche
+- `supplier-discovery` — discovers suppliers for a product
+
+**Job chaining:** product-scan automatically enqueues enrich-product and
+trend-scan as downstream jobs.
+
+**Backwards compatibility:** Legacy "scan" queue jobs are forwarded to
+the new product-scan queue via a shim worker.
+
+**New API endpoints:**
+- `POST /api/trends` — queue a trend scan
+- `POST /api/influencers/discover` — queue influencer discovery
+- `POST /api/suppliers/discover` — queue supplier discovery
+
+**Files created:**
+- `backend/src/jobs/types.ts`
+- `backend/src/jobs/product-scan.ts`
+- `backend/src/jobs/enrich-product.ts`
+- `backend/src/jobs/trend-scan.ts`
+- `backend/src/jobs/influencer-discovery.ts`
+- `backend/src/jobs/supplier-discovery.ts`
+- `backend/src/jobs/index.ts`
+
+**Files modified:**
+- `backend/src/worker.ts` — refactored to import jobs layer + legacy shim
+- `backend/src/index.ts` — added 3 new API endpoints
+
 **Next step:** Continue platform development per build phases.
 
 ------------------------------------------------------------
