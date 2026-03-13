@@ -14,6 +14,7 @@ export const QUEUES = {
   SUPPLIER_DISCOVERY: "supplier-discovery",
   TIKTOK_DISCOVERY: "tiktok-discovery",
   TIKTOK_PRODUCT_EXTRACT: "tiktok-product-extract",
+  TIKTOK_ENGAGEMENT_ANALYSIS: "tiktok-engagement-analysis",
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
@@ -96,5 +97,13 @@ export interface TikTokProductExtractJobData {
   discoveryQuery?: string;
   /** Minimum view count to consider a video (default 10000) */
   minViews?: number;
+  userId: string;
+}
+
+export interface TikTokEngagementAnalysisJobData {
+  /** Analyze only this specific hashtag, or all if omitted */
+  hashtag?: string;
+  /** Minimum videos a hashtag must appear in to be analyzed (default 3) */
+  minVideoCount?: number;
   userId: string;
 }

@@ -86,6 +86,7 @@ const influencerQueue = new Queue(QUEUES.INFLUENCER_DISCOVERY, { connection });
 const supplierQueue = new Queue(QUEUES.SUPPLIER_DISCOVERY, { connection });
 const tiktokDiscoveryQueue = new Queue(QUEUES.TIKTOK_DISCOVERY, { connection });
 const tiktokProductExtractQueue = new Queue(QUEUES.TIKTOK_PRODUCT_EXTRACT, { connection });
+const tiktokEngagementQueue = new Queue(QUEUES.TIKTOK_ENGAGEMENT_ANALYSIS, { connection });
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -267,6 +268,43 @@ app.post('/api/tiktok/extract-products', scanLimiter, async (req, res) => {
   } catch (error) {
     console.error('Failed to queue TikTok product extraction:', error);
     res.status(500).json({ error: 'Failed to queue TikTok product extraction' });
+  }
+});
+
+app.post('/api/tiktok/engagement-analysis', scanLimiter, async (req, res) => {
+  try {
+    const { hashtag, minVideoCount, userId } = req.body;
+    const job = await tiktokEngagementQueue.add('tiktok-engagement-analysis', {
+      hashtag,
+      minVideoCount: Number(minVideoCount) || 3,
+      userId,
+    });
+    res.json({ jobId: job.id, status: 'queued', queue: 'tiktok-engagement-analysis' });
+  } catch (error) {
+    console.error('Failed to queue TikTok engagement analysis:', error);
+    res.status(500).json({ error: 'Failed to queue TikTok engagement analysis' });
+  }
+});
+
+app.get('/api/tiktok/hashtag-signals', async (req, res) => {
+  try {
+    const { hashtag, limit = '50' } = req.query;
+    let q = supabase
+      .from('tiktok_hashtag_signals')
+      .select('*')
+      .order('view_velocity', { ascending: false })
+      .limit(Math.min(Number(limit), 200));
+
+    if (hashtag) {
+      q = q.eq('hashtag', String(hashtag));
+    }
+
+    const { data, error } = await q;
+    if (error) throw error;
+    res.json({ signals: data });
+  } catch (error) {
+    console.error('Failed to fetch hashtag signals:', error);
+    res.status(500).json({ error: 'Failed to fetch hashtag signals' });
   }
 });
 

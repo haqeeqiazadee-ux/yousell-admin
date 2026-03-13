@@ -521,6 +521,49 @@ scoring and DB upsert. Chained automatically from tiktok-discovery.
 
 ------------------------------------------------------------
 
+## Phase 1 Batch 03 — TikTok Engagement Signal Analysis (2026-03-13)
+
+**Module:** TikTok Intelligence — Hashtag Velocity & Engagement Tracking
+
+**Completed:** Created engagement analysis worker that aggregates per-hashtag
+metrics from discovered videos, computes velocity signals (video growth rate,
+view velocity per hour, creator adoption rate, engagement rate, product video
+percentage), and stores time-series snapshots in `tiktok_hashtag_signals`.
+
+**v7 spec coverage:** "hashtag growth velocity, video creation rate, comment
+sentiment, creator count" (Section 29.2)
+
+**Architecture:**
+- New queue: `tiktok-engagement-analysis` (concurrency 1)
+- Aggregates hashtag metrics from tiktok_videos (in-memory, up to 2000 videos)
+- Computes velocity by comparing with previous snapshot (time-series)
+- Key metrics: video_growth_rate, view_velocity, creator_growth_rate,
+  engagement_rate, product_video_pct
+- Two new API endpoints:
+  - `POST /api/tiktok/engagement-analysis` — trigger analysis job
+  - `GET /api/tiktok/hashtag-signals` — query stored signals (sort by velocity)
+
+**Files created:**
+- `backend/src/jobs/tiktok-engagement-analysis.ts`
+- `supabase/migrations/011_tiktok_hashtag_signals.sql`
+
+**Files modified:**
+- `backend/src/jobs/types.ts` — added TIKTOK_ENGAGEMENT_ANALYSIS queue + job data
+- `backend/src/jobs/index.ts` — registered tiktokEngagementWorker
+- `backend/src/index.ts` — added 2 engagement analysis endpoints
+
+**Phase 1 status:** 3 of 5 batches complete
+- [x] Batch 01 — TikTok discovery worker
+- [x] Batch 02 — Product extraction from videos
+- [x] Batch 03 — Engagement signal analysis
+- [ ] Batch 04 — Product candidate generation (cross-platform matching)
+- [ ] Batch 05 — Phase 1 integration + admin UI
+
+**Next step:** Phase 1 Batch 04 — Product candidate generation
+(cross-reference TikTok products with Amazon/Shopify for demand validation)
+
+------------------------------------------------------------
+
 # FINAL GOAL
 
 Deliver a fully operational commerce intelligence SaaS capable of discovering viral products, influencers, stores and advertising campaigns across multiple ecommerce ecosystems.
