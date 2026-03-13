@@ -811,6 +811,36 @@ Added 3 new items to Intelligence section:
 
 ------------------------------------------------------------
 
+## Fix: Admin Sidebar Not Rendering (2026-03-13)
+
+**Problem:** After RBAC fix (commit 75b26f4), the admin dashboard rendered
+without the left sidebar navigation. The old flat dashboard layout appeared
+instead of the newer sidebar layout.
+
+**Root Cause:** `src/app/admin/layout.tsx` gated sidebar rendering entirely
+on `getUser()` returning a valid user. When `getUser()` returned null (due
+to RPC timing, SSR context, or caching), the layout fell back to
+`<>{children}</>` — rendering the page without any sidebar wrapper.
+The `.catch(() => null)` silently swallowed all errors.
+
+**Fixes applied:**
+1. **Force dynamic rendering** — added `export const dynamic = 'force-dynamic'`
+   to admin layout, preventing static caching of admin pages
+2. **Session-cookie fallback** — if `getUser()` fails but Supabase session
+   cookies exist (meaning middleware already validated auth), still render
+   the sidebar with a minimal fallback profile
+3. **Error logging** — added `console.error` calls in `getUser()` for
+   auth failures, RPC failures, and unexpected errors (no longer silent)
+
+**Files modified:**
+- `src/app/admin/layout.tsx` — dynamic export, cookie fallback, error logging
+- `src/lib/auth/get-user.ts` — diagnostic error logging
+
+**Next step:** Monitor Netlify function logs for `[getUser]` errors to
+determine the exact failure mode and apply a permanent fix if needed.
+
+------------------------------------------------------------
+
 # FINAL GOAL
 
 Deliver a fully operational commerce intelligence SaaS capable of discovering viral products, influencers, stores and advertising campaigns across multiple ecommerce ecosystems.
