@@ -610,6 +610,62 @@ platform, automatically check for presence on others."
 
 ------------------------------------------------------------
 
+## Phase 1 Batch 05 — Admin UI: TikTok Intelligence Dashboard (2026-03-13)
+
+**Module:** TikTok Intelligence — Admin Frontend
+
+**Completed:** Enhanced the admin TikTok page from a simple product listing
+into a full TikTok Intelligence dashboard with three tabs.
+
+**UI tabs:**
+1. **Products** — TikTok-sourced products with scores (existing, preserved)
+2. **Videos** — Discovered TikTok videos with engagement metrics (views, likes,
+   shares, comments), creator info, hashtags, and product link indicators.
+   Filterable by description search and product-link-only toggle.
+3. **Hashtag Signals** — Velocity tracking dashboard showing per-hashtag
+   metrics: total videos, views, creator count, view velocity (/hr),
+   video growth rate, creator growth rate, engagement rate, product %
+
+**Discovery trigger:** Top-right input + button to queue a TikTok discovery
+job directly from the admin UI.
+
+**API routes created:**
+- `GET /api/admin/tiktok/videos` — paginated video list with filters
+- `GET /api/admin/tiktok/signals` — hashtag signal snapshots
+- `POST /api/admin/tiktok/discover` — proxy to backend discovery queue
+
+**Files created:**
+- `src/app/api/admin/tiktok/videos/route.ts`
+- `src/app/api/admin/tiktok/signals/route.ts`
+- `src/app/api/admin/tiktok/discover/route.ts`
+
+**Files modified:**
+- `src/app/admin/tiktok/page.tsx` — complete rewrite with tabs + discovery trigger
+
+**PHASE 1 — TIKTOK INTELLIGENCE: COMPLETE**
+
+All 5 batches delivered:
+- [x] Batch 01 — TikTok discovery worker (video scraping via Apify)
+- [x] Batch 02 — Product extraction from videos
+- [x] Batch 03 — Engagement signal analysis (hashtag velocity)
+- [x] Batch 04 — Cross-platform demand validation
+- [x] Batch 05 — Admin UI dashboard
+
+**Full TikTok pipeline:**
+```
+User triggers discovery (admin UI or API)
+  → tiktok-discovery worker (Apify → tiktok_videos)
+    → tiktok-product-extract (videos → product candidates)
+      → enrich-product (scoring + DB upsert)
+      → tiktok-cross-match (Amazon/Shopify demand validation)
+  → tiktok-engagement-analysis (hashtag velocity snapshots)
+```
+
+**Next phase:** Phase 2 — Product Intelligence
+(product clustering, trend detection engine)
+
+------------------------------------------------------------
+
 # FINAL GOAL
 
 Deliver a fully operational commerce intelligence SaaS capable of discovering viral products, influencers, stores and advertising campaigns across multiple ecommerce ecosystems.
