@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { getUser } from '@/lib/auth/get-user';
 import { UserProvider } from '@/components/user-context';
 import { AdminSidebar } from '@/components/admin-sidebar';
@@ -18,40 +17,22 @@ export default async function AdminLayout({
     return null;
   });
 
-  // Determine if user has an active Supabase session via cookies
-  // This is a lightweight check — middleware already enforced auth
-  const hasSession = !user
-    ? (await cookies()).getAll().some((c) => c.name.startsWith('sb-'))
-    : true;
-
-  // If no user AND no session cookies, render without sidebar (login/unauthorized pages)
-  if (!user && !hasSession) {
+  // No authenticated user — render without sidebar (login, unauthorized, etc.)
+  if (!user) {
     return <>{children}</>;
   }
 
   // Map getUser() result to Profile shape for UserProvider
-  // If getUser() failed but session exists, use minimal fallback profile
-  const profile: Profile = user
-    ? {
-        id: user.id,
-        email: user.email,
-        full_name: null,
-        role: user.role as Profile['role'],
-        avatar_url: null,
-        push_token: null,
-        created_at: '',
-        updated_at: '',
-      }
-    : {
-        id: '',
-        email: '',
-        full_name: null,
-        role: 'admin',
-        avatar_url: null,
-        push_token: null,
-        created_at: '',
-        updated_at: '',
-      };
+  const profile: Profile = {
+    id: user.id,
+    email: user.email,
+    full_name: null,
+    role: user.role as Profile['role'],
+    avatar_url: null,
+    push_token: null,
+    created_at: '',
+    updated_at: '',
+  };
 
   return (
     <UserProvider user={profile}>
