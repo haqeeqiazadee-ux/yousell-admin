@@ -666,6 +666,151 @@ User triggers discovery (admin UI or API)
 
 ------------------------------------------------------------
 
+## Phases 2-5 — Backend Intelligence Workers (2026-03-13)
+
+### Phase 2 — Product Intelligence
+
+**Completed:** Product clustering and trend detection workers.
+
+**Product Clustering (`product-clustering.ts`):**
+- Groups products by keyword overlap in titles (stop-word removal)
+- Builds clusters when similarity >= configurable threshold
+- Stores in `product_clusters` + `product_cluster_members` tables
+- Tracks avg_score and trend_stage per cluster
+
+**Trend Detection (`trend-detection.ts`):**
+- Analyzes clusters and products for pre-viral detection (score >= 70)
+- Updates trend_stage (emerging → growing → peak → declining)
+- Sends email alerts (Resend) for products scoring 85+
+- Stores trend snapshots in `trend_keywords` table
+
+**Migration:** `012_product_clusters.sql` — product_clusters + product_cluster_members
+
+### Phase 3 — Creator Intelligence
+
+**Completed:** Creator-product matching engine.
+
+**Creator Matching (`creator-matching.ts`):**
+- For products scoring 60+, matches against influencers
+- 3-factor scoring: niche alignment (40%), engagement fit (35%), price range fit (25%)
+- ROI projection: estimated views, conversions, profit
+- Stores in `creator_product_matches` table
+
+**Migration:** `013_creator_product_match.sql`
+
+### Phase 4 — Marketplace Intelligence
+
+**Completed:** Amazon and Shopify intelligence workers.
+
+**Amazon Intelligence (`amazon-intelligence.ts`):**
+- Scrapes Amazon BSR via Apify `junglee~amazon-bestsellers-scraper`
+- Maps to RawProduct, forwards to enrich-product pipeline
+
+**Shopify Intelligence (`shopify-intelligence.ts`):**
+- Scrapes Shopify stores via Apify `clearpath~shop-by-shopify-product-scraper`
+- Extracts competitor store data (hostname, product count)
+- Stores competitors, forwards products to enrich pipeline
+
+### Phase 5 — Ad Intelligence
+
+**Completed:** Ad discovery across TikTok and Facebook.
+
+**Ad Intelligence (`ad-intelligence.ts`):**
+- TikTok: Apify scraper filtering for sponsored content indicators
+- Facebook: Meta Ad Library API integration
+- Estimates ad spend from impressions
+- Marks scaling ads (100K+ impressions TikTok, 7+ days Facebook)
+- Stores in `ads` table
+
+**Migration:** `014_ads_table.sql` — ads table + competitor enhancements
+
+**All workers registered in `backend/src/jobs/index.ts`.**
+**15 total API endpoints in `backend/src/index.ts`.**
+
+**Files created (Phases 2-5):**
+- `backend/src/jobs/product-clustering.ts`
+- `backend/src/jobs/trend-detection.ts`
+- `backend/src/jobs/creator-matching.ts`
+- `backend/src/jobs/amazon-intelligence.ts`
+- `backend/src/jobs/shopify-intelligence.ts`
+- `backend/src/jobs/ad-intelligence.ts`
+- `supabase/migrations/012_product_clusters.sql`
+- `supabase/migrations/013_creator_product_match.sql`
+- `supabase/migrations/014_ads_table.sql`
+
+**Files modified:**
+- `backend/src/jobs/types.ts` — 6 new queues + interfaces
+- `backend/src/jobs/index.ts` — 6 new worker registrations
+- `backend/src/index.ts` — 10 new API endpoints
+
+**Next phase:** Phase 6 — Admin Dashboard Polish (UI pages for all intelligence modules)
+
+------------------------------------------------------------
+
+## Phase 6 — Admin Dashboard Polish (2026-03-13)
+
+**Completed:** Full admin UI pages for all intelligence modules with
+scan triggers, data tables, filters, and sidebar navigation updates.
+
+### New Admin Pages Created:
+
+1. **Product Clusters** (`/admin/clusters`) — Displays product clusters
+   grouped by keyword similarity. Shows keywords, product count, avg score,
+   trend stage. Run Clustering button triggers backend job.
+
+2. **Creator Matches** (`/admin/creator-matches`) — Creator-product match
+   dashboard with ROI projections. Shows product, creator, match score,
+   niche alignment, engagement fit, estimated views/profit, status.
+   Run Matching button triggers backend job.
+
+3. **Ad Intelligence** (`/admin/ads`) — Ad discovery dashboard for TikTok
+   and Facebook ads. Platform filter, scaling-only toggle, discover button.
+   Shows impressions, estimated spend, scaling status, advertiser info.
+
+### Enhanced Admin Pages:
+
+4. **Amazon Intelligence** (`/admin/amazon`) — Upgraded from simple
+   PlatformProducts wrapper to full page with BSR scan trigger input,
+   product table with sales/review columns, and error handling.
+
+5. **Shopify Intelligence** (`/admin/shopify`) — Upgraded from simple
+   PlatformProducts wrapper to tabbed view (Products + Competitor Stores).
+   Scan Stores trigger, competitor store table with niche/product count.
+
+### New API Routes:
+
+- `GET/POST /api/admin/clusters` — Read clusters, trigger clustering job
+- `GET/POST /api/admin/creator-matches` — Read matches, trigger matching
+- `GET/POST /api/admin/ads` — Read ads, trigger ad discovery
+- `POST /api/admin/amazon/scan` — Trigger Amazon BSR scan
+- `POST /api/admin/shopify/scan` — Trigger Shopify store scan
+
+### Sidebar Navigation:
+
+Added 3 new items to Intelligence section:
+- Product Clusters (Layers icon)
+- Creator Matches (Target icon)
+- Ad Intelligence (Megaphone icon)
+
+**Files created:**
+- `src/app/admin/clusters/page.tsx`
+- `src/app/admin/creator-matches/page.tsx`
+- `src/app/admin/ads/page.tsx`
+- `src/app/api/admin/clusters/route.ts`
+- `src/app/api/admin/creator-matches/route.ts`
+- `src/app/api/admin/ads/route.ts`
+- `src/app/api/admin/amazon/scan/route.ts`
+- `src/app/api/admin/shopify/scan/route.ts`
+
+**Files modified:**
+- `src/app/admin/amazon/page.tsx` — full rewrite with scan trigger
+- `src/app/admin/shopify/page.tsx` — full rewrite with tabs + scan trigger
+- `src/components/admin-sidebar.tsx` — 3 new nav items
+
+**ALL 6 PHASES COMPLETE.**
+
+------------------------------------------------------------
+
 # FINAL GOAL
 
 Deliver a fully operational commerce intelligence SaaS capable of discovering viral products, influencers, stores and advertising campaigns across multiple ecommerce ecosystems.

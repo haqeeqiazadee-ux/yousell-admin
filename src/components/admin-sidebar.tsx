@@ -22,6 +22,9 @@ import {
   LogOut,
   Bell,
   Eye,
+  Layers,
+  Target,
+  Megaphone,
 } from "lucide-react";
 import {
   Sidebar,
@@ -60,6 +63,9 @@ const channelNav = [
 ];
 
 const intelligenceNav = [
+  { title: "Product Clusters", href: "/admin/clusters", icon: Layers },
+  { title: "Creator Matches", href: "/admin/creator-matches", icon: Target },
+  { title: "Ad Intelligence", href: "/admin/ads", icon: Megaphone },
   { title: "Competitors", href: "/admin/competitors", icon: Swords },
   { title: "Influencers", href: "/admin/influencers", icon: UserSearch },
   { title: "Suppliers", href: "/admin/suppliers", icon: Truck },
