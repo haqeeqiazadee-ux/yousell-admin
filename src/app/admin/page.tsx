@@ -59,6 +59,7 @@ export default function AdminDashboard() {
   const [preViralProducts, setPreViralProducts] = useState<PreViralProduct[]>([])
   const [lastScan, setLastScan] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const [serviceStatus, setServiceStatus] = useState<Record<string, boolean>>({})
 
@@ -72,7 +73,7 @@ export default function AdminDashboard() {
           setStats(prev => ({ ...prev, competitors: d.competitors }))
         }
       })
-      .catch(() => {})
+      .catch(() => { /* service status is non-critical, degrade gracefully */ })
   }, [])
 
   const systemStatus: SystemStatus[] = [
@@ -90,7 +91,7 @@ export default function AdminDashboard() {
         const sb = getSupabase()
         const [products, scans] = await Promise.all([
           sb.from('products').select('id, title, viral_score, trend_stage, platform, final_score, channel').order('final_score', { ascending: false }),
-          sb.from('scan_history').select('*').order('created_at', { ascending: false }).limit(5),
+          sb.from('scans').select('*').order('created_at', { ascending: false }).limit(5),
         ])
 
         if (products.data) {
@@ -111,7 +112,8 @@ export default function AdminDashboard() {
           if (scans.data.length > 0) setLastScan(scans.data[0].created_at)
         }
       } catch (e) {
-        console.error(e)
+        console.error('Failed to load dashboard data:', e)
+        setError('Failed to load dashboard data. Please refresh.')
       } finally {
         setLoading(false)
       }
@@ -134,7 +136,7 @@ export default function AdminDashboard() {
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'scan_history'
+        table: 'scans'
       }, debouncedFetch)
       .subscribe()
 
@@ -181,6 +183,13 @@ export default function AdminDashboard() {
           </span>
         </div>
       </div>
+
+        {/* Error Banner */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-2">
+            <span className="text-sm text-red-700">{error}</span>
+          </div>
+        )}
 
         {/* Pre-Viral Alert Strip */}
         {preViralProducts.length > 0 && (

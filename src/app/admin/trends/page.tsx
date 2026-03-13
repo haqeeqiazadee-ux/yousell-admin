@@ -52,13 +52,20 @@ export default function TrendsPage() {
   const [keywords, setKeywords] = useState("");
   const [category, setCategory] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchTrends = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/admin/trends");
-    const data = await res.json();
-    setTrends(data.trends || []);
-    setTotal(data.total || 0);
+    try {
+      const res = await fetch("/api/admin/trends");
+      if (!res.ok) throw new Error("Failed to load trends");
+      const data = await res.json();
+      setTrends(data.trends || []);
+      setTotal(data.total || 0);
+      setError(null);
+    } catch {
+      setError("Failed to load trends. Please refresh.");
+    }
     setLoading(false);
   }, []);
 
@@ -86,6 +93,8 @@ export default function TrendsPage() {
       setCategory("");
       setDialogOpen(false);
       fetchTrends();
+    } else {
+      setError("Failed to add keywords. Please try again.");
     }
     setSubmitting(false);
   };
@@ -136,6 +145,12 @@ export default function TrendsPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {error && (
+        <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-red-700 text-sm">
+          {error}
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
