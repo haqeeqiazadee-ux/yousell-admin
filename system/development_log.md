@@ -393,6 +393,65 @@ frontend, regression).
 
 ------------------------------------------------------------
 
+## QA Batches 04-05: Scoring Engine + Financial Modeling (2026-03-13)
+
+**BUG-V7-007 (High):** Composite scoring used legacy 2-pillar formula
+(viral×0.6 + profit×0.4). Added trend heuristic and switched to
+3-pillar `calculateFinalScore(trend, viral, profit)` with correct
+v7 weights (0.40/0.35/0.25).
+
+**BUG-V7-008 (High):** Financial route only had 5 of 8 auto-rejection
+rules. Added: IP/trademark risk, retail price <$10, market
+oversaturation (100+ competitors).
+
+**Files modified:**
+- `src/lib/scoring/composite.ts`
+- `src/app/api/admin/financial/route.ts`
+
+------------------------------------------------------------
+
+## QA Batches 08-09: Frontend Admin + Client Dashboard (2026-03-13)
+
+**BUG-V7-010:** `scan_history` table references in admin dashboard
+and scan page — changed to `scans` to match backend writer.
+
+**BUG-V7-011:** Client dashboard (`dashboard/page.tsx`) queried
+Supabase directly from browser client, violating guardrail #9.
+Replaced with `/api/dashboard/products` and `/api/dashboard/requests`
+API route calls.
+
+**BUG-V7-012:** Silent `.catch(() => {})` blocks across 6 frontend
+pages swallowed errors with no user feedback. Added error state and
+visible error banners to all affected pages:
+- `admin/page.tsx`, `admin/products/page.tsx`, `admin/trends/page.tsx`
+- `dashboard/page.tsx`, `dashboard/products/page.tsx`
+
+**Files modified:**
+- `src/app/admin/page.tsx`
+- `src/app/admin/scan/page.tsx`
+- `src/app/admin/products/page.tsx`
+- `src/app/admin/trends/page.tsx`
+- `src/app/dashboard/page.tsx`
+- `src/app/dashboard/products/page.tsx`
+
+------------------------------------------------------------
+
+## QA Batch 10: Regression Sweep (2026-03-13)
+
+All critical flows verified:
+- Scoring formula: 3-pillar (0.40/0.35/0.25) used consistently across
+  composite.ts, backend scoring.ts, and scoring API route
+- Table names: All code references use `scans` (correct), `product_allocations`
+  (correct). Legacy `scan_history` only in migration SQL (dead code).
+- Auth: All 22 admin API routes use `requireAdmin()` — zero unprotected.
+- Auto-rejection: All 8 rules present in financial route.
+- Direct Supabase calls: Only admin dashboard (for Realtime subscriptions,
+  acceptable) and login page (for auth, expected). All others use API routes.
+
+**Result: PASS — no regressions found.**
+
+------------------------------------------------------------
+
 # FINAL GOAL
 
 Deliver a fully operational commerce intelligence SaaS capable of discovering viral products, influencers, stores and advertising campaigns across multiple ecommerce ecosystems.
