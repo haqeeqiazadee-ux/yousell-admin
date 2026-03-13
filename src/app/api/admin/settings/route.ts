@@ -8,10 +8,8 @@ export async function GET() {
   try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
 
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { data: { user } } = await supabase.auth.getUser();
 
   // Check which providers are configured via env vars
   const providerStatus = PROVIDERS.map((provider) => ({

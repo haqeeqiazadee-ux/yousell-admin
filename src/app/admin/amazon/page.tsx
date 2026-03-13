@@ -137,8 +137,6 @@ export default function AmazonPage() {
                   <TableHead>Category</TableHead>
                   <TableHead className="text-right">Price</TableHead>
                   <TableHead className="text-center">Score</TableHead>
-                  <TableHead className="text-right">BSR / Sales</TableHead>
-                  <TableHead className="text-right">Reviews</TableHead>
                   <TableHead className="w-10"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -168,12 +166,6 @@ export default function AmazonPage() {
                     </TableCell>
                     <TableCell className="text-center">
                       <ScoreBadge score={product.final_score ?? product.score_overall} />
-                    </TableCell>
-                    <TableCell className="text-right text-sm">
-                      {product.sales_count?.toLocaleString() || "—"}
-                    </TableCell>
-                    <TableCell className="text-right text-sm">
-                      {product.review_count?.toLocaleString() || "—"}
                     </TableCell>
                     <TableCell>
                       {product.external_url && (
