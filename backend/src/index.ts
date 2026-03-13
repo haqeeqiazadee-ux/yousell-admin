@@ -84,6 +84,16 @@ const scanQueue = new Queue('scan', { connection });
 const trendQueue = new Queue(QUEUES.TREND_SCAN, { connection });
 const influencerQueue = new Queue(QUEUES.INFLUENCER_DISCOVERY, { connection });
 const supplierQueue = new Queue(QUEUES.SUPPLIER_DISCOVERY, { connection });
+const tiktokDiscoveryQueue = new Queue(QUEUES.TIKTOK_DISCOVERY, { connection });
+const tiktokProductExtractQueue = new Queue(QUEUES.TIKTOK_PRODUCT_EXTRACT, { connection });
+const tiktokEngagementQueue = new Queue(QUEUES.TIKTOK_ENGAGEMENT_ANALYSIS, { connection });
+const tiktokCrossMatchQueue = new Queue(QUEUES.TIKTOK_CROSS_MATCH, { connection });
+const productClusteringQueue = new Queue(QUEUES.PRODUCT_CLUSTERING, { connection });
+const trendDetectionQueue = new Queue(QUEUES.TREND_DETECTION, { connection });
+const creatorMatchingQueue = new Queue(QUEUES.CREATOR_MATCHING, { connection });
+const amazonIntelligenceQueue = new Queue(QUEUES.AMAZON_INTELLIGENCE, { connection });
+const shopifyIntelligenceQueue = new Queue(QUEUES.SHOPIFY_INTELLIGENCE, { connection });
+const adIntelligenceQueue = new Queue(QUEUES.AD_INTELLIGENCE, { connection });
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -207,6 +217,279 @@ app.post('/api/suppliers/discover', scanLimiter, async (req, res) => {
   } catch (error) {
     console.error('Failed to queue supplier discovery:', error);
     res.status(500).json({ error: 'Failed to queue supplier discovery' });
+  }
+});
+
+app.post('/api/tiktok/discover', scanLimiter, async (req, res) => {
+  try {
+    const { query, limit, userId } = req.body;
+    if (!query) {
+      return res.status(400).json({ error: 'query is required' });
+    }
+    const job = await tiktokDiscoveryQueue.add('tiktok-discovery', {
+      query,
+      limit: Math.min(Number(limit) || 30, 100),
+      userId,
+    });
+    res.json({ jobId: job.id, status: 'queued', queue: 'tiktok-discovery' });
+  } catch (error) {
+    console.error('Failed to queue TikTok discovery:', error);
+    res.status(500).json({ error: 'Failed to queue TikTok discovery' });
+  }
+});
+
+app.get('/api/tiktok/videos', async (req, res) => {
+  try {
+    const { query, limit = '50', has_product } = req.query;
+    let q = supabase
+      .from('tiktok_videos')
+      .select('*')
+      .order('views', { ascending: false })
+      .limit(Math.min(Number(limit), 200));
+
+    if (query) {
+      q = q.eq('discovery_query', String(query));
+    }
+    if (has_product === 'true') {
+      q = q.eq('has_product_link', true);
+    }
+
+    const { data, error } = await q;
+    if (error) throw error;
+    res.json({ videos: data });
+  } catch (error) {
+    console.error('Failed to fetch TikTok videos:', error);
+    res.status(500).json({ error: 'Failed to fetch TikTok videos' });
+  }
+});
+
+app.post('/api/tiktok/extract-products', scanLimiter, async (req, res) => {
+  try {
+    const { discoveryQuery, minViews, userId } = req.body;
+    const job = await tiktokProductExtractQueue.add('tiktok-product-extract', {
+      discoveryQuery,
+      minViews: Number(minViews) || 10000,
+      userId,
+    });
+    res.json({ jobId: job.id, status: 'queued', queue: 'tiktok-product-extract' });
+  } catch (error) {
+    console.error('Failed to queue TikTok product extraction:', error);
+    res.status(500).json({ error: 'Failed to queue TikTok product extraction' });
+  }
+});
+
+app.post('/api/tiktok/engagement-analysis', scanLimiter, async (req, res) => {
+  try {
+    const { hashtag, minVideoCount, userId } = req.body;
+    const job = await tiktokEngagementQueue.add('tiktok-engagement-analysis', {
+      hashtag,
+      minVideoCount: Number(minVideoCount) || 3,
+      userId,
+    });
+    res.json({ jobId: job.id, status: 'queued', queue: 'tiktok-engagement-analysis' });
+  } catch (error) {
+    console.error('Failed to queue TikTok engagement analysis:', error);
+    res.status(500).json({ error: 'Failed to queue TikTok engagement analysis' });
+  }
+});
+
+app.get('/api/tiktok/hashtag-signals', async (req, res) => {
+  try {
+    const { hashtag, limit = '50' } = req.query;
+    let q = supabase
+      .from('tiktok_hashtag_signals')
+      .select('*')
+      .order('view_velocity', { ascending: false })
+      .limit(Math.min(Number(limit), 200));
+
+    if (hashtag) {
+      q = q.eq('hashtag', String(hashtag));
+    }
+
+    const { data, error } = await q;
+    if (error) throw error;
+    res.json({ signals: data });
+  } catch (error) {
+    console.error('Failed to fetch hashtag signals:', error);
+    res.status(500).json({ error: 'Failed to fetch hashtag signals' });
+  }
+});
+
+app.post('/api/tiktok/cross-match', scanLimiter, async (req, res) => {
+  try {
+    const { keywords, platforms, minTikTokScore, userId } = req.body;
+    if (!keywords || !Array.isArray(keywords) || keywords.length === 0) {
+      return res.status(400).json({ error: 'keywords array is required' });
+    }
+    const job = await tiktokCrossMatchQueue.add('tiktok-cross-match', {
+      keywords: keywords.slice(0, 20),
+      platforms: platforms || ['amazon', 'shopify'],
+      minTikTokScore: Number(minTikTokScore) || 40,
+      userId,
+    });
+    res.json({ jobId: job.id, status: 'queued', queue: 'tiktok-cross-match' });
+  } catch (error) {
+    console.error('Failed to queue TikTok cross-match:', error);
+    res.status(500).json({ error: 'Failed to queue TikTok cross-match' });
+  }
+});
+
+// ── Phase 2: Product Intelligence ──────────────────────────
+
+app.post('/api/products/cluster', scanLimiter, async (req, res) => {
+  try {
+    const { minScore, similarityThreshold, userId } = req.body;
+    const job = await productClusteringQueue.add('product-clustering', {
+      minScore: Number(minScore) || 30,
+      similarityThreshold: Number(similarityThreshold) || 0.3,
+      userId,
+    });
+    res.json({ jobId: job.id, status: 'queued', queue: 'product-clustering' });
+  } catch (error) {
+    console.error('Failed to queue product clustering:', error);
+    res.status(500).json({ error: 'Failed to queue product clustering' });
+  }
+});
+
+app.get('/api/products/clusters', async (_req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('product_clusters')
+      .select('*')
+      .order('avg_score', { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    res.json({ clusters: data });
+  } catch (error) {
+    console.error('Failed to fetch clusters:', error);
+    res.status(500).json({ error: 'Failed to fetch clusters' });
+  }
+});
+
+app.post('/api/trends/detect', scanLimiter, async (req, res) => {
+  try {
+    const { platform, minClusterSize, userId } = req.body;
+    const job = await trendDetectionQueue.add('trend-detection', {
+      platform,
+      minClusterSize: Number(minClusterSize) || 3,
+      userId,
+    });
+    res.json({ jobId: job.id, status: 'queued', queue: 'trend-detection' });
+  } catch (error) {
+    console.error('Failed to queue trend detection:', error);
+    res.status(500).json({ error: 'Failed to queue trend detection' });
+  }
+});
+
+// ── Phase 3: Creator Intelligence ──────────────────────────
+
+app.post('/api/creators/match', scanLimiter, async (req, res) => {
+  try {
+    const { productId, minProductScore, maxCreatorsPerProduct, userId } = req.body;
+    const job = await creatorMatchingQueue.add('creator-matching', {
+      productId,
+      minProductScore: Number(minProductScore) || 60,
+      maxCreatorsPerProduct: Number(maxCreatorsPerProduct) || 10,
+      userId,
+    });
+    res.json({ jobId: job.id, status: 'queued', queue: 'creator-matching' });
+  } catch (error) {
+    console.error('Failed to queue creator matching:', error);
+    res.status(500).json({ error: 'Failed to queue creator matching' });
+  }
+});
+
+app.get('/api/creators/matches', async (req, res) => {
+  try {
+    const { product_id } = req.query;
+    let query = supabase
+      .from('creator_product_matches')
+      .select('*, products(title, source, price), influencers(username, platform, followers, engagement_rate)')
+      .order('match_score', { ascending: false })
+      .limit(100);
+
+    if (product_id) query = query.eq('product_id', String(product_id));
+
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json({ matches: data });
+  } catch (error) {
+    console.error('Failed to fetch creator matches:', error);
+    res.status(500).json({ error: 'Failed to fetch creator matches' });
+  }
+});
+
+// ── Phase 4: Marketplace Intelligence ──────────────────────
+
+app.post('/api/amazon/scan', scanLimiter, async (req, res) => {
+  try {
+    const { query, limit, userId } = req.body;
+    if (!query) return res.status(400).json({ error: 'query is required' });
+    const job = await amazonIntelligenceQueue.add('amazon-intelligence', {
+      query,
+      limit: Number(limit) || 50,
+      userId,
+    });
+    res.json({ jobId: job.id, status: 'queued', queue: 'amazon-intelligence' });
+  } catch (error) {
+    console.error('Failed to queue Amazon scan:', error);
+    res.status(500).json({ error: 'Failed to queue Amazon scan' });
+  }
+});
+
+app.post('/api/shopify/scan', scanLimiter, async (req, res) => {
+  try {
+    const { niche, limit, userId } = req.body;
+    if (!niche) return res.status(400).json({ error: 'niche is required' });
+    const job = await shopifyIntelligenceQueue.add('shopify-intelligence', {
+      niche,
+      limit: Number(limit) || 20,
+      userId,
+    });
+    res.json({ jobId: job.id, status: 'queued', queue: 'shopify-intelligence' });
+  } catch (error) {
+    console.error('Failed to queue Shopify scan:', error);
+    res.status(500).json({ error: 'Failed to queue Shopify scan' });
+  }
+});
+
+// ── Phase 5: Ad Intelligence ───────────────────────────────
+
+app.post('/api/ads/discover', scanLimiter, async (req, res) => {
+  try {
+    const { query, platforms, limit, userId } = req.body;
+    if (!query) return res.status(400).json({ error: 'query is required' });
+    const job = await adIntelligenceQueue.add('ad-intelligence', {
+      query,
+      platforms: platforms || ['tiktok', 'facebook'],
+      limit: Number(limit) || 20,
+      userId,
+    });
+    res.json({ jobId: job.id, status: 'queued', queue: 'ad-intelligence' });
+  } catch (error) {
+    console.error('Failed to queue ad discovery:', error);
+    res.status(500).json({ error: 'Failed to queue ad discovery' });
+  }
+});
+
+app.get('/api/ads', async (req, res) => {
+  try {
+    const { platform, scaling_only, limit: lim = '50' } = req.query;
+    let query = supabase
+      .from('ads')
+      .select('*')
+      .order('impressions', { ascending: false })
+      .limit(Math.min(Number(lim), 200));
+
+    if (platform) query = query.eq('platform', String(platform));
+    if (scaling_only === 'true') query = query.eq('is_scaling', true);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json({ ads: data });
+  } catch (error) {
+    console.error('Failed to fetch ads:', error);
+    res.status(500).json({ error: 'Failed to fetch ads' });
   }
 });
 

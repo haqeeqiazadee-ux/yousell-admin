@@ -452,6 +452,365 @@ All critical flows verified:
 
 ------------------------------------------------------------
 
+## Phase 1 Batch 01 — TikTok Discovery Worker (2026-03-13)
+
+**Module:** TikTok Intelligence — Video Discovery
+
+**Completed:** Created dedicated TikTok discovery pipeline that fetches
+trending TikTok videos via Apify, extracts engagement signals (views,
+likes, shares, comments), hashtags, creator metadata, and product link
+presence, then upserts to `tiktok_videos` table.
+
+**Architecture:**
+- New queue: `tiktok-discovery` (concurrency 2)
+- Worker fetches videos via Apify `clockworks~tiktok-scraper` (video section)
+- Extracts: engagement signals, hashtags, creator info, product URLs
+- Upserts to `tiktok_videos` with dedup on `video_id`
+- Two new API endpoints:
+  - `POST /api/tiktok/discover` — enqueue discovery job
+  - `GET /api/tiktok/videos` — query stored videos (filter by query, product link)
+
+**Files created:**
+- `backend/src/jobs/tiktok-discovery.ts`
+- `supabase/migrations/010_tiktok_videos.sql`
+
+**Files modified:**
+- `backend/src/jobs/types.ts` — added TIKTOK_DISCOVERY queue, TikTokDiscoveryJobData, TikTokVideo interfaces
+- `backend/src/jobs/index.ts` — registered tiktokDiscoveryWorker
+- `backend/src/index.ts` — added 2 TikTok API endpoints
+
+**Next step:** Phase 1 Batch 02 — TikTok video product extraction worker
+(parse product signals from discovered videos, generate product candidates)
+
+------------------------------------------------------------
+
+## Phase 1 Batch 02 — TikTok Product Extraction Worker (2026-03-13)
+
+**Module:** TikTok Intelligence — Product Extraction from Videos
+
+**Completed:** Created worker that reads discovered TikTok videos from
+`tiktok_videos`, converts high-engagement videos into product candidates
+(RawProduct format), and forwards them to `enrich-product` queue for
+scoring and DB upsert. Chained automatically from tiktok-discovery.
+
+**Architecture:**
+- New queue: `tiktok-product-extract` (concurrency 2)
+- Queries videos with `has_product_link=true` OR views >= minViews
+- Converts engagement metrics to scoring inputs:
+  - likes+shares+comments → sales_count proxy
+  - engagement rate → rating proxy (0–5)
+  - description/hashtags → product title
+- Forwards RawProduct[] to existing enrich-product pipeline
+- Discovery worker auto-chains to extraction after storing videos
+
+**Job chain:** `tiktok-discovery → tiktok-product-extract → enrich-product`
+
+**New endpoint:** `POST /api/tiktok/extract-products` (manual trigger)
+
+**Files created:**
+- `backend/src/jobs/tiktok-product-extract.ts`
+
+**Files modified:**
+- `backend/src/jobs/types.ts` — added TIKTOK_PRODUCT_EXTRACT queue + TikTokProductExtractJobData
+- `backend/src/jobs/index.ts` — registered tiktokProductExtractWorker
+- `backend/src/jobs/tiktok-discovery.ts` — chains extraction job after video storage
+- `backend/src/index.ts` — added extract-products endpoint
+
+**Next step:** Phase 1 Batch 03 — TikTok engagement signal analysis
+(hashtag velocity tracking, creator adoption rate, view growth patterns)
+
+------------------------------------------------------------
+
+## Phase 1 Batch 03 — TikTok Engagement Signal Analysis (2026-03-13)
+
+**Module:** TikTok Intelligence — Hashtag Velocity & Engagement Tracking
+
+**Completed:** Created engagement analysis worker that aggregates per-hashtag
+metrics from discovered videos, computes velocity signals (video growth rate,
+view velocity per hour, creator adoption rate, engagement rate, product video
+percentage), and stores time-series snapshots in `tiktok_hashtag_signals`.
+
+**v7 spec coverage:** "hashtag growth velocity, video creation rate, comment
+sentiment, creator count" (Section 29.2)
+
+**Architecture:**
+- New queue: `tiktok-engagement-analysis` (concurrency 1)
+- Aggregates hashtag metrics from tiktok_videos (in-memory, up to 2000 videos)
+- Computes velocity by comparing with previous snapshot (time-series)
+- Key metrics: video_growth_rate, view_velocity, creator_growth_rate,
+  engagement_rate, product_video_pct
+- Two new API endpoints:
+  - `POST /api/tiktok/engagement-analysis` — trigger analysis job
+  - `GET /api/tiktok/hashtag-signals` — query stored signals (sort by velocity)
+
+**Files created:**
+- `backend/src/jobs/tiktok-engagement-analysis.ts`
+- `supabase/migrations/011_tiktok_hashtag_signals.sql`
+
+**Files modified:**
+- `backend/src/jobs/types.ts` — added TIKTOK_ENGAGEMENT_ANALYSIS queue + job data
+- `backend/src/jobs/index.ts` — registered tiktokEngagementWorker
+- `backend/src/index.ts` — added 2 engagement analysis endpoints
+
+**Phase 1 status:** 3 of 5 batches complete
+- [x] Batch 01 — TikTok discovery worker
+- [x] Batch 02 — Product extraction from videos
+- [x] Batch 03 — Engagement signal analysis
+- [ ] Batch 04 — Product candidate generation (cross-platform matching)
+- [ ] Batch 05 — Phase 1 integration + admin UI
+
+**Next step:** Phase 1 Batch 04 — Product candidate generation
+(cross-reference TikTok products with Amazon/Shopify for demand validation)
+
+------------------------------------------------------------
+
+## Phase 1 Batch 04 — Cross-Platform Product Matching (2026-03-13)
+
+**Module:** TikTok Intelligence — Cross-Platform Demand Validation
+
+**Completed:** Created cross-platform matching worker that takes TikTok-sourced
+products, searches for matching products on Amazon/Shopify using keyword overlap,
+and enriches the product record with cross-platform demand data.
+
+**v7 spec coverage:** Section 28.2 — "When a product is detected on one
+platform, automatically check for presence on others."
+
+**Architecture:**
+- New queue: `tiktok-cross-match` (concurrency 1)
+- Extracts search terms from TikTok product titles (stop-word removal)
+- Searches Amazon/Shopify via existing `scrapePlatform()` provider
+- Word-overlap matching (min 2 words) to find best match
+- Updates product `enrichment_data` with cross-platform matches
+- Auto-chained from tiktok-product-extract worker
+
+**Full pipeline chain:**
+`tiktok-discovery → tiktok-product-extract → enrich-product`
+                                            `→ tiktok-cross-match`
+
+**New endpoint:** `POST /api/tiktok/cross-match` (manual trigger)
+
+**Files created:**
+- `backend/src/jobs/tiktok-cross-match.ts`
+
+**Files modified:**
+- `backend/src/jobs/types.ts` — added TIKTOK_CROSS_MATCH queue + job data
+- `backend/src/jobs/tiktok-product-extract.ts` — chains cross-match after enrichment
+- `backend/src/jobs/index.ts` — registered tiktokCrossMatchWorker
+- `backend/src/index.ts` — added cross-match endpoint
+
+**Phase 1 status:** 4 of 5 batches complete
+- [x] Batch 01 — TikTok discovery worker
+- [x] Batch 02 — Product extraction from videos
+- [x] Batch 03 — Engagement signal analysis
+- [x] Batch 04 — Cross-platform demand validation
+- [ ] Batch 05 — Phase 1 integration + admin UI
+
+**Next step:** Phase 1 Batch 05 — Admin UI integration for TikTok Intelligence
+(TikTok videos page, hashtag signals dashboard, discovery trigger UI)
+
+------------------------------------------------------------
+
+## Phase 1 Batch 05 — Admin UI: TikTok Intelligence Dashboard (2026-03-13)
+
+**Module:** TikTok Intelligence — Admin Frontend
+
+**Completed:** Enhanced the admin TikTok page from a simple product listing
+into a full TikTok Intelligence dashboard with three tabs.
+
+**UI tabs:**
+1. **Products** — TikTok-sourced products with scores (existing, preserved)
+2. **Videos** — Discovered TikTok videos with engagement metrics (views, likes,
+   shares, comments), creator info, hashtags, and product link indicators.
+   Filterable by description search and product-link-only toggle.
+3. **Hashtag Signals** — Velocity tracking dashboard showing per-hashtag
+   metrics: total videos, views, creator count, view velocity (/hr),
+   video growth rate, creator growth rate, engagement rate, product %
+
+**Discovery trigger:** Top-right input + button to queue a TikTok discovery
+job directly from the admin UI.
+
+**API routes created:**
+- `GET /api/admin/tiktok/videos` — paginated video list with filters
+- `GET /api/admin/tiktok/signals` — hashtag signal snapshots
+- `POST /api/admin/tiktok/discover` — proxy to backend discovery queue
+
+**Files created:**
+- `src/app/api/admin/tiktok/videos/route.ts`
+- `src/app/api/admin/tiktok/signals/route.ts`
+- `src/app/api/admin/tiktok/discover/route.ts`
+
+**Files modified:**
+- `src/app/admin/tiktok/page.tsx` — complete rewrite with tabs + discovery trigger
+
+**PHASE 1 — TIKTOK INTELLIGENCE: COMPLETE**
+
+All 5 batches delivered:
+- [x] Batch 01 — TikTok discovery worker (video scraping via Apify)
+- [x] Batch 02 — Product extraction from videos
+- [x] Batch 03 — Engagement signal analysis (hashtag velocity)
+- [x] Batch 04 — Cross-platform demand validation
+- [x] Batch 05 — Admin UI dashboard
+
+**Full TikTok pipeline:**
+```
+User triggers discovery (admin UI or API)
+  → tiktok-discovery worker (Apify → tiktok_videos)
+    → tiktok-product-extract (videos → product candidates)
+      → enrich-product (scoring + DB upsert)
+      → tiktok-cross-match (Amazon/Shopify demand validation)
+  → tiktok-engagement-analysis (hashtag velocity snapshots)
+```
+
+**Next phase:** Phase 2 — Product Intelligence
+(product clustering, trend detection engine)
+
+------------------------------------------------------------
+
+## Phases 2-5 — Backend Intelligence Workers (2026-03-13)
+
+### Phase 2 — Product Intelligence
+
+**Completed:** Product clustering and trend detection workers.
+
+**Product Clustering (`product-clustering.ts`):**
+- Groups products by keyword overlap in titles (stop-word removal)
+- Builds clusters when similarity >= configurable threshold
+- Stores in `product_clusters` + `product_cluster_members` tables
+- Tracks avg_score and trend_stage per cluster
+
+**Trend Detection (`trend-detection.ts`):**
+- Analyzes clusters and products for pre-viral detection (score >= 70)
+- Updates trend_stage (emerging → growing → peak → declining)
+- Sends email alerts (Resend) for products scoring 85+
+- Stores trend snapshots in `trend_keywords` table
+
+**Migration:** `012_product_clusters.sql` — product_clusters + product_cluster_members
+
+### Phase 3 — Creator Intelligence
+
+**Completed:** Creator-product matching engine.
+
+**Creator Matching (`creator-matching.ts`):**
+- For products scoring 60+, matches against influencers
+- 3-factor scoring: niche alignment (40%), engagement fit (35%), price range fit (25%)
+- ROI projection: estimated views, conversions, profit
+- Stores in `creator_product_matches` table
+
+**Migration:** `013_creator_product_match.sql`
+
+### Phase 4 — Marketplace Intelligence
+
+**Completed:** Amazon and Shopify intelligence workers.
+
+**Amazon Intelligence (`amazon-intelligence.ts`):**
+- Scrapes Amazon BSR via Apify `junglee~amazon-bestsellers-scraper`
+- Maps to RawProduct, forwards to enrich-product pipeline
+
+**Shopify Intelligence (`shopify-intelligence.ts`):**
+- Scrapes Shopify stores via Apify `clearpath~shop-by-shopify-product-scraper`
+- Extracts competitor store data (hostname, product count)
+- Stores competitors, forwards products to enrich pipeline
+
+### Phase 5 — Ad Intelligence
+
+**Completed:** Ad discovery across TikTok and Facebook.
+
+**Ad Intelligence (`ad-intelligence.ts`):**
+- TikTok: Apify scraper filtering for sponsored content indicators
+- Facebook: Meta Ad Library API integration
+- Estimates ad spend from impressions
+- Marks scaling ads (100K+ impressions TikTok, 7+ days Facebook)
+- Stores in `ads` table
+
+**Migration:** `014_ads_table.sql` — ads table + competitor enhancements
+
+**All workers registered in `backend/src/jobs/index.ts`.**
+**15 total API endpoints in `backend/src/index.ts`.**
+
+**Files created (Phases 2-5):**
+- `backend/src/jobs/product-clustering.ts`
+- `backend/src/jobs/trend-detection.ts`
+- `backend/src/jobs/creator-matching.ts`
+- `backend/src/jobs/amazon-intelligence.ts`
+- `backend/src/jobs/shopify-intelligence.ts`
+- `backend/src/jobs/ad-intelligence.ts`
+- `supabase/migrations/012_product_clusters.sql`
+- `supabase/migrations/013_creator_product_match.sql`
+- `supabase/migrations/014_ads_table.sql`
+
+**Files modified:**
+- `backend/src/jobs/types.ts` — 6 new queues + interfaces
+- `backend/src/jobs/index.ts` — 6 new worker registrations
+- `backend/src/index.ts` — 10 new API endpoints
+
+**Next phase:** Phase 6 — Admin Dashboard Polish (UI pages for all intelligence modules)
+
+------------------------------------------------------------
+
+## Phase 6 — Admin Dashboard Polish (2026-03-13)
+
+**Completed:** Full admin UI pages for all intelligence modules with
+scan triggers, data tables, filters, and sidebar navigation updates.
+
+### New Admin Pages Created:
+
+1. **Product Clusters** (`/admin/clusters`) — Displays product clusters
+   grouped by keyword similarity. Shows keywords, product count, avg score,
+   trend stage. Run Clustering button triggers backend job.
+
+2. **Creator Matches** (`/admin/creator-matches`) — Creator-product match
+   dashboard with ROI projections. Shows product, creator, match score,
+   niche alignment, engagement fit, estimated views/profit, status.
+   Run Matching button triggers backend job.
+
+3. **Ad Intelligence** (`/admin/ads`) — Ad discovery dashboard for TikTok
+   and Facebook ads. Platform filter, scaling-only toggle, discover button.
+   Shows impressions, estimated spend, scaling status, advertiser info.
+
+### Enhanced Admin Pages:
+
+4. **Amazon Intelligence** (`/admin/amazon`) — Upgraded from simple
+   PlatformProducts wrapper to full page with BSR scan trigger input,
+   product table with sales/review columns, and error handling.
+
+5. **Shopify Intelligence** (`/admin/shopify`) — Upgraded from simple
+   PlatformProducts wrapper to tabbed view (Products + Competitor Stores).
+   Scan Stores trigger, competitor store table with niche/product count.
+
+### New API Routes:
+
+- `GET/POST /api/admin/clusters` — Read clusters, trigger clustering job
+- `GET/POST /api/admin/creator-matches` — Read matches, trigger matching
+- `GET/POST /api/admin/ads` — Read ads, trigger ad discovery
+- `POST /api/admin/amazon/scan` — Trigger Amazon BSR scan
+- `POST /api/admin/shopify/scan` — Trigger Shopify store scan
+
+### Sidebar Navigation:
+
+Added 3 new items to Intelligence section:
+- Product Clusters (Layers icon)
+- Creator Matches (Target icon)
+- Ad Intelligence (Megaphone icon)
+
+**Files created:**
+- `src/app/admin/clusters/page.tsx`
+- `src/app/admin/creator-matches/page.tsx`
+- `src/app/admin/ads/page.tsx`
+- `src/app/api/admin/clusters/route.ts`
+- `src/app/api/admin/creator-matches/route.ts`
+- `src/app/api/admin/ads/route.ts`
+- `src/app/api/admin/amazon/scan/route.ts`
+- `src/app/api/admin/shopify/scan/route.ts`
+
+**Files modified:**
+- `src/app/admin/amazon/page.tsx` — full rewrite with scan trigger
+- `src/app/admin/shopify/page.tsx` — full rewrite with tabs + scan trigger
+- `src/components/admin-sidebar.tsx` — 3 new nav items
+
+**ALL 6 PHASES COMPLETE.**
+
+------------------------------------------------------------
+
 # FINAL GOAL
 
 Deliver a fully operational commerce intelligence SaaS capable of discovering viral products, influencers, stores and advertising campaigns across multiple ecommerce ecosystems.
