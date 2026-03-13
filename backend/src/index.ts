@@ -85,6 +85,7 @@ const trendQueue = new Queue(QUEUES.TREND_SCAN, { connection });
 const influencerQueue = new Queue(QUEUES.INFLUENCER_DISCOVERY, { connection });
 const supplierQueue = new Queue(QUEUES.SUPPLIER_DISCOVERY, { connection });
 const tiktokDiscoveryQueue = new Queue(QUEUES.TIKTOK_DISCOVERY, { connection });
+const tiktokProductExtractQueue = new Queue(QUEUES.TIKTOK_PRODUCT_EXTRACT, { connection });
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -251,6 +252,21 @@ app.get('/api/tiktok/videos', async (req, res) => {
   } catch (error) {
     console.error('Failed to fetch TikTok videos:', error);
     res.status(500).json({ error: 'Failed to fetch TikTok videos' });
+  }
+});
+
+app.post('/api/tiktok/extract-products', scanLimiter, async (req, res) => {
+  try {
+    const { discoveryQuery, minViews, userId } = req.body;
+    const job = await tiktokProductExtractQueue.add('tiktok-product-extract', {
+      discoveryQuery,
+      minViews: Number(minViews) || 10000,
+      userId,
+    });
+    res.json({ jobId: job.id, status: 'queued', queue: 'tiktok-product-extract' });
+  } catch (error) {
+    console.error('Failed to queue TikTok product extraction:', error);
+    res.status(500).json({ error: 'Failed to queue TikTok product extraction' });
   }
 });
 

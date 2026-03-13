@@ -13,6 +13,7 @@ export const QUEUES = {
   INFLUENCER_DISCOVERY: "influencer-discovery",
   SUPPLIER_DISCOVERY: "supplier-discovery",
   TIKTOK_DISCOVERY: "tiktok-discovery",
+  TIKTOK_PRODUCT_EXTRACT: "tiktok-product-extract",
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
@@ -88,4 +89,12 @@ export interface TikTokVideo {
   /** Product signals extracted from the video */
   product_urls: string[];
   has_product_link: boolean;
+}
+
+export interface TikTokProductExtractJobData {
+  /** Filter: only process videos from this discovery query */
+  discoveryQuery?: string;
+  /** Minimum view count to consider a video (default 10000) */
+  minViews?: number;
+  userId: string;
 }

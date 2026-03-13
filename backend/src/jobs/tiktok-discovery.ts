@@ -8,9 +8,13 @@
  * This is the entry point for Phase 1 — TikTok Intelligence.
  * Downstream batches will add product extraction and engagement tracking.
  */
-import { Job } from "bullmq";
+import { Job, Queue } from "bullmq";
+import { connection } from "../lib/queue";
 import { supabase } from "../lib/supabase";
+import { QUEUES } from "./types";
 import type { TikTokDiscoveryJobData, TikTokVideo } from "./types";
+
+const extractQueue = new Queue(QUEUES.TIKTOK_PRODUCT_EXTRACT, { connection });
 
 const APIFY_TOKEN = process.env.APIFY_API_TOKEN;
 const APIFY_ACTOR = "clockworks~tiktok-scraper";
@@ -36,14 +40,25 @@ export async function processTikTokDiscovery(
 
   // ── Step 2: Upsert into tiktok_videos ────────────────────
   const stored = await upsertVideos(videos, query);
-  await job.updateProgress(100);
+  await job.updateProgress(80);
 
   console.log(`[tiktok-discovery] Stored ${stored} videos for "${query}"`);
+
+  // ── Step 3: Chain → product extraction ───────────────────
+  const extractJob = await extractQueue.add("extract-from-discovery", {
+    discoveryQuery: query,
+    minViews: 10_000,
+    userId,
+  });
+  await job.updateProgress(100);
+
+  console.log(`[tiktok-discovery] Chained product extraction job ${extractJob.id}`);
 
   return {
     query,
     videosFound: videos.length,
     videosStored: stored,
+    extractJobId: extractJob.id,
   };
 }
 

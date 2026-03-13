@@ -484,6 +484,43 @@ presence, then upserts to `tiktok_videos` table.
 
 ------------------------------------------------------------
 
+## Phase 1 Batch 02 — TikTok Product Extraction Worker (2026-03-13)
+
+**Module:** TikTok Intelligence — Product Extraction from Videos
+
+**Completed:** Created worker that reads discovered TikTok videos from
+`tiktok_videos`, converts high-engagement videos into product candidates
+(RawProduct format), and forwards them to `enrich-product` queue for
+scoring and DB upsert. Chained automatically from tiktok-discovery.
+
+**Architecture:**
+- New queue: `tiktok-product-extract` (concurrency 2)
+- Queries videos with `has_product_link=true` OR views >= minViews
+- Converts engagement metrics to scoring inputs:
+  - likes+shares+comments → sales_count proxy
+  - engagement rate → rating proxy (0–5)
+  - description/hashtags → product title
+- Forwards RawProduct[] to existing enrich-product pipeline
+- Discovery worker auto-chains to extraction after storing videos
+
+**Job chain:** `tiktok-discovery → tiktok-product-extract → enrich-product`
+
+**New endpoint:** `POST /api/tiktok/extract-products` (manual trigger)
+
+**Files created:**
+- `backend/src/jobs/tiktok-product-extract.ts`
+
+**Files modified:**
+- `backend/src/jobs/types.ts` — added TIKTOK_PRODUCT_EXTRACT queue + TikTokProductExtractJobData
+- `backend/src/jobs/index.ts` — registered tiktokProductExtractWorker
+- `backend/src/jobs/tiktok-discovery.ts` — chains extraction job after video storage
+- `backend/src/index.ts` — added extract-products endpoint
+
+**Next step:** Phase 1 Batch 03 — TikTok engagement signal analysis
+(hashtag velocity tracking, creator adoption rate, view growth patterns)
+
+------------------------------------------------------------
+
 # FINAL GOAL
 
 Deliver a fully operational commerce intelligence SaaS capable of discovering viral products, influencers, stores and advertising campaigns across multiple ecommerce ecosystems.
