@@ -18,13 +18,10 @@ export async function middleware(request: NextRequest) {
     }
 
     // Defense-in-depth: check admin role at middleware level
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    // Uses SECURITY DEFINER RPC to bypass RLS on profiles table
+    const { data: role } = await supabase.rpc('check_user_role', { user_id: user.id })
 
-    if (!profile || profile.role !== 'admin') {
+    if (role !== 'admin') {
       return NextResponse.redirect(new URL('/admin/unauthorized', request.url))
     }
   }

@@ -12,16 +12,13 @@ export async function getUser(): Promise<User | null> {
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error || !user) return null;
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    // Use SECURITY DEFINER RPC to bypass RLS on profiles table
+    const { data: role } = await supabase.rpc('check_user_role', { user_id: user.id });
 
     return {
       id: user.id,
       email: user.email || '',
-      role: (profile?.role as User['role']) || 'viewer',
+      role: (role as User['role']) || 'viewer',
     };
   } catch {
     return null;
