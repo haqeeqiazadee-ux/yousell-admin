@@ -14,6 +14,7 @@ import { QUEUES } from "./types";
 import type { TikTokProductExtractJobData, RawProduct } from "./types";
 
 const enrichQueue = new Queue(QUEUES.ENRICH_PRODUCT, { connection });
+const crossMatchQueue = new Queue(QUEUES.TIKTOK_CROSS_MATCH, { connection });
 
 export async function processTikTokProductExtract(
   job: Job<TikTokProductExtractJobData>
@@ -56,6 +57,25 @@ export async function processTikTokProductExtract(
   // ── Step 4: Mark videos as processed ─────────────────────
   const videoIds = videos.map((v) => v.id);
   await markVideosProcessed(videoIds);
+
+  // ── Step 5: Chain → cross-platform matching ──────────────
+  const keywords = candidates
+    .map((c) => c.title)
+    .filter((t) => t.length > 3)
+    .slice(0, 20);
+
+  let crossMatchJobId: string | null = null;
+  if (keywords.length > 0) {
+    const crossJob = await crossMatchQueue.add("cross-match-tiktok", {
+      keywords,
+      platforms: ["amazon", "shopify"],
+      minTikTokScore: 40,
+      userId,
+    });
+    crossMatchJobId = crossJob.id ?? null;
+    console.log(`[tiktok-product-extract] Chained cross-match job ${crossJob.id}`);
+  }
+
   await job.updateProgress(100);
 
   console.log(
@@ -65,6 +85,7 @@ export async function processTikTokProductExtract(
   return {
     candidatesGenerated: candidates.length,
     enrichJobId: enrichJob.id,
+    crossMatchJobId,
     videosProcessed: videos.length,
   };
 }

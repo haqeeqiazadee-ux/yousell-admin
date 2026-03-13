@@ -15,6 +15,7 @@ import { processSupplierDiscovery } from "./supplier-discovery";
 import { processTikTokDiscovery } from "./tiktok-discovery";
 import { processTikTokProductExtract } from "./tiktok-product-extract";
 import { processTikTokEngagementAnalysis } from "./tiktok-engagement-analysis";
+import { processTikTokCrossMatch } from "./tiktok-cross-match";
 
 function logEvents(worker: Worker, label: string) {
   worker.on("completed", (job) => {
@@ -82,6 +83,13 @@ export const tiktokEngagementWorker = new Worker(
   { connection, concurrency: 1 }
 );
 logEvents(tiktokEngagementWorker, "tiktok-engagement-analysis");
+
+export const tiktokCrossMatchWorker = new Worker(
+  QUEUES.TIKTOK_CROSS_MATCH,
+  processTikTokCrossMatch,
+  { connection, concurrency: 1 }
+);
+logEvents(tiktokCrossMatchWorker, "tiktok-cross-match");
 
 console.log(
   "Job workers started:",

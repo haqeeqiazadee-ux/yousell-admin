@@ -15,6 +15,7 @@ export const QUEUES = {
   TIKTOK_DISCOVERY: "tiktok-discovery",
   TIKTOK_PRODUCT_EXTRACT: "tiktok-product-extract",
   TIKTOK_ENGAGEMENT_ANALYSIS: "tiktok-engagement-analysis",
+  TIKTOK_CROSS_MATCH: "tiktok-cross-match",
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
@@ -105,5 +106,15 @@ export interface TikTokEngagementAnalysisJobData {
   hashtag?: string;
   /** Minimum videos a hashtag must appear in to be analyzed (default 3) */
   minVideoCount?: number;
+  userId: string;
+}
+
+export interface TikTokCrossMatchJobData {
+  /** Product title keywords to search on other platforms */
+  keywords: string[];
+  /** Platforms to cross-reference (default: amazon, shopify) */
+  platforms?: ("amazon" | "shopify")[];
+  /** Minimum score on the TikTok side to qualify (default 40) */
+  minTikTokScore?: number;
   userId: string;
 }

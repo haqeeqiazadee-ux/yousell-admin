@@ -87,6 +87,7 @@ const supplierQueue = new Queue(QUEUES.SUPPLIER_DISCOVERY, { connection });
 const tiktokDiscoveryQueue = new Queue(QUEUES.TIKTOK_DISCOVERY, { connection });
 const tiktokProductExtractQueue = new Queue(QUEUES.TIKTOK_PRODUCT_EXTRACT, { connection });
 const tiktokEngagementQueue = new Queue(QUEUES.TIKTOK_ENGAGEMENT_ANALYSIS, { connection });
+const tiktokCrossMatchQueue = new Queue(QUEUES.TIKTOK_CROSS_MATCH, { connection });
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -305,6 +306,25 @@ app.get('/api/tiktok/hashtag-signals', async (req, res) => {
   } catch (error) {
     console.error('Failed to fetch hashtag signals:', error);
     res.status(500).json({ error: 'Failed to fetch hashtag signals' });
+  }
+});
+
+app.post('/api/tiktok/cross-match', scanLimiter, async (req, res) => {
+  try {
+    const { keywords, platforms, minTikTokScore, userId } = req.body;
+    if (!keywords || !Array.isArray(keywords) || keywords.length === 0) {
+      return res.status(400).json({ error: 'keywords array is required' });
+    }
+    const job = await tiktokCrossMatchQueue.add('tiktok-cross-match', {
+      keywords: keywords.slice(0, 20),
+      platforms: platforms || ['amazon', 'shopify'],
+      minTikTokScore: Number(minTikTokScore) || 40,
+      userId,
+    });
+    res.json({ jobId: job.id, status: 'queued', queue: 'tiktok-cross-match' });
+  } catch (error) {
+    console.error('Failed to queue TikTok cross-match:', error);
+    res.status(500).json({ error: 'Failed to queue TikTok cross-match' });
   }
 });
 

@@ -564,6 +564,52 @@ sentiment, creator count" (Section 29.2)
 
 ------------------------------------------------------------
 
+## Phase 1 Batch 04 — Cross-Platform Product Matching (2026-03-13)
+
+**Module:** TikTok Intelligence — Cross-Platform Demand Validation
+
+**Completed:** Created cross-platform matching worker that takes TikTok-sourced
+products, searches for matching products on Amazon/Shopify using keyword overlap,
+and enriches the product record with cross-platform demand data.
+
+**v7 spec coverage:** Section 28.2 — "When a product is detected on one
+platform, automatically check for presence on others."
+
+**Architecture:**
+- New queue: `tiktok-cross-match` (concurrency 1)
+- Extracts search terms from TikTok product titles (stop-word removal)
+- Searches Amazon/Shopify via existing `scrapePlatform()` provider
+- Word-overlap matching (min 2 words) to find best match
+- Updates product `enrichment_data` with cross-platform matches
+- Auto-chained from tiktok-product-extract worker
+
+**Full pipeline chain:**
+`tiktok-discovery → tiktok-product-extract → enrich-product`
+                                            `→ tiktok-cross-match`
+
+**New endpoint:** `POST /api/tiktok/cross-match` (manual trigger)
+
+**Files created:**
+- `backend/src/jobs/tiktok-cross-match.ts`
+
+**Files modified:**
+- `backend/src/jobs/types.ts` — added TIKTOK_CROSS_MATCH queue + job data
+- `backend/src/jobs/tiktok-product-extract.ts` — chains cross-match after enrichment
+- `backend/src/jobs/index.ts` — registered tiktokCrossMatchWorker
+- `backend/src/index.ts` — added cross-match endpoint
+
+**Phase 1 status:** 4 of 5 batches complete
+- [x] Batch 01 — TikTok discovery worker
+- [x] Batch 02 — Product extraction from videos
+- [x] Batch 03 — Engagement signal analysis
+- [x] Batch 04 — Cross-platform demand validation
+- [ ] Batch 05 — Phase 1 integration + admin UI
+
+**Next step:** Phase 1 Batch 05 — Admin UI integration for TikTok Intelligence
+(TikTok videos page, hashtag signals dashboard, discovery trigger UI)
+
+------------------------------------------------------------
+
 # FINAL GOAL
 
 Deliver a fully operational commerce intelligence SaaS capable of discovering viral products, influencers, stores and advertising campaigns across multiple ecommerce ecosystems.
