@@ -81,7 +81,7 @@ export async function processProductClustering(
     const memberRows = cluster.members.map((m) => ({
       cluster_id: clusterRow.id,
       product_id: m.id as string,
-      similarity: m.similarity,
+      similarity: m.similarity ?? 0,
     }));
 
     await supabase
@@ -133,7 +133,7 @@ interface ProductWithKeywords {
   score_overall: unknown;
   final_score: unknown;
   keywords: string[];
-  similarity: number;
+  similarity?: number;
 }
 
 interface Cluster {

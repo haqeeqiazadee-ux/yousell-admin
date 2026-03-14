@@ -75,7 +75,7 @@ async function scrapeAmazon(query: string, limit: number): Promise<RawProduct[]>
       return [];
     }
 
-    const items: Record<string, unknown>[] = await res.json();
+    const items: Record<string, unknown>[] = await res.json() as Record<string, unknown>[];
     if (!Array.isArray(items)) return [];
 
     return items.slice(0, limit).map((item, i) => ({
