@@ -841,6 +841,33 @@ determine the exact failure mode and apply a permanent fix if needed.
 
 ------------------------------------------------------------
 
+## Session – 2026-03-14 – Fix post-login sidebar not rendering
+
+### Problem
+After login, the dashboard rendered without the sidebar (layout fell through to
+`<>{children}</>` because `getUser()` returned null). A manual page refresh
+would load the sidebar correctly.
+
+### Root Cause
+`router.push('/admin')` performs a **client-side navigation**. The Next.js
+server-side `AdminLayout` re-runs `getUser()` but the Supabase auth cookies
+haven't been fully set by the browser yet, so the server sees no session.
+
+### Fix
+Replaced `router.push('/admin')` with `window.location.href = '/admin'` in
+`src/app/admin/login/page.tsx`. This forces a full HTTP request, guaranteeing
+the auth cookies are sent with the initial server render.
+
+Removed unused `useRouter` import.
+
+### Note on "Not Configured" API statuses
+The System Status panel shows "Not Configured" for AI Engine, Resend Email,
+Apify Scrapers, and RapidAPI. This is correct behaviour — the env vars
+(`ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `APIFY_API_TOKEN`, `RAPIDAPI_KEY`)
+need to be set in the deployment environment (Netlify). This is not a code bug.
+
+------------------------------------------------------------
+
 # FINAL GOAL
 
 Deliver a fully operational commerce intelligence SaaS capable of discovering viral products, influencers, stores and advertising campaigns across multiple ecommerce ecosystems.
