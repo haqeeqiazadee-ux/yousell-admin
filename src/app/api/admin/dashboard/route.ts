@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/roles";
-import { PROVIDERS, getProviderStatus } from "@/lib/providers/config";
+import { PROVIDERS, getEnvVar } from "@/lib/providers/config";
 
-function providerConnected(id: string): boolean {
+export const dynamic = "force-dynamic";
+
+function providerConnected(id: string, savedKeys: Record<string, string>): boolean {
   const p = PROVIDERS.find((pr) => pr.id === id);
-  return p ? getProviderStatus(p.envKeys) === "connected" : false;
+  if (!p) return false;
+  return p.envKeys.every((key) => !!getEnvVar(key) || !!savedKeys[key]);
 }
 
 export async function GET() {
@@ -13,6 +17,20 @@ export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Load saved API keys from database (fallback for env vars)
+  let savedKeys: Record<string, string> = {};
+  try {
+    const adminSb = createAdminClient();
+    const { data } = await adminSb
+      .from("admin_settings")
+      .select("value")
+      .eq("key", "api_keys")
+      .single();
+    savedKeys = data?.value ?? {};
+  } catch {
+    // admin_settings may not exist yet
+  }
 
   // Helper to safely count from a table (returns 0 if table doesn't exist)
   async function safeCount(table: string, filter?: { column: string; value: string }) {
@@ -38,7 +56,7 @@ export async function GET() {
     safeCount("suppliers"),
   ]);
 
-  // Use centralized PROVIDERS config for consistent env var checking
+  // Use centralized PROVIDERS config + saved DB keys for consistent checking
   return NextResponse.json({
     products,
     tiktok,
@@ -49,12 +67,12 @@ export async function GET() {
     influencers,
     suppliers,
     services: {
-      supabase: providerConnected("supabase"),
-      auth: providerConnected("supabase"),
-      ai: providerConnected("anthropic"),
-      email: providerConnected("resend"),
-      apify: providerConnected("apify"),
-      rapidapi: providerConnected("rapidapi"),
+      supabase: providerConnected("supabase", savedKeys),
+      auth: providerConnected("supabase", savedKeys),
+      ai: providerConnected("anthropic", savedKeys),
+      email: providerConnected("resend", savedKeys),
+      apify: providerConnected("apify", savedKeys),
+      rapidapi: providerConnected("rapidapi", savedKeys),
     },
   });
 }
