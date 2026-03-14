@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -146,7 +147,7 @@ export default function AmazonPage() {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         {product.image_url ? (
-                          <img src={product.image_url} alt="" className="h-10 w-10 rounded object-cover" />
+                          <Image src={product.image_url} alt="" width={40} height={40} className="h-10 w-10 rounded object-cover" unoptimized />
                         ) : (
                           <div className="h-10 w-10 rounded bg-muted flex items-center justify-center">
                             <Package className="h-4 w-4 text-muted-foreground" />

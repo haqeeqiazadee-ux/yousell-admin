@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Package, FileText, LogOut } from "lucide-react";
+import { Package, FileText, LogOut, CreditCard, Link2, Sparkles, ShoppingBag } from "lucide-react";
 
 export default async function DashboardLayout({
   children,
@@ -17,7 +17,7 @@ export default async function DashboardLayout({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/admin/login");
+    redirect("/login");
   }
 
   const { data: profile } = await supabase
@@ -66,6 +66,30 @@ export default async function DashboardLayout({
               <Button variant="ghost" size="sm" className="gap-2">
                 <FileText className="h-4 w-4" />
                 Requests
+              </Button>
+            </Link>
+            <Link href="/dashboard/content">
+              <Button variant="ghost" size="sm" className="gap-2">
+                <Sparkles className="h-4 w-4" />
+                Content
+              </Button>
+            </Link>
+            <Link href="/dashboard/integrations">
+              <Button variant="ghost" size="sm" className="gap-2">
+                <Link2 className="h-4 w-4" />
+                Integrations
+              </Button>
+            </Link>
+            <Link href="/dashboard/orders">
+              <Button variant="ghost" size="sm" className="gap-2">
+                <ShoppingBag className="h-4 w-4" />
+                Orders
+              </Button>
+            </Link>
+            <Link href="/dashboard/billing">
+              <Button variant="ghost" size="sm" className="gap-2">
+                <CreditCard className="h-4 w-4" />
+                Billing
               </Button>
             </Link>
           </nav>

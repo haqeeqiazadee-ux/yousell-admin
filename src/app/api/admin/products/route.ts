@@ -55,7 +55,7 @@ export async function POST(request: Request) {
 
   // Whitelist allowed fields to prevent arbitrary field injection
   const allowedFields = [
-    'title', 'platform', 'status', 'price', 'external_url', 'image_url',
+    'title', 'platform', 'status', 'price', 'cost', 'currency', 'external_url', 'image_url',
     'category', 'description', 'trend_stage', 'viral_score', 'final_score',
     'channel', 'source_url', 'supplier_url', 'tags',
   ] as const;
@@ -104,7 +104,7 @@ export async function PATCH(request: Request) {
 
   // Whitelist allowed update fields
   const allowedFields = [
-    'title', 'platform', 'status', 'price', 'external_url', 'image_url',
+    'title', 'platform', 'status', 'price', 'cost', 'currency', 'external_url', 'image_url',
     'category', 'description', 'trend_stage', 'viral_score', 'final_score',
     'channel', 'source_url', 'supplier_url', 'tags',
   ] as const;

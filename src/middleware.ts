@@ -10,6 +10,34 @@ export async function middleware(request: NextRequest) {
   )
   const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
+  const hostname = request.headers.get('host') || ''
+
+  // Subdomain routing: admin.yousell.online vs yousell.online
+  const isAdminSubdomain = hostname.startsWith('admin.')
+  const isClientDomain = !isAdminSubdomain && (hostname === 'yousell.online' || hostname.startsWith('www.'))
+
+  // If on admin subdomain, redirect root to /admin
+  if (isAdminSubdomain && pathname === '/') {
+    return NextResponse.redirect(new URL('/admin', request.url))
+  }
+
+  // If on client domain, redirect root to /dashboard (if logged in) or /login
+  if (isClientDomain && pathname === '/') {
+    if (user) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  // Block client routes on admin subdomain
+  if (isAdminSubdomain && (pathname.startsWith('/dashboard') || pathname === '/login')) {
+    return NextResponse.redirect(new URL('/admin', request.url))
+  }
+
+  // Block admin routes on client domain (except API routes shared by both)
+  if (isClientDomain && pathname.startsWith('/admin')) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
 
   // Admin routes: require authenticated user with admin role
   if (pathname.startsWith('/admin') && pathname !== '/admin/login' && pathname !== '/admin/unauthorized') {
@@ -18,7 +46,6 @@ export async function middleware(request: NextRequest) {
     }
 
     // Defense-in-depth: check admin role at middleware level
-    // Uses SECURITY DEFINER RPC to bypass RLS on profiles table
     const { data: role } = await supabase.rpc('check_user_role', { user_id: user.id })
 
     if (role !== 'admin' && role !== 'super_admin') {
@@ -38,4 +65,4 @@ export async function middleware(request: NextRequest) {
 
   return supabaseResponse
 }
-export const config = { matcher: ['/admin/:path*', '/dashboard/:path*'] }
+export const config = { matcher: ['/', '/admin/:path*', '/dashboard/:path*', '/login'] }

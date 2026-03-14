@@ -968,3 +968,93 @@ ai_operating_manual.md
 - `system/e2e_testing_strategy.md` (new)
 - `src/app/api/admin/e2e/route.ts` (new)
 - `src/app/api/admin/debug/route.ts` (fixed test 1.4)
+
+------------------------------------------------------------
+
+## 2026-03-14 — Subdomain Routing, Stripe Billing & Client Dashboard
+
+### Subdomain Routing (admin.yousell.online vs yousell.online)
+
+**Completed:** Middleware-based subdomain routing for dual-platform architecture.
+
+- Detects `admin.` subdomain → routes to `/admin` pages
+- Client domain (yousell.online / www.) → routes to `/dashboard` pages
+- Cross-domain access blocked: admin routes inaccessible on client domain, vice versa
+- Root URL redirects based on hostname context
+- Both subdomains served from single Netlify deployment
+- Matcher expanded to include `/` and `/login` routes
+
+### Stripe Billing Integration
+
+**Completed:** Full Stripe subscription lifecycle.
+
+- `POST /api/webhooks/stripe` — webhook handler with signature verification
+  - checkout.session.completed → creates subscription
+  - customer.subscription.updated → syncs status/period
+  - customer.subscription.deleted → marks cancelled
+  - invoice.payment_failed → marks past_due
+- `POST /api/dashboard/subscription` → creates Stripe Checkout session
+- `GET /api/dashboard/subscription` → returns current plan/subscription
+- `POST /api/dashboard/subscription/portal` → Stripe Customer Portal session
+- Pricing tiers defined (v7 Section 3.2):
+  - Starter $29/mo (1 platform, 3 products)
+  - Growth $79/mo (3 platforms, 10 products)
+  - Professional $149/mo (5 platforms, 25 products)
+  - Enterprise $299/mo (all platforms, 50 products)
+- Requires `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` env vars
+
+### Client Dashboard Pages
+
+**Completed:** 4 new client-facing dashboard pages.
+
+1. `/dashboard/billing` — Pricing cards, checkout flow, current plan display,
+   Stripe Customer Portal link for subscription management
+2. `/dashboard/integrations` — Store connection cards (Shopify, TikTok Shop,
+   Amazon) with connect/disconnect UI (OAuth flow placeholder)
+3. `/dashboard/content` — AI content studio showing content_queue items with
+   status badges and generate button (generation worker placeholder)
+4. `/dashboard/orders` — Order tracking table with status icons, tracking
+   info, customer details, and platform badges
+
+### Dashboard API Routes
+
+- `GET /api/dashboard/channels` — connected store channels
+- `GET /api/dashboard/content` — content generation queue
+- `GET /api/dashboard/orders` — order tracking
+
+### Build Fixes
+
+- Replaced all `<img>` with `next/image` `<Image>` across 6 files (ESLint warnings)
+- Fixed TypeScript implicit `any` errors (products.data type, PreViralProduct nullability, Realtime status annotation)
+- Fixed Stripe SDK type incompatibilities (subscription period fields, invoice type)
+
+### Files Created
+- `src/lib/stripe.ts`
+- `src/app/api/webhooks/stripe/route.ts`
+- `src/app/api/dashboard/subscription/route.ts`
+- `src/app/api/dashboard/subscription/portal/route.ts`
+- `src/app/api/dashboard/channels/route.ts`
+- `src/app/api/dashboard/content/route.ts`
+- `src/app/api/dashboard/orders/route.ts`
+- `src/app/dashboard/billing/page.tsx`
+- `src/app/dashboard/integrations/page.tsx`
+- `src/app/dashboard/content/page.tsx`
+- `src/app/dashboard/orders/page.tsx`
+
+### Files Modified
+- `src/middleware.ts` — subdomain routing logic
+- `src/app/dashboard/layout.tsx` — 4 new nav items, fixed login redirect
+- `netlify.toml` — subdomain documentation
+- `src/app/admin/page.tsx` — TypeScript fixes
+- 6 files — `<img>` → `<Image>` replacements
+
+### Build Status
+- Build: PASS (0 errors, 0 warnings)
+- 80 pages total (admin + dashboard + API)
+
+### Next Steps
+- Configure Netlify domain aliases (admin.yousell.online + yousell.online)
+- Set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET in Netlify env vars
+- Implement OAuth flows for store integrations (Shopify, TikTok Shop, Amazon)
+- Implement content generation worker (Claude API → marketing content)
+- Implement order tracking webhooks from connected stores

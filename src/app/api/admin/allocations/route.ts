@@ -79,7 +79,7 @@ export async function GET(req: NextRequest) {
     .from('product_requests')
     .select('*, clients(name)')
     .eq('status', 'pending')
-    .order('created_at', { ascending: false });
+    .order('requested_at', { ascending: false });
 
   if (clientId) {
     requestsQuery = requestsQuery.eq('client_id', clientId);
@@ -110,7 +110,7 @@ export async function GET(req: NextRequest) {
     client_name: (r.clients as Record<string, unknown>)?.name || 'Unknown',
     platform: r.platform || 'all',
     note: r.note || '',
-    requested_at: r.created_at,
+    requested_at: r.requested_at,
     status: r.status,
   }));
 

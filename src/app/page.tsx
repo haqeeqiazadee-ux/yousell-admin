@@ -1,5 +1,26 @@
-import { redirect } from 'next/navigation';
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 
-export default function Home() {
-  redirect('/admin/scan');
+export const dynamic = 'force-dynamic'
+
+export default async function Home() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/admin/login')
+  }
+
+  // Check role to route to the correct dashboard
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (profile?.role === 'admin' || profile?.role === 'super_admin') {
+    redirect('/admin')
+  }
+
+  redirect('/dashboard')
 }
