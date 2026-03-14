@@ -42,10 +42,10 @@ interface ScanHistory {
 interface PreViralProduct {
   id: string
   title: string
-  viral_score: number
+  viral_score: number | null
   trend_stage: string
   platform: string
-  final_score: number
+  final_score: number | null
 }
 
 interface SystemStatus {
@@ -216,7 +216,7 @@ export default function AdminDashboard() {
               {preViralProducts.map(p => (
                 <div key={p.id} className="flex-shrink-0 bg-white border border-amber-200 rounded-lg px-3 py-2 flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-                    <span className="text-xs font-bold text-amber-700">{Math.round(p.viral_score)}</span>
+                    <span className="text-xs font-bold text-amber-700">{Math.round(p.viral_score ?? 0)}</span>
                   </div>
                   <div>
                     <p className="text-xs font-medium text-gray-900 max-w-[120px] truncate">{p.title}</p>
