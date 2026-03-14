@@ -940,3 +940,31 @@ worker_map.md
 ai_logic.md
 development_log.md
 ai_operating_manual.md
+
+------------------------------------------------------------
+
+# 2026-03-14 — E2E Testing Strategy & Automated Test Runner
+
+## What was done
+1. Created comprehensive E2E testing strategy (`system/e2e_testing_strategy.md`)
+   - 68 tests across 13 suites, 6 execution phases
+   - Covers auth, CRUD, allocation, scan pipeline, intelligence pages, API validation
+   - Cost estimates for scan tests, priority ordering (P0/P1/P2)
+
+2. Built automated E2E test runner (`/api/admin/e2e`)
+   - Server-side API route that executes all 6 phases
+   - Phase 1: Auth & navigation (login, guards, 10 API route accessibility checks)
+   - Phase 2: Product + Client full CRUD cycles (create → read → update → delete with cleanup)
+   - Phase 3: Allocation business flows (allocate → visibility toggle → client isolation)
+   - Phase 4: Scan pipeline (backend connectivity, scan history, cost-guarded skip)
+   - Phase 5: Intelligence tables (10 tables) + scoring formula validation
+   - Phase 6: API input validation, settings CRUD cycle, pagination, external API keys
+   - Usage: `GET /api/admin/e2e?phase=all` (or `phase=1` through `6`)
+   - All test data is created and cleaned up within each phase
+
+3. Fixed debug test 1.4 enum issue (user_role enum only has 'admin'|'client')
+
+## Files changed
+- `system/e2e_testing_strategy.md` (new)
+- `src/app/api/admin/e2e/route.ts` (new)
+- `src/app/api/admin/debug/route.ts` (fixed test 1.4)
