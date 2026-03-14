@@ -9,6 +9,9 @@ const nextConfig = {
       { protocol: 'https', hostname: '*.amazonaws.com' },
     ],
   },
+  // Server-side env vars (API routes, server components) are available
+  // via process.env on Netlify Functions automatically.
+  // Do NOT use next.config `env:{}` — it leaks values into the client bundle.
 };
 
 export default nextConfig;

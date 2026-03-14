@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 export interface User {
   id: string;
   email: string;
-  role: 'admin' | 'client' | 'viewer';
+  role: 'super_admin' | 'admin' | 'client' | 'viewer';
 }
 
 export async function getUser(): Promise<User | null> {
