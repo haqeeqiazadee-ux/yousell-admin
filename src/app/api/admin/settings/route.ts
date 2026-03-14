@@ -3,6 +3,8 @@ import { requireAdmin } from "@/lib/auth/roles";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PROVIDERS, getEnvVar } from "@/lib/providers/config";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/admin/settings — returns provider status and saved settings
 export async function GET(request: Request) {
   try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
