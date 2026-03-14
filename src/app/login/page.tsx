@@ -32,6 +32,21 @@ export default function ClientLoginPage() {
       return;
     }
 
+    // Check role to route to the correct dashboard
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.role === 'admin' || profile?.role === 'super_admin') {
+        window.location.href = '/admin';
+        return;
+      }
+    }
+
     // Full page navigation ensures server layout gets fresh auth cookies
     window.location.href = '/dashboard';
   };
