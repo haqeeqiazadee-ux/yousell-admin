@@ -10,11 +10,15 @@ import {
   Target, DollarSign, Eye
 } from 'lucide-react'
 
+let _browserClient: ReturnType<typeof createBrowserClient> | null = null
 function getSupabase() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-  )
+  if (!_browserClient) {
+    _browserClient = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    )
+  }
+  return _browserClient
 }
 
 interface Stats {
@@ -123,7 +127,8 @@ export default function AdminDashboard() {
     // Supabase Realtime — live updates with debouncing
     const sb = getSupabase()
     let debounceTimer: ReturnType<typeof setTimeout> | null = null
-    const debouncedFetch = () => {
+    const debouncedFetch = (payload: unknown) => {
+      console.log('[Realtime] change received:', payload)
       if (debounceTimer) clearTimeout(debounceTimer)
       debounceTimer = setTimeout(() => { fetchData() }, 2000)
     }
@@ -138,7 +143,9 @@ export default function AdminDashboard() {
         schema: 'public',
         table: 'scan_history'
       }, debouncedFetch)
-      .subscribe()
+      .subscribe((status) => {
+        console.log('[Realtime] channel status:', status)
+      })
 
     return () => {
       if (debounceTimer) clearTimeout(debounceTimer)

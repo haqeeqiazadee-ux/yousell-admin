@@ -9,11 +9,15 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
+let _browserClient: ReturnType<typeof createBrowserClient> | null = null
 function getSupabase() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-  )
+  if (!_browserClient) {
+    _browserClient = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    )
+  }
+  return _browserClient
 }
 
 type ScanMode = 'quick' | 'full' | 'client'
