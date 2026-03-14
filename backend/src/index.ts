@@ -119,7 +119,7 @@ app.post('/api/scan', scanLimiter, async (req, res) => {
 app.get('/api/scan/history', async (_req, res) => {
   try {
     const { data: scans, error } = await supabase
-      .from('scans')
+      .from('scan_history')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(50);

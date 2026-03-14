@@ -91,7 +91,7 @@ export default function AdminDashboard() {
         const sb = getSupabase()
         const [products, scans] = await Promise.all([
           sb.from('products').select('id, title, viral_score, trend_stage, platform, final_score, channel').order('final_score', { ascending: false }),
-          sb.from('scans').select('*').order('created_at', { ascending: false }).limit(5),
+          sb.from('scan_history').select('*').order('created_at', { ascending: false }).limit(5),
         ])
 
         if (products.data) {
@@ -136,7 +136,7 @@ export default function AdminDashboard() {
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'scans'
+        table: 'scan_history'
       }, debouncedFetch)
       .subscribe()
 

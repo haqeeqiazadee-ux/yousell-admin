@@ -37,7 +37,7 @@ export async function processProductScan(job: Job<ProductScanJobData>) {
 
   // Create scan record
   const { data: scan, error: scanError } = await supabase
-    .from("scans")
+    .from("scan_history")
     .insert({
       mode,
       status: "running",
@@ -84,7 +84,7 @@ export async function processProductScan(job: Job<ProductScanJobData>) {
     const duration = Date.now() - startTime;
 
     await supabase
-      .from("scans")
+      .from("scan_history")
       .update({
         status: "completed",
         completed_at: new Date().toISOString(),
@@ -102,7 +102,7 @@ export async function processProductScan(job: Job<ProductScanJobData>) {
     };
   } catch (error) {
     await supabase
-      .from("scans")
+      .from("scan_history")
       .update({ status: "failed", error: String(error) })
       .eq("id", scan.id);
     throw error;

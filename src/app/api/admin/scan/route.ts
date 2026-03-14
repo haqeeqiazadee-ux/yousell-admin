@@ -114,9 +114,9 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Read from 'scans' table — the backend worker writes here
+  // Read from 'scan_history' table — the backend worker writes here
   const { data: scans, error } = await supabase
-    .from('scans')
+    .from('scan_history')
     .select('*')
     .order('created_at', { ascending: false })
     .limit(50);
