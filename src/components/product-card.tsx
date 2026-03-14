@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -74,10 +75,13 @@ export function ProductCard({
           {/* Product Image */}
           <div className="flex-shrink-0">
             {product.image_url ? (
-              <img
+              <Image
                 src={product.image_url}
                 alt={product.title}
+                width={80}
+                height={80}
                 className="w-20 h-20 rounded-lg object-cover"
+                unoptimized
               />
             ) : (
               <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center">
@@ -155,10 +159,13 @@ export function ProductCard({
                         title={`${inf.username} (${(inf.followers / 1000).toFixed(0)}K)`}
                       >
                         {inf.avatar_url ? (
-                          <img
+                          <Image
                             src={inf.avatar_url}
                             alt={inf.username}
+                            width={24}
+                            height={24}
                             className="w-full h-full rounded-full object-cover"
+                            unoptimized
                           />
                         ) : (
                           <span className="text-[8px] text-white font-bold">

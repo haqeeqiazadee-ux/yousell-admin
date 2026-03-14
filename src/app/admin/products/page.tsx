@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -326,10 +327,13 @@ export default function ProductsPage() {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         {product.image_url ? (
-                          <img
+                          <Image
                             src={product.image_url}
                             alt=""
+                            width={40}
+                            height={40}
                             className="h-10 w-10 rounded object-cover"
+                            unoptimized
                           />
                         ) : (
                           <div className="h-10 w-10 rounded bg-muted flex items-center justify-center">

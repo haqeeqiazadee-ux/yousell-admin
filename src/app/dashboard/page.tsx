@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import Image from 'next/image';
 
 interface AllocatedProduct {
   id: string;
@@ -170,10 +171,13 @@ export default function DashboardPage() {
                   >
                     <div className="flex items-center gap-4">
                       {product.image_url ? (
-                        <img
+                        <Image
                           src={product.image_url}
                           alt={product.title}
+                          width={48}
+                          height={48}
                           className="w-12 h-12 rounded object-cover"
+                          unoptimized
                         />
                       ) : (
                         <div className="w-12 h-12 rounded bg-gray-100 flex items-center justify-center text-gray-400">
