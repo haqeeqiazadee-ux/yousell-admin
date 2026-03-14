@@ -45,7 +45,7 @@ async function scrapeTikTok(query?: string): Promise<Product[]> {
       { headers: { Authorization: `Bearer ${apiKey}` } }
     );
     if (!response.ok) throw new Error(`TikTok API error: ${response.status}`);
-    const data = await response.json();
+    const data: any = await response.json();
 
     return (data.products || []).map((p: any) => ({
       external_id: p.id,
@@ -77,7 +77,7 @@ async function scrapeAmazon(query?: string): Promise<Product[]> {
       { signal: AbortSignal.timeout(30000) }
     );
     if (!response.ok) throw new Error(`Amazon API error: ${response.status}`);
-    const data = await response.json();
+    const data: any = await response.json();
 
     return (data.search_results || []).map((p: any) => ({
       external_id: p.asin,
@@ -109,7 +109,7 @@ async function scrapeShopify(query?: string): Promise<Product[]> {
       { headers: { Authorization: `Bearer ${apiKey}` } }
     );
     if (!response.ok) throw new Error(`Shopify API error: ${response.status}`);
-    const data = await response.json();
+    const data: any = await response.json();
 
     return (data.products || []).map((p: any) => ({
       external_id: p.id?.toString(),
@@ -141,7 +141,7 @@ async function scrapePinterest(query?: string): Promise<Product[]> {
       { headers: { Authorization: `Bearer ${apiKey}` } }
     );
     if (!response.ok) throw new Error(`Pinterest API error: ${response.status}`);
-    const data = await response.json();
+    const data: any = await response.json();
 
     return (data.items || []).map((p: any) => ({
       external_id: p.id,
@@ -170,7 +170,7 @@ export async function fetchTrends(query?: string): Promise<TrendKeyword[]> {
       { headers: { Authorization: `Bearer ${apiKey}` } }
     );
     if (!response.ok) return [];
-    const data = await response.json();
+    const data: any = await response.json();
 
     return (data.trends || []).map((t: any) => ({
       keyword: t.keyword,

@@ -135,7 +135,7 @@ async function scrapeTikTokAds(query: string, limit: number): Promise<AdRecord[]
 
     if (!res.ok) return [];
 
-    const items: Record<string, unknown>[] = await res.json();
+    const items: Record<string, unknown>[] = await res.json() as Record<string, unknown>[];
     if (!Array.isArray(items)) return [];
 
     // Filter for likely ads (sponsored content indicators)
@@ -191,7 +191,7 @@ async function scrapeFacebookAds(query: string, limit: number): Promise<AdRecord
     );
 
     if (!res.ok) return [];
-    const data = await res.json();
+    const data: any = await res.json();
     const ads = data.data || [];
 
     return ads.map((ad: Record<string, unknown>, i: number) => {

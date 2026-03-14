@@ -95,7 +95,7 @@ async function fetchTikTokVideos(
       return [];
     }
 
-    const items: Record<string, unknown>[] = await res.json();
+    const items: Record<string, unknown>[] = await res.json() as Record<string, unknown>[];
     if (!Array.isArray(items)) return [];
 
     return items.map(mapApifyItem);
