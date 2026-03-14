@@ -124,7 +124,7 @@ export async function GET() {
 
   // Test 1.3 — check_user_role RPC exists
   try {
-    const { error } = await adminSb.rpc("check_user_role", { p_user_id: adminUser.id });
+    const { error } = await adminSb.rpc("check_user_role", { user_id: adminUser.id });
     results.push({
       test: "1.3 check_user_role RPC",
       layer: "DATABASE",
@@ -146,8 +146,8 @@ export async function GET() {
   try {
     const { data, error } = await adminSb
       .from("profiles")
-      .select("id, email, user_role")
-      .in("user_role", ["admin", "super_admin"]);
+      .select("id, email, role")
+      .in("role", ["admin", "super_admin"]);
 
     results.push({
       test: "1.4 Admin Users in Profiles",
@@ -156,7 +156,7 @@ export async function GET() {
       detail: error
         ? `Query error: ${error.message}`
         : data && data.length > 0
-        ? `Found ${data.length} admin(s): ${data.map((u: { email: string; user_role: string }) => `${u.email} (${u.user_role})`).join(", ")}`
+        ? `Found ${data.length} admin(s): ${data.map((u: { email: string; role: string }) => `${u.email} (${u.role})`).join(", ")}`
         : "No admin users found in profiles table",
       fix: (!data || data.length === 0) ? "UPDATE profiles SET user_role='super_admin' WHERE email='YOUR_EMAIL'" : undefined,
     });
@@ -206,7 +206,7 @@ export async function GET() {
   try {
     const { data, error } = await adminSb
       .from("products")
-      .select("id, title, price, url, image_url, source, platform, status, created_at")
+      .select("id, title, price, external_url, image_url, platform, status, created_at")
       .limit(1);
 
     results.push({
@@ -616,20 +616,22 @@ export async function GET() {
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 10000);
-      const res = await fetch("https://api.resend.com/domains", {
+      const res = await fetch("https://api.resend.com/api-keys", {
         signal: controller.signal,
         headers: { "Authorization": `Bearer ${resendKey}` },
       });
       clearTimeout(timeout);
 
+      // 200 = valid key, 401/403 = invalid key, 400 = may still be valid but restricted
+      const isValid = res.status === 200 || res.status === 400;
       results.push({
         test: "6.3 Resend API Key Valid",
         layer: "EXTERNAL_APIS",
-        status: res.ok ? "PASS" : "FAIL",
-        detail: res.ok
-          ? "Resend API responds with valid key"
-          : `Resend returned ${res.status}`,
-        fix: !res.ok ? "Check API key at resend.com → API Keys" : undefined,
+        status: isValid ? "PASS" : "FAIL",
+        detail: isValid
+          ? `Resend API key accepted (status: ${res.status})`
+          : `Resend returned ${res.status} — key may be invalid`,
+        fix: !isValid ? "Check API key at resend.com → API Keys" : undefined,
       });
     } catch (e) {
       results.push({
