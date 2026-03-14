@@ -4,19 +4,63 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { PROVIDERS, getEnvVar } from "@/lib/providers/config";
 
 // GET /api/admin/settings — returns provider status and saved settings
-export async function GET() {
+export async function GET(request: Request) {
   try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+
+  const url = new URL(request.url);
+
+  // Diagnostic endpoint: /api/admin/settings?debug=true
+  if (url.searchParams.get("debug") === "true") {
+    const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const hasSupabaseUrl = !!process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabase = createAdminClient();
+
+    let dbTest = { ok: false, error: "" };
+    try {
+      const { data, error } = await supabase
+        .from("admin_settings")
+        .select("key")
+        .limit(1);
+      if (error) {
+        dbTest = { ok: false, error: error.message };
+      } else {
+        dbTest = { ok: true, error: "" };
+      }
+    } catch (e) {
+      dbTest = { ok: false, error: e instanceof Error ? e.message : "unknown" };
+    }
+
+    return NextResponse.json({
+      env: {
+        SUPABASE_SERVICE_ROLE_KEY: hasServiceKey ? "set" : "MISSING",
+        NEXT_PUBLIC_SUPABASE_URL: hasSupabaseUrl ? "set" : "MISSING",
+        BACKEND_URL: process.env.BACKEND_URL ? "set" : "missing",
+        NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL ? "set" : "missing",
+      },
+      dbConnection: dbTest,
+      providerCount: PROVIDERS.length,
+    });
+  }
 
   const supabase = createAdminClient();
 
   // Load saved API keys from database
-  const { data: savedKeysRow } = await supabase
-    .from("admin_settings")
-    .select("value")
-    .eq("key", "api_keys")
-    .single();
+  let savedKeys: Record<string, string> = {};
+  try {
+    const { data: savedKeysRow, error } = await supabase
+      .from("admin_settings")
+      .select("value")
+      .eq("key", "api_keys")
+      .single();
 
-  const savedKeys: Record<string, string> = savedKeysRow?.value ?? {};
+    if (error && error.code !== "PGRST116") {
+      // PGRST116 = no rows found, which is fine
+      console.error("Failed to load saved API keys:", error.message);
+    }
+    savedKeys = savedKeysRow?.value ?? {};
+  } catch (e) {
+    console.error("Error loading API keys from DB:", e);
+  }
 
   // Check which providers are configured via env vars OR saved DB keys
   const providerStatus = PROVIDERS.map((provider) => ({
@@ -78,20 +122,20 @@ export async function POST(request: Request) {
       }
     }
 
-    const { error } = await supabase.from("admin_settings").upsert(
+    const { data, error } = await supabase.from("admin_settings").upsert(
       {
         key: "api_keys",
         value: merged,
         updated_by: admin.id,
       },
       { onConflict: "key" }
-    );
+    ).select();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: error.message, code: error.code, details: error.details }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, saved: Object.keys(merged).length });
   }
 
   // Handle generic settings
@@ -111,7 +155,7 @@ export async function POST(request: Request) {
   );
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: error.code }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

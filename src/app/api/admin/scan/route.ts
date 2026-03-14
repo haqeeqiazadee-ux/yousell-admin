@@ -1,8 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { requireAdmin } from '@/lib/auth/roles';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || '';
+const ENV_BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || '';
+
+async function getBackendUrl(): Promise<string> {
+  if (ENV_BACKEND_URL) return ENV_BACKEND_URL;
+
+  // Check DB-saved settings
+  try {
+    const supabase = createAdminClient();
+    const { data } = await supabase
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'api_keys')
+      .single();
+    if (data?.value?.BACKEND_URL) return data.value.BACKEND_URL;
+  } catch {}
+
+  return '';
+}
 
 export async function POST(req: NextRequest) {
   let user;
@@ -12,9 +30,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  if (!BACKEND_URL) {
+  const backendUrl = await getBackendUrl();
+
+  if (!backendUrl) {
     return NextResponse.json(
-      { error: 'Scan backend not configured. Set NEXT_PUBLIC_BACKEND_URL in environment.' },
+      { error: 'Scan backend not configured. Go to Settings and set BACKEND_URL, or deploy the Express backend first.' },
       { status: 503 }
     );
   }
@@ -24,7 +44,7 @@ export async function POST(req: NextRequest) {
   const query = body.query || '';
 
   try {
-    const response = await fetch(`${BACKEND_URL}/api/scan`, {
+    const response = await fetch(`${backendUrl}/api/scan`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -46,7 +66,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(data);
   } catch (error) {
     console.error('Failed to dispatch scan to backend:', error);
-    return NextResponse.json({ error: 'Failed to connect to scan backend. Check NEXT_PUBLIC_BACKEND_URL.' }, { status: 502 });
+    return NextResponse.json({ error: 'Failed to connect to scan backend. Is the backend running?' }, { status: 502 });
   }
 }
 
@@ -58,10 +78,16 @@ export async function GET(req: NextRequest) {
   }
 
   const jobId = req.nextUrl.searchParams.get('jobId');
+  const backendUrl = await getBackendUrl();
 
-  if (jobId && BACKEND_URL) {
+  // Check backend status
+  if (req.nextUrl.searchParams.get('check') === 'status') {
+    return NextResponse.json({ configured: !!backendUrl });
+  }
+
+  if (jobId && backendUrl) {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/scan/${jobId}`);
+      const response = await fetch(`${backendUrl}/api/scan/${jobId}`);
 
       if (!response.ok) {
         return NextResponse.json({ error: 'Job not found' }, { status: 404 });
@@ -96,19 +122,20 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Bug #5: client sends jobId as query param, not in body
   const jobId = req.nextUrl.searchParams.get('jobId');
 
   if (!jobId) {
     return NextResponse.json({ error: 'jobId is required' }, { status: 400 });
   }
 
-  if (!BACKEND_URL) {
+  const backendUrl = await getBackendUrl();
+
+  if (!backendUrl) {
     return NextResponse.json({ error: 'Scan backend not configured' }, { status: 503 });
   }
 
   try {
-    const response = await fetch(`${BACKEND_URL}/api/scan/${jobId}/cancel`, {
+    const response = await fetch(`${backendUrl}/api/scan/${jobId}/cancel`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
     });
