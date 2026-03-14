@@ -1058,3 +1058,55 @@ ai_operating_manual.md
 - Implement OAuth flows for store integrations (Shopify, TikTok Shop, Amazon)
 - Implement content generation worker (Claude API → marketing content)
 - Implement order tracking webhooks from connected stores
+
+------------------------------------------------------------
+
+## Session: 2026-03-14 — Automated Runtime Verification Suite
+
+### What Was Done
+Added a complete automated test suite (Vitest) covering three phases:
+
+**Phase 1 — Supabase Integration Tests** (`tests/phase1-supabase.test.ts`)
+- Schema validation: confirms all 30 expected tables exist and are queryable
+- Critical column checks: scoring columns, plan fields, RLS-related columns
+- RLS policy verification: anon access blocked on 17 admin-only tables + write blocks
+- Service role bypass: confirms admin client can read all tables
+- Seed data validation: all 11 automation_jobs seeded, at least one admin profile exists
+- Foreign key integrity: product_allocations → clients/products, viral_signals → products, notifications → profiles
+- Data consistency: score ranges 0-100, valid plan enums, valid allocation sources, valid influencer tiers
+
+**Phase 2 — API Route Smoke Tests** (`tests/phase2-api-smoke.test.ts`)
+- Auth guard verification on 20 admin GET routes and 5 admin POST routes
+- Dashboard route auth guards on 6 client-facing endpoints
+- Auth callback and signout basic checks
+- Stripe webhook rejects unsigned payloads
+- Response shape validation: JSON error objects, 404 for non-existent routes
+
+**Phase 3 — Business Logic Edge Cases** (`tests/phase3-business-logic.test.ts`) — **87/87 passing**
+- Final score formula: weights verification, boundary values, clamping, rounding
+- Tier classification: exact boundary tests (HOT/WARM/WATCH/COLD thresholds)
+- Trend stage mapping: exploding/rising/emerging/saturated boundaries
+- AI insight tier: sonnet/haiku/none thresholds
+- Trend, viral, profit score calculators: zeros, maxes, negatives, missing inputs
+- Auto-rejection: all 8 rejection rules with boundary values, accumulation test
+- Composite score heuristic: zero/perfect/negative/NaN/extreme inputs, source ranking
+- Profitability calculator: price sweet spot, competition mapping, margin tiers
+- Influencer conversion: micro sweet spot, engagement weighting, divide-by-zero safety
+- Subscription tier config: ascending prices/limits/platforms, engine superset rule
+
+### Files Created
+- `vitest.config.ts` — test runner configuration
+- `tests/setup.ts` — Supabase admin/anon client factory
+- `tests/phase1-supabase.test.ts` — integration tests
+- `tests/phase2-api-smoke.test.ts` — API smoke tests
+- `tests/phase3-business-logic.test.ts` — edge case unit tests
+
+### Files Modified
+- `package.json` — added vitest + test scripts (test, test:watch, test:phase1/2/3, test:unit, test:integration)
+- `.gitignore` — added .env.test
+
+### How to Run
+- `npm run test` — all phases
+- `npm run test:unit` — Phase 3 only (no network)
+- `npm run test:phase1` — Supabase integration (requires .env.test with real keys)
+- `npm run test:phase2` — API smoke (requires `npm run dev` running)
