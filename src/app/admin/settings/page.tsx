@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { CATEGORY_LABELS } from "@/lib/providers/config";
 import {
   CheckCircle2,
@@ -16,6 +18,10 @@ import {
   Zap,
   Clock,
   AlertTriangle,
+  Eye,
+  EyeOff,
+  Save,
+  Loader2,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -25,6 +31,7 @@ import {
 interface EnvKeyStatus {
   key: string;
   set: boolean;
+  source: "env" | "db" | null;
 }
 
 interface ProviderStatus {
@@ -179,8 +186,14 @@ export default function SettingsPage() {
   const [jobsLoading, setJobsLoading] = useState(true);
   const [togglingJobs, setTogglingJobs] = useState<Set<string>>(new Set());
 
+  // API key editing state
+  const [keyInputs, setKeyInputs] = useState<Record<string, string>>({});
+  const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
+  const [savingProvider, setSavingProvider] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+
   /* Fetch providers */
-  useEffect(() => {
+  const fetchProviders = useCallback(() => {
     fetch("/api/admin/settings")
       .then((res) => res.json())
       .then((d) => {
@@ -189,6 +202,10 @@ export default function SettingsPage() {
       })
       .catch(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    fetchProviders();
+  }, [fetchProviders]);
 
   /* Fetch automation jobs */
   const fetchJobs = useCallback(() => {
@@ -246,6 +263,84 @@ export default function SettingsPage() {
         return next;
       });
     }
+  };
+
+  /* Save API keys for a provider */
+  const saveProviderKeys = async (provider: ProviderStatus) => {
+    const apiKeys: Record<string, string> = {};
+    let hasInput = false;
+
+    for (const envKey of provider.envKeys) {
+      const val = keyInputs[envKey.key];
+      if (val !== undefined && val !== "") {
+        apiKeys[envKey.key] = val;
+        hasInput = true;
+      }
+    }
+
+    if (!hasInput) return;
+
+    setSavingProvider(provider.id);
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKeys }),
+      });
+
+      if (res.ok) {
+        // Clear inputs and refresh data
+        setKeyInputs((prev) => {
+          const next = { ...prev };
+          for (const envKey of provider.envKeys) {
+            delete next[envKey.key];
+          }
+          return next;
+        });
+        setSaveSuccess(provider.id);
+        setTimeout(() => setSaveSuccess(null), 2000);
+        fetchProviders();
+      }
+    } finally {
+      setSavingProvider(null);
+    }
+  };
+
+  /* Remove a saved DB key */
+  const removeKey = async (envKeyName: string, providerId: string) => {
+    setSavingProvider(providerId);
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKeys: { [envKeyName]: "" } }),
+      });
+      if (res.ok) {
+        fetchProviders();
+      }
+    } finally {
+      setSavingProvider(null);
+    }
+  };
+
+  const toggleKeyVisibility = (key: string) => {
+    setVisibleKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+
+  /* Check if a provider has unsaved input */
+  const providerHasInput = (provider: ProviderStatus) => {
+    return provider.envKeys.some((ek) => {
+      const val = keyInputs[ek.key];
+      return val !== undefined && val !== "";
+    });
   };
 
   /* Derived data */
@@ -313,12 +408,12 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground space-y-2">
                 <p>
-                  Configure your API providers below. Environment variables are
-                  set in your{" "}
+                  Configure your API providers below. Enter your API keys
+                  directly or set them as environment variables in{" "}
                   <code className="text-xs bg-muted px-1 py-0.5 rounded">
                     .env.local
                   </code>{" "}
-                  file or in Netlify&apos;s environment settings.
+                  or Netlify&apos;s environment settings.
                 </p>
                 <p>
                   Providers marked with a green checkmark are ready to use. Red
@@ -384,27 +479,103 @@ export default function SettingsPage() {
                               <XCircle className="h-5 w-5 text-red-500 shrink-0" />
                             )}
                           </div>
-                          <div className="mt-3 space-y-1">
+
+                          {/* API Key inputs */}
+                          <div className="mt-3 space-y-2">
                             {provider.envKeys.map((envKey) => (
-                              <div
-                                key={envKey.key}
-                                className="flex items-center justify-between text-xs"
-                              >
-                                <code className="bg-muted px-1 py-0.5 rounded">
-                                  {envKey.key}
-                                </code>
-                                <span
-                                  className={
-                                    envKey.set
-                                      ? "text-green-500"
-                                      : "text-red-500"
-                                  }
-                                >
-                                  {envKey.set ? "Set" : "Missing"}
-                                </span>
+                              <div key={envKey.key} className="space-y-1">
+                                <div className="flex items-center justify-between text-xs">
+                                  <code className="bg-muted px-1 py-0.5 rounded">
+                                    {envKey.key}
+                                  </code>
+                                  <span className="flex items-center gap-1.5">
+                                    {envKey.set && (
+                                      <span className={
+                                        envKey.source === "env"
+                                          ? "text-green-500"
+                                          : "text-blue-500"
+                                      }>
+                                        {envKey.source === "env" ? "Set (env)" : "Set (saved)"}
+                                      </span>
+                                    )}
+                                    {!envKey.set && (
+                                      <span className="text-red-500">Missing</span>
+                                    )}
+                                  </span>
+                                </div>
+
+                                {/* Show input if not set via env var */}
+                                {envKey.source !== "env" && (
+                                  <div className="flex items-center gap-1.5">
+                                    <div className="relative flex-1">
+                                      <Input
+                                        type={visibleKeys.has(envKey.key) ? "text" : "password"}
+                                        placeholder={envKey.set ? "••••••••••••" : `Enter ${envKey.key}`}
+                                        value={keyInputs[envKey.key] ?? ""}
+                                        onChange={(e) =>
+                                          setKeyInputs((prev) => ({
+                                            ...prev,
+                                            [envKey.key]: e.target.value,
+                                          }))
+                                        }
+                                        className="h-7 text-xs pr-8 font-mono"
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => toggleKeyVisibility(envKey.key)}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                      >
+                                        {visibleKeys.has(envKey.key) ? (
+                                          <EyeOff className="h-3.5 w-3.5" />
+                                        ) : (
+                                          <Eye className="h-3.5 w-3.5" />
+                                        )}
+                                      </button>
+                                    </div>
+                                    {envKey.source === "db" && !keyInputs[envKey.key] && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 px-2 text-xs text-red-500 hover:text-red-600 hover:bg-red-50"
+                                        onClick={() => removeKey(envKey.key, provider.id)}
+                                        disabled={savingProvider === provider.id}
+                                      >
+                                        Remove
+                                      </Button>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>
+
+                          {/* Save button for this provider */}
+                          {provider.envKeys.some((ek) => ek.source !== "env") && (
+                            <div className="mt-3 flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                className="h-7 text-xs"
+                                disabled={
+                                  !providerHasInput(provider) ||
+                                  savingProvider === provider.id
+                                }
+                                onClick={() => saveProviderKeys(provider)}
+                              >
+                                {savingProvider === provider.id ? (
+                                  <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                                ) : (
+                                  <Save className="h-3.5 w-3.5 mr-1" />
+                                )}
+                                Save Keys
+                              </Button>
+                              {saveSuccess === provider.id && (
+                                <span className="text-xs text-green-500 flex items-center gap-1">
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                  Saved
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
                     ))}
@@ -593,7 +764,7 @@ export default function SettingsPage() {
                   <span className="text-muted-foreground">
                     API Keys Storage
                   </span>
-                  <span>Server-side env vars only</span>
+                  <span>Server env vars + encrypted DB</span>
                 </div>
               </CardContent>
             </Card>
