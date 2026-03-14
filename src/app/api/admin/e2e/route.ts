@@ -479,9 +479,18 @@ export async function GET(req: NextRequest) {
     let allocTestProductId: string | null = null;
     let allocTestClientId: string | null = null;
 
+    // Pre-cleanup: Remove orphaned test data from previous failed runs
+    const { data: orphanedClient } = await adminSb
+      .from("clients").select("id").eq("email", "e2e-alloc@yousell.online").maybeSingle();
+    if (orphanedClient) {
+      await adminSb.from("product_allocations").delete().eq("client_id", orphanedClient.id);
+      await adminSb.from("clients").delete().eq("id", orphanedClient.id);
+    }
+    await adminSb.from("products").delete().eq("title", "E2E Alloc Test Product");
+
     // Setup: Create test product and client for allocation tests
     try {
-      const { data: prod } = await adminSb
+      const { data: prod, error: prodErr } = await adminSb
         .from("products")
         .insert({
           title: "E2E Alloc Test Product",
@@ -494,21 +503,22 @@ export async function GET(req: NextRequest) {
         .select()
         .single();
       allocTestProductId = prod?.id || null;
+      if (prodErr) console.error("E2E alloc product setup:", prodErr.message);
 
-      const { data: client } = await adminSb
+      const { data: client, error: clientErr } = await adminSb
         .from("clients")
         .insert({
           name: "E2E Alloc Test Client",
           email: "e2e-alloc@yousell.online",
           plan: "starter",
           niche: "tech",
-          default_product_limit: 3,
         })
         .select()
         .single();
       allocTestClientId = client?.id || null;
-    } catch {
-      // Setup failed — tests will skip
+      if (clientErr) console.error("E2E alloc client setup:", clientErr.message);
+    } catch (e) {
+      console.error("E2E alloc setup error:", e);
     }
 
     // E2E-ALLOC-01: Allocate product to client

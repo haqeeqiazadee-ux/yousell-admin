@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS clients (
   name TEXT NOT NULL,
   email TEXT NOT NULL,
   plan TEXT NOT NULL DEFAULT 'starter' CHECK (plan IN ('starter', 'growth', 'professional', 'enterprise')),
+  default_product_limit INTEGER NOT NULL DEFAULT 3,
   niche TEXT,
   notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
