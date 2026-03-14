@@ -30,6 +30,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'No active session' }, { status: 401 });
+  }
+
   const backendUrl = await getBackendUrl();
 
   if (!backendUrl) {
@@ -46,7 +52,10 @@ export async function POST(req: NextRequest) {
   try {
     const response = await fetch(`${backendUrl}/api/scan`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
       body: JSON.stringify({
         mode,
         query,
@@ -77,6 +86,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
   const jobId = req.nextUrl.searchParams.get('jobId');
   const backendUrl = await getBackendUrl();
 
@@ -87,7 +99,9 @@ export async function GET(req: NextRequest) {
 
   if (jobId && backendUrl) {
     try {
-      const response = await fetch(`${backendUrl}/api/scan/${jobId}`);
+      const response = await fetch(`${backendUrl}/api/scan/${jobId}`, {
+        headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
+      });
 
       if (!response.ok) {
         return NextResponse.json({ error: 'Job not found' }, { status: 404 });
@@ -101,7 +115,6 @@ export async function GET(req: NextRequest) {
   }
 
   // Read from 'scans' table — the backend worker writes here
-  const supabase = await createClient();
   const { data: scans, error } = await supabase
     .from('scans')
     .select('*')
@@ -122,6 +135,12 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'No active session' }, { status: 401 });
+  }
+
   const jobId = req.nextUrl.searchParams.get('jobId');
 
   if (!jobId) {
@@ -137,7 +156,10 @@ export async function DELETE(req: NextRequest) {
   try {
     const response = await fetch(`${backendUrl}/api/scan/${jobId}/cancel`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
     });
 
     if (!response.ok) {
