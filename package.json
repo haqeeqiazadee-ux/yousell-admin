@@ -6,12 +6,18 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:phase1": "vitest run tests/phase1-supabase.test.ts",
+    "test:phase2": "vitest run tests/phase2-api-smoke.test.ts",
+    "test:phase3": "vitest run tests/phase3-business-logic.test.ts",
+    "test:unit": "vitest run tests/phase3-business-logic.test.ts",
+    "test:integration": "vitest run tests/phase1-supabase.test.ts tests/phase2-api-smoke.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",
     "@supabase/ssr": "^0.9.0",
-    "@supabase/supabase-js": "^2.39.0",
     "autoprefixer": "^10.4.27",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -29,11 +35,14 @@
   },
   "devDependencies": {
     "@netlify/plugin-nextjs": "^4.41.3",
+    "@supabase/supabase-js": "^2.99.1",
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "dotenv": "^17.3.1",
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.35",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^4.1.0"
   }
 }
