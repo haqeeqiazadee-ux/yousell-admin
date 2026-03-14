@@ -11,7 +11,16 @@ export async function GET() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Check which providers are configured via env vars
+  // Load saved API keys from database
+  const { data: savedKeysRow } = await supabase
+    .from("admin_settings")
+    .select("value")
+    .eq("key", "api_keys")
+    .single();
+
+  const savedKeys: Record<string, string> = savedKeysRow?.value ?? {};
+
+  // Check which providers are configured via env vars OR saved DB keys
   const providerStatus = PROVIDERS.map((provider) => ({
     id: provider.id,
     name: provider.name,
@@ -19,17 +28,21 @@ export async function GET() {
     category: provider.category,
     phase: provider.phase,
     freeQuota: provider.freeQuota,
-    configured: provider.envKeys.every((key) => !!getEnvVar(key)),
+    pendingApproval: provider.pendingApproval,
+    fallback: provider.fallback,
+    configured: provider.envKeys.every((key) => !!getEnvVar(key) || !!savedKeys[key]),
     envKeys: provider.envKeys.map((key) => ({
       key,
-      set: !!getEnvVar(key),
+      set: !!getEnvVar(key) || !!savedKeys[key],
+      source: getEnvVar(key) ? "env" as const : savedKeys[key] ? "db" as const : null,
     })),
   }));
 
-  // Load saved settings from database
+  // Load other saved settings from database
   const { data: settings } = await supabase
     .from("admin_settings")
-    .select("key, value");
+    .select("key, value")
+    .neq("key", "api_keys");
 
   return NextResponse.json({
     providers: providerStatus,
@@ -37,7 +50,7 @@ export async function GET() {
   });
 }
 
-// POST /api/admin/settings — save a setting
+// POST /api/admin/settings — save API keys or other settings
 export async function POST(request: Request) {
   try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
 
@@ -48,6 +61,46 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
 
   const body = await request.json();
+
+  // Handle API key saves
+  if (body.apiKeys) {
+    const keys: Record<string, string> = body.apiKeys;
+
+    // Load existing saved keys
+    const { data: existing } = await supabase
+      .from("admin_settings")
+      .select("value")
+      .eq("key", "api_keys")
+      .single();
+
+    const merged: Record<string, string> = existing?.value ?? {};
+
+    // Merge new keys (empty string = delete)
+    for (const [k, v] of Object.entries(keys)) {
+      if (v === "") {
+        delete merged[k];
+      } else {
+        merged[k] = v;
+      }
+    }
+
+    const { error } = await supabase.from("admin_settings").upsert(
+      {
+        key: "api_keys",
+        value: merged,
+        updated_by: user!.id,
+      },
+      { onConflict: "key" }
+    );
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  }
+
+  // Handle generic settings
   const { key, value } = body;
 
   if (!key) {
