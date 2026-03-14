@@ -204,8 +204,41 @@ export const CATEGORY_LABELS: Record<string, string> = {
   supplier: "Supplier Discovery",
 };
 
+// Static env var lookup — Next.js inlines process.env.KEY at build time,
+// but NOT process.env[dynamicKey]. This map ensures all provider keys
+// are resolved at build time without leaking to the client bundle.
+export function getEnvVar(key: string): string | undefined {
+  const ENV_MAP: Record<string, string | undefined> = {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    APIFY_API_TOKEN: process.env.APIFY_API_TOKEN,
+    RAPIDAPI_KEY: process.env.RAPIDAPI_KEY,
+    TIKTOK_API_KEY: process.env.TIKTOK_API_KEY,
+    SCRAPE_CREATORS_API_KEY: process.env.SCRAPE_CREATORS_API_KEY,
+    AMAZON_PA_API_KEY: process.env.AMAZON_PA_API_KEY,
+    AMAZON_PA_API_SECRET: process.env.AMAZON_PA_API_SECRET,
+    AMAZON_ASSOCIATE_TAG: process.env.AMAZON_ASSOCIATE_TAG,
+    REDDIT_CLIENT_ID: process.env.REDDIT_CLIENT_ID,
+    REDDIT_CLIENT_SECRET: process.env.REDDIT_CLIENT_SECRET,
+    YOUTUBE_API_KEY: process.env.YOUTUBE_API_KEY,
+    PINTEREST_API_KEY: process.env.PINTEREST_API_KEY,
+    PRODUCT_HUNT_API_KEY: process.env.PRODUCT_HUNT_API_KEY,
+    SERPAPI_KEY: process.env.SERPAPI_KEY,
+    AINFLUENCER_API_KEY: process.env.AINFLUENCER_API_KEY,
+    MODASH_API_KEY: process.env.MODASH_API_KEY,
+    HYPEAUDITOR_API_KEY: process.env.HYPEAUDITOR_API_KEY,
+    CJ_DROPSHIPPING_API_KEY: process.env.CJ_DROPSHIPPING_API_KEY,
+    ALIBABA_APP_KEY: process.env.ALIBABA_APP_KEY,
+    FAIRE_API_KEY: process.env.FAIRE_API_KEY,
+  };
+  return ENV_MAP[key];
+}
+
 export function getProviderStatus(envKeys: string[]): "connected" | "missing" {
-  return envKeys.every((key) => !!process.env[key])
+  return envKeys.every((key) => !!getEnvVar(key))
     ? "connected"
     : "missing";
 }

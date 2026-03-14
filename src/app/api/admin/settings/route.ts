@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/roles";
-import { PROVIDERS } from "@/lib/providers/config";
+import { PROVIDERS, getEnvVar } from "@/lib/providers/config";
 
 // GET /api/admin/settings — returns provider status and saved settings
 export async function GET() {
@@ -19,10 +19,10 @@ export async function GET() {
     category: provider.category,
     phase: provider.phase,
     freeQuota: provider.freeQuota,
-    configured: provider.envKeys.every((key) => !!process.env[key]),
+    configured: provider.envKeys.every((key) => !!getEnvVar(key)),
     envKeys: provider.envKeys.map((key) => ({
       key,
-      set: !!process.env[key],
+      set: !!getEnvVar(key),
     })),
   }));
 
