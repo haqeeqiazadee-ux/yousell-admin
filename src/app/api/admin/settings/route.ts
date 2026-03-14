@@ -17,7 +17,7 @@ export async function GET(request: Request) {
 
     let dbTest = { ok: false, error: "" };
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("admin_settings")
         .select("key")
         .limit(1);
@@ -122,14 +122,14 @@ export async function POST(request: Request) {
       }
     }
 
-    const { data, error } = await supabase.from("admin_settings").upsert(
+    const { error } = await supabase.from("admin_settings").upsert(
       {
         key: "api_keys",
         value: merged,
         updated_by: admin.id,
       },
       { onConflict: "key" }
-    ).select();
+    );
 
     if (error) {
       return NextResponse.json({ error: error.message, code: error.code, details: error.details }, { status: 500 });
