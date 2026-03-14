@@ -2,8 +2,6 @@
 
 import { useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
-import { useRouter } from 'next/navigation';
-
 function getSupabase() {
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -16,7 +14,6 @@ export default function ClientLoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,8 +32,8 @@ export default function ClientLoginPage() {
       return;
     }
 
-    router.push('/dashboard');
-    router.refresh();
+    // Full page navigation ensures server layout gets fresh auth cookies
+    window.location.href = '/dashboard';
   };
 
   return (

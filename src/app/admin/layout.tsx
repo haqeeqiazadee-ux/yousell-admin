@@ -18,7 +18,9 @@ export default async function AdminLayout({
   });
 
   // No authenticated user — render without sidebar (login, unauthorized, etc.)
-  if (!user) {
+  // Also skip sidebar for non-admin users (defense-in-depth: middleware should
+  // already redirect, but this prevents sidebar flash for non-admins)
+  if (!user || (user.role !== 'admin' && user.role !== 'super_admin')) {
     return <>{children}</>;
   }
 

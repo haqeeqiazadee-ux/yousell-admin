@@ -868,6 +868,65 @@ need to be set in the deployment environment (Netlify). This is not a code bug.
 
 ------------------------------------------------------------
 
+------------------------------------------------------------
+
+## SESSION: 2026-03-14 — Full System Audit & Bug Fixes
+
+### Issues Found & Fixed
+
+1. **SECURITY FIX: Secrets leaked to client bundle**
+   - `next.config.mjs` used `env:{}` which exposes ALL listed env vars (including
+     `SUPABASE_SERVICE_ROLE_KEY`) into the client-side JavaScript bundle
+   - Removed entire `env:{}` block — Netlify Functions already have `process.env`
+     access at runtime without build-time inlining
+
+2. **BUG FIX: Middleware rejects super_admin role**
+   - `middleware.ts` only checked `role !== 'admin'`, blocking `super_admin` users
+   - Fixed to accept both `admin` and `super_admin` roles
+
+3. **BUG FIX: BUG-001 — Admin layout renders for any authenticated user**
+   - `admin/layout.tsx` showed sidebar to any logged-in user (including clients)
+   - Added defense-in-depth role check: only renders admin sidebar for
+     `admin` / `super_admin` roles
+
+4. **BUG FIX: Client login uses router.push instead of window.location.href**
+   - `/login/page.tsx` used `router.push('/dashboard')` which doesn't refresh
+     server-side layout, causing stale auth cookies
+   - Changed to `window.location.href = '/dashboard'` (same fix as admin login)
+
+5. **FIX: netlify.toml missing Node version and security headers**
+   - Added `NODE_VERSION = "18"` to build environment
+   - Added security headers: X-Frame-Options, X-Content-Type-Options,
+     Referrer-Policy, Permissions-Policy
+
+6. **SECURITY FIX: check_user_role RPC granted to anon**
+   - The `anon` role could call `check_user_role()` to enumerate user roles
+   - Changed to REVOKE from anon, only `authenticated` can call it
+
+7. **TYPE FIX: UserRole type missing super_admin and viewer**
+   - `database.ts` had `"admin" | "client"` only
+   - Fixed to `"super_admin" | "admin" | "client" | "viewer"`
+
+8. **FIX: requireAdmin() rejects super_admin**
+   - `roles.ts` only accepted `role === 'admin'`
+   - Fixed to accept both `admin` and `super_admin`
+
+### Files Modified
+- `next.config.mjs` — Removed secret-leaking env config
+- `src/middleware.ts` — Accept super_admin role
+- `src/app/admin/layout.tsx` — Defense-in-depth role check
+- `src/app/login/page.tsx` — Use window.location.href
+- `src/lib/auth/get-user.ts` — Add super_admin to User type
+- `src/lib/auth/roles.ts` — Accept super_admin in requireAdmin()
+- `src/lib/types/database.ts` — Add super_admin/viewer to UserRole
+- `netlify.toml` — Node version + security headers
+- `supabase/migrations/015_admin_check_rpc.sql` — Revoke anon access
+
+### Build Status
+- Build: PASS (70 pages, no errors)
+
+------------------------------------------------------------
+
 # FINAL GOAL
 
 Deliver a fully operational commerce intelligence SaaS capable of discovering viral products, influencers, stores and advertising campaigns across multiple ecommerce ecosystems.

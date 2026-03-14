@@ -7,6 +7,7 @@ RETURNS TEXT AS $$
   SELECT role::TEXT FROM profiles WHERE id = user_id;
 $$ LANGUAGE sql SECURITY DEFINER STABLE;
 
--- Grant execute to authenticated users (anon key with valid JWT)
+-- Grant execute to authenticated users only (not anon — role check
+-- should never be callable without a valid JWT session)
 GRANT EXECUTE ON FUNCTION check_user_role(UUID) TO authenticated;
-GRANT EXECUTE ON FUNCTION check_user_role(UUID) TO anon;
+REVOKE EXECUTE ON FUNCTION check_user_role(UUID) FROM anon;

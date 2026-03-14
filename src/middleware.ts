@@ -21,7 +21,7 @@ export async function middleware(request: NextRequest) {
     // Uses SECURITY DEFINER RPC to bypass RLS on profiles table
     const { data: role } = await supabase.rpc('check_user_role', { user_id: user.id })
 
-    if (role !== 'admin') {
+    if (role !== 'admin' && role !== 'super_admin') {
       return NextResponse.redirect(new URL('/admin/unauthorized', request.url))
     }
   }
