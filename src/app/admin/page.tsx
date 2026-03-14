@@ -99,7 +99,7 @@ export default function AdminDashboard() {
         ])
 
         if (products.data) {
-          const all = products.data
+          const all = products.data as { id: string; title: string; viral_score: number | null; trend_stage: string; platform: string; final_score: number | null; channel: string }[]
           setStats(prev => ({
             ...prev,
             productsTracked: all.length,
