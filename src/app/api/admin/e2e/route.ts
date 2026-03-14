@@ -376,7 +376,7 @@ export async function GET(req: NextRequest) {
       try {
         const { data, error } = await adminSb
           .from("clients")
-          .update({ plan: "growth", default_product_limit: 10 })
+          .update({ plan: "growth" })
           .eq("id", testClientId)
           .select()
           .single();
@@ -387,7 +387,7 @@ export async function GET(req: NextRequest) {
           status: error ? "FAIL" : data?.plan === "growth" ? "PASS" : "FAIL",
           detail: error
             ? `Update failed: ${error.message}`
-            : `Plan updated to "${data.plan}", limit=${data.default_product_limit}`,
+            : `Plan updated to "${data.plan}"`,
         });
       } catch (e) {
         results.push({
@@ -715,7 +715,7 @@ export async function GET(req: NextRequest) {
         const { data, error } = await adminSb
           .from("scan_history")
           .select("*")
-          .order("created_at", { ascending: false })
+          .order("started_at", { ascending: false })
           .limit(10);
 
         results.push({
