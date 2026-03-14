@@ -75,11 +75,14 @@ const SCAN_CONFIGS: ScanConfig[] = [
 
 interface ScanHistory {
   id: string
-  mode: string
+  mode?: string
+  scan_mode?: string
   status: string
   products_found: number
+  hot_products?: number
   created_at: string
-  duration_seconds: number
+  started_at?: string
+  duration_seconds?: number
 }
 
 function ScanPageContent() {
@@ -97,7 +100,6 @@ function ScanPageContent() {
   const [productsFound, setProductsFound] = useState(0)
   const [clients, setClients] = useState<ClientOption[]>([])
   const [selectedClientId, setSelectedClientId] = useState<string>('')
-  const [backendConfigured, setBackendConfigured] = useState<boolean | null>(null)
   const pollRef = useRef<NodeJS.Timeout | null>(null)
 
   const config = SCAN_CONFIGS.find(c => c.mode === selectedMode)!
@@ -105,21 +107,8 @@ function ScanPageContent() {
   useEffect(() => {
     fetchHistory()
     fetchClients()
-    checkBackendStatus()
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
   }, [])
-
-  async function checkBackendStatus() {
-    try {
-      const res = await fetch('/api/admin/scan?check=status')
-      if (res.ok) {
-        const data = await res.json()
-        setBackendConfigured(data.configured)
-      }
-    } catch {
-      setBackendConfigured(false)
-    }
-  }
 
   async function fetchClients() {
     try {
@@ -170,7 +159,20 @@ function ScanPageContent() {
         throw new Error(err.error || 'Failed to start scan')
       }
 
-      const { jobId: id } = await res.json()
+      const data = await res.json()
+      const id = data.jobId
+
+      // If direct scan returned completed immediately, skip polling
+      if (data.status === 'completed') {
+        setJobId(id)
+        setStatus('completed')
+        setProgress(100)
+        setProgressLabel('Scan complete!')
+        setProductsFound(data.productsFound ?? 0)
+        fetchHistory()
+        return
+      }
+
       setJobId(id)
       pollJobStatus(id)
     } catch (e: unknown) {
@@ -189,8 +191,8 @@ function ScanPageContent() {
         if (!res.ok) return
         const job = await res.json()
 
-        setProgress(job.progress ?? progress)
-        setProgressLabel(job.step ?? progressLabel)
+        setProgress(prev => job.progress ?? prev)
+        setProgressLabel(prev => job.step ?? prev)
 
         if (job.status === 'completed') {
           clearInterval(pollRef.current!)
@@ -255,24 +257,6 @@ function ScanPageContent() {
 
         {/* Left: Scan Controls */}
         <div className="lg:col-span-2 space-y-5">
-
-          {/* Backend not configured warning */}
-          {backendConfigured === false && status === 'idle' && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-              <div className="flex items-start gap-3">
-                <AlertTriangle size={18} className="text-amber-600 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-amber-800">Backend Not Connected</p>
-                  <p className="text-xs text-amber-700 mt-1">
-                    The scan backend (Express + Redis) needs to be deployed and configured.
-                    Go to{' '}
-                    <Link href="/admin/settings" className="underline font-medium">Settings</Link>
-                    {' '}and set the <code className="text-xs bg-amber-100 px-1 py-0.5 rounded">BACKEND_URL</code> to your deployed backend address.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Mode selector */}
           {status === 'idle' && (
@@ -507,7 +491,7 @@ function ScanPageContent() {
                 {history.map(scan => (
                   <div key={scan.id} className="p-3 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-semibold text-gray-700 capitalize">{scan.mode} Scan</span>
+                      <span className="text-xs font-semibold text-gray-700 capitalize">{scan.scan_mode || scan.mode} Scan</span>
                       <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
                         scan.status === 'completed' ? 'bg-emerald-50 text-emerald-700' :
                         scan.status === 'failed' ? 'bg-red-50 text-red-600' :
@@ -517,7 +501,7 @@ function ScanPageContent() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs text-gray-400">
-                      <span>{formatTime(scan.created_at)}</span>
+                      <span>{formatTime(scan.started_at || scan.created_at)}</span>
                       <span className="font-medium text-gray-600">{scan.products_found ?? 0} products</span>
                     </div>
                     {scan.duration_seconds && (
