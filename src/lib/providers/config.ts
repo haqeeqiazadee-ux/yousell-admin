@@ -24,6 +24,14 @@ export const PROVIDERS: ProviderInfo[] = [
     phase: 1,
   },
   {
+    id: "backend",
+    name: "Scan Backend",
+    description: "Express API + BullMQ worker for product scanning jobs",
+    category: "ai",
+    envKeys: ["BACKEND_URL"],
+    phase: 1,
+  },
+  {
     id: "anthropic",
     name: "Claude AI (Anthropic)",
     description: "AI-powered product analysis, scoring, and blueprints",
@@ -212,6 +220,7 @@ export function getEnvVar(key: string): string | undefined {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    BACKEND_URL: process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL,
     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     APIFY_API_TOKEN: process.env.APIFY_API_TOKEN,

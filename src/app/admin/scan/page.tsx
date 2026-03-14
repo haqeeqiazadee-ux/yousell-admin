@@ -93,6 +93,7 @@ function ScanPageContent() {
   const [productsFound, setProductsFound] = useState(0)
   const [clients, setClients] = useState<ClientOption[]>([])
   const [selectedClientId, setSelectedClientId] = useState<string>('')
+  const [backendConfigured, setBackendConfigured] = useState<boolean | null>(null)
   const pollRef = useRef<NodeJS.Timeout | null>(null)
 
   const config = SCAN_CONFIGS.find(c => c.mode === selectedMode)!
@@ -100,8 +101,21 @@ function ScanPageContent() {
   useEffect(() => {
     fetchHistory()
     fetchClients()
+    checkBackendStatus()
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
   }, [])
+
+  async function checkBackendStatus() {
+    try {
+      const res = await fetch('/api/admin/scan?check=status')
+      if (res.ok) {
+        const data = await res.json()
+        setBackendConfigured(data.configured)
+      }
+    } catch {
+      setBackendConfigured(false)
+    }
+  }
 
   async function fetchClients() {
     try {
@@ -237,6 +251,24 @@ function ScanPageContent() {
 
         {/* Left: Scan Controls */}
         <div className="lg:col-span-2 space-y-5">
+
+          {/* Backend not configured warning */}
+          {backendConfigured === false && status === 'idle' && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle size={18} className="text-amber-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-amber-800">Backend Not Connected</p>
+                  <p className="text-xs text-amber-700 mt-1">
+                    The scan backend (Express + Redis) needs to be deployed and configured.
+                    Go to{' '}
+                    <Link href="/admin/settings" className="underline font-medium">Settings</Link>
+                    {' '}and set the <code className="text-xs bg-amber-100 px-1 py-0.5 rounded">BACKEND_URL</code> to your deployed backend address.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Mode selector */}
           {status === 'idle' && (
