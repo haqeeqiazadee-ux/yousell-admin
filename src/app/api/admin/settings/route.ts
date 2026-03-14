@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/roles";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { PROVIDERS, getEnvVar } from "@/lib/providers/config";
 
 // GET /api/admin/settings — returns provider status and saved settings
 export async function GET() {
   try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
 
-  const supabase = await createClient();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { data: { user } } = await supabase.auth.getUser();
+  const supabase = createAdminClient();
 
   // Load saved API keys from database
   const { data: savedKeysRow } = await supabase
@@ -52,14 +50,10 @@ export async function GET() {
 
 // POST /api/admin/settings — save API keys or other settings
 export async function POST(request: Request) {
-  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+  const admin = await requireAdmin().catch(() => null);
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const supabase = createAdminClient();
   const body = await request.json();
 
   // Handle API key saves
@@ -88,7 +82,7 @@ export async function POST(request: Request) {
       {
         key: "api_keys",
         value: merged,
-        updated_by: user!.id,
+        updated_by: admin.id,
       },
       { onConflict: "key" }
     );
@@ -111,7 +105,7 @@ export async function POST(request: Request) {
     {
       key,
       value,
-      updated_by: user!.id,
+      updated_by: admin.id,
     },
     { onConflict: "key" }
   );

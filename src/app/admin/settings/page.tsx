@@ -266,6 +266,8 @@ export default function SettingsPage() {
   };
 
   /* Save API keys for a provider */
+  const [saveError, setSaveError] = useState<string | null>(null);
+
   const saveProviderKeys = async (provider: ProviderStatus) => {
     const apiKeys: Record<string, string> = {};
     let hasInput = false;
@@ -281,6 +283,7 @@ export default function SettingsPage() {
     if (!hasInput) return;
 
     setSavingProvider(provider.id);
+    setSaveError(null);
     try {
       const res = await fetch("/api/admin/settings", {
         method: "POST",
@@ -300,7 +303,14 @@ export default function SettingsPage() {
         setSaveSuccess(provider.id);
         setTimeout(() => setSaveSuccess(null), 2000);
         fetchProviders();
+      } else {
+        const err = await res.json().catch(() => ({ error: "Failed to save" }));
+        setSaveError(`${provider.name}: ${err.error || "Failed to save"}`);
+        setTimeout(() => setSaveError(null), 5000);
       }
+    } catch {
+      setSaveError(`${provider.name}: Network error`);
+      setTimeout(() => setSaveError(null), 5000);
     } finally {
       setSavingProvider(null);
     }
@@ -390,8 +400,8 @@ export default function SettingsPage() {
           </div>
         </div>
       ) : (
-        <Tabs defaultValue="providers">
-          <TabsList>
+        <Tabs defaultValue="providers" className="flex flex-col gap-2">
+          <TabsList className="flex flex-row h-8">
             <TabsTrigger value="providers">API Providers</TabsTrigger>
             <TabsTrigger value="automation">Automation</TabsTrigger>
             <TabsTrigger value="system">System</TabsTrigger>
@@ -421,6 +431,12 @@ export default function SettingsPage() {
                 </p>
               </CardContent>
             </Card>
+
+            {saveError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-2 rounded-lg dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+                {saveError}
+              </div>
+            )}
 
             {categories.map((category) => {
               const catLabel =
