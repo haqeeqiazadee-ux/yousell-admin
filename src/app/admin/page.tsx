@@ -143,7 +143,7 @@ export default function AdminDashboard() {
         schema: 'public',
         table: 'scan_history'
       }, debouncedFetch)
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         console.log('[Realtime] channel status:', status)
       })
 
