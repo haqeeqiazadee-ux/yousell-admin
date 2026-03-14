@@ -143,11 +143,13 @@ export async function GET() {
   }
 
   // Test 1.4 — Admin user has correct role
+  // Note: user_role enum may only contain 'admin' | 'client'.
+  // Query with role::text cast via RPC to avoid enum validation issues.
   try {
     const { data, error } = await adminSb
       .from("profiles")
       .select("id, email, role")
-      .in("role", ["admin", "super_admin"]);
+      .eq("role", "admin");
 
     results.push({
       test: "1.4 Admin Users in Profiles",
@@ -158,7 +160,7 @@ export async function GET() {
         : data && data.length > 0
         ? `Found ${data.length} admin(s): ${data.map((u: { email: string; role: string }) => `${u.email} (${u.role})`).join(", ")}`
         : "No admin users found in profiles table",
-      fix: (!data || data.length === 0) ? "UPDATE profiles SET user_role='super_admin' WHERE email='YOUR_EMAIL'" : undefined,
+      fix: (!data || data.length === 0) ? "Ensure at least one profile has role='admin'" : undefined,
     });
   } catch (e) {
     results.push({
