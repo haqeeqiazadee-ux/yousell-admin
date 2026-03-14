@@ -495,20 +495,20 @@ export async function GET(req: NextRequest) {
         .single();
       allocTestProductId = prod?.id || null;
 
-      const { data: client } = await adminSb
+      const { data: client, error: clientErr } = await adminSb
         .from("clients")
         .insert({
           name: "E2E Alloc Test Client",
           email: "e2e-alloc@yousell.online",
           plan: "starter",
           niche: "tech",
-          default_product_limit: 3,
         })
         .select()
         .single();
       allocTestClientId = client?.id || null;
-    } catch {
-      // Setup failed — tests will skip
+      if (clientErr) console.error("E2E alloc client setup:", clientErr.message);
+    } catch (e) {
+      console.error("E2E alloc setup error:", e);
     }
 
     // E2E-ALLOC-01: Allocate product to client
