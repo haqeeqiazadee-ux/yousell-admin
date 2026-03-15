@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { authFetch } from '@/lib/auth-fetch'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -58,7 +59,7 @@ export default function BillingPage() {
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/dashboard/subscription')
+    authFetch('/api/dashboard/subscription')
       .then(r => r.json())
       .then(data => {
         setSubscription(data.subscription)
@@ -71,7 +72,7 @@ export default function BillingPage() {
   const handleCheckout = async (planId: string) => {
     setCheckoutLoading(planId)
     try {
-      const res = await fetch('/api/dashboard/subscription', {
+      const res = await authFetch('/api/dashboard/subscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ planId }),
@@ -89,7 +90,7 @@ export default function BillingPage() {
 
   const handleManage = async () => {
     try {
-      const res = await fetch('/api/dashboard/subscription/portal', { method: 'POST' })
+      const res = await authFetch('/api/dashboard/subscription/portal', { method: 'POST' })
       const data = await res.json()
       if (data.url) {
         window.location.href = data.url

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { authFetch } from "@/lib/auth-fetch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -64,7 +65,7 @@ export default function ClientRequestsPage() {
 
   async function fetchRequests() {
     try {
-      const res = await fetch("/api/dashboard/requests");
+      const res = await authFetch("/api/dashboard/requests");
       const data = await res.json();
       setRequests(data.requests || []);
     } catch {
@@ -86,7 +87,7 @@ export default function ClientRequestsPage() {
     setSubmitSuccess(false);
 
     try {
-      const res = await fetch("/api/dashboard/requests", {
+      const res = await authFetch("/api/dashboard/requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ platform, note: note || null }),

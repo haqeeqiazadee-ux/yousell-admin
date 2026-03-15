@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { authFetch } from '@/lib/auth-fetch'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -64,7 +65,7 @@ export default function IntegrationsPage() {
   }, [searchParams])
 
   useEffect(() => {
-    fetch('/api/dashboard/channels')
+    authFetch('/api/dashboard/channels')
       .then(r => r.json())
       .then(data => setChannels(data.channels || []))
       .catch(console.error)
@@ -76,7 +77,7 @@ export default function IntegrationsPage() {
   const handleConnect = async (channelType: string) => {
     setConnecting(channelType)
     try {
-      const res = await fetch('/api/dashboard/channels/connect', {
+      const res = await authFetch('/api/dashboard/channels/connect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -103,7 +104,7 @@ export default function IntegrationsPage() {
   const handleDisconnect = async (channelId: string, channelType: string) => {
     setDisconnecting(channelId)
     try {
-      const res = await fetch('/api/dashboard/channels/disconnect', {
+      const res = await authFetch('/api/dashboard/channels/disconnect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ channelId }),

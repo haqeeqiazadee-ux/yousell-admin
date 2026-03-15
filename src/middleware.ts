@@ -58,9 +58,21 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/admin', request.url))
   }
 
-  // Client dashboard routes: require authenticated user
-  if (pathname.startsWith('/dashboard') && !user) {
-    return NextResponse.redirect(new URL('/login', request.url))
+  // Client dashboard routes: require authenticated user with client role
+  if (pathname.startsWith('/dashboard')) {
+    if (!user) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+
+    // Defense-in-depth: check client role at middleware level
+    const { data: clientRole } = await supabase.rpc('check_user_role', { user_id: user.id })
+    if (clientRole !== 'client') {
+      // Admin/super_admin users should go to admin panel, not client dashboard
+      if (clientRole === 'admin' || clientRole === 'super_admin') {
+        return NextResponse.redirect(new URL('/admin', request.url))
+      }
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
   }
 
   return supabaseResponse

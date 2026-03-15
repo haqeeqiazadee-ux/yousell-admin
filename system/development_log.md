@@ -1773,3 +1773,70 @@ Created `tests/phase5-security.test.ts` covering:
 - `package.json` — Added test:phase4, test:phase5 scripts
 
 ### QA Build Status — PASS (0 errors, 0 warnings)
+
+---
+
+## Session: Full System QA Audit & Bug Fixes (2026-03-15)
+
+### QA Audit Summary
+Conducted comprehensive 10-batch QA audit of the entire YouSell platform.
+Identified 22 bugs across all severity levels.
+
+### CRITICAL Fixes (3 issues — ALL FIXED)
+- **CRITICAL-1**: Client dashboard API routes used `cookies()` which hangs on Netlify. Created `src/lib/auth/client-api-auth.ts` with token-based `authenticateClient()` / `authenticateClientLite()`. Migrated all 10 dashboard API routes and updated all 7 client pages to use `authFetch()`.
+- **CRITICAL-2**: 6 tables had RLS disabled via `USING(true)` policies. Created `supabase/migrations/020_rls_security_fixes.sql` to drop them.
+- **CRITICAL-3**: Dashboard layout crashed on Netlify. Added `force-dynamic`, cookie fallback, and redirect re-throw error handling.
+
+### HIGH Fixes (3 issues — ALL FIXED)
+- **HIGH-1**: Client API routes lacked role verification. Built into `authenticateClientLite()`.
+- **HIGH-2**: `product_requests` RLS allowed clients to UPDATE/DELETE. Split into SELECT + INSERT only (in migration 020).
+- **HIGH-3**: 4 admin API routes had inline `authenticateAdmin()` copies. Consolidated to shared import from `@/lib/auth/admin-api-auth`.
+
+### MEDIUM Fixes (10 issues — ALL ADDRESSED)
+- **QA-B1-001**: Subdomain dev protection — acceptable (localhost doesn't need subdomain routing).
+- **QA-B1-004**: Middleware client role check — added defense-in-depth client role verification in middleware. Admin users redirected to `/admin`.
+- **QA-B2-002**: `requireClient()` rejects admin — dead code, not used anywhere.
+- **QA-B2-004**: `getUser()` falls back to viewer on RPC failure — added retry logic (2 attempts) and returns null on total failure instead of silently downgrading role.
+- **QA-B4-003**: Duplicate `productsReleased` KPI — fixed to count products with trend_stage 'released' or 'active' instead of duplicating total count.
+- **QA-B4-004**: No mobile nav in client dashboard — created `DashboardMobileNav` component with hamburger menu.
+- **QA-B6-003**: `user.email!` non-null assertion in `requireClient()` — added explicit null check with error throw.
+- **QA-B6-004**: Stripe checkout URL hardcoded — already uses `NEXT_PUBLIC_SITE_URL` env var with production fallback.
+- **QA-B9-003**: Duplicate `016_run_this.sql` migration — renamed to `016_run_this_DEPRECATED.sql`.
+
+### LOW Fixes (5 issues — REVIEWED)
+- **QA-B1-002**: Middleware NextResponse pattern — standard Supabase SSR pattern, not a bug.
+- **QA-B2-003**: `requireAdmin()` uses cookie-based auth — dead code, not imported anywhere.
+- **QA-B7-002**: Missing TypeScript types — cosmetic, no functional impact.
+- **QA-B7-004**: Loading states — some pages lack loading skeletons. Low priority.
+- **QA-B10-004**: Console.log in scan route — operational logs useful for debugging scan pipeline.
+
+### Files Created
+- `src/lib/auth/client-api-auth.ts` — Token-based client auth for API routes
+- `src/components/dashboard-mobile-nav.tsx` — Mobile hamburger menu for client dashboard
+- `supabase/migrations/020_rls_security_fixes.sql` — RLS security fixes
+
+### Files Modified
+- `src/middleware.ts` — Added client role check
+- `src/lib/auth/get-user.ts` — Added RPC retry logic, fail-safe null return
+- `src/lib/auth/require-client.ts` — Added email null check, removed non-null assertions
+- `src/app/dashboard/layout.tsx` — Force-dynamic, cookie fallback, mobile nav import
+- `src/app/dashboard/page.tsx` — Fixed duplicate KPI, authFetch migration
+- `src/app/dashboard/products/page.tsx` — authFetch migration
+- `src/app/dashboard/requests/page.tsx` — authFetch migration
+- `src/app/dashboard/integrations/page.tsx` — authFetch migration
+- `src/app/dashboard/content/page.tsx` — authFetch migration
+- `src/app/dashboard/billing/page.tsx` — authFetch migration
+- `src/app/dashboard/orders/page.tsx` — authFetch migration
+- `src/app/api/dashboard/*` (10 routes) — Token-based auth migration
+- `src/app/api/admin/products/route.ts` — Shared authenticateAdmin import
+- `src/app/api/admin/analytics/route.ts` — Shared authenticateAdmin import
+- `src/app/api/admin/dashboard/route.ts` — Shared authenticateAdmin import
+- `src/app/api/admin/scan/route.ts` — Shared authenticateAdmin import
+
+### Files Renamed
+- `supabase/migrations/016_run_this.sql` → `016_run_this_DEPRECATED.sql`
+
+### Build Status — PASS (0 errors, 0 warnings)
+
+### Action Required
+- Run `supabase/migrations/020_rls_security_fixes.sql` in Supabase SQL Editor to apply RLS fixes

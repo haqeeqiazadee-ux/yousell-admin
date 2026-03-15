@@ -1,57 +1,32 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { createClient } from '@/lib/supabase/server'
+import { authenticateClient, authenticateClientLite } from '@/lib/auth/client-api-auth'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getStripe, PRICING_TIERS } from '@/lib/stripe'
 
 // GET — Fetch current client subscription
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const clientCtx = await authenticateClient(req)
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id, role')
-      .eq('id', user.id)
-      .single()
-
-    if (!profile || profile.role !== 'client') {
-      return NextResponse.json({ error: 'Not a client' }, { status: 403 })
-    }
-
-    // Get client record
-    const { data: client } = await supabase
-      .from('clients')
-      .select('id')
-      .eq('email', user.email)
-      .single()
-
-    if (!client) {
-      return NextResponse.json({ subscription: null, plan: null })
-    }
-
-    const { data: subscription } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('client_id', client.id)
-      .single()
-
-    const plan = subscription?.plan ? PRICING_TIERS[subscription.plan as keyof typeof PRICING_TIERS] : null
-
-    return NextResponse.json({ subscription, plan })
+    return NextResponse.json({
+      subscription: clientCtx.subscription,
+      plan: clientCtx.subscription?.plan
+        ? PRICING_TIERS[clientCtx.subscription.plan as keyof typeof PRICING_TIERS] || null
+        : null,
+    })
   } catch (err) {
-    console.error('[Subscription API] Error:', err)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    const message = err instanceof Error ? err.message : 'Internal error'
+    const status = message.includes('Unauthorized') || message.includes('No Authorization') ? 401 : message.includes('Not a client') ? 403 : 500
+    return NextResponse.json({ error: message }, { status })
   }
 }
 
 // POST — Create Stripe Checkout session
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const client = await authenticateClientLite(request)
+    const admin = createAdminClient()
 
     const body = await request.json()
     const { planId } = body
@@ -61,25 +36,13 @@ export async function POST(request: Request) {
     }
 
     const plan = PRICING_TIERS[planId as keyof typeof PRICING_TIERS]
-
-    // Get client record
-    const { data: client } = await supabase
-      .from('clients')
-      .select('id')
-      .eq('email', user.email)
-      .single()
-
-    if (!client) {
-      return NextResponse.json({ error: 'Client not found' }, { status: 404 })
-    }
-
     const stripe = getStripe()
 
     // Check for existing Stripe customer
-    const { data: existingSub } = await supabase
+    const { data: existingSub } = await admin
       .from('subscriptions')
       .select('stripe_customer_id')
-      .eq('client_id', client.id)
+      .eq('client_id', client.clientId)
       .single()
 
     const sessionParams: Record<string, unknown> = {
@@ -93,7 +56,7 @@ export async function POST(request: Request) {
         },
         quantity: 1,
       }],
-      metadata: { client_id: client.id, plan_id: planId },
+      metadata: { client_id: client.clientId, plan_id: planId },
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://yousell.online'}/dashboard/billing?success=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://yousell.online'}/dashboard/billing?cancelled=true`,
     }
@@ -101,7 +64,7 @@ export async function POST(request: Request) {
     if (existingSub?.stripe_customer_id) {
       sessionParams.customer = existingSub.stripe_customer_id
     } else {
-      sessionParams.customer_email = user.email
+      sessionParams.customer_email = client.email
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams as Stripe.Checkout.SessionCreateParams)
@@ -109,6 +72,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ url: session.url })
   } catch (err) {
     console.error('[Checkout] Error:', err)
-    return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 })
+    const message = err instanceof Error ? err.message : 'Internal error'
+    const status = message.includes('Unauthorized') || message.includes('No Authorization') ? 401 : message.includes('Not a client') ? 403 : 500
+    return NextResponse.json({ error: message }, { status })
   }
 }

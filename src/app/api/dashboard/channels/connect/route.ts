@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { authenticateClientLite } from '@/lib/auth/client-api-auth'
 
 // OAuth configuration per channel type
 const OAUTH_CONFIG: Record<string, {
@@ -30,17 +30,7 @@ const OAUTH_CONFIG: Record<string, {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const { data: client } = await supabase
-      .from('clients')
-      .select('id')
-      .eq('email', user.email)
-      .single()
-
-    if (!client) return NextResponse.json({ error: 'Client not found' }, { status: 404 })
+    const client = await authenticateClientLite(request)
 
     const { channelType, shopDomain } = await request.json()
 
@@ -60,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     // Generate state token for CSRF protection
     const state = Buffer.from(JSON.stringify({
-      clientId: client.id,
+      clientId: client.clientId,
       channelType,
       timestamp: Date.now(),
     })).toString('base64url')
@@ -87,6 +77,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ authUrl, state })
   } catch (err) {
     console.error('[Channel Connect] Error:', err)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    const message = err instanceof Error ? err.message : 'Internal error'
+    const status = message.includes('Unauthorized') || message.includes('No Authorization') ? 401 : message.includes('Not a client') ? 403 : 500
+    return NextResponse.json({ error: message }, { status })
   }
 }

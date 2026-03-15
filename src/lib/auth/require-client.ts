@@ -24,6 +24,7 @@ export async function requireClient(): Promise<ClientContext> {
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
+  if (!user.email) throw new Error("User has no email");
 
   // Verify client role
   const { data: profile } = await supabase
@@ -40,7 +41,7 @@ export async function requireClient(): Promise<ClientContext> {
   const { data: client } = await supabase
     .from("clients")
     .select("id")
-    .eq("email", user.email!)
+    .eq("email", user.email)
     .single();
 
   if (!client) throw new Error("Client not found");
@@ -67,7 +68,7 @@ export async function requireClient(): Promise<ClientContext> {
   return {
     userId: user.id,
     clientId: client.id,
-    email: user.email!,
+    email: user.email,
     subscription,
   };
 }

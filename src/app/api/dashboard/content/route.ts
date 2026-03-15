@@ -1,30 +1,23 @@
-import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { authenticateClientLite } from '@/lib/auth/client-api-auth'
+import { createAdminClient } from '@/lib/supabase/admin'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const client = await authenticateClientLite(req)
+    const admin = createAdminClient()
 
-    const { data: client } = await supabase
-      .from('clients')
-      .select('id')
-      .eq('email', user.email)
-      .single()
-
-    if (!client) return NextResponse.json({ items: [] })
-
-    const { data: items } = await supabase
+    const { data: items } = await admin
       .from('content_queue')
       .select('*')
-      .eq('client_id', client.id)
+      .eq('client_id', client.clientId)
       .order('requested_at', { ascending: false })
       .limit(50)
 
     return NextResponse.json({ items: items || [] })
   } catch (err) {
-    console.error('[Content API] Error:', err)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    const message = err instanceof Error ? err.message : 'Internal error'
+    const status = message.includes('Unauthorized') || message.includes('No Authorization') ? 401 : message.includes('Not a client') ? 403 : 500
+    return NextResponse.json({ error: message }, { status })
   }
 }
