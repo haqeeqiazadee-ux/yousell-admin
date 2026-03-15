@@ -268,9 +268,11 @@ export async function POST(req: NextRequest) {
 
   const backendUrl = await getBackendUrl();
 
-  // If backend is configured, proxy to it
+  // If backend is configured, proxy to it (with 5s timeout to avoid hanging)
   if (backendUrl) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
       const response = await fetch(`${backendUrl}/api/scan`, {
         method: 'POST',
         headers: {
@@ -278,7 +280,9 @@ export async function POST(req: NextRequest) {
           Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ mode, query, userId: user.id }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -339,14 +343,18 @@ export async function GET(req: NextRequest) {
 
   // If jobId provided, try backend first, then fall back to scan_history
   if (jobId) {
-    // Try backend if configured
+    // Try backend if configured (with 3s timeout)
     if (backendUrl) {
       try {
         const supabase = await createClient();
         const { data: { session } } = await supabase.auth.getSession();
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
         const response = await fetch(`${backendUrl}/api/scan/${jobId}`, {
           headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
+          signal: controller.signal,
         });
+        clearTimeout(timeoutId);
 
         if (response.ok) {
           const data = await response.json();
@@ -384,7 +392,7 @@ export async function GET(req: NextRequest) {
   const { data: scans, error } = await supabase
     .from('scan_history')
     .select('*')
-    .order('created_at', { ascending: false })
+    .order('started_at', { ascending: false })
     .limit(50);
 
   if (error) {
@@ -415,16 +423,20 @@ export async function DELETE(req: NextRequest) {
 
   const backendUrl = await getBackendUrl();
 
-  // Try backend cancel
+  // Try backend cancel (with 3s timeout)
   if (backendUrl) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
       const response = await fetch(`${backendUrl}/api/scan/${jobId}/cancel`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const data = await response.json();
