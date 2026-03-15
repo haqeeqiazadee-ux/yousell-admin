@@ -26,7 +26,10 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get("status");
   const platform = searchParams.get("platform");
   const search = searchParams.get("search");
-  const sortBy = searchParams.get("sort") || "created_at";
+  // BUG-045 fix: Whitelist allowed sort fields to prevent injection
+  const allowedSortFields = ["created_at", "title", "platform", "status", "price", "final_score", "viral_score", "trend_stage", "category"];
+  const rawSort = searchParams.get("sort") || "created_at";
+  const sortBy = allowedSortFields.includes(rawSort) ? rawSort : "created_at";
   const order = searchParams.get("order") || "desc";
   const limit = parseInt(searchParams.get("limit") || "50");
   const offset = parseInt(searchParams.get("offset") || "0");

@@ -22,8 +22,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { UserSearch, Plus, AlertTriangle, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { UserSearch, Plus, AlertTriangle, ArrowUpDown, ChevronLeft, ChevronRight, Mail, Loader2, Check } from "lucide-react";
 import { authFetch } from "@/lib/auth-fetch";
+import { toast } from "sonner";
 
 interface Influencer {
   id: string;
@@ -35,6 +36,14 @@ interface Influencer {
   tier: "nano" | "micro" | "mid" | "macro";
   engagement_rate?: number;
   conversion_score?: number;
+}
+
+interface Product {
+  id: string;
+  title: string;
+  platform: string;
+  final_score?: number;
+  category?: string;
 }
 
 const platformColors: Record<string, string> = {
@@ -97,6 +106,15 @@ export default function InfluencersPage() {
   const [page, setPage] = useState(1);
   const pageSize = 25;
 
+  // Invite system state
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [inviteInfluencer, setInviteInfluencer] = useState<Influencer | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
+  const [inviteSending, setInviteSending] = useState(false);
+  const [productSearch, setProductSearch] = useState("");
+
   const fetchInfluencers = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
@@ -155,6 +173,54 @@ export default function InfluencersPage() {
     }
     setSubmitting(false);
   };
+
+  const openInviteDialog = async (influencer: Influencer) => {
+    setInviteInfluencer(influencer);
+    setSelectedProductId("");
+    setProductSearch("");
+    setInviteDialogOpen(true);
+    setProductsLoading(true);
+    try {
+      const res = await authFetch("/api/admin/products?sort=final_score&order=desc&limit=50");
+      const data = await res.json();
+      setProducts(data.products || []);
+    } catch {
+      toast.error("Failed to load products");
+    }
+    setProductsLoading(false);
+  };
+
+  const handleInvite = async () => {
+    if (!inviteInfluencer || !selectedProductId) return;
+    setInviteSending(true);
+    try {
+      const res = await authFetch("/api/admin/influencers/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          influencerId: inviteInfluencer.id,
+          productId: selectedProductId,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Failed to send invite");
+      } else if (data.emailSent) {
+        toast.success(`Invite sent to ${inviteInfluencer.username}`);
+        setInviteDialogOpen(false);
+      } else {
+        toast.success("Invite created (email service not configured — saved as draft)");
+        setInviteDialogOpen(false);
+      }
+    } catch {
+      toast.error("Failed to send invite");
+    }
+    setInviteSending(false);
+  };
+
+  const filteredProducts = products.filter(p =>
+    !productSearch || p.title.toLowerCase().includes(productSearch.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -296,6 +362,7 @@ export default function InfluencersPage() {
                     </button>
                   </TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Invite</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -350,6 +417,18 @@ export default function InfluencersPage() {
                       <TableCell className="text-sm text-muted-foreground">
                         {influencer.email || "\u2014"}
                       </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={!influencer.email}
+                          title={influencer.email ? "Send collaboration invite" : "No email on file"}
+                          onClick={() => openInviteDialog(influencer)}
+                        >
+                          <Mail className="h-3.5 w-3.5 mr-1" />
+                          Invite
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -385,6 +464,89 @@ export default function InfluencersPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Invite Dialog — Product Selector */}
+      <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Invite {inviteInfluencer?.username} to Promote
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Select a product to send a personalized collaboration invite. An AI-generated outreach email will be sent to{" "}
+              <span className="font-medium text-foreground">{inviteInfluencer?.email}</span>.
+            </p>
+            <Input
+              placeholder="Search products..."
+              value={productSearch}
+              onChange={(e) => setProductSearch(e.target.value)}
+            />
+            {productsLoading ? (
+              <div className="flex items-center justify-center py-6">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No products found
+              </p>
+            ) : (
+              <div className="max-h-64 overflow-y-auto space-y-1">
+                {filteredProducts.map((product) => (
+                  <button
+                    key={product.id}
+                    onClick={() => setSelectedProductId(product.id)}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center justify-between transition-colors ${
+                      selectedProductId === product.id
+                        ? "bg-primary/10 border border-primary/30"
+                        : "hover:bg-muted border border-transparent"
+                    }`}
+                  >
+                    <div>
+                      <p className="font-medium">{product.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {product.platform} {product.category ? `· ${product.category}` : ""}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {product.final_score != null && (
+                        <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+                          product.final_score >= 80 ? "bg-red-100 text-red-700" :
+                          product.final_score >= 60 ? "bg-orange-100 text-orange-700" :
+                          "bg-gray-100 text-gray-600"
+                        }`}>
+                          {product.final_score.toFixed(0)}
+                        </span>
+                      )}
+                      {selectedProductId === product.id && (
+                        <Check className="h-4 w-4 text-primary" />
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            <Button
+              className="w-full"
+              disabled={!selectedProductId || inviteSending}
+              onClick={handleInvite}
+            >
+              {inviteSending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Generating & Sending...
+                </>
+              ) : (
+                <>
+                  <Mail className="h-4 w-4 mr-2" />
+                  Send Invite
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

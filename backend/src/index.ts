@@ -15,12 +15,37 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 app.use(helmet());
 
+// BUG-029 fix: Support multiple CORS origins (production + Netlify deploy previews)
+const ALLOWED_ORIGINS = [
+  FRONTEND_URL,
+  ...(process.env.CORS_ALLOWED_ORIGINS?.split(',').map(s => s.trim()).filter(Boolean) || []),
+];
+
 app.use(cors({
-  origin: FRONTEND_URL,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (server-to-server, curl, health checks)
+    if (!origin) return callback(null, true);
+    // Check exact match or Netlify preview pattern
+    if (
+      ALLOWED_ORIGINS.includes(origin) ||
+      /^https:\/\/[a-z0-9-]+--[a-z0-9-]+\.netlify\.app$/.test(origin)
+    ) {
+      return callback(null, true);
+    }
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
 }));
 
 app.use(express.json());
+
+// BUG-030 fix: Sanitize error logs to prevent API key leakage
+function sanitizeError(error: unknown): string {
+  const msg = error instanceof Error ? error.message : String(error);
+  // Redact anything that looks like an API key, token, or secret
+  return msg.replace(/(?:key|token|secret|password|authorization)[=:\s]+\S+/gi, '[REDACTED]')
+    .replace(/(?:sk|pk|api|bearer)[-_][a-zA-Z0-9]{20,}/g, '[REDACTED]');
+}
 
 const generalLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -131,7 +156,8 @@ app.get('/health', (_req, res) => {
 
 app.post('/api/scan', scanLimiter, requireAdmin, async (req, res) => {
   try {
-    const { mode = 'quick', query = '', userId } = req.body;
+    const { mode = 'quick', query = '' } = req.body;
+    const userId = (req as any).user.id; // BUG-028 fix: use authenticated user
 
     const job = await scanQueue.add('scan-products', {
       mode,
@@ -141,7 +167,7 @@ app.post('/api/scan', scanLimiter, requireAdmin, async (req, res) => {
 
     res.json({ jobId: job.id, status: 'queued' });
   } catch (error) {
-    console.error('Failed to queue scan:', error);
+    console.error('Failed to queue scan:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to queue scan' });
   }
 });
@@ -157,7 +183,7 @@ app.get('/api/scan/history', requireAdmin, async (_req, res) => {
     if (error) throw error;
     res.json({ scans });
   } catch (error) {
-    console.error('Failed to fetch scan history:', error);
+    console.error('Failed to fetch scan history:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to fetch scan history' });
   }
 });
@@ -181,7 +207,7 @@ app.get('/api/scan/:jobId', requireAdmin, async (req, res) => {
       data: state === 'completed' ? job.returnvalue : null,
     });
   } catch (error) {
-    console.error('Failed to get job status:', error);
+    console.error('Failed to get job status:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to get job status' });
   }
 });
@@ -204,7 +230,7 @@ app.post('/api/scan/:jobId/cancel', scanLimiter, requireAdmin, async (req, res) 
 
     res.json({ status: 'cancelled' });
   } catch (error) {
-    console.error('Failed to cancel job:', error);
+    console.error('Failed to cancel job:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to cancel job' });
   }
 });
@@ -213,46 +239,50 @@ app.post('/api/scan/:jobId/cancel', scanLimiter, requireAdmin, async (req, res) 
 
 app.post('/api/trends', scanLimiter, requireAdmin, async (req, res) => {
   try {
-    const { query = '', userId } = req.body;
+    const { query = '' } = req.body;
+    const userId = (req as any).user.id;
     const job = await trendQueue.add('trend-scan', { query, userId });
     res.json({ jobId: job.id, status: 'queued', queue: 'trend-scan' });
   } catch (error) {
-    console.error('Failed to queue trend scan:', error);
+    console.error('Failed to queue trend scan:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to queue trend scan' });
   }
 });
 
 app.post('/api/influencers/discover', scanLimiter, requireAdmin, async (req, res) => {
   try {
-    const { niche, userId } = req.body;
+    const { niche } = req.body;
+    const userId = (req as any).user.id;
     if (!niche) {
       return res.status(400).json({ error: 'niche is required' });
     }
     const job = await influencerQueue.add('influencer-discovery', { niche, userId });
     res.json({ jobId: job.id, status: 'queued', queue: 'influencer-discovery' });
   } catch (error) {
-    console.error('Failed to queue influencer discovery:', error);
+    console.error('Failed to queue influencer discovery:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to queue influencer discovery' });
   }
 });
 
 app.post('/api/suppliers/discover', scanLimiter, requireAdmin, async (req, res) => {
   try {
-    const { productName, category, userId } = req.body;
+    const { productName, category } = req.body;
+    const userId = (req as any).user.id;
     if (!productName) {
       return res.status(400).json({ error: 'productName is required' });
     }
     const job = await supplierQueue.add('supplier-discovery', { productName, category, userId });
     res.json({ jobId: job.id, status: 'queued', queue: 'supplier-discovery' });
   } catch (error) {
-    console.error('Failed to queue supplier discovery:', error);
+    console.error('Failed to queue supplier discovery:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to queue supplier discovery' });
   }
 });
 
 app.post('/api/tiktok/discover', scanLimiter, requireAdmin, async (req, res) => {
   try {
-    const { query, limit, userId } = req.body;
+    const { query, limit } = req.body;
+    const userId = (req as any).user.id;
     if (!query) {
       return res.status(400).json({ error: 'query is required' });
     }
@@ -263,7 +293,7 @@ app.post('/api/tiktok/discover', scanLimiter, requireAdmin, async (req, res) => 
     });
     res.json({ jobId: job.id, status: 'queued', queue: 'tiktok-discovery' });
   } catch (error) {
-    console.error('Failed to queue TikTok discovery:', error);
+    console.error('Failed to queue TikTok discovery:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to queue TikTok discovery' });
   }
 });
@@ -288,14 +318,15 @@ app.get('/api/tiktok/videos', requireAdmin, async (req, res) => {
     if (error) throw error;
     res.json({ videos: data });
   } catch (error) {
-    console.error('Failed to fetch TikTok videos:', error);
+    console.error('Failed to fetch TikTok videos:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to fetch TikTok videos' });
   }
 });
 
 app.post('/api/tiktok/extract-products', scanLimiter, requireAdmin, async (req, res) => {
   try {
-    const { discoveryQuery, minViews, userId } = req.body;
+    const { discoveryQuery, minViews } = req.body;
+    const userId = (req as any).user.id;
     const job = await tiktokProductExtractQueue.add('tiktok-product-extract', {
       discoveryQuery,
       minViews: Number(minViews) || 10000,
@@ -303,14 +334,15 @@ app.post('/api/tiktok/extract-products', scanLimiter, requireAdmin, async (req, 
     });
     res.json({ jobId: job.id, status: 'queued', queue: 'tiktok-product-extract' });
   } catch (error) {
-    console.error('Failed to queue TikTok product extraction:', error);
+    console.error('Failed to queue TikTok product extraction:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to queue TikTok product extraction' });
   }
 });
 
 app.post('/api/tiktok/engagement-analysis', scanLimiter, requireAdmin, async (req, res) => {
   try {
-    const { hashtag, minVideoCount, userId } = req.body;
+    const { hashtag, minVideoCount } = req.body;
+    const userId = (req as any).user.id;
     const job = await tiktokEngagementQueue.add('tiktok-engagement-analysis', {
       hashtag,
       minVideoCount: Number(minVideoCount) || 3,
@@ -318,7 +350,7 @@ app.post('/api/tiktok/engagement-analysis', scanLimiter, requireAdmin, async (re
     });
     res.json({ jobId: job.id, status: 'queued', queue: 'tiktok-engagement-analysis' });
   } catch (error) {
-    console.error('Failed to queue TikTok engagement analysis:', error);
+    console.error('Failed to queue TikTok engagement analysis:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to queue TikTok engagement analysis' });
   }
 });
@@ -340,14 +372,15 @@ app.get('/api/tiktok/hashtag-signals', requireAdmin, async (req, res) => {
     if (error) throw error;
     res.json({ signals: data });
   } catch (error) {
-    console.error('Failed to fetch hashtag signals:', error);
+    console.error('Failed to fetch hashtag signals:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to fetch hashtag signals' });
   }
 });
 
 app.post('/api/tiktok/cross-match', scanLimiter, requireAdmin, async (req, res) => {
   try {
-    const { keywords, platforms, minTikTokScore, userId } = req.body;
+    const { keywords, platforms, minTikTokScore } = req.body;
+    const userId = (req as any).user.id;
     if (!keywords || !Array.isArray(keywords) || keywords.length === 0) {
       return res.status(400).json({ error: 'keywords array is required' });
     }
@@ -359,7 +392,7 @@ app.post('/api/tiktok/cross-match', scanLimiter, requireAdmin, async (req, res) 
     });
     res.json({ jobId: job.id, status: 'queued', queue: 'tiktok-cross-match' });
   } catch (error) {
-    console.error('Failed to queue TikTok cross-match:', error);
+    console.error('Failed to queue TikTok cross-match:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to queue TikTok cross-match' });
   }
 });
@@ -368,7 +401,8 @@ app.post('/api/tiktok/cross-match', scanLimiter, requireAdmin, async (req, res) 
 
 app.post('/api/products/cluster', scanLimiter, requireAdmin, async (req, res) => {
   try {
-    const { minScore, similarityThreshold, userId } = req.body;
+    const { minScore, similarityThreshold } = req.body;
+    const userId = (req as any).user.id;
     const job = await productClusteringQueue.add('product-clustering', {
       minScore: Number(minScore) || 30,
       similarityThreshold: Number(similarityThreshold) || 0.3,
@@ -376,7 +410,7 @@ app.post('/api/products/cluster', scanLimiter, requireAdmin, async (req, res) =>
     });
     res.json({ jobId: job.id, status: 'queued', queue: 'product-clustering' });
   } catch (error) {
-    console.error('Failed to queue product clustering:', error);
+    console.error('Failed to queue product clustering:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to queue product clustering' });
   }
 });
@@ -391,14 +425,15 @@ app.get('/api/products/clusters', requireAdmin, async (_req, res) => {
     if (error) throw error;
     res.json({ clusters: data });
   } catch (error) {
-    console.error('Failed to fetch clusters:', error);
+    console.error('Failed to fetch clusters:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to fetch clusters' });
   }
 });
 
 app.post('/api/trends/detect', scanLimiter, requireAdmin, async (req, res) => {
   try {
-    const { platform, minClusterSize, userId } = req.body;
+    const { platform, minClusterSize } = req.body;
+    const userId = (req as any).user.id;
     const job = await trendDetectionQueue.add('trend-detection', {
       platform,
       minClusterSize: Number(minClusterSize) || 3,
@@ -406,7 +441,7 @@ app.post('/api/trends/detect', scanLimiter, requireAdmin, async (req, res) => {
     });
     res.json({ jobId: job.id, status: 'queued', queue: 'trend-detection' });
   } catch (error) {
-    console.error('Failed to queue trend detection:', error);
+    console.error('Failed to queue trend detection:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to queue trend detection' });
   }
 });
@@ -415,7 +450,8 @@ app.post('/api/trends/detect', scanLimiter, requireAdmin, async (req, res) => {
 
 app.post('/api/creators/match', scanLimiter, requireAdmin, async (req, res) => {
   try {
-    const { productId, minProductScore, maxCreatorsPerProduct, userId } = req.body;
+    const { productId, minProductScore, maxCreatorsPerProduct } = req.body;
+    const userId = (req as any).user.id;
     const job = await creatorMatchingQueue.add('creator-matching', {
       productId,
       minProductScore: Number(minProductScore) || 60,
@@ -424,7 +460,7 @@ app.post('/api/creators/match', scanLimiter, requireAdmin, async (req, res) => {
     });
     res.json({ jobId: job.id, status: 'queued', queue: 'creator-matching' });
   } catch (error) {
-    console.error('Failed to queue creator matching:', error);
+    console.error('Failed to queue creator matching:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to queue creator matching' });
   }
 });
@@ -444,7 +480,7 @@ app.get('/api/creators/matches', requireAdmin, async (req, res) => {
     if (error) throw error;
     res.json({ matches: data });
   } catch (error) {
-    console.error('Failed to fetch creator matches:', error);
+    console.error('Failed to fetch creator matches:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to fetch creator matches' });
   }
 });
@@ -453,7 +489,8 @@ app.get('/api/creators/matches', requireAdmin, async (req, res) => {
 
 app.post('/api/amazon/scan', scanLimiter, requireAdmin, async (req, res) => {
   try {
-    const { query, limit, userId } = req.body;
+    const { query, limit } = req.body;
+    const userId = (req as any).user.id;
     if (!query) return res.status(400).json({ error: 'query is required' });
     const job = await amazonIntelligenceQueue.add('amazon-intelligence', {
       query,
@@ -462,14 +499,15 @@ app.post('/api/amazon/scan', scanLimiter, requireAdmin, async (req, res) => {
     });
     res.json({ jobId: job.id, status: 'queued', queue: 'amazon-intelligence' });
   } catch (error) {
-    console.error('Failed to queue Amazon scan:', error);
+    console.error('Failed to queue Amazon scan:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to queue Amazon scan' });
   }
 });
 
 app.post('/api/shopify/scan', scanLimiter, requireAdmin, async (req, res) => {
   try {
-    const { niche, limit, userId } = req.body;
+    const { niche, limit } = req.body;
+    const userId = (req as any).user.id;
     if (!niche) return res.status(400).json({ error: 'niche is required' });
     const job = await shopifyIntelligenceQueue.add('shopify-intelligence', {
       niche,
@@ -478,7 +516,7 @@ app.post('/api/shopify/scan', scanLimiter, requireAdmin, async (req, res) => {
     });
     res.json({ jobId: job.id, status: 'queued', queue: 'shopify-intelligence' });
   } catch (error) {
-    console.error('Failed to queue Shopify scan:', error);
+    console.error('Failed to queue Shopify scan:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to queue Shopify scan' });
   }
 });
@@ -487,7 +525,8 @@ app.post('/api/shopify/scan', scanLimiter, requireAdmin, async (req, res) => {
 
 app.post('/api/ads/discover', scanLimiter, requireAdmin, async (req, res) => {
   try {
-    const { query, platforms, limit, userId } = req.body;
+    const { query, platforms, limit } = req.body;
+    const userId = (req as any).user.id;
     if (!query) return res.status(400).json({ error: 'query is required' });
     const job = await adIntelligenceQueue.add('ad-intelligence', {
       query,
@@ -497,7 +536,7 @@ app.post('/api/ads/discover', scanLimiter, requireAdmin, async (req, res) => {
     });
     res.json({ jobId: job.id, status: 'queued', queue: 'ad-intelligence' });
   } catch (error) {
-    console.error('Failed to queue ad discovery:', error);
+    console.error('Failed to queue ad discovery:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to queue ad discovery' });
   }
 });
@@ -518,7 +557,7 @@ app.get('/api/ads', requireAdmin, async (req, res) => {
     if (error) throw error;
     res.json({ ads: data });
   } catch (error) {
-    console.error('Failed to fetch ads:', error);
+    console.error('Failed to fetch ads:', sanitizeError(error));
     res.status(500).json({ error: 'Failed to fetch ads' });
   }
 });

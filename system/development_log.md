@@ -1544,3 +1544,51 @@ Built the Content Creation Engine per v7 spec Phase 3:
 - `src/app/dashboard/content/page.tsx` — Full Content Studio with generation UI
 
 ### Build Status — PASS (0 errors, 0 warnings)
+
+------------------------------------------------------------
+
+## Session: 2026-03-15 — Security Bug Fixes (BUG-028/029/030/045/049) + One-Click Influencer Invite
+
+### Critical Security Fixes
+
+**BUG-028 (HIGH): Backend userId spoofing**
+All 13 POST routes in `backend/src/index.ts` read `userId` from `req.body`, allowing any authenticated admin to spoof another user's identity in job payloads. Fixed by replacing all instances with `(req as any).user.id` from the authenticated session.
+
+**BUG-029 (MEDIUM): CORS single-origin**
+Backend CORS was hardcoded to a single `FRONTEND_URL`, breaking Netlify deploy previews. Fixed with dynamic origin validation supporting multiple origins via `CORS_ALLOWED_ORIGINS` env var plus automatic Netlify preview URL pattern matching.
+
+**BUG-030 (MEDIUM): API keys in error logs**
+All `console.error` calls in backend routes logged raw error objects which could contain API keys/tokens in messages. Added `sanitizeError()` helper that redacts patterns matching keys, tokens, secrets, and bearer tokens. Applied to all 20+ error log sites.
+
+**BUG-045 (MEDIUM): Product sort field injection**
+`GET /api/admin/products` passed user-supplied `sort` query param directly to Supabase `.order()` without validation. Fixed by adding whitelist of allowed sort fields.
+
+**BUG-049 (MEDIUM): Product table missing indexes**
+Created migration `018_security_and_indexes.sql` adding indexes on `title`, `platform`, `status`, `final_score`, `created_at`, `category`, `trend_stage`, and a composite index on `(platform, status, final_score)`.
+
+### One-Click Influencer Invite System (Phase 3 Completion)
+
+**API: `POST /api/admin/influencers/invite`**
+- Accepts `influencerId` and `productId`
+- Validates influencer has email on file
+- Deduplication: prevents re-inviting same influencer for same product within 7 days
+- Generates personalized outreach email via Claude Haiku (cost-optimized)
+- Fallback template if ANTHROPIC_API_KEY not configured
+- Stores in `outreach_emails` table as draft, then sends via Resend API
+- Graceful degradation if RESEND_API_KEY not configured (saves as draft)
+
+**UI: Invite button on Influencers page**
+- "Invite" button on each influencer row (disabled if no email)
+- Product selector dialog with search, score indicators, and selection
+- Loading states and toast notifications for success/failure
+
+### Files Created
+- `src/app/api/admin/influencers/invite/route.ts`
+- `supabase/migrations/018_security_and_indexes.sql`
+
+### Files Modified
+- `backend/src/index.ts` — BUG-028, BUG-029, BUG-030
+- `src/app/api/admin/products/route.ts` — BUG-045
+- `src/app/admin/influencers/page.tsx` — Invite button + product selector dialog
+
+### Build Status — PASS (0 errors, 0 warnings)
