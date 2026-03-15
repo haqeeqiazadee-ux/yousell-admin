@@ -1728,4 +1728,48 @@ Frontend providers use Apify actors (per CLAUDE.md rule 6), backend workers use 
 - `backend/src/lib/providers.ts` — fetchTrends error logging (BUG-031)
 - `src/lib/providers/index.ts` — Added digital/affiliate re-exports (BUG-042)
 
-### Build Status — PASS (0 errors, 0 warnings)
+### Bug Fix Build Status — PASS (0 errors, 0 warnings)
+
+------------------------------------------------------------
+
+## Session: 2026-03-15 — Phase I QA (Test Suite Expansion)
+
+### Test Updates
+
+**Phase 3 tests updated for scoring rename**
+Updated 4 failing tests that referenced `overall_score` and `profitability_score` to use the new canonical field names `final_score` and `profit_score`.
+
+**Phase 4 tests added (new features)**
+Created `tests/phase4-new-features.test.ts` covering:
+- Content Engine API auth guard (generate + list endpoints)
+- OAuth channel connect/disconnect auth guards
+- OAuth callback error handling (missing state)
+- Webhook endpoints (Shopify HMAC, TikTok, Amazon) — rejects invalid payloads without crashing
+- Influencer invite API auth guard
+- New admin routes auth guards (analytics, creator-matches, opportunities, engines/health)
+- Billing API auth guard (subscription portal)
+
+**Phase 5 tests added (security validation)**
+Created `tests/phase5-security.test.ts` covering:
+- All 8 auto-rejection rules with individual test cases
+- Boundary value testing (exact thresholds for margin, shipping, break-even, delivery, price, competitors)
+- Multiple violation accumulation
+- Sort field injection prevention
+- Error response sanitization (no API keys in responses)
+- OAuth state token expiry validation
+
+### Test Results
+- Phase 3 (business logic): 87/87 PASS
+- Phase 5 (security): 21/21 PASS
+- Total local tests: **108/108 PASS**
+- Phase 1 (Supabase) and Phase 2/4 (API smoke) require live services
+
+### Files Created
+- `tests/phase4-new-features.test.ts`
+- `tests/phase5-security.test.ts`
+
+### Files Modified
+- `tests/phase3-business-logic.test.ts` — Updated field names
+- `package.json` — Added test:phase4, test:phase5 scripts
+
+### QA Build Status — PASS (0 errors, 0 warnings)

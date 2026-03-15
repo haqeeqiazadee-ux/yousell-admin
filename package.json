@@ -12,8 +12,10 @@
     "test:phase1": "vitest run tests/phase1-supabase.test.ts",
     "test:phase2": "vitest run tests/phase2-api-smoke.test.ts",
     "test:phase3": "vitest run tests/phase3-business-logic.test.ts",
-    "test:unit": "vitest run tests/phase3-business-logic.test.ts",
-    "test:integration": "vitest run tests/phase1-supabase.test.ts tests/phase2-api-smoke.test.ts"
+    "test:phase4": "vitest run tests/phase4-new-features.test.ts",
+    "test:phase5": "vitest run tests/phase5-security.test.ts",
+    "test:unit": "vitest run tests/phase3-business-logic.test.ts tests/phase5-security.test.ts",
+    "test:integration": "vitest run tests/phase1-supabase.test.ts tests/phase2-api-smoke.test.ts tests/phase4-new-features.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",

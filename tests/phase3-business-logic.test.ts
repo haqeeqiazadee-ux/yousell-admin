@@ -312,14 +312,14 @@ describe('Phase 3G: Composite Score (Heuristic)', () => {
     const result = calculateCompositeScore({
       price: 0, sales_count: 0, review_count: 0, rating: 0, source: 'unknown',
     })
-    expect(result.overall_score).toBeLessThanOrEqual(10)
+    expect(result.final_score).toBeLessThanOrEqual(10)
   })
 
   it('perfect TikTok product → high score', () => {
     const result = calculateCompositeScore({
       price: 30, sales_count: 10000, review_count: 2000, rating: 4.8, source: 'tiktok',
     })
-    expect(result.overall_score).toBeGreaterThanOrEqual(70)
+    expect(result.final_score).toBeGreaterThanOrEqual(70)
     expect(result.viral_score).toBeGreaterThanOrEqual(80)
   })
 
@@ -340,8 +340,8 @@ describe('Phase 3G: Composite Score (Heuristic)', () => {
       price: 50, sales_count: 999999, review_count: 999999, rating: 5.0, source: 'tiktok',
     })
     expect(result.viral_score).toBeLessThanOrEqual(100)
-    expect(result.overall_score).toBeLessThanOrEqual(100)
-    expect(result.profitability_score).toBeLessThanOrEqual(100)
+    expect(result.final_score).toBeLessThanOrEqual(100)
+    expect(result.profit_score).toBeLessThanOrEqual(100)
   })
 
   it('source affects viral score: tiktok > pinterest > amazon', () => {
@@ -506,7 +506,7 @@ describe('Phase 3L: Cross-Function Integration', () => {
     const result = calculateCompositeScore({
       price: 30, sales_count: 10000, review_count: 2000, rating: 4.8, source: 'tiktok',
     })
-    const tier = getTierFromScore(result.overall_score)
+    const tier = getTierFromScore(result.final_score)
     expect(['HOT', 'WARM', 'WATCH', 'COLD']).toContain(tier)
   })
 
@@ -522,7 +522,7 @@ describe('Phase 3L: Cross-Function Integration', () => {
     const result = calculateCompositeScore({
       price: 30, sales_count: 10000, review_count: 2000, rating: 4.8, source: 'tiktok',
     })
-    const aiTier = getAiInsightTier(result.overall_score)
+    const aiTier = getAiInsightTier(result.final_score)
     expect(['none', 'haiku', 'sonnet']).toContain(aiTier)
   })
 
@@ -536,13 +536,13 @@ describe('Phase 3L: Cross-Function Integration', () => {
 
     for (const product of products) {
       const score = calculateCompositeScore(product)
-      const tier = getTierFromScore(score.overall_score)
+      const tier = getTierFromScore(score.final_score)
       const stage = getStageFromViralScore(score.viral_score)
-      const aiTier = getAiInsightTier(score.overall_score)
+      const aiTier = getAiInsightTier(score.final_score)
 
       // All outputs should be valid
-      expect(score.overall_score).toBeGreaterThanOrEqual(0)
-      expect(score.overall_score).toBeLessThanOrEqual(100)
+      expect(score.final_score).toBeGreaterThanOrEqual(0)
+      expect(score.final_score).toBeLessThanOrEqual(100)
       expect(['HOT', 'WARM', 'WATCH', 'COLD']).toContain(tier)
       expect(['emerging', 'rising', 'exploding', 'saturated']).toContain(stage)
       expect(['none', 'haiku', 'sonnet']).toContain(aiTier)
