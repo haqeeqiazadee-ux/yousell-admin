@@ -12,8 +12,8 @@ import { Worker, Job, Queue } from "bullmq";
 import { connection } from "./lib/queue";
 import { QUEUES } from "./jobs/types";
 
-// Register all job workers
-import "./jobs";
+// Register all job workers — keep reference for graceful shutdown
+import * as workers from "./jobs";
 
 // ── Legacy compatibility ─────────────────────────────────────
 // The existing POST /api/scan endpoint enqueues to the "scan" queue.
@@ -40,5 +40,30 @@ legacyWorker.on("completed", (job) => {
 legacyWorker.on("failed", (job, error) => {
   console.error(`[legacy] Scan job ${job?.id} failed:`, error);
 });
+
+// ── Graceful shutdown ────────────────────────────────────────
+// Wait for in-flight jobs to finish before exiting
+
+async function gracefulShutdown(signal: string) {
+  console.log(`\n[worker] Received ${signal}, shutting down gracefully...`);
+
+  const allWorkers: Worker[] = [
+    legacyWorker,
+    ...Object.values(workers).filter((w): w is Worker => w instanceof Worker),
+  ];
+
+  try {
+    await Promise.all(allWorkers.map((w) => w.close()));
+    await connection.quit();
+    console.log("[worker] All workers closed, Redis disconnected. Exiting.");
+    process.exit(0);
+  } catch (err) {
+    console.error("[worker] Error during shutdown:", err);
+    process.exit(1);
+  }
+}
+
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
 console.log("Worker process ready (legacy scan queue + new job queues)");

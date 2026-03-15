@@ -87,7 +87,6 @@ export interface ScoringResult {
   viral_score: number;
   profit_score: number;
   final_score: number;
-  overall_score: number; // backwards compat alias for final_score
 }
 
 export function calculateCompositeScore(product: Product): ScoringResult {
@@ -106,7 +105,6 @@ export function calculateCompositeScore(product: Product): ScoringResult {
     viral_score,
     profit_score,
     final_score,
-    overall_score: final_score,
   };
 }
 

@@ -36,7 +36,7 @@ export async function processEnrichProduct(job: Job<EnrichProductJobData>) {
         trend_score: p.trend_score,
         viral_score: p.viral_score,
         profit_score: p.profit_score,
-        score_overall: p.overall_score,
+        score_overall: p.final_score,
         trend_stage: getStageFromScore(p.viral_score),
         scan_id: scanId,
       })),

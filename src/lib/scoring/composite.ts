@@ -1,9 +1,10 @@
 import { calculateProfitability } from './profitability';
 
 export interface CompositeScore {
+  trend_score: number;
   viral_score: number;
-  profitability_score: number;
-  overall_score: number;
+  profit_score: number;
+  final_score: number;
 }
 
 export function calculateCompositeScore(product: {
@@ -52,13 +53,16 @@ export function calculateCompositeScore(product: {
 
   trend_score = Math.min(100, trend_score);
 
+  const profit_score = profitability.score;
+
   // v7 3-pillar formula: Trend(0.40) + Viral(0.35) + Profit(0.25)
-  const overall_score = calculateFinalScore(trend_score, viral_score, profitability.score);
+  const final_score = calculateFinalScore(trend_score, viral_score, profit_score);
 
   return {
+    trend_score,
     viral_score,
-    profitability_score: profitability.score,
-    overall_score,
+    profit_score,
+    final_score,
   };
 }
 

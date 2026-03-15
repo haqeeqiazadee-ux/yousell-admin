@@ -177,7 +177,8 @@ export async function fetchTrends(query?: string): Promise<TrendKeyword[]> {
       volume: t.volume || 0,
       growth: t.growth_rate || 0,
     }));
-  } catch {
+  } catch (error) {
+    console.error('TikTok trends fetch error:', error);
     return [];
   }
 }

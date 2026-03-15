@@ -7,6 +7,17 @@
 import { Worker } from "bullmq";
 import { connection } from "../lib/queue";
 import { QUEUES } from "./types";
+
+// Default worker options with retry and dead-letter support
+const defaultOpts = {
+  connection,
+  settings: {
+    backoffStrategy: (attemptsMade: number) => {
+      // Exponential backoff: 5s, 20s, 80s, 320s
+      return Math.min(5000 * Math.pow(4, attemptsMade - 1), 300000);
+    },
+  },
+};
 import { processProductScan } from "./product-scan";
 import { processEnrichProduct } from "./enrich-product";
 import { processTrendScan } from "./trend-scan";
@@ -37,63 +48,63 @@ function logEvents(worker: Worker, label: string) {
 export const productScanWorker = new Worker(
   QUEUES.PRODUCT_SCAN,
   processProductScan,
-  { connection, concurrency: 2 }
+  { ...defaultOpts, concurrency: 2 }
 );
 logEvents(productScanWorker, "product-scan");
 
 export const enrichProductWorker = new Worker(
   QUEUES.ENRICH_PRODUCT,
   processEnrichProduct,
-  { connection, concurrency: 3 }
+  { ...defaultOpts, concurrency: 3 }
 );
 logEvents(enrichProductWorker, "enrich-product");
 
 export const trendScanWorker = new Worker(
   QUEUES.TREND_SCAN,
   processTrendScan,
-  { connection, concurrency: 2 }
+  { ...defaultOpts, concurrency: 2 }
 );
 logEvents(trendScanWorker, "trend-scan");
 
 export const influencerDiscoveryWorker = new Worker(
   QUEUES.INFLUENCER_DISCOVERY,
   processInfluencerDiscovery,
-  { connection, concurrency: 1 }
+  { ...defaultOpts, concurrency: 1 }
 );
 logEvents(influencerDiscoveryWorker, "influencer-discovery");
 
 export const supplierDiscoveryWorker = new Worker(
   QUEUES.SUPPLIER_DISCOVERY,
   processSupplierDiscovery,
-  { connection, concurrency: 1 }
+  { ...defaultOpts, concurrency: 1 }
 );
 logEvents(supplierDiscoveryWorker, "supplier-discovery");
 
 export const tiktokDiscoveryWorker = new Worker(
   QUEUES.TIKTOK_DISCOVERY,
   processTikTokDiscovery,
-  { connection, concurrency: 2 }
+  { ...defaultOpts, concurrency: 2 }
 );
 logEvents(tiktokDiscoveryWorker, "tiktok-discovery");
 
 export const tiktokProductExtractWorker = new Worker(
   QUEUES.TIKTOK_PRODUCT_EXTRACT,
   processTikTokProductExtract,
-  { connection, concurrency: 2 }
+  { ...defaultOpts, concurrency: 2 }
 );
 logEvents(tiktokProductExtractWorker, "tiktok-product-extract");
 
 export const tiktokEngagementWorker = new Worker(
   QUEUES.TIKTOK_ENGAGEMENT_ANALYSIS,
   processTikTokEngagementAnalysis,
-  { connection, concurrency: 1 }
+  { ...defaultOpts, concurrency: 1 }
 );
 logEvents(tiktokEngagementWorker, "tiktok-engagement-analysis");
 
 export const tiktokCrossMatchWorker = new Worker(
   QUEUES.TIKTOK_CROSS_MATCH,
   processTikTokCrossMatch,
-  { connection, concurrency: 1 }
+  { ...defaultOpts, concurrency: 1 }
 );
 logEvents(tiktokCrossMatchWorker, "tiktok-cross-match");
 
@@ -102,14 +113,14 @@ logEvents(tiktokCrossMatchWorker, "tiktok-cross-match");
 export const productClusteringWorker = new Worker(
   QUEUES.PRODUCT_CLUSTERING,
   processProductClustering,
-  { connection, concurrency: 1 }
+  { ...defaultOpts, concurrency: 1 }
 );
 logEvents(productClusteringWorker, "product-clustering");
 
 export const trendDetectionWorker = new Worker(
   QUEUES.TREND_DETECTION,
   processTrendDetection,
-  { connection, concurrency: 1 }
+  { ...defaultOpts, concurrency: 1 }
 );
 logEvents(trendDetectionWorker, "trend-detection");
 
@@ -118,7 +129,7 @@ logEvents(trendDetectionWorker, "trend-detection");
 export const creatorMatchingWorker = new Worker(
   QUEUES.CREATOR_MATCHING,
   processCreatorMatching,
-  { connection, concurrency: 1 }
+  { ...defaultOpts, concurrency: 1 }
 );
 logEvents(creatorMatchingWorker, "creator-matching");
 
@@ -127,14 +138,14 @@ logEvents(creatorMatchingWorker, "creator-matching");
 export const amazonIntelligenceWorker = new Worker(
   QUEUES.AMAZON_INTELLIGENCE,
   processAmazonIntelligence,
-  { connection, concurrency: 1 }
+  { ...defaultOpts, concurrency: 1 }
 );
 logEvents(amazonIntelligenceWorker, "amazon-intelligence");
 
 export const shopifyIntelligenceWorker = new Worker(
   QUEUES.SHOPIFY_INTELLIGENCE,
   processShopifyIntelligence,
-  { connection, concurrency: 1 }
+  { ...defaultOpts, concurrency: 1 }
 );
 logEvents(shopifyIntelligenceWorker, "shopify-intelligence");
 
@@ -143,7 +154,7 @@ logEvents(shopifyIntelligenceWorker, "shopify-intelligence");
 export const adIntelligenceWorker = new Worker(
   QUEUES.AD_INTELLIGENCE,
   processAdIntelligence,
-  { connection, concurrency: 1 }
+  { ...defaultOpts, concurrency: 1 }
 );
 logEvents(adIntelligenceWorker, "ad-intelligence");
 

@@ -1592,3 +1592,184 @@ Created migration `018_security_and_indexes.sql` adding indexes on `title`, `pla
 - `src/app/admin/influencers/page.tsx` — Invite button + product selector dialog
 
 ### Build Status — PASS (0 errors, 0 warnings)
+
+---
+
+## Session: 2026-03-15 — UI Overhaul + Phase 4 (Store OAuth, Order Tracking, Automation)
+
+### UI Overhaul — FastMoss-Style Lively Design
+
+**globals.css — Complete theme system rewrite**
+- CSS custom properties: rose primary (346°), dark mode variables
+- Gradient utilities: coral, teal, purple, amber, blue, pink, emerald, orange
+- Component classes: badge-new, icon-circle, icon-circle-lg, card-hover, pulse-dot animation
+
+**admin-sidebar.tsx — Colorful navigation**
+- Gradient icon circles per nav item (gradient backgrounds for main nav, colored bg-50 for channels)
+- NEW badges on TikTok Shop, AI Affiliates, Ad Intelligence, Automation
+- Rose accent for active state, gradient coral logo icon
+- Added Automation nav item under Management
+
+**admin/page.tsx — FastMoss-style dashboard**
+- Feature category cards (Discover Products, Find Trends, Find Shops, Find Creators, AI Intelligence)
+- Sub-items with chevrons and NEW badges, gradient icon backgrounds
+- Lively KPI cards with pulse-dot animations and card hover effects
+
+**admin/automation/page.tsx — New automation management page**
+- Job monitoring with toggle switches, summary stats (enabled/running/cost/records)
+- Cost warning banner, job list with status badges, last run times, error logs
+- Lively gradient styling throughout
+
+### Phase 4: Store OAuth Integration
+
+**API: `POST /api/dashboard/channels/connect`**
+- OAuth initiation for Shopify (requires shopDomain), TikTok Shop, Amazon
+- CSRF protection via base64url state token (client_id + channelType + timestamp)
+- Returns authUrl for redirect
+
+**API: `POST /api/dashboard/channels/disconnect`**
+- Soft disconnect: verifies ownership, clears tokens, marks disconnected
+
+**API: `GET /api/auth/oauth/callback`**
+- Decodes state, verifies 15-min expiry
+- Exchanges authorization code per channel (Shopify, TikTok Shop, Amazon)
+- Upserts tokens to connected_channels table
+
+**UI: dashboard/integrations/page.tsx**
+- Enhanced with OAuth connect/disconnect flow, gradient card styling
+- Loading states, Shopify domain input, toast notifications for success/failure
+
+### Phase 4: Order Tracking System
+
+**Webhook Handlers**
+- `api/webhooks/shopify/route.ts` — HMAC signature verification, order create/update events, status mapping
+- `api/webhooks/tiktok/route.ts` — TikTok Shop order events, shop_id matching via channel metadata
+- `api/webhooks/amazon/route.ts` — SP-API ORDER_CHANGE notifications, seller ID matching
+
+All webhooks: upsert orders to DB, send status emails for shipped/delivered
+
+**Post-Purchase Email Sequences**
+- `lib/email-orders.ts` — Branded HTML emails for confirmed/shipped/delivered statuses
+- Gradient-styled status badges in emails, tracking URL buttons
+- Graceful degradation if RESEND_API_KEY not set
+
+**UI: dashboard/orders/page.tsx — Enhanced order tracking**
+- KPI cards (total orders, revenue, avg value, fulfilled) with gradient icons
+- Status filter buttons (All/Pending/Confirmed/Shipped/Delivered) with counts
+- Search across order ID, product, customer name, email
+- Platform-colored badges, tracking links, responsive table
+- Wrapped in EngineGate for subscription gating
+
+**Migration: 019_order_tracking_enhancements.sql**
+- Unique constraint on (external_order_id, platform) for webhook upsert
+- Composite index for faster webhook lookups
+
+### Files Created
+- `src/app/api/webhooks/shopify/route.ts`
+- `src/app/api/webhooks/tiktok/route.ts`
+- `src/app/api/webhooks/amazon/route.ts`
+- `src/lib/email-orders.ts`
+- `src/app/admin/automation/page.tsx`
+- `src/app/api/dashboard/channels/connect/route.ts`
+- `src/app/api/dashboard/channels/disconnect/route.ts`
+- `src/app/api/auth/oauth/callback/route.ts`
+- `supabase/migrations/019_order_tracking_enhancements.sql`
+
+### Files Modified
+- `src/app/globals.css` — Complete theme system
+- `src/components/admin-sidebar.tsx` — Lively navigation
+- `src/app/admin/page.tsx` — FastMoss-style dashboard
+- `src/app/dashboard/integrations/page.tsx` — OAuth flow + lively UI
+- `src/app/dashboard/orders/page.tsx` — Enhanced order tracking UI
+
+### Phase 4 Build Status — PASS (0 errors, 0 warnings)
+
+------------------------------------------------------------
+
+## Session: 2026-03-15 — Bug Fix Batch (BUG-036/037/031/042/050/051/052/063)
+
+### Scoring Consistency (BUG-036 + BUG-037)
+
+**BUG-036: Backend vs frontend scoring interface mismatch**
+Frontend `CompositeScore` returned `{ viral_score, profitability_score, overall_score }` while backend returned `{ trend_score, viral_score, profit_score, final_score }`. Unified both to use `{ trend_score, viral_score, profit_score, final_score }`. Removed `overall_score` alias from backend `ScoringResult`. Fixed `enrich-product.ts` which referenced the removed `overall_score` field.
+
+**BUG-037: overall_score vs final_score alias conflict**
+Resolved by removing `overall_score` entirely. Both frontend and backend now use `final_score` as the canonical field, matching the DB column name.
+
+### Auto-Rejection Rules (BUG-063) — Already Fixed
+Verified all 8 auto-rejection rules are present in both `src/lib/scoring/composite.ts` and `src/app/api/admin/financial/route.ts`. No fix needed.
+
+### Provider Re-exports (BUG-042)
+No duplicate provider files found — subdirectory structure is clean. Added missing re-exports for `digital` and `affiliate` modules to `src/lib/providers/index.ts`.
+
+### Parallel Scanning (BUG-050)
+Backend `product-scan.ts` used sequential `for...of` with `await` for platform scraping. Replaced with `Promise.all()` so all platforms scrape concurrently. Full scan time reduced from sum of all platforms to time of slowest platform.
+
+### Worker Graceful Shutdown (BUG-051)
+Added `SIGTERM` and `SIGINT` signal handlers to `backend/src/worker.ts`. On shutdown signal, all workers close gracefully (waiting for in-flight jobs to finish), then Redis disconnects cleanly.
+
+### Dead Letter Queue + Retry Config (BUG-052)
+Added `defaultJobOptions` to `backend/src/lib/queue.ts` with 3 retry attempts, exponential backoff (5s base), and retention policies (keep 1000 completed, 5000 failed). Updated all 14 workers in `backend/src/jobs/index.ts` to use shared `defaultOpts` with backoff strategy.
+
+### fetchTrends Silent Failure (BUG-031)
+Added `console.error('TikTok trends fetch error:', error)` to the empty catch block in `backend/src/lib/providers.ts:fetchTrends()`. Now consistent with all other provider error handling.
+
+### Frontend/Backend API Unification (BUG-040) — Documented
+Frontend providers use Apify actors (per CLAUDE.md rule 6), backend workers use direct APIs (TikTok Shop, RainForest, Pinterest, Shopify scraper). Both write consistent field schemas to the `products` table. This is by design — backend workers are a secondary path that degrades gracefully when API keys aren't set. No code change needed; architectural note recorded.
+
+### Files Modified
+- `src/lib/scoring/composite.ts` — Unified CompositeScore interface (BUG-036/037)
+- `backend/src/lib/scoring.ts` — Removed overall_score alias (BUG-037)
+- `backend/src/jobs/enrich-product.ts` — Fixed overall_score reference (BUG-036)
+- `backend/src/jobs/product-scan.ts` — Promise.all parallel scraping (BUG-050)
+- `backend/src/worker.ts` — Graceful shutdown handlers (BUG-051)
+- `backend/src/lib/queue.ts` — Default job options with retry/backoff (BUG-052)
+- `backend/src/jobs/index.ts` — All workers use shared defaultOpts (BUG-052)
+- `backend/src/lib/providers.ts` — fetchTrends error logging (BUG-031)
+- `src/lib/providers/index.ts` — Added digital/affiliate re-exports (BUG-042)
+
+### Bug Fix Build Status — PASS (0 errors, 0 warnings)
+
+------------------------------------------------------------
+
+## Session: 2026-03-15 — Phase I QA (Test Suite Expansion)
+
+### Test Updates
+
+**Phase 3 tests updated for scoring rename**
+Updated 4 failing tests that referenced `overall_score` and `profitability_score` to use the new canonical field names `final_score` and `profit_score`.
+
+**Phase 4 tests added (new features)**
+Created `tests/phase4-new-features.test.ts` covering:
+- Content Engine API auth guard (generate + list endpoints)
+- OAuth channel connect/disconnect auth guards
+- OAuth callback error handling (missing state)
+- Webhook endpoints (Shopify HMAC, TikTok, Amazon) — rejects invalid payloads without crashing
+- Influencer invite API auth guard
+- New admin routes auth guards (analytics, creator-matches, opportunities, engines/health)
+- Billing API auth guard (subscription portal)
+
+**Phase 5 tests added (security validation)**
+Created `tests/phase5-security.test.ts` covering:
+- All 8 auto-rejection rules with individual test cases
+- Boundary value testing (exact thresholds for margin, shipping, break-even, delivery, price, competitors)
+- Multiple violation accumulation
+- Sort field injection prevention
+- Error response sanitization (no API keys in responses)
+- OAuth state token expiry validation
+
+### Test Results
+- Phase 3 (business logic): 87/87 PASS
+- Phase 5 (security): 21/21 PASS
+- Total local tests: **108/108 PASS**
+- Phase 1 (Supabase) and Phase 2/4 (API smoke) require live services
+
+### Files Created
+- `tests/phase4-new-features.test.ts`
+- `tests/phase5-security.test.ts`
+
+### Files Modified
+- `tests/phase3-business-logic.test.ts` — Updated field names
+- `package.json` — Added test:phase4, test:phase5 scripts
+
+### QA Build Status — PASS (0 errors, 0 warnings)
