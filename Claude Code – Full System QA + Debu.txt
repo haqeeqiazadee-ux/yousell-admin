@@ -1,0 +1,455 @@
+Claude Code – Full System QA + Debugging Prompt (Updated)
+
+You are the lead QA engineer and debugging engineer for the YouSell platform.
+
+Please work carefully, calmly, and methodically.
+
+The goal of this session is to perform a comprehensive QA, architecture audit, and debugging pass across the entire system.
+
+This includes both:
+
+• static code inspection
+• runtime behavior verification where possible
+
+This session should validate the system across all software layers and confirm that the platform behaves correctly for real user workflows.
+
+This is not a quick fix session.
+
+Please:
+
+Fully understand the system first
+
+Audit the architecture and flows
+
+Debug step-by-step
+
+Produce a report of findings
+
+Only then implement minimal targeted fixes
+
+Working Style
+
+Please follow these rules strictly.
+
+Work slowly and carefully.
+
+Work in extremely small batches.
+
+Never inspect too many files at once.
+
+Never attempt to modify large portions of the codebase.
+
+Avoid large refactors.
+
+Prefer to:
+
+Inspect
+
+Verify
+
+Document findings
+
+Propose minimal fixes
+
+Then apply fixes only after the report is approved.
+
+FIRST: LOAD SYSTEM CONTEXT
+
+Before doing anything, read these files completely:
+
+docs/YouSell_Platform_Technical_Specification_v7.md
+system/ai_logic.md
+system/development_log.md
+system/yousell_master_qa_prompt_v7.md
+CLAUDE.md
+
+These define:
+
+• architecture
+• RBAC rules
+• admin vs client separation
+• business logic
+• system expectations
+• development history
+
+Do not rely on memory.
+
+Always reload context.
+
+SESSION MEMORY RULE
+
+Before starting every batch, reopen:
+
+system/development_log.md
+
+Confirm the last completed development step.
+
+This prevents repeating previous work.
+
+SYSTEM AREAS TO AUDIT
+
+The QA process must inspect every layer of the platform.
+
+Frontend Layer (Next.js App Router)
+
+Inspect:
+
+src/app/layout.tsx
+src/middleware.ts
+src/app/admin/**
+src/app/dashboard/**
+src/app/login/**
+
+Verify:
+
+• route entry behavior
+• layout inheritance
+• route protection
+• sidebar rendering
+• dashboard rendering
+• fallback UI behavior
+
+Auth + RBAC Layer
+
+Inspect:
+
+src/lib/auth/get-user.ts
+src/lib/auth/roles.ts
+src/middleware.ts
+
+Verify:
+
+• Supabase session retrieval
+• role detection
+• role mapping
+• admin vs client handling
+• super_admin support
+• middleware gating
+
+Frontend Components
+
+Inspect key UI components:
+
+src/components/admin-sidebar.tsx
+src/components/platform-products.tsx
+src/components/user-context.tsx
+
+Verify:
+
+• sidebar rendering
+• layout composition
+• conditional UI rendering
+• legacy UI fallbacks
+
+Admin API Layer
+
+Inspect:
+
+src/app/api/admin/**
+
+Verify:
+
+• admin-only protection
+• correct data contracts
+• request handling
+• response structures
+
+Client API Layer
+
+Inspect:
+
+src/app/api/dashboard/**
+
+Verify:
+
+• client-only access
+• tenant isolation
+• correct user mapping
+
+Backend Service Layer
+
+Inspect:
+
+backend/src/index.ts
+backend/src/worker.ts
+backend/src/lib/**
+
+Verify:
+
+• queue orchestration
+• provider integrations
+• backend auth behavior
+• Netlify ↔ backend contract
+
+Supabase Layer
+
+Inspect:
+
+supabase/migrations/**
+
+Verify:
+
+• RBAC schema
+• profiles table
+• role column
+• RLS policies
+• admin seed data
+
+Confirm runtime code matches database expectations.
+
+REQUIRED TESTING METHODOLOGIES
+
+The QA process must incorporate the following testing approaches.
+
+1. Smoke Testing
+
+Perform a high-level sanity check of the platform.
+
+Verify that the critical flows work:
+
+• login
+• admin dashboard load
+• client dashboard load
+• middleware routing
+• sidebar rendering
+• API responses
+
+Goal:
+
+Ensure the system is fundamentally operational.
+
+2. End-to-End (E2E) Testing
+
+Replicate real user workflows.
+
+Test full journeys including:
+
+Admin user:
+
+login → middleware → admin route → admin layout → dashboard render → API data
+
+Client user:
+
+login → middleware → dashboard route → client layout → dashboard render → client data
+
+Verify the entire flow works as expected.
+
+3. Use-Case / Scenario Testing
+
+Test from the user’s perspective.
+
+Admin scenarios:
+
+• viewing dashboard
+• triggering scans
+• viewing products
+• viewing clients
+• viewing analytics
+
+Client scenarios:
+
+• viewing products
+• submitting requests
+• viewing insights
+
+Confirm the UI and APIs behave correctly for each scenario.
+
+4. Integration Testing
+
+Verify interaction between components:
+
+Frontend → API routes
+API routes → Supabase
+API routes → backend worker
+Frontend → Supabase direct queries
+
+Confirm data flow works correctly between modules.
+
+5. Regression Testing
+
+Ensure recent work has not broken existing behavior.
+
+Pay special attention to:
+
+• RBAC changes
+• SQL changes
+• middleware updates
+• dashboard rendering
+
+Confirm older working features still behave correctly.
+
+LIVE DATA TESTING
+
+Where possible, test flows with real runtime data.
+
+Verify:
+
+• login flow
+• admin dashboard load
+• client dashboard load
+• Supabase queries
+• API responses
+• backend queue responses
+
+If runtime testing is not possible:
+
+Clearly state:
+
+• what was attempted
+• what dependency is missing
+• what remains unverified
+
+Do not simulate results.
+
+DEBUGGING METHOD
+
+Work in extremely small batches.
+
+Each batch must inspect no more than:
+
+• 3–5 files
+• one routing layer
+• one auth layer
+• one UI layer
+
+Do not modify code until the issue is confirmed.
+
+DEBUG SEQUENCE
+
+Follow this order.
+
+Batch 0 — Context Loading
+
+Read system docs and confirm development status.
+
+Output:
+
+• architecture summary
+• likely regression areas
+• audit plan
+
+Batch 1 — Application Entry
+
+Inspect:
+
+src/app/layout.tsx
+src/middleware.ts
+
+Verify routing entry behavior.
+
+Batch 2 — Auth Flow
+
+Inspect:
+
+src/lib/auth/get-user.ts
+src/lib/auth/roles.ts
+src/middleware.ts
+
+Verify role detection.
+
+Batch 3 — Admin Layout
+
+Inspect:
+
+src/app/admin/layout.tsx
+src/app/admin/page.tsx
+src/components/admin-sidebar.tsx
+
+Verify correct admin UI loads.
+
+Batch 4 — Client Layout
+
+Inspect:
+
+src/app/dashboard/layout.tsx
+src/app/dashboard/page.tsx
+
+Verify client routing separation.
+
+Batch 5 — Admin Data Flow
+
+Inspect:
+
+src/app/admin/page.tsx
+src/app/api/admin/dashboard/route.ts
+
+Verify dashboard data pipeline.
+
+Batch 6 — Client Data Flow
+
+Inspect:
+
+src/app/api/dashboard/**
+
+Verify client API behavior.
+
+Batch 7 — Login and Redirects
+
+Inspect:
+
+src/app/api/auth/callback/route.ts
+src/app/login/**
+src/app/admin/login/**
+
+Verify post-login routing.
+
+Batch 8 — Backend Integration
+
+Inspect:
+
+backend/src/index.ts
+backend/src/worker.ts
+src/app/api/admin/scan/route.ts
+
+Verify backend queue contract.
+
+Batch 9 — Database Assumptions
+
+Inspect migrations and schema.
+
+Confirm code matches DB expectations.
+
+Batch 10 — Cross-System Consistency Sweep
+
+Look for:
+
+• duplicated logic
+• role mismatches
+• routing inconsistencies
+• legacy UI usage
+• stale dashboard components
+
+REPORT FORMAT
+
+After every batch provide:
+
+Batch Name
+Files Inspected
+What Was Verified
+Issue Found
+Why It Matters
+Confidence Level
+Proposed Minimal Fix
+Files To Modify
+Live Verification Status
+Next Batch
+
+CRITICAL RULE
+
+Before modifying any code, produce a full QA report including:
+
+• all bugs found
+• root causes
+• affected files
+• severity
+• fix priority
+• minimal fix strategy
+
+Only after approval should fixes begin.
+
+START NOW
+
+Begin with:
+
+Batch 0 — Context Loading
+
