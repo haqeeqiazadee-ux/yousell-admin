@@ -25,6 +25,7 @@ import {
   Layers,
   Target,
   Megaphone,
+  BarChart2,
 } from "lucide-react";
 import {
   Sidebar,
@@ -49,6 +50,7 @@ const mainNav = [
   { title: "Scan Control", href: "/admin/scan", icon: Scan },
   { title: "Products", href: "/admin/products", icon: Package },
   { title: "Trend Scout", href: "/admin/trends", icon: TrendingUp },
+  { title: "Analytics", href: "/admin/analytics", icon: BarChart2 },
 ];
 
 const channelNav = [

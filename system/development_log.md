@@ -1397,3 +1397,198 @@ Built 6 intelligence engines that run directly in Next.js API routes — **no Ex
 
 ### Architecture Impact
 All 8 intelligence API routes now work self-contained on Netlify without needing the Express backend on Railway. The Express backend + BullMQ worker remains available for future heavy-duty scheduled jobs but is no longer required for any admin-triggered operation.
+
+------------------------------------------------------------
+
+## Session: 2026-03-15 — SaaS Subscription Layer & Client Platform Gating
+
+### What Was Done
+
+#### 1. requireClient() Auth Middleware
+Created `src/lib/auth/require-client.ts` — server-side helper for dashboard API routes that authenticates user, verifies client role, resolves client record, fetches subscription, and maps plan capabilities.
+
+#### 2. Subscription Context Provider + Banner
+- `src/components/subscription-context.tsx` — React context providing `useSubscription()` hook with plan/engines/limits
+- `src/components/subscription-banner.tsx` — contextual banners: upgrade prompt (no sub), cancellation warning, or clean (active)
+
+#### 3. Engine Gate Component
+Created `src/components/engine-gate.tsx` — wraps dashboard features. Shows children if plan includes required engine, locked upgrade prompt otherwise. Maps: discovery→Starter, content→Growth, influencer→Professional, store_integration→Enterprise.
+
+#### 4. Dashboard Layout Updated
+Wrapped in `<SubscriptionProvider>` + `<SubscriptionBanner>`. All client pages now subscription-aware.
+
+#### 5. Engine Gating Applied
+- Content Studio → gated by `content` engine (Growth+)
+- Store Integrations → gated by `store_integration` engine (Enterprise)
+
+#### 6. Public Pricing Page
+Created `src/app/pricing/page.tsx` — static, SEO-friendly with 4 plan cards, feature highlights, FAQ. Client domain root redirects to /pricing for unauthenticated visitors.
+
+### Files Created
+- `src/lib/auth/require-client.ts`
+- `src/components/subscription-context.tsx`
+- `src/components/subscription-banner.tsx`
+- `src/components/engine-gate.tsx`
+- `src/app/pricing/page.tsx`
+
+### Files Modified
+- `src/app/dashboard/layout.tsx`, `src/app/dashboard/content/page.tsx`, `src/app/dashboard/integrations/page.tsx`, `src/middleware.ts`
+
+### Build Status — PASS (0 errors, 0 warnings)
+
+### v7 Spec Progress
+- Phase 1 (Stripe subscription billing): COMPLETE
+- Phase 2 (Engine toggles + Platform gating): COMPLETE; Store integration pending OAuth
+
+------------------------------------------------------------
+
+## Session: 2026-03-15 — SaaS Dashboard Metrics, Analytics Page, Allocate Workflow
+
+### What Was Done
+
+#### 1. Revenue & SaaS Metrics on Admin Dashboard
+Added a new revenue metrics row to the admin homepage showing:
+- **MRR (Monthly Recurring Revenue)** — calculated from active subscriptions × plan prices
+- **Active Subscriptions** — count of active subscription records
+- **Total Clients** — client count from database
+- **Products Allocated** — total allocation count
+
+Also added two new bottom panels:
+- **Subscription Plans** — visual breakdown of plan distribution (starter/growth/professional/enterprise) with progress bars
+- **Recent Clients** — latest 5 client signups with avatar and relative timestamp
+
+Dashboard API (`/api/admin/dashboard`) now fetches subscriptions, allocations, and recent clients in parallel alongside existing data.
+
+#### 2. Full Analytics Page (was "Coming Soon" stub)
+Built comprehensive analytics dashboard at `/admin/analytics` with recharts:
+- **6 KPI cards**: Total Products, Total Scans, Total Clients, Active Subs, MRR, Allocations
+- **Products by Platform** — color-coded bar chart
+- **Score Distribution** — histogram across 0-19, 20-39, 40-59, 60-79, 80-100 ranges
+- **Trend Stages** — pie chart (emerging/rising/exploding/saturated)
+- **Avg Score Pillars** — radar chart showing trend/viral/profit averages
+- **Plan Distribution** — pie chart with MRR callout
+- **Scan Performance Over Time** — line chart (products found vs hot products)
+- **Top Categories** — horizontal bar chart
+- **Trending Keywords** — ranked list with direction indicators
+
+New API route: `GET /api/admin/analytics` — aggregates product, scan, subscription, allocation, trend data.
+
+#### 3. Enhanced Allocate Page
+Upgraded from partial to fully functional:
+- **Search & filter**: text search, platform filter dropdown, sort toggle (score/name)
+- **Score-colored indicators**: red 80+, amber 60+, gray below
+- **Trend stage badges** on product rows
+- **Toast notifications** (sonner) for success/failure feedback on allocation
+- **Approve/Reject workflow** for pending client requests with dedicated buttons
+- **Side-by-side layout**: pending requests + recent allocations in 2-column grid
+
+New API route: `PATCH /api/admin/allocations/requests` — approve/reject product requests.
+
+### Files Created
+- `src/app/api/admin/analytics/route.ts`
+- `src/app/api/admin/allocations/requests/route.ts`
+
+### Files Modified
+- `src/app/api/admin/dashboard/route.ts` — added revenue, subscription, allocation, recent client data
+- `src/app/admin/page.tsx` — added revenue metrics row, subscription breakdown, recent clients panels
+- `src/app/admin/analytics/page.tsx` — replaced Coming Soon stub with full analytics dashboard
+- `src/app/admin/allocate/page.tsx` — enhanced with search, filters, toasts, approve/reject flow
+
+### Dependencies Added
+- `recharts` — chart library for analytics visualizations
+
+### Build Status — PASS (0 errors, 0 warnings)
+
+------------------------------------------------------------
+
+## Session — 2026-03-15: Security Fixes (BUG-001, BUG-016, BUG-035) + Content Creation Engine
+
+### Critical Bug Fixes
+
+**BUG-001: RLS policies missing super_admin role**
+All RLS admin policies across 25+ tables only checked `role = 'admin'`, excluding `super_admin` users from database access. Fixed by updating all policies to use `role IN ('admin', 'super_admin')`.
+
+**BUG-016: Backend Express server missing RBAC**
+The `authMiddleware` in `backend/src/index.ts` only verified that a user was authenticated but did not check their role. Any authenticated user (including clients) could call admin-only endpoints like `/api/scan`, `/api/trends`, etc. Fixed by adding `requireAdmin` middleware that checks the user's profile role via the service-role Supabase client. Applied to all 20 admin-only Express routes.
+
+**BUG-035: Clients table missing self-read RLS policy**
+The `clients` table had RLS enabled with only an admin policy, preventing clients from reading their own record. This would block client dashboard pages from resolving the client context. Fixed by adding a SELECT policy matching `email = (SELECT email FROM profiles WHERE id = auth.uid())`. Also added a client self-management policy for `product_requests`.
+
+### Phase 3: Content Creation Engine
+
+Built the Content Creation Engine per v7 spec Phase 3:
+
+**API: `POST /api/dashboard/content/generate`**
+- Validates subscription (Growth plan or higher required for content engine)
+- Accepts productId, contentType, and optional channel
+- 5 content types: product_description, social_post, ad_copy, email_sequence, video_script
+- Each type has a specialized system prompt and token limit
+- Uses Claude Haiku (cost-optimized per v7 spec Rule 12)
+- Queues request in content_queue, generates via Anthropic API, updates with result
+- Tracks usage in usage_tracking table per billing period
+- Graceful degradation if ANTHROPIC_API_KEY not configured
+
+**UI: Enhanced Content Studio (`/dashboard/content`)**
+- Full content generation panel with product selector, content type pills, channel dropdown
+- Expandable content cards with copy-to-clipboard
+- Status badges (pending, generated, scheduled, published, failed)
+- Error display for failed generations
+- Loading states and empty state prompts
+
+### Files Created
+- `supabase/migrations/017_security_fixes.sql` — BUG-001, BUG-035 RLS fixes
+- `src/app/api/dashboard/content/generate/route.ts` — Content generation API
+
+### Files Modified
+- `backend/src/index.ts` — Added requireAdmin RBAC middleware to all admin routes (BUG-016)
+- `src/app/dashboard/content/page.tsx` — Full Content Studio with generation UI
+
+### Build Status — PASS (0 errors, 0 warnings)
+
+------------------------------------------------------------
+
+## Session: 2026-03-15 — Security Bug Fixes (BUG-028/029/030/045/049) + One-Click Influencer Invite
+
+### Critical Security Fixes
+
+**BUG-028 (HIGH): Backend userId spoofing**
+All 13 POST routes in `backend/src/index.ts` read `userId` from `req.body`, allowing any authenticated admin to spoof another user's identity in job payloads. Fixed by replacing all instances with `(req as any).user.id` from the authenticated session.
+
+**BUG-029 (MEDIUM): CORS single-origin**
+Backend CORS was hardcoded to a single `FRONTEND_URL`, breaking Netlify deploy previews. Fixed with dynamic origin validation supporting multiple origins via `CORS_ALLOWED_ORIGINS` env var plus automatic Netlify preview URL pattern matching.
+
+**BUG-030 (MEDIUM): API keys in error logs**
+All `console.error` calls in backend routes logged raw error objects which could contain API keys/tokens in messages. Added `sanitizeError()` helper that redacts patterns matching keys, tokens, secrets, and bearer tokens. Applied to all 20+ error log sites.
+
+**BUG-045 (MEDIUM): Product sort field injection**
+`GET /api/admin/products` passed user-supplied `sort` query param directly to Supabase `.order()` without validation. Fixed by adding whitelist of allowed sort fields.
+
+**BUG-049 (MEDIUM): Product table missing indexes**
+Created migration `018_security_and_indexes.sql` adding indexes on `title`, `platform`, `status`, `final_score`, `created_at`, `category`, `trend_stage`, and a composite index on `(platform, status, final_score)`.
+
+### One-Click Influencer Invite System (Phase 3 Completion)
+
+**API: `POST /api/admin/influencers/invite`**
+- Accepts `influencerId` and `productId`
+- Validates influencer has email on file
+- Deduplication: prevents re-inviting same influencer for same product within 7 days
+- Generates personalized outreach email via Claude Haiku (cost-optimized)
+- Fallback template if ANTHROPIC_API_KEY not configured
+- Stores in `outreach_emails` table as draft, then sends via Resend API
+- Graceful degradation if RESEND_API_KEY not configured (saves as draft)
+
+**UI: Invite button on Influencers page**
+- "Invite" button on each influencer row (disabled if no email)
+- Product selector dialog with search, score indicators, and selection
+- Loading states and toast notifications for success/failure
+
+### Files Created
+- `src/app/api/admin/influencers/invite/route.ts`
+- `supabase/migrations/018_security_and_indexes.sql`
+
+### Files Modified
+- `backend/src/index.ts` — BUG-028, BUG-029, BUG-030
+- `src/app/api/admin/products/route.ts` — BUG-045
+- `src/app/admin/influencers/page.tsx` — Invite button + product selector dialog
+
+### Build Status — PASS (0 errors, 0 warnings)
