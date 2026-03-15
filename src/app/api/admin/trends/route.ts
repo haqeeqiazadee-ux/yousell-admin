@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { authenticateAdmin } from "@/lib/auth/admin-api-auth";
+import { detectTrends } from "@/lib/engines/trend-detection";
 
 export async function GET(request: NextRequest) {
   try { await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
@@ -37,4 +38,22 @@ export async function POST(request: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ trends: data }, { status: 201 });
+}
+
+// PUT = Run automated trend detection engine
+export async function PUT(request: NextRequest) {
+  try { await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+
+  try {
+    const result = await detectTrends();
+    return NextResponse.json({
+      status: "completed",
+      trendsDetected: result.trendsDetected,
+      trendsUpdated: result.trendsUpdated,
+      ...(result.errors.length > 0 ? { warnings: result.errors } : {}),
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Trend detection failed";
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }

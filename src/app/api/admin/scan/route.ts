@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { runLiveDiscoveryScan } from '@/lib/engines/discovery';
 
 // ── Pre-flight: verify critical env vars ──
 
@@ -279,11 +280,56 @@ export async function POST(req: NextRequest) {
 
   const mode = body.mode || 'quick';
   const clientId = body.clientId;
-  console.log('[SCAN] Starting direct scan, mode:', mode);
+  const useLive = body.live !== false; // Default to live scan; set live:false for mock
+  console.log('[SCAN] Starting scan, mode:', mode, 'live:', useLive);
 
   try {
+    // Try live discovery scan first (uses real Apify/RapidAPI providers)
+    if (useLive && (process.env.APIFY_API_TOKEN || process.env.RAPIDAPI_KEY)) {
+      console.log('[SCAN] Using LIVE discovery engine');
+      const result = await runLiveDiscoveryScan(mode as 'quick' | 'full' | 'client', user.id, clientId);
+      console.log('[SCAN] Live scan completed:', result.totalStored, 'products stored');
+
+      const warnings: string[] = [];
+      for (const r of result.results) {
+        if (r.errors.length > 0) {
+          warnings.push(`${r.platform}: ${r.errors.join('; ')}`);
+        }
+      }
+
+      // If live scan found nothing, fall back to mock
+      if (result.totalFound === 0) {
+        console.log('[SCAN] Live scan found 0 products, falling back to mock');
+        const mockResult = await runDirectScan(mode, user.id, clientId);
+        return NextResponse.json({
+          jobId: mockResult.scanId,
+          status: 'completed',
+          progress: 100,
+          step: 'Scan complete (mock fallback — no API results)',
+          productsFound: mockResult.productsFound,
+          hotProducts: mockResult.hotProducts,
+          source: 'mock',
+          ...(mockResult.productError ? { warning: mockResult.productError } : {}),
+        });
+      }
+
+      return NextResponse.json({
+        jobId: result.scanId,
+        status: 'completed',
+        progress: 100,
+        step: 'Live scan complete!',
+        productsFound: result.totalStored,
+        hotProducts: result.hotProducts,
+        source: 'live',
+        platforms: result.results.map(r => ({ platform: r.platform, found: r.found, stored: r.stored })),
+        ...(warnings.length > 0 ? { warnings } : {}),
+      });
+    }
+
+    // Fallback: mock data scan
+    console.log('[SCAN] No API keys configured, using mock scan');
     const result = await runDirectScan(mode, user.id, clientId);
-    console.log('[SCAN] Scan completed:', result.productsFound, 'products');
+    console.log('[SCAN] Mock scan completed:', result.productsFound, 'products');
     return NextResponse.json({
       jobId: result.scanId,
       status: 'completed',
@@ -291,11 +337,12 @@ export async function POST(req: NextRequest) {
       step: 'Scan complete!',
       productsFound: result.productsFound,
       hotProducts: result.hotProducts,
+      source: 'mock',
       ...(result.productError ? { warning: `Products partially failed: ${result.productError}` } : {}),
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[SCAN] Direct scan failed:', msg);
+    console.error('[SCAN] Scan failed:', msg);
     return NextResponse.json(
       { error: `Scan failed: ${msg}` },
       { status: 500 }

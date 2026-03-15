@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { authenticateAdmin } from "@/lib/auth/admin-api-auth";
-
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:4000";
+import { runCreatorMatching } from "@/lib/engines/creator-matching";
 
 export async function GET(request: NextRequest) {
   try { await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
@@ -13,7 +12,7 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from("creator_product_matches")
-    .select("*, products(title, source, price), influencers(username, platform, followers, engagement_rate)")
+    .select("*, products(title, platform, price), influencers(username, platform, followers, engagement_rate)")
     .order("match_score", { ascending: false })
     .limit(100);
 
@@ -25,31 +24,25 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  let user;
-  try { user = await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+  try { await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
 
-  const token = request.headers.get("authorization")?.replace("Bearer ", "") || "";
-  const body = await request.json();
+  let body: Record<string, unknown> = {};
+  try { body = await request.json(); } catch { /* use defaults */ }
 
   try {
-    const res = await fetch(`${BACKEND_URL}/api/creators/match`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        productId: body.productId,
-        minProductScore: body.minProductScore || 60,
-        maxCreatorsPerProduct: body.maxCreatorsPerProduct || 10,
-        userId: user.id,
-      }),
-    });
+    const result = await runCreatorMatching(
+      Number(body.minProductScore) || 60,
+      Number(body.maxCreatorsPerProduct) || 10
+    );
 
-    const data = await res.json();
-    if (!res.ok) return NextResponse.json({ error: data.error || "Backend error" }, { status: res.status });
-    return NextResponse.json(data);
-  } catch {
-    return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
+    return NextResponse.json({
+      status: "completed",
+      productsMatched: result.productsMatched,
+      matchesCreated: result.matchesCreated,
+      ...(result.errors.length > 0 ? { warnings: result.errors } : {}),
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Matching failed";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
