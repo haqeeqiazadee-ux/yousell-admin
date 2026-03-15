@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { requireAdmin } from '@/lib/auth/roles';
 
 // ── Pre-flight: verify critical env vars ──
 
@@ -8,6 +7,35 @@ function checkEnvVars(): string | null {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return 'NEXT_PUBLIC_SUPABASE_URL is not set. Add it to Netlify env vars and redeploy.';
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return 'SUPABASE_SERVICE_ROLE_KEY is not set. Add it to Netlify env vars and redeploy.';
   return null;
+}
+
+// ── Token-based auth (bypasses cookies() which hangs on Netlify) ──
+
+async function authenticateAdmin(req: NextRequest): Promise<{ id: string; email: string; role: string }> {
+  const token = req.headers.get('authorization')?.replace('Bearer ', '');
+  if (!token) {
+    throw new Error('No Authorization header. Please log in again.');
+  }
+
+  const admin = createAdminClient();
+
+  // Verify the JWT directly with Supabase (no cookies needed)
+  const { data: { user }, error: authErr } = await admin.auth.getUser(token);
+  if (authErr || !user) {
+    throw new Error(`Invalid session: ${authErr?.message || 'user not found'}. Please log in again.`);
+  }
+
+  // Check admin role via RPC
+  const { data: role, error: roleErr } = await admin.rpc('check_user_role', { user_id: user.id });
+  if (roleErr) {
+    throw new Error(`Role check failed: ${roleErr.message}`);
+  }
+
+  if (role !== 'admin' && role !== 'super_admin') {
+    throw new Error(`Forbidden: requires admin role, got "${role || 'none'}"`);
+  }
+
+  return { id: user.id, email: user.email || '', role: role as string };
 }
 
 // ── Mock product generation ──
@@ -234,7 +262,7 @@ export async function POST(req: NextRequest) {
 
   let user;
   try {
-    user = await requireAdmin();
+    user = await authenticateAdmin(req);
     console.log('[SCAN] Auth OK — user:', user.email, 'role:', user.role);
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Unauthorized';
@@ -277,7 +305,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    await requireAdmin();
+    await authenticateAdmin(req);
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Unauthorized';
     return NextResponse.json({ error: `Auth failed: ${msg}` }, { status: 401 });
@@ -329,7 +357,7 @@ export async function GET(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    await requireAdmin();
+    await authenticateAdmin(req);
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Unauthorized';
     return NextResponse.json({ error: `Auth failed: ${msg}` }, { status: 401 });

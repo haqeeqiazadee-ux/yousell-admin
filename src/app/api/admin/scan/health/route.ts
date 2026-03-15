@@ -92,10 +92,11 @@ export async function GET() {
       });
 
       // Test profiles table
+      // Query admin users (avoid super_admin enum value which may not exist)
       const { data: profiles, error: profErr } = await admin
         .from('profiles')
         .select('id, email, role')
-        .in('role', ['admin', 'super_admin']);
+        .eq('role', 'admin');
 
       checks.push({
         test: 'Admin users in profiles',
