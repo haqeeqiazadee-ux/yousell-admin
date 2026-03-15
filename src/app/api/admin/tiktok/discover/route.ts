@@ -16,23 +16,27 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "query is required" }, { status: 400 });
   }
 
-  const res = await fetch(`${BACKEND_URL}/api/tiktok/discover`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      query,
-      limit: limit || 30,
-      userId: user.id,
-    }),
-  });
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/tiktok/discover`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        query,
+        limit: limit || 30,
+        userId: user.id,
+      }),
+    });
 
-  const data = await res.json();
-  if (!res.ok) {
-    return NextResponse.json({ error: data.error || "Backend error" }, { status: res.status });
+    const data = await res.json();
+    if (!res.ok) {
+      return NextResponse.json({ error: data.error || "Backend error" }, { status: res.status });
+    }
+
+    return NextResponse.json(data);
+  } catch {
+    return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
   }
-
-  return NextResponse.json(data);
 }

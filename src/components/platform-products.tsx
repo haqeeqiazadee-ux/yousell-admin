@@ -18,6 +18,7 @@ import { ScoreBadge } from "@/components/score-badge";
 import { Package, Search, ExternalLink } from "lucide-react";
 import type { Product } from "@/lib/types/product";
 import type { LucideIcon } from "lucide-react";
+import { authFetch } from "@/lib/auth-fetch";
 
 interface PlatformProductsProps {
   title: string;
@@ -45,7 +46,7 @@ export function PlatformProducts({
   // Fetch real provider status from dashboard API
   useEffect(() => {
     if (statusBadge?.serviceKey) {
-      fetch('/api/admin/dashboard')
+      authFetch('/api/admin/dashboard')
         .then(r => r.json())
         .then(d => {
           if (d.services && d.services[statusBadge.serviceKey!] !== undefined) {
@@ -60,7 +61,7 @@ export function PlatformProducts({
     setLoading(true);
     const params = new URLSearchParams();
     if (search) params.set("search", search);
-    const res = await fetch(`${apiPath}?${params}`);
+    const res = await authFetch(`${apiPath}?${params}`);
     const data = await res.json();
     setProducts(data.products || []);
     setTotal(data.total || 0);

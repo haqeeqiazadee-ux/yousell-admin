@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("products")
       .select("*", { count: "exact" })
-      .in("platform", ["ai", "physical"])
+      .in("platform", ["ai_affiliate", "physical_affiliate"])
       .order("score_overall", { ascending: false })
       .limit(50);
 
