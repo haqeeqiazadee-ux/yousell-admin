@@ -1275,3 +1275,30 @@ All 30 admin API routes used `requireAdmin()` which calls `cookies()` from `next
 
 ### Build Status
 - Build: PASS
+
+------------------------------------------------------------
+
+## Session: 2026-03-15 — Fix remaining admin page failures
+
+### Issues Identified
+1. **PlatformProducts component using bare `fetch()`** — Pinterest, Digital, Affiliates AI/Physical pages failed with 403 because auth headers weren't sent
+2. **Affiliates API route platform filter bug** — Used `["ai", "physical"]` but products table stores `["ai_affiliate", "physical_affiliate"]`
+3. **Missing database tables** — 6 tables referenced by API routes don't exist: `tiktok_videos`, `tiktok_hashtag_signals`, `product_clusters`, `product_cluster_members`, `creator_product_matches`, `ads`
+4. **Backend proxy routes missing try/catch** — Unhandled fetch errors would crash routes when backend is unreachable
+
+### Fixes Applied
+1. `src/components/platform-products.tsx` — Replaced bare `fetch()` with `authFetch()` (import added)
+2. `src/app/api/admin/affiliates/route.ts` — Fixed platform filter to `["ai_affiliate", "physical_affiliate"]`
+3. `supabase/migrations/016_missing_tables_consolidated.sql` — Created consolidated migration for all missing tables (safe to re-run with IF NOT EXISTS)
+4. Added try/catch with 502 response to 6 backend proxy routes:
+   - `src/app/api/admin/tiktok/discover/route.ts`
+   - `src/app/api/admin/ads/route.ts`
+   - `src/app/api/admin/clusters/route.ts`
+   - `src/app/api/admin/creator-matches/route.ts`
+   - `src/app/api/admin/shopify/scan/route.ts`
+   - `src/app/api/admin/amazon/scan/route.ts`
+
+### ACTION REQUIRED
+Run `supabase/migrations/016_missing_tables_consolidated.sql` in the Supabase SQL Editor to create the 6 missing tables. Without this, TikTok Videos/Signals, Product Clusters, Creator Matches, and Ads pages will show 500 errors.
+
+### Build Status — PASS

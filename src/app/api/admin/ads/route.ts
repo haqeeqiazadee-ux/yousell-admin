@@ -35,21 +35,25 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
   if (!body.query) return NextResponse.json({ error: "query is required" }, { status: 400 });
 
-  const res = await fetch(`${BACKEND_URL}/api/ads/discover`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      query: body.query,
-      platforms: body.platforms || ["tiktok", "facebook"],
-      limit: body.limit || 20,
-      userId: user.id,
-    }),
-  });
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/ads/discover`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        query: body.query,
+        platforms: body.platforms || ["tiktok", "facebook"],
+        limit: body.limit || 20,
+        userId: user.id,
+      }),
+    });
 
-  const data = await res.json();
-  if (!res.ok) return NextResponse.json({ error: data.error || "Backend error" }, { status: res.status });
-  return NextResponse.json(data);
+    const data = await res.json();
+    if (!res.ok) return NextResponse.json({ error: data.error || "Backend error" }, { status: res.status });
+    return NextResponse.json(data);
+  } catch {
+    return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
+  }
 }

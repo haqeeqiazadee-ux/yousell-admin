@@ -25,20 +25,24 @@ export async function POST(request: NextRequest) {
   const token = request.headers.get("authorization")?.replace("Bearer ", "") || "";
   const body = await request.json();
 
-  const res = await fetch(`${BACKEND_URL}/api/products/cluster`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      minScore: body.minScore || 30,
-      similarityThreshold: body.similarityThreshold || 0.3,
-      userId: user.id,
-    }),
-  });
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/products/cluster`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        minScore: body.minScore || 30,
+        similarityThreshold: body.similarityThreshold || 0.3,
+        userId: user.id,
+      }),
+    });
 
-  const data = await res.json();
-  if (!res.ok) return NextResponse.json({ error: data.error || "Backend error" }, { status: res.status });
-  return NextResponse.json(data);
+    const data = await res.json();
+    if (!res.ok) return NextResponse.json({ error: data.error || "Backend error" }, { status: res.status });
+    return NextResponse.json(data);
+  } catch {
+    return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
+  }
 }
