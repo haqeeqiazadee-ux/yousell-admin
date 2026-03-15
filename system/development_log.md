@@ -1209,3 +1209,44 @@ Tested directly against the live Supabase database and found:
 
 ### Build Status
 - Build: PASS
+
+------------------------------------------------------------
+
+## Session: 2026-03-15 — Full Diagnostic & E2E Testing Strategy
+
+### Testing Strategy Applied
+
+| Test Type | What Was Checked | Result |
+|-----------|-----------------|--------|
+| E2E | Full scan flow: frontend → API → Supabase → products table | Found 3 issues |
+| Integration | Auth chain: middleware → getUser → check_user_role RPC → roles | PASS |
+| Integration | Supabase clients: server (anon+cookies), admin (service key), browser | Found RLS issue |
+| Integration | DB schema: all columns in products/scan_history match code | PASS (after prior fix) |
+| Smoke | scan_history INSERT/UPDATE/SELECT, products INSERT/SELECT | PASS with service key, FAIL with anon key |
+| Regression | Build passes, no working code broken | PASS |
+
+### Issues Found & Fixed
+
+1. **RLS blocks scan_history reads** (CRITICAL)
+   - `scan_history` has RLS: `USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))`
+   - Browser and server anon clients get 0 results
+   - Fix: All scan_history queries now use admin client (service role key)
+   - Fix: `fetchHistory()` calls API route instead of direct Supabase
+
+2. **Generic error messages** (CRITICAL for diagnosis)
+   - All errors returned "Scan failed. Please try again."
+   - Fix: Specific error messages for auth, env vars, DB failures
+
+3. **No env var pre-flight check** (CRITICAL)
+   - If SUPABASE_SERVICE_ROLE_KEY not set on Netlify, admin client fails silently
+   - Fix: `checkEnvVars()` runs before scan, returns clear error if missing
+
+### User Action Required
+- Verify Netlify env vars: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
+
+### Files Modified
+- `src/app/api/admin/scan/route.ts` — env check, detailed errors, admin client for all queries
+- `src/app/admin/scan/page.tsx` — fetchHistory via API, safer JSON parsing
+
+### Build Status
+- Build: PASS
