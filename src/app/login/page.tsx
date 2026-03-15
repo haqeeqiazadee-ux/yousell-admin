@@ -1,7 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
+import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
+
 function getSupabase() {
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -62,6 +65,17 @@ export default function ClientLoginPage() {
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border p-8">
+          <SocialLoginButtons redirectTo="/dashboard" />
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-white px-4 text-gray-500">or continue with email</span>
+            </div>
+          </div>
+
           <form onSubmit={handleLogin} className="space-y-4">
             {error && (
               <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
@@ -107,6 +121,13 @@ export default function ClientLoginPage() {
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
+
+          <p className="text-center text-sm text-gray-500 mt-6">
+            Don&apos;t have an account?{' '}
+            <Link href="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+              Sign Up
+            </Link>
+          </p>
         </div>
       </div>
     </div>

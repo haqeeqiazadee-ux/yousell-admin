@@ -5,9 +5,9 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const rawNext = searchParams.get("next") ?? "/admin";
+  const rawNext = searchParams.get("next") ?? "/dashboard";
   // Prevent open redirect: must be a relative path, no protocol tricks
-  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/admin";
+  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/dashboard";
 
   if (code) {
     const cookieStore = await cookies();
@@ -30,9 +30,28 @@ export async function GET(request: Request) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      // Check user role to determine correct redirect
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        // Route based on role
+        if (profile?.role === 'admin' || profile?.role === 'super_admin') {
+          return NextResponse.redirect(`${origin}/admin`);
+        }
+        // Client role or new user: go to dashboard (or requested next)
+        return NextResponse.redirect(`${origin}${next === '/admin' ? '/dashboard' : next}`);
+      }
+
       return NextResponse.redirect(`${origin}${next}`);
     }
   }
 
-  return NextResponse.redirect(`${origin}/admin/login?error=auth`);
+  // Determine which login page to redirect to on error
+  const errorRedirect = next.startsWith('/admin') ? '/admin/login' : '/login';
+  return NextResponse.redirect(`${origin}${errorRedirect}?error=auth`);
 }
