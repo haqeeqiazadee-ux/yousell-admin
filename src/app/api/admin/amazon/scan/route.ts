@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await admin
       .from('products')
-      .upsert(rows, { onConflict: 'platform,external_id', ignoreDuplicates: true })
+      .insert(rows)
       .select('id');
 
     return NextResponse.json({
