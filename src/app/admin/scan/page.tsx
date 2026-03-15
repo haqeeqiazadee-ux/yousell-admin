@@ -124,12 +124,15 @@ function ScanPageContent() {
   }
 
   async function fetchHistory() {
-    const { data } = await getSupabase()
-      .from('scan_history')
-      .select('*')
-      .order('started_at', { ascending: false })
-      .limit(10)
-    if (data) setHistory(data)
+    try {
+      const { data: { session } } = await getSupabase().auth.getSession()
+      const res = await fetch('/api/admin/scan', {
+        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      if (data.scans) setHistory(data.scans)
+    } catch {}
   }
 
   function startConfirm() {
@@ -155,11 +158,17 @@ function ScanPageContent() {
       })
 
       if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.error || 'Failed to start scan')
+        const text = await res.text()
+        let errorMsg = `Server error (${res.status})`
+        try { errorMsg = JSON.parse(text).error || errorMsg } catch {}
+        throw new Error(errorMsg)
       }
 
-      const data = await res.json()
+      const text = await res.text()
+      let data
+      try { data = JSON.parse(text) } catch {
+        throw new Error(`Invalid response from server: ${text.slice(0, 200)}`)
+      }
       const id = data.jobId
 
       // If direct scan returned completed immediately, skip polling

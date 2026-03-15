@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireAdmin } from '@/lib/auth/roles';
 
-// ── Mock product generation (matches backend/src/lib/mock-data.ts) ──
+// ── Pre-flight: verify critical env vars ──
+
+function checkEnvVars(): string | null {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return 'NEXT_PUBLIC_SUPABASE_URL is not set. Add it to Netlify env vars and redeploy.';
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return 'SUPABASE_SERVICE_ROLE_KEY is not set. Add it to Netlify env vars and redeploy.';
+  return null;
+}
+
+// ── Mock product generation ──
 
 type Platform = 'tiktok' | 'amazon' | 'shopify' | 'pinterest' | 'digital' | 'ai_affiliate' | 'physical_affiliate';
 
@@ -97,7 +104,6 @@ function generateProducts(mode: string) {
   for (const platform of platforms) {
     const templates = PLATFORM_TEMPLATES[platform];
     const count = Math.min(perPlatform, templates.length);
-    // Shuffle and pick
     const shuffled = [...templates].sort(() => Math.random() - 0.5).slice(0, count);
 
     for (const t of shuffled) {
@@ -163,28 +169,18 @@ async function runDirectScan(mode: string, userId: string, clientId?: string) {
     .single();
 
   if (scanErr || !scan) {
-    throw new Error(`Failed to create scan record: ${scanErr?.message || 'unknown'}`);
+    throw new Error(`scan_history insert failed: ${scanErr?.message || 'no data returned'}`);
   }
 
   const scanId = scan.id;
 
   try {
-    // 2. Update progress
-    await admin
-      .from('scan_history')
-      .update({ progress: 20, log: [{ step: 'Generating product intelligence...', ts: new Date().toISOString() }] })
-      .eq('id', scanId);
-
-    // 3. Generate products
+    // 2. Generate products
     const products = generateProducts(mode);
 
-    await admin
-      .from('scan_history')
-      .update({ progress: 50, log: [{ step: 'Inserting products...', ts: new Date().toISOString() }] })
-      .eq('id', scanId);
-
-    // 4. Insert products into DB
+    // 3. Insert products into DB
     let insertedCount = 0;
+    let productError: string | null = null;
     if (products.length > 0) {
       const { data: inserted, error: insertErr } = await admin
         .from('products')
@@ -192,6 +188,7 @@ async function runDirectScan(mode: string, userId: string, clientId?: string) {
         .select('id, final_score');
 
       if (insertErr) {
+        productError = insertErr.message;
         console.error('Product insert error:', insertErr);
       } else {
         insertedCount = inserted?.length ?? 0;
@@ -200,7 +197,7 @@ async function runDirectScan(mode: string, userId: string, clientId?: string) {
 
     const hotCount = products.filter(p => (p.final_score as number) >= 80).length;
 
-    // 5. Mark completed
+    // 4. Mark completed (even if product insert had errors, the scan itself completed)
     await admin
       .from('scan_history')
       .update({
@@ -212,7 +209,7 @@ async function runDirectScan(mode: string, userId: string, clientId?: string) {
       })
       .eq('id', scanId);
 
-    return { scanId, productsFound: insertedCount, hotProducts: hotCount };
+    return { scanId, productsFound: insertedCount, hotProducts: hotCount, productError };
   } catch (error) {
     await admin
       .from('scan_history')
@@ -225,14 +222,27 @@ async function runDirectScan(mode: string, userId: string, clientId?: string) {
 // ── Route handlers ──
 
 export async function POST(req: NextRequest) {
+  // Pre-flight: check env vars
+  const envError = checkEnvVars();
+  if (envError) {
+    return NextResponse.json({ error: `Configuration error: ${envError}` }, { status: 500 });
+  }
+
   let user;
   try {
     user = await requireAdmin();
-  } catch {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Unauthorized';
+    return NextResponse.json({ error: `Auth failed: ${msg}` }, { status: 401 });
   }
 
-  const body = await req.json();
+  let body;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+  }
+
   const mode = body.mode || 'quick';
   const clientId = body.clientId;
 
@@ -245,11 +255,13 @@ export async function POST(req: NextRequest) {
       step: 'Scan complete!',
       productsFound: result.productsFound,
       hotProducts: result.hotProducts,
+      ...(result.productError ? { warning: `Products partially failed: ${result.productError}` } : {}),
     });
   } catch (error) {
-    console.error('Direct scan failed:', error);
+    const msg = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Direct scan failed:', msg);
     return NextResponse.json(
-      { error: 'Scan failed. Please try again.' },
+      { error: `Scan failed: ${msg}` },
       { status: 500 }
     );
   }
@@ -258,20 +270,21 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     await requireAdmin();
-  } catch {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Unauthorized';
+    return NextResponse.json({ error: `Auth failed: ${msg}` }, { status: 401 });
   }
 
   const jobId = req.nextUrl.searchParams.get('jobId');
 
-  // Check backend status
   if (req.nextUrl.searchParams.get('check') === 'status') {
     return NextResponse.json({ configured: true });
   }
 
-  // If jobId provided, look up scan_history
+  // Use admin client for all queries to bypass RLS
+  const admin = createAdminClient();
+
   if (jobId) {
-    const admin = createAdminClient();
     const { data: scan } = await admin
       .from('scan_history')
       .select('*')
@@ -292,16 +305,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Scan not found' }, { status: 404 });
   }
 
-  // No jobId — return scan history
-  const supabase = await createClient();
-  const { data: scans, error } = await supabase
+  // No jobId — return scan history (using admin client to bypass RLS)
+  const { data: scans, error } = await admin
     .from('scan_history')
     .select('*')
     .order('started_at', { ascending: false })
     .limit(50);
 
   if (error) {
-    return NextResponse.json({ error: 'Failed to fetch scan history' }, { status: 500 });
+    return NextResponse.json({ error: `Failed to fetch scan history: ${error.message}` }, { status: 500 });
   }
 
   return NextResponse.json({ scans });
@@ -310,8 +322,9 @@ export async function GET(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     await requireAdmin();
-  } catch {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Unauthorized';
+    return NextResponse.json({ error: `Auth failed: ${msg}` }, { status: 401 });
   }
 
   const jobId = req.nextUrl.searchParams.get('jobId');
