@@ -124,12 +124,15 @@ function ScanPageContent() {
   }
 
   async function fetchHistory() {
-    const { data } = await getSupabase()
-      .from('scan_history')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(10)
-    if (data) setHistory(data)
+    try {
+      const { data: { session } } = await getSupabase().auth.getSession()
+      const res = await fetch('/api/admin/scan', {
+        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      if (data.scans) setHistory(data.scans)
+    } catch {}
   }
 
   function startConfirm() {
@@ -145,21 +148,43 @@ function ScanPageContent() {
 
     try {
       const { data: { session } } = await getSupabase().auth.getSession()
-      const res = await fetch('/api/admin/scan', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-        },
-        body: JSON.stringify({ mode: selectedMode, query, ...(selectedClientId ? { clientId: selectedClientId } : {}) }),
-      })
+
+      // 15-second timeout to prevent infinite spinner
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 15000)
+
+      let res: Response
+      try {
+        res = await fetch('/api/admin/scan', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+          },
+          body: JSON.stringify({ mode: selectedMode, query, ...(selectedClientId ? { clientId: selectedClientId } : {}) }),
+          signal: controller.signal,
+        })
+      } catch (fetchErr) {
+        clearTimeout(timeoutId)
+        if (fetchErr instanceof DOMException && fetchErr.name === 'AbortError') {
+          throw new Error('Scan request timed out after 15 seconds. The API may not be responding. Visit /api/admin/scan/health in your browser to diagnose.')
+        }
+        throw new Error(`Network error: ${fetchErr instanceof Error ? fetchErr.message : 'Failed to reach server'}`)
+      }
+      clearTimeout(timeoutId)
 
       if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.error || 'Failed to start scan')
+        const text = await res.text()
+        let errorMsg = `Server error (${res.status})`
+        try { errorMsg = JSON.parse(text).error || errorMsg } catch {}
+        throw new Error(errorMsg)
       }
 
-      const data = await res.json()
+      const text = await res.text()
+      let data
+      try { data = JSON.parse(text) } catch {
+        throw new Error(`Invalid response from server: ${text.slice(0, 200)}`)
+      }
       const id = data.jobId
 
       // If direct scan returned completed immediately, skip polling

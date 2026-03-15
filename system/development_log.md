@@ -1144,3 +1144,109 @@ Implemented a self-contained scan directly in the Next.js API route:
 
 ### Build Status
 - Build: PASS (0 errors, 0 warnings)
+
+------------------------------------------------------------
+
+## Session: 2026-03-15 — Fix Scan Timeout + History Column
+
+### Problem
+Scan still stuck after previous fix. Three root causes found:
+
+### Root Causes & Fixes
+
+1. **Backend URL timeout** — `BACKEND_URL` stored in `admin_settings` (from
+   saving Apify keys via Settings page) caused `fetch()` to hang for 30+s
+   waiting for TCP timeout on a non-existent Express backend. Netlify's 10s
+   function timeout killed the request before the direct scan fallback could
+   execute. **Fix:** Added `AbortController` with 5s timeout on POST, 3s on
+   GET/DELETE.
+
+2. **Wrong column name** — `scan_history` table has `started_at`, not
+   `created_at`. Both the API route GET and frontend `fetchHistory()` queried
+   `.order('created_at', ...)` which silently failed. History always showed
+   "No scans yet." **Fix:** Changed to `started_at`.
+
+3. **Not an API key issue** — TikTok/Amazon keys being unconfigured does NOT
+   affect the scan. The direct scan uses mock product generation (no external
+   API calls). Apify keys are only needed for a future live scraping backend.
+
+### Files Modified
+- `src/app/api/admin/scan/route.ts` — AbortController timeouts, column fix
+- `src/app/admin/scan/page.tsx` — column fix in fetchHistory
+
+### Build Status
+- Build: PASS
+
+------------------------------------------------------------
+
+## Session: 2026-03-15 — Live DB Testing & Schema Fix
+
+### Investigation (via Supabase REST API)
+
+Tested directly against the live Supabase database and found:
+
+1. **BACKEND_URL was `https://admin.yousell.online/admin/setup`** — pointing to
+   the admin site itself, not an Express backend. Every scan POST was hitting
+   the setup page, getting HTML back, and failing. **Removed from admin_settings.**
+
+2. **Products table missing columns** — `source`, `url`, `sales_count`,
+   `review_count`, `rating` exist in migration SQL but were never applied to
+   the live database. The product insert was silently failing with
+   `Could not find the 'source' column`. **Fixed by removing these fields from
+   generateProducts().** Changed `source` to `channel` (which exists).
+
+3. **scan_history table verified** — insert/update works correctly.
+
+4. **Confirmed stored API keys** — APIFY_API_TOKEN, ANTHROPIC_API_KEY,
+   RAPIDAPI_KEY, RESEND_API_KEY are all saved. TikTok/Amazon keys are NOT
+   needed for the direct scan (mock data generation).
+
+### Database Changes (Live)
+- Removed `BACKEND_URL` from `admin_settings` (key: `api_keys`)
+
+### Files Modified
+- `src/app/api/admin/scan/route.ts` — removed non-existent columns from product insert
+
+### Build Status
+- Build: PASS
+
+------------------------------------------------------------
+
+## Session: 2026-03-15 — Full Diagnostic & E2E Testing Strategy
+
+### Testing Strategy Applied
+
+| Test Type | What Was Checked | Result |
+|-----------|-----------------|--------|
+| E2E | Full scan flow: frontend → API → Supabase → products table | Found 3 issues |
+| Integration | Auth chain: middleware → getUser → check_user_role RPC → roles | PASS |
+| Integration | Supabase clients: server (anon+cookies), admin (service key), browser | Found RLS issue |
+| Integration | DB schema: all columns in products/scan_history match code | PASS (after prior fix) |
+| Smoke | scan_history INSERT/UPDATE/SELECT, products INSERT/SELECT | PASS with service key, FAIL with anon key |
+| Regression | Build passes, no working code broken | PASS |
+
+### Issues Found & Fixed
+
+1. **RLS blocks scan_history reads** (CRITICAL)
+   - `scan_history` has RLS: `USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))`
+   - Browser and server anon clients get 0 results
+   - Fix: All scan_history queries now use admin client (service role key)
+   - Fix: `fetchHistory()` calls API route instead of direct Supabase
+
+2. **Generic error messages** (CRITICAL for diagnosis)
+   - All errors returned "Scan failed. Please try again."
+   - Fix: Specific error messages for auth, env vars, DB failures
+
+3. **No env var pre-flight check** (CRITICAL)
+   - If SUPABASE_SERVICE_ROLE_KEY not set on Netlify, admin client fails silently
+   - Fix: `checkEnvVars()` runs before scan, returns clear error if missing
+
+### User Action Required
+- Verify Netlify env vars: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
+
+### Files Modified
+- `src/app/api/admin/scan/route.ts` — env check, detailed errors, admin client for all queries
+- `src/app/admin/scan/page.tsx` — fetchHistory via API, safer JSON parsing
+
+### Build Status
+- Build: PASS
