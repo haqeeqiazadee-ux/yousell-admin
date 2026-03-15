@@ -1400,6 +1400,48 @@ All 8 intelligence API routes now work self-contained on Netlify without needing
 
 ------------------------------------------------------------
 
+## Session: 2026-03-15 — SaaS Subscription Layer & Client Platform Gating
+
+### What Was Done
+
+#### 1. requireClient() Auth Middleware
+Created `src/lib/auth/require-client.ts` — server-side helper for dashboard API routes that authenticates user, verifies client role, resolves client record, fetches subscription, and maps plan capabilities.
+
+#### 2. Subscription Context Provider + Banner
+- `src/components/subscription-context.tsx` — React context providing `useSubscription()` hook with plan/engines/limits
+- `src/components/subscription-banner.tsx` — contextual banners: upgrade prompt (no sub), cancellation warning, or clean (active)
+
+#### 3. Engine Gate Component
+Created `src/components/engine-gate.tsx` — wraps dashboard features. Shows children if plan includes required engine, locked upgrade prompt otherwise. Maps: discovery→Starter, content→Growth, influencer→Professional, store_integration→Enterprise.
+
+#### 4. Dashboard Layout Updated
+Wrapped in `<SubscriptionProvider>` + `<SubscriptionBanner>`. All client pages now subscription-aware.
+
+#### 5. Engine Gating Applied
+- Content Studio → gated by `content` engine (Growth+)
+- Store Integrations → gated by `store_integration` engine (Enterprise)
+
+#### 6. Public Pricing Page
+Created `src/app/pricing/page.tsx` — static, SEO-friendly with 4 plan cards, feature highlights, FAQ. Client domain root redirects to /pricing for unauthenticated visitors.
+
+### Files Created
+- `src/lib/auth/require-client.ts`
+- `src/components/subscription-context.tsx`
+- `src/components/subscription-banner.tsx`
+- `src/components/engine-gate.tsx`
+- `src/app/pricing/page.tsx`
+
+### Files Modified
+- `src/app/dashboard/layout.tsx`, `src/app/dashboard/content/page.tsx`, `src/app/dashboard/integrations/page.tsx`, `src/middleware.ts`
+
+### Build Status — PASS (0 errors, 0 warnings)
+
+### v7 Spec Progress
+- Phase 1 (Stripe subscription billing): COMPLETE
+- Phase 2 (Engine toggles + Platform gating): COMPLETE; Store integration pending OAuth
+
+------------------------------------------------------------
+
 ## Session: 2026-03-15 — SaaS Dashboard Metrics, Analytics Page, Allocate Workflow
 
 ### What Was Done

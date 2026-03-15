@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Sparkles, FileText, Clock, CheckCircle, AlertCircle } from 'lucide-react'
+import { EngineGate } from '@/components/engine-gate'
 
 interface ContentItem {
   id: string
@@ -37,6 +38,7 @@ export default function ContentPage() {
   }, [])
 
   return (
+    <EngineGate engine="content" featureName="Content Studio">
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -102,5 +104,6 @@ export default function ContentPage() {
         </div>
       )}
     </div>
+    </EngineGate>
   )
 }

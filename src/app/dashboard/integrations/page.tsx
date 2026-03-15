@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Store, Link2, Unlink, ShoppingBag, ShoppingCart } from 'lucide-react'
+import { EngineGate } from '@/components/engine-gate'
 
 interface Channel {
   id: string
@@ -35,6 +36,7 @@ export default function IntegrationsPage() {
   const getConnectedChannel = (type: string) => channels.find(c => c.channel_type === type)
 
   return (
+    <EngineGate engine="store_integration" featureName="Store Integrations">
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Store Integrations</h1>
@@ -99,5 +101,6 @@ export default function IntegrationsPage() {
         </div>
       )}
     </div>
+    </EngineGate>
   )
 }
