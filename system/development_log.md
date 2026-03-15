@@ -1302,3 +1302,98 @@ All 30 admin API routes used `requireAdmin()` which calls `cookies()` from `next
 Run `supabase/migrations/016_missing_tables_consolidated.sql` in the Supabase SQL Editor to create the 6 missing tables. Without this, TikTok Videos/Signals, Product Clusters, Creator Matches, and Ads pages will show 500 errors.
 
 ### Build Status — PASS
+
+------------------------------------------------------------
+
+## Session: 2026-03-15 — Intelligence Engines (Direct Implementation)
+
+### What Was Done
+Built 6 intelligence engines that run directly in Next.js API routes — **no Express backend required**. All engines previously proxied to an Express backend on Railway; they now execute self-contained within Netlify functions.
+
+### Engines Built
+
+1. **Discovery Engine** (`src/lib/engines/discovery.ts`)
+   - Wires real Apify/RapidAPI providers into the scan route
+   - Calls TikTok, Amazon, Shopify, Pinterest providers in parallel
+   - Scores products using the 3-pillar formula (trend × 0.40 + viral × 0.35 + profit × 0.25)
+   - Falls back to mock data if no API keys configured
+   - Scan route now tries live scan first, mock fallback second
+
+2. **TikTok Discovery Engine** (`src/lib/engines/tiktok-discovery.ts`)
+   - Calls Apify `clockworks~tiktok-scraper` for video discovery
+   - Maps raw Apify responses to internal TikTokVideo schema
+   - Extracts hashtags from description, challenges, and hashtag arrays
+   - Detects product links from productLink, commerceInfo, sticker URLs
+   - Batch upserts videos to `tiktok_videos` table (25 per batch)
+   - Auto-runs hashtag signal analysis after discovery
+   - Hashtag analysis: aggregates by tag, calculates velocity metrics (video growth rate, view velocity, creator growth rate, engagement rate, product video %)
+
+3. **Product Clustering Engine** (`src/lib/engines/clustering.ts`)
+   - Groups products by Jaccard similarity on tags + tokenized title words
+   - Configurable similarity threshold (default 0.3) and minimum score
+   - Greedy clustering: assigns each product to most similar existing cluster or creates new
+   - Stores clusters in `product_clusters` and members in `product_cluster_members`
+   - Calculates cluster-level metrics: avg score, price range, dominant trend stage, platform mix
+
+4. **Trend Detection Engine** (`src/lib/engines/trend-detection.ts`)
+   - Aggregates product tags and categories into frequency signals
+   - Enriches with TikTok hashtag velocity data
+   - Scores trends based on: product frequency, avg score, view volume, growth rate, multi-platform presence
+   - Classifies direction: rising/stable/declining based on growth rate
+   - Upserts to `trend_keywords` table
+
+5. **Creator Matching Engine** (`src/lib/engines/creator-matching.ts`)
+   - Pairs products (score 60+) with influencers from the database
+   - Match scoring: niche alignment (35%), engagement fit (30%), price range fit (20%), platform match, conversion score
+   - Niche alignment: keyword overlap between product tags/title and influencer niche
+   - Price range fit: maps influencer tier (nano/micro/mid/macro) to optimal price ranges
+   - Estimates: views, conversions, profit per match
+   - Stores in `creator_product_matches`
+
+6. **Ad Intelligence Engine** (`src/lib/engines/ad-intelligence.ts`)
+   - Discovers ads from Meta Ads Library (free, via Apify fallback)
+   - Discovers TikTok ad-like content via Apify scraper (filters for commercial indicators)
+   - Calculates days running, scaling status (>100k impressions)
+   - Stores in `ads` table
+
+7. **Opportunity Feed Engine** (`src/lib/engines/opportunity-feed.ts`)
+   - Aggregates products with enrichment data from all engines
+   - Joins: cluster memberships, creator matches, allocations, blueprints, financial models
+   - Returns unified opportunity objects with tier classification
+   - Calculates feed-level stats: total, hot/warm/watch/cold counts, avg score, top platform/category
+   - New API route: `GET /api/admin/opportunities`
+
+### API Routes Updated (No Longer Proxy to Express)
+- `POST /api/admin/scan` — Uses live discovery engine, falls back to mock
+- `POST /api/admin/tiktok/discover` — Direct Apify video discovery
+- `POST /api/admin/clusters` — Direct clustering engine
+- `POST /api/admin/creator-matches` — Direct creator matching
+- `POST /api/admin/ads` — Direct ad discovery
+- `PUT /api/admin/trends` — Run trend detection engine
+- `POST /api/admin/shopify/scan` — Direct Shopify product search
+- `POST /api/admin/amazon/scan` — Direct Amazon product search
+
+### Files Created
+- `src/lib/engines/discovery.ts`
+- `src/lib/engines/tiktok-discovery.ts`
+- `src/lib/engines/clustering.ts`
+- `src/lib/engines/trend-detection.ts`
+- `src/lib/engines/creator-matching.ts`
+- `src/lib/engines/ad-intelligence.ts`
+- `src/lib/engines/opportunity-feed.ts`
+- `src/app/api/admin/opportunities/route.ts`
+
+### Files Modified
+- `src/app/api/admin/scan/route.ts` — Live scan with fallback
+- `src/app/api/admin/tiktok/discover/route.ts` — Direct engine
+- `src/app/api/admin/clusters/route.ts` — Direct engine
+- `src/app/api/admin/creator-matches/route.ts` — Direct engine
+- `src/app/api/admin/ads/route.ts` — Direct engine
+- `src/app/api/admin/trends/route.ts` — Added PUT handler
+- `src/app/api/admin/shopify/scan/route.ts` — Direct provider
+- `src/app/api/admin/amazon/scan/route.ts` — Direct provider
+
+### Build Status — PASS (0 errors, 0 warnings)
+
+### Architecture Impact
+All 8 intelligence API routes now work self-contained on Netlify without needing the Express backend on Railway. The Express backend + BullMQ worker remains available for future heavy-duty scheduled jobs but is no longer required for any admin-triggered operation.
