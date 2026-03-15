@@ -1683,3 +1683,49 @@ All webhooks: upsert orders to DB, send status emails for shipped/delivered
 - `src/app/dashboard/orders/page.tsx` — Enhanced order tracking UI
 
 ### Phase 4 Build Status — PASS (0 errors, 0 warnings)
+
+------------------------------------------------------------
+
+## Session: 2026-03-15 — Bug Fix Batch (BUG-036/037/031/042/050/051/052/063)
+
+### Scoring Consistency (BUG-036 + BUG-037)
+
+**BUG-036: Backend vs frontend scoring interface mismatch**
+Frontend `CompositeScore` returned `{ viral_score, profitability_score, overall_score }` while backend returned `{ trend_score, viral_score, profit_score, final_score }`. Unified both to use `{ trend_score, viral_score, profit_score, final_score }`. Removed `overall_score` alias from backend `ScoringResult`. Fixed `enrich-product.ts` which referenced the removed `overall_score` field.
+
+**BUG-037: overall_score vs final_score alias conflict**
+Resolved by removing `overall_score` entirely. Both frontend and backend now use `final_score` as the canonical field, matching the DB column name.
+
+### Auto-Rejection Rules (BUG-063) — Already Fixed
+Verified all 8 auto-rejection rules are present in both `src/lib/scoring/composite.ts` and `src/app/api/admin/financial/route.ts`. No fix needed.
+
+### Provider Re-exports (BUG-042)
+No duplicate provider files found — subdirectory structure is clean. Added missing re-exports for `digital` and `affiliate` modules to `src/lib/providers/index.ts`.
+
+### Parallel Scanning (BUG-050)
+Backend `product-scan.ts` used sequential `for...of` with `await` for platform scraping. Replaced with `Promise.all()` so all platforms scrape concurrently. Full scan time reduced from sum of all platforms to time of slowest platform.
+
+### Worker Graceful Shutdown (BUG-051)
+Added `SIGTERM` and `SIGINT` signal handlers to `backend/src/worker.ts`. On shutdown signal, all workers close gracefully (waiting for in-flight jobs to finish), then Redis disconnects cleanly.
+
+### Dead Letter Queue + Retry Config (BUG-052)
+Added `defaultJobOptions` to `backend/src/lib/queue.ts` with 3 retry attempts, exponential backoff (5s base), and retention policies (keep 1000 completed, 5000 failed). Updated all 14 workers in `backend/src/jobs/index.ts` to use shared `defaultOpts` with backoff strategy.
+
+### fetchTrends Silent Failure (BUG-031)
+Added `console.error('TikTok trends fetch error:', error)` to the empty catch block in `backend/src/lib/providers.ts:fetchTrends()`. Now consistent with all other provider error handling.
+
+### Frontend/Backend API Unification (BUG-040) — Documented
+Frontend providers use Apify actors (per CLAUDE.md rule 6), backend workers use direct APIs (TikTok Shop, RainForest, Pinterest, Shopify scraper). Both write consistent field schemas to the `products` table. This is by design — backend workers are a secondary path that degrades gracefully when API keys aren't set. No code change needed; architectural note recorded.
+
+### Files Modified
+- `src/lib/scoring/composite.ts` — Unified CompositeScore interface (BUG-036/037)
+- `backend/src/lib/scoring.ts` — Removed overall_score alias (BUG-037)
+- `backend/src/jobs/enrich-product.ts` — Fixed overall_score reference (BUG-036)
+- `backend/src/jobs/product-scan.ts` — Promise.all parallel scraping (BUG-050)
+- `backend/src/worker.ts` — Graceful shutdown handlers (BUG-051)
+- `backend/src/lib/queue.ts` — Default job options with retry/backoff (BUG-052)
+- `backend/src/jobs/index.ts` — All workers use shared defaultOpts (BUG-052)
+- `backend/src/lib/providers.ts` — fetchTrends error logging (BUG-031)
+- `src/lib/providers/index.ts` — Added digital/affiliate re-exports (BUG-042)
+
+### Build Status — PASS (0 errors, 0 warnings)

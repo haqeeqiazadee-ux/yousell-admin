@@ -57,14 +57,19 @@ export async function processProductScan(job: Job<ProductScanJobData>) {
   const allProducts: RawProduct[] = [];
 
   try {
-    // Scrape each platform
-    for (const step of steps) {
-      const products = await scrapePlatform(step.platform, query);
-      allProducts.push(...products);
+    // Scrape all platforms in parallel
+    const scrapeResults = await Promise.all(
+      steps.map(async (step) => {
+        const products = await scrapePlatform(step.platform, query);
+        return { products, weight: step.weight };
+      })
+    );
 
-      totalProgress += step.weight;
-      await job.updateProgress(totalProgress);
+    for (const result of scrapeResults) {
+      allProducts.push(...result.products);
+      totalProgress += result.weight;
     }
+    await job.updateProgress(totalProgress);
 
     // Enqueue trend scan as a separate job
     await trendQueue.add("trend-scan", {

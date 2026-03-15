@@ -22,5 +22,12 @@ export type { InfluencerResult } from "./influencer";
 export { searchSuppliers, getSupplierConfig } from "./supplier";
 export type { SupplierResult } from "./supplier";
 
+// === Digital Products ===
+export { searchDigitalProducts, getDigitalConfig } from "./digital";
+
+// === Affiliate ===
+export { getAIAffiliatePrograms, getPhysicalAffiliateProducts } from "./affiliate";
+export type { AffiliateProgram } from "./affiliate";
+
 // === Shared Types ===
 export type { ProductResult, TrendResult, ProviderConfig, CompetitorResult } from "./types";
