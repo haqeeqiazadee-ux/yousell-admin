@@ -30,7 +30,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Block client routes on admin subdomain
-  if (isAdminSubdomain && (pathname.startsWith('/dashboard') || pathname === '/login')) {
+  if (isAdminSubdomain && (pathname.startsWith('/dashboard') || pathname === '/login' || pathname === '/signup')) {
     return NextResponse.redirect(new URL('/admin', request.url))
   }
 
@@ -53,9 +53,13 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Redirect logged-in users away from login page
+  // Redirect logged-in users away from login/signup pages
   if (pathname === '/admin/login' && user) {
     return NextResponse.redirect(new URL('/admin', request.url))
+  }
+
+  if ((pathname === '/login' || pathname === '/signup') && user) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
   // Client dashboard routes: require authenticated user with client role
@@ -77,4 +81,4 @@ export async function middleware(request: NextRequest) {
 
   return supabaseResponse
 }
-export const config = { matcher: ['/', '/admin/:path*', '/dashboard/:path*', '/login'] }
+export const config = { matcher: ['/', '/admin/:path*', '/dashboard/:path*', '/login', '/signup'] }

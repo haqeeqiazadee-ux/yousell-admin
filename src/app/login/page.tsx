@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
 function getSupabase() {
   return createBrowserClient(
@@ -107,6 +108,13 @@ export default function ClientLoginPage() {
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
+
+          <p className="text-center text-sm text-gray-500 mt-6">
+            Don&apos;t have an account?{' '}
+            <Link href="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+              Sign Up
+            </Link>
+          </p>
         </div>
       </div>
     </div>
