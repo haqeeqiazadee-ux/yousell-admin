@@ -1,33 +1,16 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { NextRequest, NextResponse } from "next/server";
+import { authenticateClientLite } from "@/lib/auth/client-api-auth";
+import { createAdminClient } from "@/lib/supabase/admin";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const supabase = await createClient();
+    const client = await authenticateClientLite(req);
+    const admin = createAdminClient();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Find the client record matching the authenticated user's email
-    const { data: client, error: clientError } = await supabase
-      .from("clients")
-      .select("id")
-      .eq("email", user.email!)
-      .single();
-
-    if (clientError || !client) {
-      return NextResponse.json({ error: "Client not found" }, { status: 404 });
-    }
-
-    const { data: requests, error } = await supabase
+    const { data: requests, error } = await admin
       .from("product_requests")
       .select("*")
-      .eq("client_id", client.id)
+      .eq("client_id", client.clientId)
       .order("requested_at", { ascending: false });
 
     if (error) {
@@ -35,51 +18,29 @@ export async function GET() {
     }
 
     return NextResponse.json({ requests: requests || [] });
-  } catch {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Internal error";
+    const status = message.includes("Unauthorized") || message.includes("No Authorization") ? 401 : message.includes("Not a client") ? 403 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Find the client record matching the authenticated user's email
-    const { data: client, error: clientError } = await supabase
-      .from("clients")
-      .select("id")
-      .eq("email", user.email!)
-      .single();
-
-    if (clientError || !client) {
-      return NextResponse.json({ error: "Client not found" }, { status: 404 });
-    }
+    const client = await authenticateClientLite(request);
+    const admin = createAdminClient();
 
     const body = await request.json();
     const { platform, note } = body;
 
     if (!platform) {
-      return NextResponse.json(
-        { error: "Platform is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Platform is required" }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await admin
       .from("product_requests")
       .insert({
-        client_id: client.id,
+        client_id: client.clientId,
         platform,
         note: note || null,
         status: "pending",
@@ -92,10 +53,9 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ request: data }, { status: 201 });
-  } catch {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Internal error";
+    const status = message.includes("Unauthorized") || message.includes("No Authorization") ? 401 : message.includes("Not a client") ? 403 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }

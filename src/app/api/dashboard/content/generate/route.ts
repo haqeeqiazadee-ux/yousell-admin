@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { authenticateClient } from '@/lib/auth/client-api-auth'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 const CONTENT_TEMPLATES: Record<string, { systemPrompt: string; maxTokens: number }> = {
   product_description: {
@@ -26,32 +27,12 @@ const CONTENT_TEMPLATES: Record<string, { systemPrompt: string; maxTokens: numbe
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const { data: client } = await supabase
-      .from('clients')
-      .select('id')
-      .eq('email', user.email)
-      .single()
-
-    if (!client) return NextResponse.json({ error: 'Client not found' }, { status: 404 })
-
-    // Check subscription has content engine access
-    const { data: sub } = await supabase
-      .from('subscriptions')
-      .select('plan, status')
-      .eq('client_id', client.id)
-      .single()
-
-    if (!sub || sub.status !== 'active') {
-      return NextResponse.json({ error: 'Active subscription required' }, { status: 403 })
-    }
+    const clientCtx = await authenticateClient(request)
+    const admin = createAdminClient()
 
     // Content engine requires Growth plan or higher
     const contentPlans = ['growth', 'professional', 'enterprise']
-    if (!contentPlans.includes(sub.plan)) {
+    if (!clientCtx.subscription || !contentPlans.includes(clientCtx.subscription.plan)) {
       return NextResponse.json({ error: 'Content engine requires Growth plan or higher' }, { status: 403 })
     }
 
@@ -68,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get product info for context
-    const { data: product } = await supabase
+    const { data: product } = await admin
       .from('products')
       .select('title, description, price, source, category, final_score, trend_stage')
       .eq('id', productId)
@@ -78,7 +59,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
-    // Build the prompt with product context
     const productContext = [
       `Product: ${product.title}`,
       product.description ? `Description: ${product.description}` : null,
@@ -92,16 +72,16 @@ export async function POST(request: NextRequest) {
     const prompt = `Generate ${contentType.replace(/_/g, ' ')} for this product:\n\n${productContext}`
 
     // Insert queue entry as pending
-    const { data: queueEntry, error: insertError } = await supabase
+    const { data: queueEntry, error: insertError } = await admin
       .from('content_queue')
       .insert({
-        client_id: client.id,
+        client_id: clientCtx.clientId,
         product_id: productId,
         content_type: contentType,
         channel: channel || null,
         prompt,
         status: 'pending',
-        requested_by: user.id,
+        requested_by: clientCtx.userId,
       })
       .select()
       .single()
@@ -114,8 +94,7 @@ export async function POST(request: NextRequest) {
     // Generate content using Anthropic Claude Haiku (cost-optimized per v7 spec)
     const anthropicKey = process.env.ANTHROPIC_API_KEY
     if (!anthropicKey) {
-      // Update to failed if no API key
-      await supabase
+      await admin
         .from('content_queue')
         .update({ status: 'failed', error: 'AI service not configured' })
         .eq('id', queueEntry.id)
@@ -151,8 +130,7 @@ export async function POST(request: NextRequest) {
       const result = await response.json()
       const generatedContent = result.content?.[0]?.text || ''
 
-      // Update queue entry with generated content
-      await supabase
+      await admin
         .from('content_queue')
         .update({
           generated_content: generatedContent,
@@ -166,8 +144,8 @@ export async function POST(request: NextRequest) {
       const periodStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
       const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString()
 
-      await supabase.from('usage_tracking').insert({
-        client_id: client.id,
+      await admin.from('usage_tracking').insert({
+        client_id: clientCtx.clientId,
         resource: 'content',
         action: contentType,
         count: 1,
@@ -186,7 +164,7 @@ export async function POST(request: NextRequest) {
       const errorMessage = aiError instanceof Error ? aiError.message : 'Unknown AI error'
       console.error('[Content Generate] AI error:', errorMessage)
 
-      await supabase
+      await admin
         .from('content_queue')
         .update({ status: 'failed', error: errorMessage })
         .eq('id', queueEntry.id)
@@ -199,6 +177,8 @@ export async function POST(request: NextRequest) {
     }
   } catch (err) {
     console.error('[Content Generate] Error:', err)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    const message = err instanceof Error ? err.message : 'Internal error'
+    const status = message.includes('Unauthorized') || message.includes('No Authorization') ? 401 : message.includes('Not a client') ? 403 : 500
+    return NextResponse.json({ error: message }, { status })
   }
 }

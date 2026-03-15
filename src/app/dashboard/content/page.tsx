@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { authFetch } from '@/lib/auth-fetch'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -69,7 +70,7 @@ export default function ContentPage() {
   const [channel, setChannel] = useState('')
 
   const loadContent = useCallback(() => {
-    fetch('/api/dashboard/content')
+    authFetch('/api/dashboard/content')
       .then(r => r.json())
       .then(data => setItems(data.items || []))
       .catch(console.error)
@@ -79,7 +80,7 @@ export default function ContentPage() {
   useEffect(() => {
     loadContent()
     // Load allocated products for the generator
-    fetch('/api/dashboard/products')
+    authFetch('/api/dashboard/products')
       .then(r => r.json())
       .then(data => setProducts(data.products || []))
       .catch(console.error)
@@ -89,7 +90,7 @@ export default function ContentPage() {
     if (!selectedProduct || !contentType) return
     setGenerating(true)
     try {
-      const res = await fetch('/api/dashboard/content/generate', {
+      const res = await authFetch('/api/dashboard/content/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -1,28 +1,18 @@
-import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { authenticateClientLite } from '@/lib/auth/client-api-auth'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getStripe } from '@/lib/stripe'
 
 // POST — Create Stripe Customer Portal session
-export async function POST() {
+export async function POST(req: NextRequest) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const client = await authenticateClientLite(req)
+    const admin = createAdminClient()
 
-    const { data: client } = await supabase
-      .from('clients')
-      .select('id')
-      .eq('email', user.email)
-      .single()
-
-    if (!client) {
-      return NextResponse.json({ error: 'Client not found' }, { status: 404 })
-    }
-
-    const { data: subscription } = await supabase
+    const { data: subscription } = await admin
       .from('subscriptions')
       .select('stripe_customer_id')
-      .eq('client_id', client.id)
+      .eq('client_id', client.clientId)
       .single()
 
     if (!subscription?.stripe_customer_id) {
@@ -38,6 +28,8 @@ export async function POST() {
     return NextResponse.json({ url: session.url })
   } catch (err) {
     console.error('[Portal] Error:', err)
-    return NextResponse.json({ error: 'Failed to create portal session' }, { status: 500 })
+    const message = err instanceof Error ? err.message : 'Internal error'
+    const status = message.includes('Unauthorized') || message.includes('No Authorization') ? 401 : message.includes('Not a client') ? 403 : 500
+    return NextResponse.json({ error: message }, { status })
   }
 }

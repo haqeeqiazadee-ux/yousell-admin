@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
@@ -6,30 +7,65 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Package, FileText, LogOut, CreditCard, Link2, Sparkles, ShoppingBag } from "lucide-react";
 import { SubscriptionProvider } from "@/components/subscription-context";
 import { SubscriptionBanner } from "@/components/subscription-banner";
+import { DashboardMobileNav } from "@/components/dashboard-mobile-nav";
+
+// Force dynamic rendering — never statically cache dashboard pages
+export const dynamic = 'force-dynamic';
+
+interface ProfileData {
+  full_name: string | null;
+  email: string | null;
+  role: string;
+  avatar_url: string | null;
+}
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
+  let profile: ProfileData | null = null;
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
 
-  if (!user) {
-    redirect("/login");
-  }
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+    if (authError) {
+      console.error('[DashboardLayout] auth.getUser failed:', authError.message);
+    }
 
-  if (!profile || profile.role !== "client") {
-    redirect("/admin/unauthorized");
+    if (!user) {
+      // Check if cookies exist (middleware already validated auth)
+      const cookieStore = await cookies();
+      const hasSession = cookieStore.getAll().some(c => c.name.includes('auth-token'));
+      if (!hasSession) {
+        redirect("/login");
+      }
+      // Cookies exist but getUser failed — render with minimal profile
+      profile = { full_name: null, email: null, role: 'client', avatar_url: null };
+    } else {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("full_name, email, role, avatar_url")
+        .eq("id", user.id)
+        .single();
+
+      if (!profileData || profileData.role !== "client") {
+        redirect("/admin/unauthorized");
+      }
+
+      profile = profileData;
+    }
+  } catch (err) {
+    // If redirect was thrown, re-throw it
+    if (err && typeof err === 'object' && 'digest' in err) throw err;
+    console.error('[DashboardLayout] unexpected error:', err);
+    // Fallback: render with minimal profile
+    profile = { full_name: null, email: null, role: 'client', avatar_url: null };
   }
 
   const initials = profile.full_name
@@ -97,11 +133,14 @@ export default async function DashboardLayout({
               </Link>
             </nav>
 
+            {/* Mobile Menu Toggle */}
+            <DashboardMobileNav />
+
             {/* User Menu */}
             <div className="flex items-center gap-3">
               <div className="hidden sm:block text-right">
                 <p className="text-sm font-medium leading-none">
-                  {profile.full_name || profile.email}
+                  {profile.full_name || profile.email || "Client"}
                 </p>
                 <p className="text-xs text-muted-foreground">Client</p>
               </div>

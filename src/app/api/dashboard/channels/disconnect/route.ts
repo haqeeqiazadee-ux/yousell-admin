@@ -1,26 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { authenticateClientLite } from '@/lib/auth/client-api-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const { data: client } = await supabase
-      .from('clients')
-      .select('id')
-      .eq('email', user.email)
-      .single()
-
-    if (!client) return NextResponse.json({ error: 'Client not found' }, { status: 404 })
+    const client = await authenticateClientLite(request)
+    const admin = createAdminClient()
 
     const { channelId } = await request.json()
     if (!channelId) return NextResponse.json({ error: 'channelId required' }, { status: 400 })
-
-    // Use admin client to bypass RLS for the update
-    const admin = createAdminClient()
 
     // Verify the channel belongs to this client
     const { data: channel } = await admin
@@ -29,7 +17,7 @@ export async function POST(request: NextRequest) {
       .eq('id', channelId)
       .single()
 
-    if (!channel || channel.client_id !== client.id) {
+    if (!channel || channel.client_id !== client.clientId) {
       return NextResponse.json({ error: 'Channel not found' }, { status: 404 })
     }
 
@@ -49,6 +37,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (err) {
     console.error('[Channel Disconnect] Error:', err)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    const message = err instanceof Error ? err.message : 'Internal error'
+    const status = message.includes('Unauthorized') || message.includes('No Authorization') ? 401 : message.includes('Not a client') ? 403 : 500
+    return NextResponse.json({ error: message }, { status })
   }
 }

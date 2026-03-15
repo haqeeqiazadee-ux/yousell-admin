@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { authenticateAdmin } from "@/lib/auth/admin-api-auth";
 import { PROVIDERS, getEnvVar } from "@/lib/providers/config";
 import { PRICING_TIERS } from "@/lib/stripe";
 
@@ -9,21 +10,6 @@ function providerConnected(id: string, savedKeys: Record<string, string>): boole
   const p = PROVIDERS.find((pr) => pr.id === id);
   if (!p) return false;
   return p.envKeys.every((key) => !!getEnvVar(key) || !!savedKeys[key]);
-}
-
-// Token-based auth (same pattern as scan route — bypasses cookies() hang on Netlify)
-async function authenticateAdmin(req: NextRequest) {
-  const token = req.headers.get("authorization")?.replace("Bearer ", "");
-  if (!token) throw new Error("No Authorization header");
-
-  const admin = createAdminClient();
-  const { data: { user }, error } = await admin.auth.getUser(token);
-  if (error || !user) throw new Error(error?.message || "Invalid session");
-
-  const { data: role } = await admin.rpc("check_user_role", { user_id: user.id });
-  if (role !== "admin" && role !== "super_admin") throw new Error("Not admin");
-
-  return user;
 }
 
 export async function GET(req: NextRequest) {

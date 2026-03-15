@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { authFetch } from '@/lib/auth-fetch'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -50,7 +51,7 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/dashboard/orders')
+    authFetch('/api/dashboard/orders')
       .then(r => r.json())
       .then(data => setOrders(data.orders || []))
       .catch(console.error)

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface AllocatedProduct {
   id: string;
@@ -44,8 +45,8 @@ export default function DashboardPage() {
   const fetchData = useCallback(async () => {
     try {
       const [productsRes, requestsRes] = await Promise.all([
-        fetch('/api/dashboard/products'),
-        fetch('/api/dashboard/requests'),
+        authFetch('/api/dashboard/products'),
+        authFetch('/api/dashboard/requests'),
       ]);
 
       if (!productsRes.ok || !requestsRes.ok) {
@@ -65,11 +66,15 @@ export default function DashboardPage() {
         (r: Record<string, unknown>) => r.status === 'pending'
       ).length;
 
+      const releasedCount = allProducts.filter(
+        (p: AllocatedProduct) => p.trend_stage === 'released' || p.trend_stage === 'active'
+      ).length;
+
       setStats({
         productsAvailable: allProducts.length,
         hotProducts: hotCount,
         pendingRequests: pendingCount,
-        productsReleased: allProducts.length,
+        productsReleased: releasedCount,
       });
       setError(null);
     } catch {
@@ -84,7 +89,7 @@ export default function DashboardPage() {
 
   const handleRequestProducts = async () => {
     try {
-      const res = await fetch('/api/dashboard/requests', {
+      const res = await authFetch('/api/dashboard/requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
