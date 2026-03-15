@@ -3,25 +3,6 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireAdmin } from '@/lib/auth/roles';
 
-const ENV_BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || '';
-
-async function getBackendUrl(): Promise<string> {
-  if (ENV_BACKEND_URL) return ENV_BACKEND_URL;
-
-  // Check DB-saved settings
-  try {
-    const supabase = createAdminClient();
-    const { data } = await supabase
-      .from('admin_settings')
-      .select('value')
-      .eq('key', 'api_keys')
-      .single();
-    if (data?.value?.BACKEND_URL) return data.value.BACKEND_URL;
-  } catch {}
-
-  return '';
-}
-
 // ── Mock product generation (matches backend/src/lib/mock-data.ts) ──
 
 type Platform = 'tiktok' | 'amazon' | 'shopify' | 'pinterest' | 'digital' | 'ai_affiliate' | 'physical_affiliate';
@@ -251,56 +232,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    return NextResponse.json({ error: 'No active session' }, { status: 401 });
-  }
-
   const body = await req.json();
   const mode = body.mode || 'quick';
-  const query = body.query || '';
   const clientId = body.clientId;
 
-  const backendUrl = await getBackendUrl();
-
-  // If backend is configured, proxy to it (with 5s timeout to avoid hanging)
-  if (backendUrl) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      const response = await fetch(`${backendUrl}/api/scan`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ mode, query, userId: user.id }),
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        // If backend is unreachable/broken, fall through to direct scan
-        if (response.status >= 500) {
-          console.warn('Backend returned error, falling back to direct scan');
-        } else {
-          return NextResponse.json(
-            { error: errorData.error || 'Failed to queue scan' },
-            { status: response.status }
-          );
-        }
-      } else {
-        const data = await response.json();
-        return NextResponse.json(data);
-      }
-    } catch (error) {
-      console.warn('Backend unreachable, falling back to direct scan:', error);
-    }
-  }
-
-  // Direct scan — no backend needed
   try {
     const result = await runDirectScan(mode, user.id, clientId);
     return NextResponse.json({
@@ -310,7 +245,6 @@ export async function POST(req: NextRequest) {
       step: 'Scan complete!',
       productsFound: result.productsFound,
       hotProducts: result.hotProducts,
-      direct: true,
     });
   } catch (error) {
     console.error('Direct scan failed:', error);
@@ -329,39 +263,14 @@ export async function GET(req: NextRequest) {
   }
 
   const jobId = req.nextUrl.searchParams.get('jobId');
-  const backendUrl = await getBackendUrl();
 
   // Check backend status
   if (req.nextUrl.searchParams.get('check') === 'status') {
-    // Always report as configured since direct scan works as fallback
     return NextResponse.json({ configured: true });
   }
 
-  // If jobId provided, try backend first, then fall back to scan_history
+  // If jobId provided, look up scan_history
   if (jobId) {
-    // Try backend if configured (with 3s timeout)
-    if (backendUrl) {
-      try {
-        const supabase = await createClient();
-        const { data: { session } } = await supabase.auth.getSession();
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
-        const response = await fetch(`${backendUrl}/api/scan/${jobId}`, {
-          headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-
-        if (response.ok) {
-          const data = await response.json();
-          return NextResponse.json(data);
-        }
-      } catch {
-        // Fall through to scan_history lookup
-      }
-    }
-
-    // Read from scan_history (for direct scans or when backend fails)
     const admin = createAdminClient();
     const { data: scan } = await admin
       .from('scan_history')
@@ -405,45 +314,12 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    return NextResponse.json({ error: 'No active session' }, { status: 401 });
-  }
-
   const jobId = req.nextUrl.searchParams.get('jobId');
 
   if (!jobId) {
     return NextResponse.json({ error: 'jobId is required' }, { status: 400 });
   }
 
-  const backendUrl = await getBackendUrl();
-
-  // Try backend cancel (with 3s timeout)
-  if (backendUrl) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
-      const response = await fetch(`${backendUrl}/api/scan/${jobId}/cancel`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        const data = await response.json();
-        return NextResponse.json(data);
-      }
-    } catch {
-      // Fall through to direct cancel
-    }
-  }
-
-  // Direct cancel — update scan_history
   const admin = createAdminClient();
   await admin
     .from('scan_history')
