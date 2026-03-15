@@ -222,17 +222,23 @@ async function runDirectScan(mode: string, userId: string, clientId?: string) {
 // ── Route handlers ──
 
 export async function POST(req: NextRequest) {
+  console.log('[SCAN] POST received');
+
   // Pre-flight: check env vars
   const envError = checkEnvVars();
   if (envError) {
+    console.error('[SCAN] Env check failed:', envError);
     return NextResponse.json({ error: `Configuration error: ${envError}` }, { status: 500 });
   }
+  console.log('[SCAN] Env vars OK');
 
   let user;
   try {
     user = await requireAdmin();
+    console.log('[SCAN] Auth OK — user:', user.email, 'role:', user.role);
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Unauthorized';
+    console.error('[SCAN] Auth failed:', msg);
     return NextResponse.json({ error: `Auth failed: ${msg}` }, { status: 401 });
   }
 
@@ -245,9 +251,11 @@ export async function POST(req: NextRequest) {
 
   const mode = body.mode || 'quick';
   const clientId = body.clientId;
+  console.log('[SCAN] Starting direct scan, mode:', mode);
 
   try {
     const result = await runDirectScan(mode, user.id, clientId);
+    console.log('[SCAN] Scan completed:', result.productsFound, 'products');
     return NextResponse.json({
       jobId: result.scanId,
       status: 'completed',
@@ -259,7 +267,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Direct scan failed:', msg);
+    console.error('[SCAN] Direct scan failed:', msg);
     return NextResponse.json(
       { error: `Scan failed: ${msg}` },
       { status: 500 }

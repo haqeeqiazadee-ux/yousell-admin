@@ -148,14 +148,30 @@ function ScanPageContent() {
 
     try {
       const { data: { session } } = await getSupabase().auth.getSession()
-      const res = await fetch('/api/admin/scan', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-        },
-        body: JSON.stringify({ mode: selectedMode, query, ...(selectedClientId ? { clientId: selectedClientId } : {}) }),
-      })
+
+      // 15-second timeout to prevent infinite spinner
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 15000)
+
+      let res: Response
+      try {
+        res = await fetch('/api/admin/scan', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+          },
+          body: JSON.stringify({ mode: selectedMode, query, ...(selectedClientId ? { clientId: selectedClientId } : {}) }),
+          signal: controller.signal,
+        })
+      } catch (fetchErr) {
+        clearTimeout(timeoutId)
+        if (fetchErr instanceof DOMException && fetchErr.name === 'AbortError') {
+          throw new Error('Scan request timed out after 15 seconds. The API may not be responding. Visit /api/admin/scan/health in your browser to diagnose.')
+        }
+        throw new Error(`Network error: ${fetchErr instanceof Error ? fetchErr.message : 'Failed to reach server'}`)
+      }
+      clearTimeout(timeoutId)
 
       if (!res.ok) {
         const text = await res.text()
