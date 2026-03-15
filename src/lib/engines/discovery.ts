@@ -232,24 +232,44 @@ async function discoverPlatform(
     const admin = createAdminClient();
     const rows = rawProducts.map(p => toProductRow(p, userId, scanChannel));
 
-    // Batch insert (skip duplicates via conflict on external_id)
-    const { data, error } = await admin
-      .from('products')
-      .upsert(rows, { onConflict: 'platform,external_id', ignoreDuplicates: true })
-      .select('id');
+    // Insert products individually to handle duplicates gracefully
+    // (no unique constraint on platform+external_id exists yet)
+    let inserted = 0;
+    for (const row of rows) {
+      // Check if product already exists (by external_id + platform)
+      if (row.external_id) {
+        const { data: existing } = await admin
+          .from('products')
+          .select('id')
+          .eq('platform', row.platform)
+          .eq('external_id', row.external_id)
+          .maybeSingle();
 
-    if (error) {
-      result.errors.push(`DB error: ${error.message}`);
-      // Try individual inserts as fallback
-      let inserted = 0;
-      for (const row of rows) {
-        const { error: singleErr } = await admin.from('products').insert(row);
-        if (!singleErr) inserted++;
+        if (existing) {
+          // Update existing product scores
+          await admin
+            .from('products')
+            .update({
+              score_overall: row.score_overall,
+              final_score: row.final_score,
+              trend_score: row.trend_score,
+              viral_score: row.viral_score,
+              profit_score: row.profit_score,
+              trend_stage: row.trend_stage,
+              price: row.price,
+              metadata: row.metadata,
+            })
+            .eq('id', existing.id);
+          inserted++;
+          continue;
+        }
       }
-      result.stored = inserted;
-    } else {
-      result.stored = data?.length ?? rows.length;
+
+      const { error: insertErr } = await admin.from('products').insert(row);
+      if (!insertErr) inserted++;
+      else result.errors.push(`Insert "${String(row.title).slice(0, 30)}": ${insertErr.message}`);
     }
+    result.stored = inserted;
   } catch (err) {
     result.errors.push(`Provider error: ${err instanceof Error ? err.message : String(err)}`);
   }
