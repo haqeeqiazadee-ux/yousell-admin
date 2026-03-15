@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PROVIDERS, getEnvVar } from "@/lib/providers/config";
+import { PRICING_TIERS } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 
@@ -57,10 +58,10 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Fetch counts + products + scan history in parallel
+  // Fetch counts + products + scan history + revenue data in parallel
   const [
     products, tiktok, amazon, trends, competitors, clients, influencers, suppliers,
-    productsList, scansList
+    productsList, scansList, subscriptionsList, allocationCount, recentClients
   ] = await Promise.all([
     safeCount("products"),
     safeCount("products", { column: "platform", value: "tiktok" }),
@@ -80,7 +81,31 @@ export async function GET(req: NextRequest) {
       .select("id, scan_mode, status, products_found, started_at, hot_products")
       .order("started_at", { ascending: false })
       .limit(5),
+    // Active subscriptions for revenue metrics
+    adminSb.from("subscriptions")
+      .select("id, plan, status, current_period_start, current_period_end")
+      .eq("status", "active"),
+    // Total allocations
+    safeCount("product_allocations"),
+    // Recently added clients
+    adminSb.from("clients")
+      .select("id, name, created_at")
+      .order("created_at", { ascending: false })
+      .limit(5),
   ]);
+
+  // Calculate revenue metrics from subscriptions
+  const activeSubs = subscriptionsList.data || [];
+  const mrr = activeSubs.reduce((sum: number, sub: { plan: string }) => {
+    const tier = PRICING_TIERS[sub.plan as keyof typeof PRICING_TIERS];
+    return sum + (tier?.price || 0);
+  }, 0);
+
+  const planBreakdown: Record<string, number> = {};
+  for (const sub of activeSubs) {
+    const plan = sub.plan || "free";
+    planBreakdown[plan] = (planBreakdown[plan] || 0) + 1;
+  }
 
   return NextResponse.json({
     products,
@@ -94,6 +119,15 @@ export async function GET(req: NextRequest) {
     // Full data for dashboard rendering
     productsList: productsList.data || [],
     scanHistory: scansList.data || [],
+    // Revenue & SaaS metrics
+    revenue: {
+      mrr,
+      activeSubscriptions: activeSubs.length,
+      totalClients: clients,
+      totalAllocations: allocationCount,
+      planBreakdown,
+    },
+    recentClients: recentClients.data || [],
     services: {
       supabase: providerConnected("supabase", savedKeys),
       auth: providerConnected("supabase", savedKeys),

@@ -1397,3 +1397,62 @@ Built 6 intelligence engines that run directly in Next.js API routes — **no Ex
 
 ### Architecture Impact
 All 8 intelligence API routes now work self-contained on Netlify without needing the Express backend on Railway. The Express backend + BullMQ worker remains available for future heavy-duty scheduled jobs but is no longer required for any admin-triggered operation.
+
+------------------------------------------------------------
+
+## Session: 2026-03-15 — SaaS Dashboard Metrics, Analytics Page, Allocate Workflow
+
+### What Was Done
+
+#### 1. Revenue & SaaS Metrics on Admin Dashboard
+Added a new revenue metrics row to the admin homepage showing:
+- **MRR (Monthly Recurring Revenue)** — calculated from active subscriptions × plan prices
+- **Active Subscriptions** — count of active subscription records
+- **Total Clients** — client count from database
+- **Products Allocated** — total allocation count
+
+Also added two new bottom panels:
+- **Subscription Plans** — visual breakdown of plan distribution (starter/growth/professional/enterprise) with progress bars
+- **Recent Clients** — latest 5 client signups with avatar and relative timestamp
+
+Dashboard API (`/api/admin/dashboard`) now fetches subscriptions, allocations, and recent clients in parallel alongside existing data.
+
+#### 2. Full Analytics Page (was "Coming Soon" stub)
+Built comprehensive analytics dashboard at `/admin/analytics` with recharts:
+- **6 KPI cards**: Total Products, Total Scans, Total Clients, Active Subs, MRR, Allocations
+- **Products by Platform** — color-coded bar chart
+- **Score Distribution** — histogram across 0-19, 20-39, 40-59, 60-79, 80-100 ranges
+- **Trend Stages** — pie chart (emerging/rising/exploding/saturated)
+- **Avg Score Pillars** — radar chart showing trend/viral/profit averages
+- **Plan Distribution** — pie chart with MRR callout
+- **Scan Performance Over Time** — line chart (products found vs hot products)
+- **Top Categories** — horizontal bar chart
+- **Trending Keywords** — ranked list with direction indicators
+
+New API route: `GET /api/admin/analytics` — aggregates product, scan, subscription, allocation, trend data.
+
+#### 3. Enhanced Allocate Page
+Upgraded from partial to fully functional:
+- **Search & filter**: text search, platform filter dropdown, sort toggle (score/name)
+- **Score-colored indicators**: red 80+, amber 60+, gray below
+- **Trend stage badges** on product rows
+- **Toast notifications** (sonner) for success/failure feedback on allocation
+- **Approve/Reject workflow** for pending client requests with dedicated buttons
+- **Side-by-side layout**: pending requests + recent allocations in 2-column grid
+
+New API route: `PATCH /api/admin/allocations/requests` — approve/reject product requests.
+
+### Files Created
+- `src/app/api/admin/analytics/route.ts`
+- `src/app/api/admin/allocations/requests/route.ts`
+
+### Files Modified
+- `src/app/api/admin/dashboard/route.ts` — added revenue, subscription, allocation, recent client data
+- `src/app/admin/page.tsx` — added revenue metrics row, subscription breakdown, recent clients panels
+- `src/app/admin/analytics/page.tsx` — replaced Coming Soon stub with full analytics dashboard
+- `src/app/admin/allocate/page.tsx` — enhanced with search, filters, toasts, approve/reject flow
+
+### Dependencies Added
+- `recharts` — chart library for analytics visualizations
+
+### Build Status — PASS (0 errors, 0 warnings)

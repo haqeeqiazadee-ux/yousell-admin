@@ -31,6 +31,20 @@ interface Stats {
   hotProducts: number
 }
 
+interface RevenueMetrics {
+  mrr: number
+  activeSubscriptions: number
+  totalClients: number
+  totalAllocations: number
+  planBreakdown: Record<string, number>
+}
+
+interface RecentClient {
+  id: string
+  name: string
+  created_at: string
+}
+
 interface ScanHistory {
   id: string
   mode: string
@@ -66,6 +80,10 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const [revenue, setRevenue] = useState<RevenueMetrics>({
+    mrr: 0, activeSubscriptions: 0, totalClients: 0, totalAllocations: 0, planBreakdown: {}
+  })
+  const [recentClients, setRecentClients] = useState<RecentClient[]>([])
   const [serviceStatus, setServiceStatus] = useState<Record<string, boolean>>({})
 
   const systemStatus: SystemStatus[] = [
@@ -89,8 +107,10 @@ export default function AdminDashboard() {
 
         const d = await res.json()
 
-        // Service status
+        // Service status & revenue
         if (d.services) setServiceStatus(d.services)
+        if (d.revenue) setRevenue(d.revenue)
+        if (d.recentClients) setRecentClients(d.recentClients)
 
         // Stats from counts
         const productsList = d.productsList as { id: string; title: string; viral_score: number | null; trend_stage: string; platform: string; final_score: number | null; channel: string }[] || []
@@ -250,6 +270,46 @@ export default function AdminDashboard() {
               <p className="text-xs text-gray-500 mt-0.5">{kpi.label}</p>
             </div>
           ))}
+        </div>
+
+        {/* Revenue & SaaS Metrics */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4">
+            <div className="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center mb-3">
+              <DollarSign size={18} className="text-green-600" />
+            </div>
+            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              {loading ? '—' : `$${revenue.mrr.toLocaleString()}`}
+            </p>
+            <p className="text-xs text-gray-500 mt-0.5">Monthly Recurring Revenue</p>
+          </div>
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4">
+            <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center mb-3">
+              <Activity size={18} className="text-indigo-600" />
+            </div>
+            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              {loading ? '—' : revenue.activeSubscriptions}
+            </p>
+            <p className="text-xs text-gray-500 mt-0.5">Active Subscriptions</p>
+          </div>
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4">
+            <div className="w-9 h-9 rounded-lg bg-cyan-50 flex items-center justify-center mb-3">
+              <Users size={18} className="text-cyan-600" />
+            </div>
+            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              {loading ? '—' : revenue.totalClients}
+            </p>
+            <p className="text-xs text-gray-500 mt-0.5">Total Clients</p>
+          </div>
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4">
+            <div className="w-9 h-9 rounded-lg bg-violet-50 flex items-center justify-center mb-3">
+              <Package size={18} className="text-violet-600" />
+            </div>
+            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              {loading ? '—' : revenue.totalAllocations}
+            </p>
+            <p className="text-xs text-gray-500 mt-0.5">Products Allocated</p>
+          </div>
         </div>
 
         {/* Main grid */}
@@ -423,6 +483,90 @@ export default function AdminDashboard() {
                     }`}>
                       {p.trend_stage}
                     </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Subscription Breakdown + Recent Clients */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Subscription Breakdown */}
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <DollarSign size={16} className="text-gray-700" />
+                <h2 className="font-semibold text-gray-900 dark:text-gray-100">Subscription Plans</h2>
+              </div>
+              <Link href="/admin/clients" className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+                Manage <ChevronRight size={12} />
+              </Link>
+            </div>
+            {revenue.activeSubscriptions === 0 ? (
+              <div className="text-center py-8">
+                <DollarSign size={24} className="text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-400">No active subscriptions</p>
+                <p className="text-xs text-gray-300 mt-1">Client subscriptions will appear here</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {Object.entries(revenue.planBreakdown).map(([plan, count]) => {
+                  const total = revenue.activeSubscriptions || 1
+                  const pct = Math.round((count / total) * 100)
+                  const colors: Record<string, string> = {
+                    starter: 'bg-blue-500', growth: 'bg-emerald-500',
+                    professional: 'bg-purple-500', enterprise: 'bg-orange-500', free: 'bg-gray-400'
+                  }
+                  return (
+                    <div key={plan}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">{plan}</span>
+                        <span className="text-xs text-gray-500">{count} ({pct}%)</span>
+                      </div>
+                      <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2">
+                        <div className={`${colors[plan] || 'bg-gray-400'} h-2 rounded-full transition-all`} style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Recent Clients */}
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Users size={16} className="text-gray-700" />
+                <h2 className="font-semibold text-gray-900 dark:text-gray-100">Recent Clients</h2>
+              </div>
+              <Link href="/admin/clients" className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+                View all <ChevronRight size={12} />
+              </Link>
+            </div>
+            {recentClients.length === 0 ? (
+              <div className="text-center py-8">
+                <Users size={24} className="text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-400">No clients yet</p>
+                <p className="text-xs text-gray-300 mt-1">Clients will appear here when they sign up</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentClients.map((c: RecentClient) => (
+                  <div key={c.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+                        <span className="text-xs font-bold text-white">{c.name?.charAt(0)?.toUpperCase() || '?'}</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{c.name}</p>
+                        <p className="text-xs text-gray-400">{formatTime(c.created_at)}</p>
+                      </div>
+                    </div>
+                    <Link href={`/admin/clients`} className="text-xs text-blue-600 hover:text-blue-800">
+                      View
+                    </Link>
                   </div>
                 ))}
               </div>
