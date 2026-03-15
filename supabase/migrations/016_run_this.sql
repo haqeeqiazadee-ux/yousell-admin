@@ -262,9 +262,9 @@ ALTER TABLE competitors ADD COLUMN IF NOT EXISTS discovered_at timestamptz DEFAU
 
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'product_platform') THEN
-    BEGIN ALTER TYPE product_platform ADD VALUE IF NOT EXISTS 'pinterest'; EXCEPTION WHEN duplicate_object THEN NULL; END;
-    BEGIN ALTER TYPE product_platform ADD VALUE IF NOT EXISTS 'digital'; EXCEPTION WHEN duplicate_object THEN NULL; END;
-    BEGIN ALTER TYPE product_platform ADD VALUE IF NOT EXISTS 'ai_affiliate'; EXCEPTION WHEN duplicate_object THEN NULL; END;
-    BEGIN ALTER TYPE product_platform ADD VALUE IF NOT EXISTS 'physical_affiliate'; EXCEPTION WHEN duplicate_object THEN NULL; END;
+    ALTER TYPE product_platform ADD VALUE IF NOT EXISTS 'pinterest';
+    ALTER TYPE product_platform ADD VALUE IF NOT EXISTS 'digital';
+    ALTER TYPE product_platform ADD VALUE IF NOT EXISTS 'ai_affiliate';
+    ALTER TYPE product_platform ADD VALUE IF NOT EXISTS 'physical_affiliate';
   END IF;
 END $$;
