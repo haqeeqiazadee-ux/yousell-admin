@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requireAdmin } from "@/lib/auth/roles";
+import { authenticateAdmin } from "@/lib/auth/admin-api-auth";
 import { getEnvVar } from "@/lib/providers/config";
 
 export const dynamic = "force-dynamic";
@@ -31,9 +31,9 @@ export async function GET(req: NextRequest) {
   }
 
   // Auth gate
-  let adminUser: { id: string; email: string; role: string };
+  let adminUser: { id: string; email?: string; role?: string };
   try {
-    adminUser = await requireAdmin();
+    adminUser = await authenticateAdmin(req);
   } catch {
     return NextResponse.json({
       error: "Authentication required. Login at /admin/login first.",

@@ -1,12 +1,26 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { requireAdmin } from "@/lib/auth/roles";
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+// Token-based auth (bypasses cookies() hang on Netlify)
+async function authenticateAdmin(req: NextRequest) {
+  const token = req.headers.get("authorization")?.replace("Bearer ", "");
+  if (!token) throw new Error("No Authorization header");
+
+  const admin = createAdminClient();
+  const { data: { user }, error } = await admin.auth.getUser(token);
+  if (error || !user) throw new Error(error?.message || "Invalid session");
+
+  const { data: role } = await admin.rpc("check_user_role", { user_id: user.id });
+  if (role !== "admin" && role !== "super_admin") throw new Error("Not admin");
+
+  return user;
+}
 
 // GET /api/admin/products — list products with filtering
-export async function GET(request: Request) {
-  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+export async function GET(request: NextRequest) {
+  try { await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
 
-  const supabase = await createClient();
+  const adminSb = createAdminClient();
 
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status");
@@ -17,7 +31,7 @@ export async function GET(request: Request) {
   const limit = parseInt(searchParams.get("limit") || "50");
   const offset = parseInt(searchParams.get("offset") || "0");
 
-  let query = supabase
+  let query = adminSb
     .from("products")
     .select("*", { count: "exact" });
 
@@ -39,21 +53,13 @@ export async function GET(request: Request) {
 }
 
 // POST /api/admin/products — create a product
-export async function POST(request: Request) {
-  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+export async function POST(request: NextRequest) {
+  let user;
+  try { user = await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
 
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+  const adminSb = createAdminClient();
   const body = await request.json();
 
-  // Whitelist allowed fields to prevent arbitrary field injection
   const allowedFields = [
     'title', 'platform', 'status', 'price', 'cost', 'currency', 'external_url', 'image_url',
     'category', 'description', 'trend_stage', 'viral_score', 'final_score',
@@ -66,7 +72,7 @@ export async function POST(request: Request) {
     }
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await adminSb
     .from("products")
     .insert({
       ...sanitized,
@@ -84,17 +90,11 @@ export async function POST(request: Request) {
 }
 
 // PATCH /api/admin/products — update a product
-export async function PATCH(request: Request) {
-  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+export async function PATCH(request: NextRequest) {
+  let user;
+  try { user = await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+  const adminSb = createAdminClient();
   const body = await request.json();
   const { id } = body;
 
@@ -102,7 +102,6 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Product id is required" }, { status: 400 });
   }
 
-  // Whitelist allowed update fields
   const allowedFields = [
     'title', 'platform', 'status', 'price', 'cost', 'currency', 'external_url', 'image_url',
     'category', 'description', 'trend_stage', 'viral_score', 'final_score',
@@ -115,7 +114,7 @@ export async function PATCH(request: Request) {
     }
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await adminSb
     .from("products")
     .update({ ...updates, updated_by: user.id })
     .eq("id", id)
@@ -130,10 +129,10 @@ export async function PATCH(request: Request) {
 }
 
 // DELETE /api/admin/products — delete a product
-export async function DELETE(request: Request) {
-  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+export async function DELETE(request: NextRequest) {
+  try { await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
 
-  const supabase = await createClient();
+  const adminSb = createAdminClient();
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
 
@@ -141,7 +140,7 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Product id is required" }, { status: 400 });
   }
 
-  const { error } = await supabase
+  const { error } = await adminSb
     .from("products")
     .delete()
     .eq("id", id);

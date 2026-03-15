@@ -1250,3 +1250,28 @@ Tested directly against the live Supabase database and found:
 
 ### Build Status
 - Build: PASS
+
+------------------------------------------------------------
+
+## Session: 2026-03-15 — Systematic Token-Based Auth Migration
+
+### Problem
+All 30 admin API routes used `requireAdmin()` which calls `cookies()` from `next/headers`. This hangs indefinitely on Netlify. Additionally, all 20 admin page components called `fetch()` without Authorization headers, causing 403 errors. Products from scans were not showing on the dashboard because of these interconnectivity failures.
+
+### Root Cause
+`cookies()` from `next/headers` hangs in Next.js API Route Handlers on Netlify with `@netlify/plugin-nextjs`. This affected every admin API route, not just the scan.
+
+### Solution — Full Migration
+1. Created shared `authenticateAdmin()` utility (`src/lib/auth/admin-api-auth.ts`)
+2. Created shared `authFetch()` utility (`src/lib/auth-fetch.ts`)
+3. Updated all 30 admin API routes to use `authenticateAdmin()` + `createAdminClient()`
+4. Updated all 20 admin page components to use `authFetch()`
+
+### Files Modified (53 files)
+- `src/lib/auth/admin-api-auth.ts` — NEW shared auth utility
+- `src/lib/auth-fetch.ts` — NEW shared fetch utility
+- All `src/app/api/admin/*/route.ts` — token-based auth
+- All `src/app/admin/*/page.tsx` — authFetch for API calls
+
+### Build Status
+- Build: PASS

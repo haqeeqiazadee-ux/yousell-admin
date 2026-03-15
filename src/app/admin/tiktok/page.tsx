@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { authFetch } from "@/lib/auth-fetch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -115,7 +116,7 @@ function DiscoveryTrigger() {
     setLoading(true);
     setResult(null);
     try {
-      const res = await fetch("/api/admin/tiktok/discover", {
+      const res = await authFetch("/api/admin/tiktok/discover", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: query.trim(), limit: 30 }),
@@ -167,7 +168,7 @@ function ProductsTab() {
     try {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
-      const res = await fetch(`/api/admin/tiktok?${params}`);
+      const res = await authFetch(`/api/admin/tiktok?${params}`);
       if (!res.ok) throw new Error("Failed to load products");
       const data = await res.json();
       setProducts(data.products || []);
@@ -254,7 +255,7 @@ function VideosTab() {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
       if (productOnly) params.set("has_product", "true");
-      const res = await fetch(`/api/admin/tiktok/videos?${params}`);
+      const res = await authFetch(`/api/admin/tiktok/videos?${params}`);
       if (!res.ok) throw new Error("Failed to load videos");
       const data = await res.json();
       setVideos(data.videos || []);
@@ -378,7 +379,7 @@ function SignalsTab() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/admin/tiktok/signals");
+      const res = await authFetch("/api/admin/tiktok/signals");
       if (!res.ok) throw new Error("Failed to load signals");
       const data = await res.json();
       setSignals(data.signals || []);

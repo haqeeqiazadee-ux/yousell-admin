@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { authFetch } from "@/lib/auth-fetch";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,9 +48,9 @@ export default function AllocatePage() {
     setLoading(true);
     try {
       const [allocRes, productsRes, clientsRes] = await Promise.all([
-        fetch("/api/admin/allocations"),
-        fetch("/api/admin/products?limit=50&sort=final_score&order=desc"),
-        fetch("/api/admin/clients"),
+        authFetch("/api/admin/allocations"),
+        authFetch("/api/admin/products?limit=50&sort=final_score&order=desc"),
+        authFetch("/api/admin/clients"),
       ]);
       const allocData = await allocRes.json();
       setPending(allocData.pending || []);
@@ -148,7 +149,7 @@ export default function AllocatePage() {
                 onClick={async () => {
                   setAllocating(true);
                   try {
-                    await fetch('/api/admin/allocations', {
+                    await authFetch('/api/admin/allocations', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({

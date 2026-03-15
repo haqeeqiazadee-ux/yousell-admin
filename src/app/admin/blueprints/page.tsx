@@ -11,6 +11,7 @@ import {
   Clock,
   ChevronRight,
 } from "lucide-react";
+import { authFetch } from "@/lib/auth-fetch";
 
 interface Blueprint {
   id: string;
@@ -39,7 +40,7 @@ export default function BlueprintsPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/blueprints")
+    authFetch("/api/admin/blueprints")
       .then((res) => res.json())
       .then((data) => {
         setBlueprints(Array.isArray(data) ? data : []);

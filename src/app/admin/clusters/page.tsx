@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { authFetch } from "@/lib/auth-fetch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +45,7 @@ export default function ClustersPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/admin/clusters");
+      const res = await authFetch("/api/admin/clusters");
       if (!res.ok) throw new Error("Failed to load clusters");
       const data = await res.json();
       setClusters(data.clusters || []);
@@ -61,7 +62,7 @@ export default function ClustersPage() {
     setRunLoading(true);
     setRunResult(null);
     try {
-      const res = await fetch("/api/admin/clusters", {
+      const res = await authFetch("/api/admin/clusters", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ minScore: 30, similarityThreshold: 0.3 }),

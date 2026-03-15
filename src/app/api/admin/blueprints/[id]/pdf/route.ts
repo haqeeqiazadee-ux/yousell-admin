@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { requireAdmin } from "@/lib/auth/roles";
+import { createAdminClient } from '@/lib/supabase/admin';
+import { authenticateAdmin } from '@/lib/auth/admin-api-auth';
 
 function escapeHtml(str: string): string {
   return str
@@ -74,12 +74,8 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  try { await authenticateAdmin(req); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+  const supabase = createAdminClient();
 
   const { id } = params;
 

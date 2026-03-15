@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { authFetch } from "@/lib/auth-fetch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -194,7 +195,7 @@ export default function SettingsPage() {
 
   /* Fetch providers */
   const fetchProviders = useCallback(() => {
-    fetch("/api/admin/settings")
+    authFetch("/api/admin/settings")
       .then((res) => res.json())
       .then((d) => {
         setData(d);
@@ -210,7 +211,7 @@ export default function SettingsPage() {
   /* Fetch automation jobs */
   const fetchJobs = useCallback(() => {
     setJobsLoading(true);
-    fetch("/api/admin/automation")
+    authFetch("/api/admin/automation")
       .then((res) => res.json())
       .then((d: AutomationJob[]) => {
         setJobs(Array.isArray(d) ? d : []);
@@ -226,7 +227,7 @@ export default function SettingsPage() {
   /* Master kill switch — disable ALL jobs */
   const killAllJobs = async () => {
     try {
-      const res = await fetch("/api/admin/automation", {
+      const res = await authFetch("/api/admin/automation", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ killSwitch: true }),
@@ -244,7 +245,7 @@ export default function SettingsPage() {
     setTogglingJobs((prev) => new Set(prev).add(jobName));
 
     try {
-      const res = await fetch("/api/admin/automation", {
+      const res = await authFetch("/api/admin/automation", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ job_name: jobName, status: newStatus }),
@@ -285,7 +286,7 @@ export default function SettingsPage() {
     setSavingProvider(provider.id);
     setSaveError(null);
     try {
-      const res = await fetch("/api/admin/settings", {
+      const res = await authFetch("/api/admin/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ apiKeys }),
@@ -320,7 +321,7 @@ export default function SettingsPage() {
   const removeKey = async (envKeyName: string, providerId: string) => {
     setSavingProvider(providerId);
     try {
-      const res = await fetch("/api/admin/settings", {
+      const res = await authFetch("/api/admin/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ apiKeys: { [envKeyName]: "" } }),

@@ -1,7 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
-import { requireAdmin } from "@/lib/auth/roles";
+import { authenticateAdmin } from "@/lib/auth/admin-api-auth";
 import { PROVIDERS, getEnvVar } from "@/lib/providers/config";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +13,7 @@ interface TestResult {
   fix?: string;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const results: TestResult[] = [];
   let adminUser: { id: string; email: string; role: string } | null = null;
 
@@ -22,8 +21,8 @@ export async function GET() {
   // LAYER 0: Auth Check (needed to run the rest)
   // ============================================================
   try {
-    const user = await requireAdmin();
-    adminUser = { id: user.id, email: user.email || "", role: user.role };
+    const user = await authenticateAdmin(request);
+    adminUser = { id: user.id, email: user.email || "", role: user.role || "" };
     results.push({
       test: "0.1 Admin Authentication",
       layer: "AUTH",
@@ -46,7 +45,7 @@ export async function GET() {
   }
 
   const adminSb = createAdminClient();
-  const userSb = await createClient();
+  const userSb = createAdminClient();
 
   // ============================================================
   // LAYER 1: DATABASE — Tables, RLS, Admin Role

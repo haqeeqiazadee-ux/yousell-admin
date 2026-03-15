@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Truck, Plus, Check, X } from "lucide-react";
+import { authFetch } from "@/lib/auth-fetch";
 
 interface Supplier {
   id: string;
@@ -60,7 +61,7 @@ export default function SuppliersPage() {
 
   const fetchSuppliers = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/admin/suppliers");
+    const res = await authFetch("/api/admin/suppliers");
     const data = await res.json();
     setSuppliers(data.suppliers || []);
     setTotal(data.total || 0);
@@ -75,7 +76,7 @@ export default function SuppliersPage() {
     e.preventDefault();
     setSubmitting(true);
 
-    const res = await fetch("/api/admin/suppliers", {
+    const res = await authFetch("/api/admin/suppliers", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserSearch, Plus, AlertTriangle, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { authFetch } from "@/lib/auth-fetch";
 
 interface Influencer {
   id: string;
@@ -104,7 +105,7 @@ export default function InfluencersPage() {
     params.set("offset", String((page - 1) * pageSize));
     params.set("sort", sortField);
     params.set("order", sortOrder);
-    const res = await fetch(`/api/admin/influencers?${params}`);
+    const res = await authFetch(`/api/admin/influencers?${params}`);
     const data = await res.json();
     setInfluencers(data.influencers || []);
     setTotal(data.total || 0);
@@ -131,7 +132,7 @@ export default function InfluencersPage() {
     e.preventDefault();
     setSubmitting(true);
 
-    const res = await fetch("/api/admin/influencers", {
+    const res = await authFetch("/api/admin/influencers", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

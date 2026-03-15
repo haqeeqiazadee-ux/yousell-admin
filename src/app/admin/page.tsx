@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import Link from 'next/link'
+import { authFetch } from '@/lib/auth-fetch'
 import {
   Zap, TrendingUp, Users, Package, ShoppingBag, Activity,
   ArrowRight, Clock,
@@ -67,19 +68,6 @@ export default function AdminDashboard() {
 
   const [serviceStatus, setServiceStatus] = useState<Record<string, boolean>>({})
 
-  useEffect(() => {
-    // Fetch service status and KPIs from server-side API (never expose keys in client bundle)
-    fetch('/api/admin/dashboard')
-      .then(r => r.json())
-      .then(d => {
-        if (d.services) setServiceStatus(d.services)
-        if (d.competitors !== undefined) {
-          setStats(prev => ({ ...prev, competitors: d.competitors }))
-        }
-      })
-      .catch(() => { /* service status is non-critical, degrade gracefully */ })
-  }, [])
-
   const systemStatus: SystemStatus[] = [
     { label: 'Supabase', status: serviceStatus.supabase ? 'connected' : 'warning', detail: serviceStatus.supabase ? 'Connected' : 'Check Config' },
     { label: 'Auth + RBAC', status: serviceStatus.auth ? 'connected' : 'warning', detail: serviceStatus.auth ? 'Connected' : 'Check Config' },
@@ -92,29 +80,38 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const sb = getSupabase()
-        const [products, scans] = await Promise.all([
-          sb.from('products').select('id, title, viral_score, trend_stage, platform, final_score, channel').order('final_score', { ascending: false }),
-          sb.from('scan_history').select('*').order('created_at', { ascending: false }).limit(5),
-        ])
-
-        if (products.data) {
-          const all = products.data as { id: string; title: string; viral_score: number | null; trend_stage: string; platform: string; final_score: number | null; channel: string }[]
-          setStats(prev => ({
-            ...prev,
-            productsTracked: all.length,
-            activeTrends: all.filter(p => ['emerging', 'rising'].includes(p.trend_stage)).length,
-            tiktokProducts: all.filter(p => p.platform === 'tiktok').length,
-            amazonListings: all.filter(p => p.platform === 'amazon').length,
-            hotProducts: all.filter(p => (p.viral_score ?? 0) >= 80).length,
-          }))
-          setPreViralProducts(all.filter(p => (p.viral_score ?? 0) >= 70).slice(0, 5))
+        const res = await authFetch('/api/admin/dashboard')
+        if (!res.ok) {
+          console.error('Dashboard API returned', res.status)
+          setLoading(false)
+          return
         }
 
-        if (scans.data) {
-          setScanHistory(scans.data)
-          if (scans.data.length > 0) setLastScan(scans.data[0].created_at)
-        }
+        const d = await res.json()
+
+        // Service status
+        if (d.services) setServiceStatus(d.services)
+
+        // Stats from counts
+        const productsList = d.productsList as { id: string; title: string; viral_score: number | null; trend_stage: string; platform: string; final_score: number | null; channel: string }[] || []
+        setStats({
+          productsTracked: d.products ?? productsList.length,
+          activeTrends: d.trends ?? productsList.filter((p: { trend_stage: string }) => ['emerging', 'rising'].includes(p.trend_stage)).length,
+          tiktokProducts: d.tiktok ?? 0,
+          amazonListings: d.amazon ?? 0,
+          hotProducts: productsList.filter((p: { viral_score: number | null }) => (p.viral_score ?? 0) >= 80).length,
+          competitors: d.competitors ?? 0,
+        })
+        setPreViralProducts(productsList.filter((p: { viral_score: number | null }) => (p.viral_score ?? 0) >= 70).slice(0, 5))
+
+        // Scan history
+        const scans = d.scanHistory || []
+        setScanHistory(scans.map((s: Record<string, unknown>) => ({
+          ...s,
+          mode: s.scan_mode || s.mode,
+          created_at: s.started_at || s.created_at,
+        })))
+        if (scans.length > 0) setLastScan((scans[0].started_at || scans[0].created_at) as string)
       } catch (e) {
         console.error('Failed to load dashboard data:', e)
         setError('Failed to load dashboard data. Please refresh.')

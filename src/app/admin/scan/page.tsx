@@ -2,23 +2,12 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
 import {
   Scan, X, Clock, AlertTriangle,
   CheckCircle, Loader2, BarChart2, Zap, TrendingUp
 } from 'lucide-react'
 import Link from 'next/link'
-
-let _browserClient: ReturnType<typeof createBrowserClient> | null = null
-function getSupabase() {
-  if (!_browserClient) {
-    _browserClient = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-    )
-  }
-  return _browserClient
-}
+import { authFetch } from '@/lib/auth-fetch'
 
 type ScanMode = 'quick' | 'full' | 'client'
 type ScanStatus = 'idle' | 'confirming' | 'running' | 'completed' | 'failed' | 'cancelled'
@@ -112,7 +101,7 @@ function ScanPageContent() {
 
   async function fetchClients() {
     try {
-      const res = await fetch('/api/admin/clients')
+      const res = await authFetch('/api/admin/clients')
       if (!res.ok) return
       const data = await res.json()
       setClients((data.clients || []).map((c: Record<string, unknown>) => ({
@@ -125,10 +114,7 @@ function ScanPageContent() {
 
   async function fetchHistory() {
     try {
-      const { data: { session } } = await getSupabase().auth.getSession()
-      const res = await fetch('/api/admin/scan', {
-        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
-      })
+      const res = await authFetch('/api/admin/scan')
       if (!res.ok) return
       const data = await res.json()
       if (data.scans) setHistory(data.scans)
@@ -147,20 +133,15 @@ function ScanPageContent() {
     setError(null)
 
     try {
-      const { data: { session } } = await getSupabase().auth.getSession()
-
       // 15-second timeout to prevent infinite spinner
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 15000)
 
       let res: Response
       try {
-        res = await fetch('/api/admin/scan', {
+        res = await authFetch('/api/admin/scan', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ mode: selectedMode, query, ...(selectedClientId ? { clientId: selectedClientId } : {}) }),
           signal: controller.signal,
         })
@@ -209,10 +190,7 @@ function ScanPageContent() {
   function pollJobStatus(id: string) {
     pollRef.current = setInterval(async () => {
       try {
-        const { data: { session } } = await getSupabase().auth.getSession()
-        const res = await fetch(`/api/admin/scan?jobId=${id}`, {
-          headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
-        })
+        const res = await authFetch(`/api/admin/scan?jobId=${id}`)
         if (!res.ok) return
         const job = await res.json()
 
@@ -239,10 +217,8 @@ function ScanPageContent() {
     if (!jobId) { setStatus('idle'); return }
     if (pollRef.current) clearInterval(pollRef.current)
     try {
-      const { data: { session } } = await getSupabase().auth.getSession()
-      await fetch(`/api/admin/scan?jobId=${jobId}`, {
+      await authFetch(`/api/admin/scan?jobId=${jobId}`, {
         method: 'DELETE',
-        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
       })
     } catch {}
     setStatus('cancelled')

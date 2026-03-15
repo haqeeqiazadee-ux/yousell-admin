@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { authFetch } from "@/lib/auth-fetch";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,7 +66,7 @@ export default function ClientsPage() {
 
   const fetchClients = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/admin/clients");
+    const res = await authFetch("/api/admin/clients");
     const data = await res.json();
     setClients(data.clients || []);
     setTotal(data.total || 0);
@@ -80,7 +81,7 @@ export default function ClientsPage() {
     e.preventDefault();
     setSubmitting(true);
 
-    const res = await fetch("/api/admin/clients", {
+    const res = await authFetch("/api/admin/clients", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -105,7 +106,7 @@ export default function ClientsPage() {
   };
 
   const handleUpdatePlan = async (clientId: string, plan: string) => {
-    const res = await fetch("/api/admin/clients", {
+    const res = await authFetch("/api/admin/clients", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: clientId, plan }),
@@ -118,7 +119,7 @@ export default function ClientsPage() {
 
   const handleDeleteClient = async (clientId: string, clientName: string) => {
     if (!confirm(`Delete client "${clientName}"? This cannot be undone.`)) return;
-    const res = await fetch(`/api/admin/clients?id=${clientId}`, {
+    const res = await authFetch(`/api/admin/clients?id=${clientId}`, {
       method: "DELETE",
     });
     if (res.ok) fetchClients();

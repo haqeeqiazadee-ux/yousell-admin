@@ -1,13 +1,11 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { requireAdmin } from "@/lib/auth/roles";
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { authenticateAdmin } from "@/lib/auth/admin-api-auth";
 
-export async function GET() {
-  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+export async function GET(request: NextRequest) {
+  try { await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const supabase = createAdminClient();
 
     const { data, error, count } = await supabase
       .from("clients")
@@ -21,12 +19,10 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
-  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+export async function POST(request: NextRequest) {
+  try { await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const supabase = createAdminClient();
 
     const body = await request.json();
     const { name, email, plan, niche, notes } = body;
@@ -56,12 +52,10 @@ const PLAN_LIMITS: Record<string, number> = {
   enterprise: 50,
 };
 
-export async function PUT(request: Request) {
-  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+export async function PUT(request: NextRequest) {
+  try { await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const supabase = createAdminClient();
 
     const body = await request.json();
     const { id, name, email, plan, niche, notes } = body;
@@ -99,12 +93,10 @@ export async function PUT(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
-  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+export async function DELETE(request: NextRequest) {
+  try { await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const supabase = createAdminClient();
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
