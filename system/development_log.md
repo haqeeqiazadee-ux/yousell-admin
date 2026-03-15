@@ -1176,3 +1176,36 @@ Scan still stuck after previous fix. Three root causes found:
 
 ### Build Status
 - Build: PASS
+
+------------------------------------------------------------
+
+## Session: 2026-03-15 — Live DB Testing & Schema Fix
+
+### Investigation (via Supabase REST API)
+
+Tested directly against the live Supabase database and found:
+
+1. **BACKEND_URL was `https://admin.yousell.online/admin/setup`** — pointing to
+   the admin site itself, not an Express backend. Every scan POST was hitting
+   the setup page, getting HTML back, and failing. **Removed from admin_settings.**
+
+2. **Products table missing columns** — `source`, `url`, `sales_count`,
+   `review_count`, `rating` exist in migration SQL but were never applied to
+   the live database. The product insert was silently failing with
+   `Could not find the 'source' column`. **Fixed by removing these fields from
+   generateProducts().** Changed `source` to `channel` (which exists).
+
+3. **scan_history table verified** — insert/update works correctly.
+
+4. **Confirmed stored API keys** — APIFY_API_TOKEN, ANTHROPIC_API_KEY,
+   RAPIDAPI_KEY, RESEND_API_KEY are all saved. TikTok/Amazon keys are NOT
+   needed for the direct scan (mock data generation).
+
+### Database Changes (Live)
+- Removed `BACKEND_URL` from `admin_settings` (key: `api_keys`)
+
+### Files Modified
+- `src/app/api/admin/scan/route.ts` — removed non-existent columns from product insert
+
+### Build Status
+- Build: PASS
