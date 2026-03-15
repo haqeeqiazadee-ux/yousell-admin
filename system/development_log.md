@@ -1144,3 +1144,35 @@ Implemented a self-contained scan directly in the Next.js API route:
 
 ### Build Status
 - Build: PASS (0 errors, 0 warnings)
+
+------------------------------------------------------------
+
+## Session: 2026-03-15 — Fix Scan Timeout + History Column
+
+### Problem
+Scan still stuck after previous fix. Three root causes found:
+
+### Root Causes & Fixes
+
+1. **Backend URL timeout** — `BACKEND_URL` stored in `admin_settings` (from
+   saving Apify keys via Settings page) caused `fetch()` to hang for 30+s
+   waiting for TCP timeout on a non-existent Express backend. Netlify's 10s
+   function timeout killed the request before the direct scan fallback could
+   execute. **Fix:** Added `AbortController` with 5s timeout on POST, 3s on
+   GET/DELETE.
+
+2. **Wrong column name** — `scan_history` table has `started_at`, not
+   `created_at`. Both the API route GET and frontend `fetchHistory()` queried
+   `.order('created_at', ...)` which silently failed. History always showed
+   "No scans yet." **Fix:** Changed to `started_at`.
+
+3. **Not an API key issue** — TikTok/Amazon keys being unconfigured does NOT
+   affect the scan. The direct scan uses mock product generation (no external
+   API calls). Apify keys are only needed for a future live scraping backend.
+
+### Files Modified
+- `src/app/api/admin/scan/route.ts` — AbortController timeouts, column fix
+- `src/app/admin/scan/page.tsx` — column fix in fetchHistory
+
+### Build Status
+- Build: PASS
