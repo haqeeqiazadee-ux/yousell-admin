@@ -1498,3 +1498,49 @@ New API route: `PATCH /api/admin/allocations/requests` — approve/reject produc
 - `recharts` — chart library for analytics visualizations
 
 ### Build Status — PASS (0 errors, 0 warnings)
+
+------------------------------------------------------------
+
+## Session — 2026-03-15: Security Fixes (BUG-001, BUG-016, BUG-035) + Content Creation Engine
+
+### Critical Bug Fixes
+
+**BUG-001: RLS policies missing super_admin role**
+All RLS admin policies across 25+ tables only checked `role = 'admin'`, excluding `super_admin` users from database access. Fixed by updating all policies to use `role IN ('admin', 'super_admin')`.
+
+**BUG-016: Backend Express server missing RBAC**
+The `authMiddleware` in `backend/src/index.ts` only verified that a user was authenticated but did not check their role. Any authenticated user (including clients) could call admin-only endpoints like `/api/scan`, `/api/trends`, etc. Fixed by adding `requireAdmin` middleware that checks the user's profile role via the service-role Supabase client. Applied to all 20 admin-only Express routes.
+
+**BUG-035: Clients table missing self-read RLS policy**
+The `clients` table had RLS enabled with only an admin policy, preventing clients from reading their own record. This would block client dashboard pages from resolving the client context. Fixed by adding a SELECT policy matching `email = (SELECT email FROM profiles WHERE id = auth.uid())`. Also added a client self-management policy for `product_requests`.
+
+### Phase 3: Content Creation Engine
+
+Built the Content Creation Engine per v7 spec Phase 3:
+
+**API: `POST /api/dashboard/content/generate`**
+- Validates subscription (Growth plan or higher required for content engine)
+- Accepts productId, contentType, and optional channel
+- 5 content types: product_description, social_post, ad_copy, email_sequence, video_script
+- Each type has a specialized system prompt and token limit
+- Uses Claude Haiku (cost-optimized per v7 spec Rule 12)
+- Queues request in content_queue, generates via Anthropic API, updates with result
+- Tracks usage in usage_tracking table per billing period
+- Graceful degradation if ANTHROPIC_API_KEY not configured
+
+**UI: Enhanced Content Studio (`/dashboard/content`)**
+- Full content generation panel with product selector, content type pills, channel dropdown
+- Expandable content cards with copy-to-clipboard
+- Status badges (pending, generated, scheduled, published, failed)
+- Error display for failed generations
+- Loading states and empty state prompts
+
+### Files Created
+- `supabase/migrations/017_security_fixes.sql` — BUG-001, BUG-035 RLS fixes
+- `src/app/api/dashboard/content/generate/route.ts` — Content generation API
+
+### Files Modified
+- `backend/src/index.ts` — Added requireAdmin RBAC middleware to all admin routes (BUG-016)
+- `src/app/dashboard/content/page.tsx` — Full Content Studio with generation UI
+
+### Build Status — PASS (0 errors, 0 warnings)

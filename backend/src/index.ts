@@ -78,6 +78,36 @@ async function authMiddleware(req: express.Request, res: express.Response, next:
   }
 }
 
+// BUG-016 fix: RBAC middleware — restrict admin-only endpoints to admin/super_admin roles
+async function requireAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const user = (req as any).user;
+  if (!user) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  try {
+    // Use the service-role client to bypass RLS and check role
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (error || !profile) {
+      return res.status(403).json({ error: 'Profile not found' });
+    }
+
+    if (profile.role !== 'admin' && profile.role !== 'super_admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    (req as any).userRole = profile.role;
+    next();
+  } catch {
+    return res.status(403).json({ error: 'Authorization check failed' });
+  }
+}
+
 app.use(authMiddleware);
 
 const scanQueue = new Queue('scan', { connection });
@@ -99,7 +129,7 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.post('/api/scan', scanLimiter, async (req, res) => {
+app.post('/api/scan', scanLimiter, requireAdmin, async (req, res) => {
   try {
     const { mode = 'quick', query = '', userId } = req.body;
 
@@ -116,7 +146,7 @@ app.post('/api/scan', scanLimiter, async (req, res) => {
   }
 });
 
-app.get('/api/scan/history', async (_req, res) => {
+app.get('/api/scan/history', requireAdmin, async (_req, res) => {
   try {
     const { data: scans, error } = await supabase
       .from('scan_history')
@@ -132,7 +162,7 @@ app.get('/api/scan/history', async (_req, res) => {
   }
 });
 
-app.get('/api/scan/:jobId', async (req, res) => {
+app.get('/api/scan/:jobId', requireAdmin, async (req, res) => {
   try {
     const { jobId } = req.params;
     const job = await scanQueue.getJob(jobId);
@@ -156,7 +186,7 @@ app.get('/api/scan/:jobId', async (req, res) => {
   }
 });
 
-app.post('/api/scan/:jobId/cancel', scanLimiter, async (req, res) => {
+app.post('/api/scan/:jobId/cancel', scanLimiter, requireAdmin, async (req, res) => {
   try {
     const { jobId } = req.params;
     const job = await scanQueue.getJob(jobId);
@@ -181,7 +211,7 @@ app.post('/api/scan/:jobId/cancel', scanLimiter, async (req, res) => {
 
 // ── New job endpoints ────────────────────────────────────────
 
-app.post('/api/trends', scanLimiter, async (req, res) => {
+app.post('/api/trends', scanLimiter, requireAdmin, async (req, res) => {
   try {
     const { query = '', userId } = req.body;
     const job = await trendQueue.add('trend-scan', { query, userId });
@@ -192,7 +222,7 @@ app.post('/api/trends', scanLimiter, async (req, res) => {
   }
 });
 
-app.post('/api/influencers/discover', scanLimiter, async (req, res) => {
+app.post('/api/influencers/discover', scanLimiter, requireAdmin, async (req, res) => {
   try {
     const { niche, userId } = req.body;
     if (!niche) {
@@ -206,7 +236,7 @@ app.post('/api/influencers/discover', scanLimiter, async (req, res) => {
   }
 });
 
-app.post('/api/suppliers/discover', scanLimiter, async (req, res) => {
+app.post('/api/suppliers/discover', scanLimiter, requireAdmin, async (req, res) => {
   try {
     const { productName, category, userId } = req.body;
     if (!productName) {
@@ -220,7 +250,7 @@ app.post('/api/suppliers/discover', scanLimiter, async (req, res) => {
   }
 });
 
-app.post('/api/tiktok/discover', scanLimiter, async (req, res) => {
+app.post('/api/tiktok/discover', scanLimiter, requireAdmin, async (req, res) => {
   try {
     const { query, limit, userId } = req.body;
     if (!query) {
@@ -238,7 +268,7 @@ app.post('/api/tiktok/discover', scanLimiter, async (req, res) => {
   }
 });
 
-app.get('/api/tiktok/videos', async (req, res) => {
+app.get('/api/tiktok/videos', requireAdmin, async (req, res) => {
   try {
     const { query, limit = '50', has_product } = req.query;
     let q = supabase
@@ -263,7 +293,7 @@ app.get('/api/tiktok/videos', async (req, res) => {
   }
 });
 
-app.post('/api/tiktok/extract-products', scanLimiter, async (req, res) => {
+app.post('/api/tiktok/extract-products', scanLimiter, requireAdmin, async (req, res) => {
   try {
     const { discoveryQuery, minViews, userId } = req.body;
     const job = await tiktokProductExtractQueue.add('tiktok-product-extract', {
@@ -278,7 +308,7 @@ app.post('/api/tiktok/extract-products', scanLimiter, async (req, res) => {
   }
 });
 
-app.post('/api/tiktok/engagement-analysis', scanLimiter, async (req, res) => {
+app.post('/api/tiktok/engagement-analysis', scanLimiter, requireAdmin, async (req, res) => {
   try {
     const { hashtag, minVideoCount, userId } = req.body;
     const job = await tiktokEngagementQueue.add('tiktok-engagement-analysis', {
@@ -293,7 +323,7 @@ app.post('/api/tiktok/engagement-analysis', scanLimiter, async (req, res) => {
   }
 });
 
-app.get('/api/tiktok/hashtag-signals', async (req, res) => {
+app.get('/api/tiktok/hashtag-signals', requireAdmin, async (req, res) => {
   try {
     const { hashtag, limit = '50' } = req.query;
     let q = supabase
@@ -315,7 +345,7 @@ app.get('/api/tiktok/hashtag-signals', async (req, res) => {
   }
 });
 
-app.post('/api/tiktok/cross-match', scanLimiter, async (req, res) => {
+app.post('/api/tiktok/cross-match', scanLimiter, requireAdmin, async (req, res) => {
   try {
     const { keywords, platforms, minTikTokScore, userId } = req.body;
     if (!keywords || !Array.isArray(keywords) || keywords.length === 0) {
@@ -336,7 +366,7 @@ app.post('/api/tiktok/cross-match', scanLimiter, async (req, res) => {
 
 // ── Phase 2: Product Intelligence ──────────────────────────
 
-app.post('/api/products/cluster', scanLimiter, async (req, res) => {
+app.post('/api/products/cluster', scanLimiter, requireAdmin, async (req, res) => {
   try {
     const { minScore, similarityThreshold, userId } = req.body;
     const job = await productClusteringQueue.add('product-clustering', {
@@ -351,7 +381,7 @@ app.post('/api/products/cluster', scanLimiter, async (req, res) => {
   }
 });
 
-app.get('/api/products/clusters', async (_req, res) => {
+app.get('/api/products/clusters', requireAdmin, async (_req, res) => {
   try {
     const { data, error } = await supabase
       .from('product_clusters')
@@ -366,7 +396,7 @@ app.get('/api/products/clusters', async (_req, res) => {
   }
 });
 
-app.post('/api/trends/detect', scanLimiter, async (req, res) => {
+app.post('/api/trends/detect', scanLimiter, requireAdmin, async (req, res) => {
   try {
     const { platform, minClusterSize, userId } = req.body;
     const job = await trendDetectionQueue.add('trend-detection', {
@@ -383,7 +413,7 @@ app.post('/api/trends/detect', scanLimiter, async (req, res) => {
 
 // ── Phase 3: Creator Intelligence ──────────────────────────
 
-app.post('/api/creators/match', scanLimiter, async (req, res) => {
+app.post('/api/creators/match', scanLimiter, requireAdmin, async (req, res) => {
   try {
     const { productId, minProductScore, maxCreatorsPerProduct, userId } = req.body;
     const job = await creatorMatchingQueue.add('creator-matching', {
@@ -399,7 +429,7 @@ app.post('/api/creators/match', scanLimiter, async (req, res) => {
   }
 });
 
-app.get('/api/creators/matches', async (req, res) => {
+app.get('/api/creators/matches', requireAdmin, async (req, res) => {
   try {
     const { product_id } = req.query;
     let query = supabase
@@ -421,7 +451,7 @@ app.get('/api/creators/matches', async (req, res) => {
 
 // ── Phase 4: Marketplace Intelligence ──────────────────────
 
-app.post('/api/amazon/scan', scanLimiter, async (req, res) => {
+app.post('/api/amazon/scan', scanLimiter, requireAdmin, async (req, res) => {
   try {
     const { query, limit, userId } = req.body;
     if (!query) return res.status(400).json({ error: 'query is required' });
@@ -437,7 +467,7 @@ app.post('/api/amazon/scan', scanLimiter, async (req, res) => {
   }
 });
 
-app.post('/api/shopify/scan', scanLimiter, async (req, res) => {
+app.post('/api/shopify/scan', scanLimiter, requireAdmin, async (req, res) => {
   try {
     const { niche, limit, userId } = req.body;
     if (!niche) return res.status(400).json({ error: 'niche is required' });
@@ -455,7 +485,7 @@ app.post('/api/shopify/scan', scanLimiter, async (req, res) => {
 
 // ── Phase 5: Ad Intelligence ───────────────────────────────
 
-app.post('/api/ads/discover', scanLimiter, async (req, res) => {
+app.post('/api/ads/discover', scanLimiter, requireAdmin, async (req, res) => {
   try {
     const { query, platforms, limit, userId } = req.body;
     if (!query) return res.status(400).json({ error: 'query is required' });
@@ -472,7 +502,7 @@ app.post('/api/ads/discover', scanLimiter, async (req, res) => {
   }
 });
 
-app.get('/api/ads', async (req, res) => {
+app.get('/api/ads', requireAdmin, async (req, res) => {
   try {
     const { platform, scaling_only, limit: lim = '50' } = req.query;
     let query = supabase
