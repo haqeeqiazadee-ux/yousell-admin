@@ -147,18 +147,14 @@ function generateProducts(mode: string) {
         score_margin: profitScore,
         score_trend: trendScore,
         image_url: `https://picsum.photos/seed/${Math.random().toString(36).slice(2, 8)}/400/400`,
-        source: `scan-${mode}`,
+        channel: `scan-${mode}`,
         tags: t.tags,
         final_score: finalScore,
         trend_score: trendScore,
         viral_score: viralScore,
         profit_score: profitScore,
         trend_stage: stages[stageIdx],
-        url: `https://example.com/${platform}/${t.name.toLowerCase().replace(/\s+/g, '-')}`,
         external_url: `https://example.com/${platform}/${t.name.toLowerCase().replace(/\s+/g, '-')}`,
-        sales_count: randomInt(50, 5000),
-        review_count: randomInt(10, 2000),
-        rating: randomFloat(3.5, 5.0),
       });
     }
   }
