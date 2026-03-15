@@ -11,6 +11,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
+import { authFetch } from "@/lib/auth-fetch";
 
 type Platform = "tiktok" | "amazon" | "shopify" | "pinterest";
 
@@ -67,7 +68,7 @@ export default function ImportPage() {
       formData.append("file", file);
       formData.append("platform", selectedPlatform);
 
-      const res = await fetch("/api/admin/import", {
+      const res = await authFetch("/api/admin/import", {
         method: "POST",
         body: formData,
       });

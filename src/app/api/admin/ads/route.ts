@@ -1,14 +1,12 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { requireAdmin } from "@/lib/auth/roles";
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { authenticateAdmin } from "@/lib/auth/admin-api-auth";
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:4000";
 
-export async function GET(request: Request) {
-  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function GET(request: NextRequest) {
+  try { await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+  const supabase = createAdminClient();
 
   const { searchParams } = new URL(request.url);
   const platform = searchParams.get("platform");
@@ -28,11 +26,11 @@ export async function GET(request: Request) {
   return NextResponse.json({ ads: data || [] });
 }
 
-export async function POST(request: Request) {
-  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function POST(request: NextRequest) {
+  let user;
+  try { user = await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+
+  const token = request.headers.get("authorization")?.replace("Bearer ", "") || "";
 
   const body = await request.json();
   if (!body.query) return NextResponse.json({ error: "query is required" }, { status: 400 });
@@ -41,13 +39,13 @@ export async function POST(request: Request) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${session.access_token}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
       query: body.query,
       platforms: body.platforms || ["tiktok", "facebook"],
       limit: body.limit || 20,
-      userId: session.user.id,
+      userId: user.id,
     }),
   });
 

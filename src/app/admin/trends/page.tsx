@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { authFetch } from "@/lib/auth-fetch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,7 +58,7 @@ export default function TrendsPage() {
   const fetchTrends = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/trends");
+      const res = await authFetch("/api/admin/trends");
       if (!res.ok) throw new Error("Failed to load trends");
       const data = await res.json();
       setTrends(data.trends || []);
@@ -82,7 +83,7 @@ export default function TrendsPage() {
       .map((k) => k.trim())
       .filter(Boolean);
 
-    const res = await fetch("/api/admin/trends", {
+    const res = await authFetch("/api/admin/trends", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ keywords: keywordList, category: category || undefined }),

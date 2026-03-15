@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { authFetch } from "@/lib/auth-fetch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -57,7 +58,7 @@ export default function CreatorMatchesPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/admin/creator-matches");
+      const res = await authFetch("/api/admin/creator-matches");
       if (!res.ok) throw new Error("Failed to load matches");
       const data = await res.json();
       setMatches(data.matches || []);
@@ -74,7 +75,7 @@ export default function CreatorMatchesPage() {
     setRunLoading(true);
     setRunResult(null);
     try {
-      const res = await fetch("/api/admin/creator-matches", {
+      const res = await authFetch("/api/admin/creator-matches", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ minProductScore: 60 }),

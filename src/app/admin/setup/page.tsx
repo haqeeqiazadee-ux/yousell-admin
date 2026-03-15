@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { authFetch } from "@/lib/auth-fetch";
 import {
   CheckCircle2,
   XCircle,
@@ -37,7 +38,7 @@ export default function SetupPage() {
       configPath: "/admin/settings",
       check: async () => {
         try {
-          const res = await fetch("/api/admin/dashboard");
+          const res = await authFetch("/api/admin/dashboard");
           const data = await res.json();
           return data.services?.supabase === true;
         } catch {
@@ -52,7 +53,7 @@ export default function SetupPage() {
       configPath: "/admin/settings",
       check: async () => {
         try {
-          const res = await fetch("/api/admin/dashboard");
+          const res = await authFetch("/api/admin/dashboard");
           const data = await res.json();
           return data.services?.auth === true;
         } catch {
@@ -67,7 +68,7 @@ export default function SetupPage() {
       configPath: "/admin/settings",
       check: async () => {
         try {
-          const res = await fetch("/api/admin/dashboard");
+          const res = await authFetch("/api/admin/dashboard");
           const data = await res.json();
           return data.services?.ai === true;
         } catch {
@@ -82,7 +83,7 @@ export default function SetupPage() {
       configPath: "/admin/settings",
       check: async () => {
         try {
-          const res = await fetch("/api/admin/dashboard");
+          const res = await authFetch("/api/admin/dashboard");
           const data = await res.json();
           return data.services?.email === true;
         } catch {
@@ -97,7 +98,7 @@ export default function SetupPage() {
       configPath: "/admin/settings",
       check: async () => {
         try {
-          const res = await fetch("/api/admin/dashboard");
+          const res = await authFetch("/api/admin/dashboard");
           const data = await res.json();
           return data.services?.apify === true;
         } catch {
@@ -112,7 +113,7 @@ export default function SetupPage() {
       configPath: "/admin/settings",
       check: async () => {
         try {
-          const res = await fetch("/api/admin/settings");
+          const res = await authFetch("/api/admin/settings");
           const data = await res.json();
           const providers = data.providers || [];
           const configured = providers.filter((p: { configured: boolean }) => p.configured).length;
@@ -127,8 +128,8 @@ export default function SetupPage() {
   useEffect(() => {
     async function runChecks() {
       setChecking(true);
-      const dashRes = await fetch("/api/admin/dashboard").then(r => r.json()).catch(() => ({}));
-      const settingsRes = await fetch("/api/admin/settings").then(r => r.json()).catch(() => ({}));
+      const dashRes = await authFetch("/api/admin/dashboard").then(r => r.json()).catch(() => ({}));
+      const settingsRes = await authFetch("/api/admin/settings").then(r => r.json()).catch(() => ({}));
 
       const newResults: Record<number, boolean> = {};
 

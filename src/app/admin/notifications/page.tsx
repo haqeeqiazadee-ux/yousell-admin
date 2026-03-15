@@ -11,6 +11,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
+import { authFetch } from "@/lib/auth-fetch";
 
 interface Notification {
   id: string;
@@ -35,7 +36,7 @@ export default function NotificationsPage() {
 
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/admin/notifications");
+    const res = await authFetch("/api/admin/notifications");
     const data = await res.json();
     const items: Notification[] = data.notifications || [];
     setNotifications(items);
@@ -48,7 +49,7 @@ export default function NotificationsPage() {
   }, [fetchNotifications]);
 
   const markAsRead = async (id: string) => {
-    const res = await fetch("/api/admin/notifications", {
+    const res = await authFetch("/api/admin/notifications", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),

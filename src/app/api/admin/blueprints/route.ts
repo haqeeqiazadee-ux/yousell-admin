@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { requireAdmin } from "@/lib/auth/roles";
+import { createAdminClient } from '@/lib/supabase/admin';
+import { authenticateAdmin } from '@/lib/auth/admin-api-auth';
 
-export async function GET() {
-  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+export async function GET(request: NextRequest) {
+  try { await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+  const supabase = createAdminClient();
 
   const { data: blueprints, error } = await supabase
     .from('launch_blueprints')
@@ -23,12 +19,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  try { await authenticateAdmin(req); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+  const supabase = createAdminClient();
 
   const body = await req.json();
   const { product_id, positioning, product_page_content, pricing_strategy,

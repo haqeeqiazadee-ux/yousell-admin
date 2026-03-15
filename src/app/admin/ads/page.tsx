@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { authFetch } from "@/lib/auth-fetch";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,7 +69,7 @@ export default function AdsPage() {
       const params = new URLSearchParams();
       if (platformFilter !== "all") params.set("platform", platformFilter);
       if (scalingOnly) params.set("scaling_only", "true");
-      const res = await fetch(`/api/admin/ads?${params}`);
+      const res = await authFetch(`/api/admin/ads?${params}`);
       if (!res.ok) throw new Error("Failed to load ads");
       const data = await res.json();
       setAds(data.ads || []);
@@ -86,7 +87,7 @@ export default function AdsPage() {
     setRunLoading(true);
     setRunResult(null);
     try {
-      const res = await fetch("/api/admin/ads", {
+      const res = await authFetch("/api/admin/ads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: query.trim() }),

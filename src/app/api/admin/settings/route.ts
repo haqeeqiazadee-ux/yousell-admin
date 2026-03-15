@@ -1,13 +1,13 @@
-import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth/roles";
+import { NextRequest, NextResponse } from "next/server";
+import { authenticateAdmin } from "@/lib/auth/admin-api-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PROVIDERS, getEnvVar } from "@/lib/providers/config";
 
 export const dynamic = "force-dynamic";
 
 // GET /api/admin/settings — returns provider status and saved settings
-export async function GET(request: Request) {
-  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+export async function GET(request: NextRequest) {
+  try { await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
 
   const url = new URL(request.url);
 
@@ -95,9 +95,9 @@ export async function GET(request: Request) {
 }
 
 // POST /api/admin/settings — save API keys or other settings
-export async function POST(request: Request) {
-  const admin = await requireAdmin().catch(() => null);
-  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+export async function POST(request: NextRequest) {
+  let admin;
+  try { admin = await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
 
   const supabase = createAdminClient();
   const body = await request.json();

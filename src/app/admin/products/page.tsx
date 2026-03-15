@@ -35,6 +35,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import type { Product } from "@/lib/types/product";
+import { authFetch } from "@/lib/auth-fetch";
 
 const platformColors: Record<string, string> = {
   tiktok: "text-pink-500 border-pink-500/30",
@@ -92,7 +93,7 @@ export default function ProductsPage() {
       if (search) params.set("search", search);
       params.set("limit", String(PAGE_SIZE));
       params.set("offset", String((page - 1) * PAGE_SIZE));
-      const res = await fetch(`/api/admin/products?${params}`);
+      const res = await authFetch(`/api/admin/products?${params}`);
       if (!res.ok) throw new Error("Failed to load products");
       const data = await res.json();
       setProducts(data.products || []);
@@ -112,7 +113,7 @@ export default function ProductsPage() {
     e.preventDefault();
     setSubmitting(true);
 
-    const res = await fetch("/api/admin/products", {
+    const res = await authFetch("/api/admin/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -154,7 +155,7 @@ export default function ProductsPage() {
     e.preventDefault();
     if (!editProduct) return;
     setSubmitting(true);
-    const res = await fetch("/api/admin/products", {
+    const res = await authFetch("/api/admin/products", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -178,7 +179,7 @@ export default function ProductsPage() {
   const handleDeleteProduct = async () => {
     if (!deleteProduct) return;
     setSubmitting(true);
-    const res = await fetch(`/api/admin/products?id=${deleteProduct.id}`, {
+    const res = await authFetch(`/api/admin/products?id=${deleteProduct.id}`, {
       method: "DELETE",
     });
     if (res.ok) {

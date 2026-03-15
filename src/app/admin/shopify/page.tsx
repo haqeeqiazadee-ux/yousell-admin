@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { authFetch } from "@/lib/auth-fetch";
 import Image from "next/image";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -74,7 +75,7 @@ function ScanTrigger() {
     setLoading(true);
     setResult(null);
     try {
-      const res = await fetch("/api/admin/shopify/scan", {
+      const res = await authFetch("/api/admin/shopify/scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ niche: niche.trim(), limit: 20 }),
@@ -125,7 +126,7 @@ function ProductsTab() {
     try {
       const params = new URLSearchParams({ platform: "shopify" });
       if (search) params.set("search", search);
-      const res = await fetch(`/api/admin/products?${params}`);
+      const res = await authFetch(`/api/admin/products?${params}`);
       if (!res.ok) throw new Error("Failed to load");
       const data = await res.json();
       setProducts(data.products || []);
@@ -222,7 +223,7 @@ function StoresTab() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/admin/competitors");
+      const res = await authFetch("/api/admin/competitors");
       if (!res.ok) throw new Error("Failed to load");
       const data = await res.json();
       const shopifyStores = (data.competitors || []).filter(

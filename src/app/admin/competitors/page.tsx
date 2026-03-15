@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Swords, Plus, ExternalLink } from "lucide-react";
+import { authFetch } from "@/lib/auth-fetch";
 
 interface Competitor {
   id: string;
@@ -51,7 +52,7 @@ export default function CompetitorsPage() {
 
   const fetchCompetitors = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/admin/competitors");
+    const res = await authFetch("/api/admin/competitors");
     const data = await res.json();
     setCompetitors(data.competitors || []);
     setTotal(data.total || 0);
@@ -66,7 +67,7 @@ export default function CompetitorsPage() {
     e.preventDefault();
     setSubmitting(true);
 
-    const res = await fetch("/api/admin/competitors", {
+    const res = await authFetch("/api/admin/competitors", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

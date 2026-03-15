@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { authFetch } from "@/lib/auth-fetch";
 import Image from "next/image";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -42,7 +43,7 @@ export default function AmazonPage() {
     try {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
-      const res = await fetch(`/api/admin/amazon?${params}`);
+      const res = await authFetch(`/api/admin/amazon?${params}`);
       if (!res.ok) throw new Error("Failed to load products");
       const data = await res.json();
       setProducts(data.products || []);
@@ -61,7 +62,7 @@ export default function AmazonPage() {
     setScanLoading(true);
     setScanResult(null);
     try {
-      const res = await fetch("/api/admin/amazon/scan", {
+      const res = await authFetch("/api/admin/amazon/scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: scanQuery.trim(), limit: 50 }),

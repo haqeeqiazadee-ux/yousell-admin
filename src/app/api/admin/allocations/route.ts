@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { requireAdmin } from '@/lib/auth/roles';
+import { authenticateAdmin } from '@/lib/auth/admin-api-auth';
 
 export async function POST(req: NextRequest) {
   let user;
-  try { user = await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+  try { user = await authenticateAdmin(req); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
 
   const supabaseAdmin = createAdminClient();
   const body = await req.json();
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+  try { await authenticateAdmin(req); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
 
   const supabaseAdmin = createAdminClient();
   const clientId = req.nextUrl.searchParams.get('clientId');
