@@ -1592,3 +1592,94 @@ Created migration `018_security_and_indexes.sql` adding indexes on `title`, `pla
 - `src/app/admin/influencers/page.tsx` — Invite button + product selector dialog
 
 ### Build Status — PASS (0 errors, 0 warnings)
+
+---
+
+## Session: 2026-03-15 — UI Overhaul + Phase 4 (Store OAuth, Order Tracking, Automation)
+
+### UI Overhaul — FastMoss-Style Lively Design
+
+**globals.css — Complete theme system rewrite**
+- CSS custom properties: rose primary (346°), dark mode variables
+- Gradient utilities: coral, teal, purple, amber, blue, pink, emerald, orange
+- Component classes: badge-new, icon-circle, icon-circle-lg, card-hover, pulse-dot animation
+
+**admin-sidebar.tsx — Colorful navigation**
+- Gradient icon circles per nav item (gradient backgrounds for main nav, colored bg-50 for channels)
+- NEW badges on TikTok Shop, AI Affiliates, Ad Intelligence, Automation
+- Rose accent for active state, gradient coral logo icon
+- Added Automation nav item under Management
+
+**admin/page.tsx — FastMoss-style dashboard**
+- Feature category cards (Discover Products, Find Trends, Find Shops, Find Creators, AI Intelligence)
+- Sub-items with chevrons and NEW badges, gradient icon backgrounds
+- Lively KPI cards with pulse-dot animations and card hover effects
+
+**admin/automation/page.tsx — New automation management page**
+- Job monitoring with toggle switches, summary stats (enabled/running/cost/records)
+- Cost warning banner, job list with status badges, last run times, error logs
+- Lively gradient styling throughout
+
+### Phase 4: Store OAuth Integration
+
+**API: `POST /api/dashboard/channels/connect`**
+- OAuth initiation for Shopify (requires shopDomain), TikTok Shop, Amazon
+- CSRF protection via base64url state token (client_id + channelType + timestamp)
+- Returns authUrl for redirect
+
+**API: `POST /api/dashboard/channels/disconnect`**
+- Soft disconnect: verifies ownership, clears tokens, marks disconnected
+
+**API: `GET /api/auth/oauth/callback`**
+- Decodes state, verifies 15-min expiry
+- Exchanges authorization code per channel (Shopify, TikTok Shop, Amazon)
+- Upserts tokens to connected_channels table
+
+**UI: dashboard/integrations/page.tsx**
+- Enhanced with OAuth connect/disconnect flow, gradient card styling
+- Loading states, Shopify domain input, toast notifications for success/failure
+
+### Phase 4: Order Tracking System
+
+**Webhook Handlers**
+- `api/webhooks/shopify/route.ts` — HMAC signature verification, order create/update events, status mapping
+- `api/webhooks/tiktok/route.ts` — TikTok Shop order events, shop_id matching via channel metadata
+- `api/webhooks/amazon/route.ts` — SP-API ORDER_CHANGE notifications, seller ID matching
+
+All webhooks: upsert orders to DB, send status emails for shipped/delivered
+
+**Post-Purchase Email Sequences**
+- `lib/email-orders.ts` — Branded HTML emails for confirmed/shipped/delivered statuses
+- Gradient-styled status badges in emails, tracking URL buttons
+- Graceful degradation if RESEND_API_KEY not set
+
+**UI: dashboard/orders/page.tsx — Enhanced order tracking**
+- KPI cards (total orders, revenue, avg value, fulfilled) with gradient icons
+- Status filter buttons (All/Pending/Confirmed/Shipped/Delivered) with counts
+- Search across order ID, product, customer name, email
+- Platform-colored badges, tracking links, responsive table
+- Wrapped in EngineGate for subscription gating
+
+**Migration: 019_order_tracking_enhancements.sql**
+- Unique constraint on (external_order_id, platform) for webhook upsert
+- Composite index for faster webhook lookups
+
+### Files Created
+- `src/app/api/webhooks/shopify/route.ts`
+- `src/app/api/webhooks/tiktok/route.ts`
+- `src/app/api/webhooks/amazon/route.ts`
+- `src/lib/email-orders.ts`
+- `src/app/admin/automation/page.tsx`
+- `src/app/api/dashboard/channels/connect/route.ts`
+- `src/app/api/dashboard/channels/disconnect/route.ts`
+- `src/app/api/auth/oauth/callback/route.ts`
+- `supabase/migrations/019_order_tracking_enhancements.sql`
+
+### Files Modified
+- `src/app/globals.css` — Complete theme system
+- `src/components/admin-sidebar.tsx` — Lively navigation
+- `src/app/admin/page.tsx` — FastMoss-style dashboard
+- `src/app/dashboard/integrations/page.tsx` — OAuth flow + lively UI
+- `src/app/dashboard/orders/page.tsx` — Enhanced order tracking UI
+
+### Phase 4 Build Status — PASS (0 errors, 0 warnings)
