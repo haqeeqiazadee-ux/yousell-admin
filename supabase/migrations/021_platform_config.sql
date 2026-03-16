@@ -24,7 +24,7 @@ ALTER TABLE platform_config ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Admins can manage platform_config" ON platform_config;
 CREATE POLICY "Admins can manage platform_config" ON platform_config
   FOR ALL USING (
-    EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.role IN ('admin', 'super_admin'))
+    EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.role = 'admin')
   );
 
 -- All authenticated users can read platform config
