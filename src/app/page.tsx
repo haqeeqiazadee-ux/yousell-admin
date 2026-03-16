@@ -17,9 +17,9 @@ export default async function Home() {
     redirect(user ? '/admin' : '/admin/login')
   }
 
-  // Client domain: logged-in users go to dashboard
+  // Client domain: logged-in users go to main site dashboard
   if (user) {
-    redirect('/dashboard')
+    redirect('https://yousell.online/dashboard')
   }
 
   // Unauthenticated client-domain visitors see the homepage
