@@ -1838,5 +1838,6 @@ Identified 22 bugs across all severity levels.
 
 ### Build Status — PASS (0 errors, 0 warnings)
 
-### Action Required
-- Run `supabase/migrations/020_rls_security_fixes.sql` in Supabase SQL Editor to apply RLS fixes
+### Action Required — COMPLETED
+- ~~Run `supabase/migrations/020_rls_security_fixes.sql` in Supabase SQL Editor to apply RLS fixes~~
+- ✅ Migration 020 applied and verified on 2026-03-16. No permissive `USING(true)` policies remain.
