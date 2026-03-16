@@ -1841,3 +1841,64 @@ Identified 22 bugs across all severity levels.
 ### Action Required — COMPLETED
 - ~~Run `supabase/migrations/020_rls_security_fixes.sql` in Supabase SQL Editor to apply RLS fixes~~
 - ✅ Migration 020 applied and verified on 2026-03-16. No permissive `USING(true)` policies remain.
+
+------------------------------------------------------------
+
+## Session: 2026-03-16 — Netlify Deploy Fix + Gap Closure
+
+### Netlify Deploy Fix
+- Diagnosed failed Netlify deploys: root cause was **deprecated build image** (not code)
+- Upgraded Node.js from 18 to 20 in `netlify.toml`
+- Upgraded Next.js from 14 to 15 for Netlify compatibility
+- Restored `@netlify/plugin-nextjs` in `netlify.toml` (auto-managed by Netlify, not pinned in package.json)
+- Removed legacy `@netlify/plugin-nextjs` from `package.json` to avoid version conflicts
+- User updated Netlify build image in dashboard — deploy succeeded
+
+### Full Platform Audit
+Conducted comprehensive gap analysis comparing v7 spec against actual codebase.
+
+**Key Findings — Platform is ~95% complete:**
+- All Stripe billing (webhooks, checkout, portal) — FULLY FUNCTIONAL
+- All content generation (Claude Haiku, 5 content types) — FULLY FUNCTIONAL
+- All channel OAuth (Shopify, TikTok, Amazon connect/disconnect/callback) — FULLY FUNCTIONAL
+- All order tracking (3 webhook handlers + email sequences) — FULLY FUNCTIONAL
+- All 3 CRITICAL bugs and 6 HIGH bugs from QA — ALL FIXED
+- All database tables from v7 spec — ALL MIGRATED (22+ tables)
+- 108 unit/integration tests — ALL PASSING
+
+### New Features Added
+
+**Admin Revenue Analytics API** (`/api/admin/revenue`)
+- MRR and ARR calculations from active subscriptions
+- Per-plan breakdown (count + revenue per tier)
+- Churn metrics (cancelled + pending cancellation)
+- Client growth (new clients in last 30 days, conversion rate)
+- Usage summary aggregation
+- Recent subscription list
+
+**Dashboard Engines API** (`/api/dashboard/engines`)
+- GET: Lists all 8 engines with entitlement status per client's plan
+- POST: Toggle engines on/off (validates plan entitlement)
+- Maps engines to minimum required plan tier
+- Upserts into `engine_toggles` table with conflict handling
+
+**Platform Config Migration** (`supabase/migrations/021_platform_config.sql`)
+- Creates `platform_config` table (last missing v7 table)
+- RLS policies for admin write + authenticated read
+- Seeds 7 platform configurations matching v7 spec Section 2.2
+- Includes base pricing, descriptions, enabled state
+
+### Files Created
+- `src/app/api/admin/revenue/route.ts` — Admin revenue analytics
+- `src/app/api/dashboard/engines/route.ts` — Client engine toggle API
+- `supabase/migrations/021_platform_config.sql` — Platform config table + seed data
+
+### Files Modified
+- `netlify.toml` — Node 20, plugin reference restored
+- `package.json` — Next.js 15, removed pinned Netlify plugin
+- `.env.example` — Full env var documentation (Stripe, OAuth, Claude, Apify)
+
+### Build Status — PASS (0 errors, 0 warnings)
+
+### Action Required
+- Run `supabase/migrations/021_platform_config.sql` in Supabase SQL Editor to create platform_config table
