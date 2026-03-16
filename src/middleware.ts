@@ -21,12 +21,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/admin', request.url))
   }
 
-  // If on client domain, redirect root to /dashboard (if logged in) or /login
+  // If on client domain root, redirect logged-in users to dashboard; otherwise show homepage
   if (isClientDomain && pathname === '/') {
     if (user) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
-    return NextResponse.redirect(new URL('/login', request.url))
+    // Let unauthenticated users see the homepage
+    return supabaseResponse
   }
 
   // Block client routes on admin subdomain
