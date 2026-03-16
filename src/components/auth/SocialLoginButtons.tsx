@@ -15,9 +15,11 @@ type Provider = 'google' | 'facebook';
 interface SocialLoginButtonsProps {
   /** Where to redirect after successful OAuth login */
   redirectTo?: string;
+  /** Visual variant – 'dark' for dark backgrounds, 'light' for white backgrounds */
+  variant?: 'dark' | 'light';
 }
 
-export default function SocialLoginButtons({ redirectTo = '/dashboard' }: SocialLoginButtonsProps) {
+export default function SocialLoginButtons({ redirectTo = '/dashboard', variant = 'dark' }: SocialLoginButtonsProps) {
   const [loading, setLoading] = useState<Provider | null>(null);
   const [error, setError] = useState('');
 
@@ -41,19 +43,30 @@ export default function SocialLoginButtons({ redirectTo = '/dashboard' }: Social
     }
   };
 
+  const isDark = variant === 'dark';
+
   return (
     <div className="space-y-3">
       {error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+        <div className={`rounded-lg p-3 text-sm ${
+          isDark
+            ? 'bg-red-500/10 border border-red-500/20 text-red-400'
+            : 'bg-red-50 border border-red-200 text-red-700'
+        }`}>
           {error}
         </div>
       )}
 
+      {/* Google */}
       <button
         type="button"
         onClick={() => handleOAuth('google')}
         disabled={loading !== null}
-        className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-md py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+        className={`w-full flex items-center justify-center gap-3 rounded-lg py-2.5 text-sm font-medium transition-colors disabled:opacity-50 ${
+          isDark
+            ? 'bg-white/5 border border-white/10 text-gray-200 hover:bg-white/10'
+            : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+        }`}
       >
         <svg className="w-5 h-5" viewBox="0 0 24 24">
           <path
@@ -76,11 +89,12 @@ export default function SocialLoginButtons({ redirectTo = '/dashboard' }: Social
         {loading === 'google' ? 'Redirecting...' : 'Continue with Google'}
       </button>
 
+      {/* Facebook */}
       <button
         type="button"
         onClick={() => handleOAuth('facebook')}
         disabled={loading !== null}
-        className="w-full flex items-center justify-center gap-3 bg-[#1877F2] border border-[#1877F2] rounded-md py-2.5 text-sm font-medium text-white hover:bg-[#166FE5] disabled:opacity-50 transition-colors"
+        className="w-full flex items-center justify-center gap-3 bg-[#1877F2] border border-[#1877F2] rounded-lg py-2.5 text-sm font-medium text-white hover:bg-[#166FE5] disabled:opacity-50 transition-colors"
       >
         <svg className="w-5 h-5" viewBox="0 0 24 24" fill="white">
           <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
