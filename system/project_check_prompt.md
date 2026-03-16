@@ -307,6 +307,177 @@ For each recommendation:
 
 ---
 
+## PHASE 2.5: n8n Automation Workflow Analysis
+
+> This phase runs AFTER Phase 2 market research and BEFORE Phase 3 documentation updates.
+
+### Data Source
+
+The file `n8n_templates.zip` in the repo root contains `n8n_templates.xlsx` — a spreadsheet of **8,806 free n8n automation workflows** with columns:
+
+| Column | Description |
+|--------|-------------|
+| # | Row number |
+| ID | n8n workflow ID |
+| Name | Workflow title |
+| Categories | Comma-separated categories |
+| Nodes Used | n8n nodes/integrations used |
+| Creator | Author username |
+| Total Views | Popularity metric |
+| Created Date | When published |
+| n8n URL | Direct link to workflow on n8n.io |
+
+### Pre-Analysis: Category Landscape
+
+The spreadsheet contains 37 unique categories. The most relevant to YOUSELL are:
+
+| Category | Description |
+|----------|-------------|
+| Content Creation | Content generation workflows |
+| AI Copywriting & Video Automation | AI-powered content pipelines |
+| Social Media Automation & Email Marketing Campaigns | Publishing & email sequences |
+| Marketing | Marketing automation |
+| Lead Generation | Lead capture & qualification |
+| Lead Nurturing/Interaction & AI Sales Agents | Sales automation |
+| Sales Operations & CRM Workflows | CRM and sales ops |
+| Product & Market Insights | Market research automation |
+| Enrichment & Qualification | Data enrichment |
+| Extraction, Analysis & Document Generation | Data extraction |
+| AI RAG, MCP & Knowledge Retrieval | Knowledge systems |
+| Multimodal AI & Content Generation | Multi-format content |
+
+Relevant keyword hit counts across all 8,806 workflows:
+- Shopify: 114 | TikTok: 74 | Amazon: 38 | E-commerce: 39
+- Content: 2,518 | Marketing: 617 | Social Media: 640 | Email: 1,800
+- SEO: 198 | Scraping: 72 | Stripe: 67 | CRM: 497
+- Lead: 1,050 | Sales: 820 | Influencer: 22 | Affiliate: 9
+- Product: 1,675 | Inventory: 38 | Order: 95 | Supplier: 10
+
+### Step 1: Extract and Filter
+
+Extract the zip file and read the spreadsheet. Filter workflows into YOUSELL-relevant buckets:
+
+**Bucket A — Product Discovery & Intelligence** (priority: HIGH)
+Filter by: categories containing "Product & Market Insights", "Extraction", or names/nodes containing shopify, amazon, tiktok, product research, scraping, competitor, trend, BSR, winning product
+
+**Bucket B — Content Creation & Marketing** (priority: HIGH)
+Filter by: categories containing "Content Creation", "AI Copywriting", "Social Media Automation", "Marketing", or names/nodes containing content, copywriting, social media, post, video, ad copy, email marketing, campaign
+
+**Bucket C — Sales, CRM & Lead Generation** (priority: MEDIUM)
+Filter by: categories containing "Lead Generation", "Lead Nurturing", "Sales Operations", or names/nodes containing lead, CRM, sales, customer, outreach, nurture
+
+**Bucket D — Supplier & Fulfillment** (priority: MEDIUM)
+Filter by: names/nodes containing supplier, fulfillment, inventory, order, shipping, tracking, warehouse
+
+**Bucket E — AI & Automation Infrastructure** (priority: MEDIUM)
+Filter by: categories containing "AI Agent", "AI RAG", or names/nodes containing AI agent, RAG, automation, webhook, Stripe, Supabase, BullMQ
+
+**Bucket F — Influencer & Affiliate** (priority: HIGH)
+Filter by: names/nodes containing influencer, affiliate, creator, partnership, commission, referral
+
+### Step 2: Rank and Evaluate
+
+For each bucket, identify the **top 10-15 most relevant workflows** based on:
+1. Direct applicability to a YOUSELL engine or feature
+2. Popularity (Total Views — higher = more proven)
+3. Recency (Created Date — prefer 2025-2026)
+4. Node compatibility (do they use services we already integrate with: Supabase, Stripe, Shopify, TikTok, Claude/OpenAI, Resend, Apify?)
+
+For each selected workflow, produce a **Build vs Adopt decision** using this evaluation framework:
+
+| Field | Detail |
+|-------|--------|
+| **Workflow ID & Name** | From spreadsheet |
+| **n8n URL** | Direct link |
+| **Views** | Popularity indicator |
+| **Nodes Used** | Key integrations |
+| **YOUSELL Engine Mapping** | Which engine/feature this enhances |
+| **Integration Strategy** | How to adapt this workflow for YOUSELL (n8n embed, port logic to BullMQ, API integration, or inspiration-only) |
+| **Implementation Effort** | S/M/L |
+| **Value Add** | What capability this gives us that we don't have today |
+
+#### Build vs Adopt Decision Matrix (apply to EVERY workflow)
+
+For each workflow, answer these 5 questions and produce a clear **VERDICT: USE N8N** or **VERDICT: BUILD NATIVE** or **VERDICT: SKIP**:
+
+| Decision Factor | Question to Answer |
+|-----------------|-------------------|
+| **Cost Efficiency** | Is using this n8n workflow cheaper than building the same logic natively? Consider: n8n hosting costs (self-hosted vs cloud), API call costs for nodes used, maintenance overhead vs our existing BullMQ infrastructure. Calculate approximate monthly cost for both approaches at 100, 1,000, and 10,000 executions/month. |
+| **Speed to Market** | How fast can we integrate this workflow vs building it ourselves? If the n8n workflow gets us 80% of the feature in 1 day vs 2 weeks native — that matters. Estimate: hours to integrate n8n workflow vs hours to build natively in our TypeScript stack. |
+| **Ease of Maintenance** | Which is easier to maintain long-term? n8n workflows are visual and non-dev-friendly but add infrastructure complexity (another service to run). Native BullMQ jobs live in our codebase, version-controlled, tested. Consider: who maintains it, debugging difficulty, upgrade path. |
+| **SaaS Performance Impact** | Does this workflow improve the end-user experience? Consider: latency (n8n adds network hops vs native in-process), reliability (external dependency vs self-contained), scalability (n8n queue limits vs our Redis/BullMQ setup), data residency (does data leave our infrastructure?). |
+| **Functionality Gap** | Does this workflow provide functionality we genuinely cannot build efficiently ourselves? Some n8n workflows leverage 3rd-party connectors (e.g., native Shopify, TikTok, Meta Ads nodes) that would take significant effort to replicate. Others are trivial logic we already have. |
+
+**Scoring:** Rate each factor 1-5 for the n8n approach (5 = n8n is clearly better, 1 = native is clearly better). If total score >= 18: USE N8N. If 12-17: consider hybrid. If <= 11: BUILD NATIVE.
+
+**Important context for cost analysis:**
+- Our current stack: Next.js (Netlify), Express + BullMQ (Railway), Redis (Railway), Supabase (PostgreSQL)
+- n8n self-hosted on Railway would add ~$5-20/month base cost
+- n8n cloud pricing scales with executions
+- Every external service adds operational complexity and a potential failure point
+- Native implementations benefit from our existing monitoring, logging, error handling, and test suite
+- BUT: n8n's pre-built connectors for Shopify, TikTok, Meta, Google Sheets, Slack, etc. can save weeks of integration work
+
+### Step 3: Integration Recommendations
+
+Based on the Build vs Adopt verdicts, produce a prioritized list grouped by strategy:
+
+**Strategy 1 — Direct n8n Integration (VERDICT: USE N8N workflows)**
+Workflows where the n8n approach scored >= 18. These are worth running via n8n as a sidecar. For each:
+- Justify WHY n8n is better than native (cost, speed, connector advantage)
+- Specify deployment approach (self-hosted on Railway vs n8n cloud)
+- Detail how it connects to our Supabase database and existing APIs
+- Estimate monthly cost at scale (1,000+ executions)
+
+**Strategy 2 — Port Logic to BullMQ (VERDICT: BUILD NATIVE workflows)**
+Workflows that scored <= 11 but whose LOGIC is valuable. We don't use n8n for these — we extract the automation pattern and build it into our existing backend/src/jobs/ system. For each:
+- Explain the translation from n8n nodes to our TypeScript job handlers
+- Why native is better (performance, cost, control)
+
+**Strategy 3 — Hybrid Approach (scored 12-17)**
+Workflows where the decision is nuanced. Perhaps use n8n for rapid prototyping, then port to native once validated. Or use n8n for the parts with complex 3rd-party connectors and native for the core logic.
+
+**Strategy 4 — Inspiration Only (VERDICT: SKIP the workflow, keep the idea)**
+Workflows that reveal automation patterns we should build natively from scratch. The n8n workflow itself isn't worth integrating, but the concept fills a gap.
+
+**Strategy 5 — Client-Facing Automation Templates**
+Workflows we could offer to YOUSELL clients as pre-built automations (competitive differentiator vs TopDawg/Sell The Trend/AutoDS). Think: "one-click marketing automation" or "auto-post winning products to social media." These could be a premium feature — clients get access to a library of proven automation workflows.
+
+### Step 3b: Architecture Decision Record
+
+Produce a clear architectural recommendation:
+
+**Should YOUSELL adopt n8n as part of its infrastructure?**
+
+Answer with:
+1. **Yes — as a core component**: n8n runs alongside BullMQ, handling specific workflow categories. Define which categories.
+2. **Yes — as a client-facing feature**: Embed n8n for client self-service automations (like Zapier integrations).
+3. **Partial — for prototyping only**: Use n8n to validate automation ideas quickly, then port proven ones to native.
+4. **No — native only**: The overhead isn't worth it. Build everything in BullMQ.
+
+Support your recommendation with:
+- Total cost comparison (n8n infrastructure vs native development time)
+- Performance impact analysis
+- Maintenance burden assessment
+- How many of the evaluated workflows actually scored >= 18 (USE N8N)
+- Risk analysis (what happens if n8n goes down, pricing changes, etc.)
+
+### Step 4: Output File
+
+**Create `docs/N8N_WORKFLOW_ANALYSIS.md`** containing:
+- Full bucket analysis with filtered workflow counts
+- Top 10-15 workflows per bucket with Build vs Adopt decision matrix scores
+- Clear VERDICT for every evaluated workflow (USE N8N / BUILD NATIVE / SKIP)
+- Integration recommendations grouped by strategy
+- Architecture Decision Record: should YOUSELL adopt n8n? (with cost/performance/risk analysis)
+- Priority implementation roadmap (which workflows to integrate first, in what order)
+- Cost projection table: n8n infrastructure costs vs native development costs at 100/1K/10K executions
+- Architecture diagram notes: how n8n would fit alongside our existing BullMQ + Express + Netlify stack
+
+Target: 400+ lines.
+
+---
+
 ## PHASE 3: Update Project Documentation
 
 Based on Phases 1 and 2, update the following files:
@@ -342,13 +513,14 @@ If Phase 4 new-feature tests or Phase 5 security tests are empty placeholders, o
 6. Do not skip any engine or requirement — exhaustive coverage is the goal.
 7. Commit after each Phase completion with a descriptive message.
 8. Update system/development_log.md after each Phase.
-9. Total output target: RTM should be 500+ lines, Improvement Plan should be 300+ lines, Research Log should be 400+ lines.
+9. Total output target: RTM should be 500+ lines, Improvement Plan should be 300+ lines, Research Log should be 400+ lines, n8n Analysis should be 400+ lines.
 10. Quality bar: A senior engineer unfamiliar with the project should be able to read the RTM and understand exactly what works, what doesn't, and what's next.
 11. **Research thoroughness**: Use WebSearch and WebFetch for EVERY competitor platform. Do not skip any. Use multiple search queries per niche. The research log must prove exhaustive coverage.
 12. **Research log is mandatory**: docs/RESEARCH_LOG.md must be created during Phase 2. Every search query, every URL fetched, every finding must be logged. This is non-negotiable.
 13. **YOUSELL positioning**: Always frame analysis through the lens that YOUSELL is model-agnostic (dropship OR bulk buy), AI-first, and covers discovery + content + marketing — not just product finding.
 14. **Niche coverage**: E-commerce intelligence, AI content creation, marketing automation, and supplier/fulfillment niches must ALL be researched. If any niche has fewer than 5 research entries in the log, keep researching.
-15. **Three deliverables minimum from Phase 2**: docs/RESEARCH_LOG.md, docs/IMPROVEMENT_PLAN.md, and the self-review annotations added back to docs/RTM_v7.md.
+15. **Four deliverables minimum from Phase 2 + 2.5**: docs/RESEARCH_LOG.md, docs/IMPROVEMENT_PLAN.md, docs/N8N_WORKFLOW_ANALYSIS.md, and the self-review annotations added back to docs/RTM_v7.md.
+16. **n8n analysis must be data-driven**: Read the actual spreadsheet. Don't guess workflow names — filter programmatically, then evaluate the top results. Use Bash with Python/openpyxl to parse the xlsx file.
 
 ## OUTPUT FILES SUMMARY
 
@@ -359,6 +531,7 @@ At the end of all 3 phases, the following files must exist:
 | `docs/RTM_v7.md` | Phase 1 | 500+ | Requirements Traceability Matrix |
 | `docs/RESEARCH_LOG.md` | Phase 2 | 400+ | Full audit trail of all market research |
 | `docs/IMPROVEMENT_PLAN.md` | Phase 2 | 300+ | Categorized improvement recommendations |
+| `docs/N8N_WORKFLOW_ANALYSIS.md` | Phase 2.5 | 400+ | n8n workflow evaluation with Build vs Adopt verdicts and architecture decision |
 | Updated `system/development_log.md` | Phase 3 | +50 lines | Session entry with audit findings |
 | Updated `system/ai_logic.md` | Phase 3 | as needed | Engine logic corrections |
 | Updated `system/yousell_master_qa_prompt_v7.md` | Phase 3 | +20 tests | New test cases for gaps |
