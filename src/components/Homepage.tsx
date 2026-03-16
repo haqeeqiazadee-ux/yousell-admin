@@ -1533,7 +1533,7 @@ const homepageHTML = `
 <!-- ── ANNOUNCEMENT BAR ── -->
 <div class="announce-bar" id="announce-bar">
   <span>🚀 <strong>Limited Launch Pricing</strong> — Save up to $2,997. Ends in <strong id="countdown-timer">calculating...</strong></span>
-  <a href="https://yousell.online/pricing/">Claim Your Spot →</a>
+  <a href="/pricing/">Claim Your Spot →</a>
   <button type="button" class="announce-close" data-close-bar="true" aria-label="Close">×</button>
 </div>
 <script>
@@ -1573,7 +1573,7 @@ const homepageHTML = `
 <!-- ── NAVBAR ── -->
 <nav class="nav" id="main-nav">
   <div class="nav-inner">
-    <a href="https://yousell.online/" class="nav-logo">
+    <a href="/" class="nav-logo">
       <span class="logo-you">You</span><span class="logo-sell">Sell</span><span class="logo-dot">.</span><span class="logo-online">Online</span>
     </a>
 
@@ -1581,28 +1581,28 @@ const homepageHTML = `
       <li class="nav-dropdown">
         <a href="#">Solutions</a>
         <div class="dropdown-panel">
-          <a href="https://yousell.online/amazon-services" class="dropdown-item">
+          <a href="/amazon-services" class="dropdown-item">
             <div class="dropdown-icon di-amz">📦</div>
             <div class="dropdown-item-text">
               <strong>Amazon Services</strong>
               <span>Launch & manage your FBA store</span>
             </div>
           </a>
-          <a href="https://yousell.online/tiktok-shop" class="dropdown-item">
+          <a href="/tiktok-shop" class="dropdown-item">
             <div class="dropdown-icon di-ttk">🎵</div>
             <div class="dropdown-item-text">
               <strong>TikTok Shop</strong>
               <span>Live in 14 days, creator network</span>
             </div>
           </a>
-          <a href="https://yousell.online/shopify-launch" class="dropdown-item">
+          <a href="/shopify-launch" class="dropdown-item">
             <div class="dropdown-icon di-shp">🛍️</div>
             <div class="dropdown-item-text">
               <strong>Shopify Launch</strong>
               <span>Store built & live in 21 days</span>
             </div>
           </a>
-          <a href="https://yousell.online/ai-bundle" class="dropdown-item">
+          <a href="/ai-bundle" class="dropdown-item">
             <div class="dropdown-icon di-ai">🤖</div>
             <div class="dropdown-item-text">
               <strong>AI Ecommerce Bundle</strong>
@@ -1611,15 +1611,15 @@ const homepageHTML = `
           </a>
         </div>
       </li>
-      <li><a href="https://yousell.online/pricing">Pricing</a></li>
-      <li><a href="https://yousell.online/case-studies">Results</a></li>
-      <li><a href="https://yousell.online/blog">Resources</a></li>
-      <li><a href="https://yousell.online/enterprise">Enterprise</a></li>
+      <li><a href="/pricing">Pricing</a></li>
+      <li><a href="/case-studies">Results</a></li>
+      <li><a href="/blog">Resources</a></li>
+      <li><a href="/enterprise">Enterprise</a></li>
     </ul>
 
     <div class="nav-right">
-      <a href="https://yousell.online/login" class="nav-btn-ghost">Client Login</a>
-      <a href="https://yousell.online/pricing" class="nav-btn-primary">Get Started →</a>
+      <a href="/login" class="nav-btn-ghost">Client Login</a>
+      <a href="/pricing" class="nav-btn-primary">Get Started →</a>
       <button type="button" class="nav-hamburger" id="hamburger" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
@@ -1630,20 +1630,20 @@ const homepageHTML = `
 <!-- ── MOBILE MENU ── -->
 <div class="mobile-menu" id="mobile-menu">
   <div class="mobile-menu-header">
-    <a href="https://yousell.online/" class="nav-logo">
+    <a href="/" class="nav-logo">
       <span class="logo-you">You</span><span class="logo-sell">Sell</span><span class="logo-dot">.</span><span class="logo-online">Online</span>
     </a>
     <button type="button" class="mobile-close" id="mobile-close" aria-label="Close">×</button>
   </div>
-  <a href="https://yousell.online/amazon-services">📦 Amazon Services</a>
-  <a href="https://yousell.online/tiktok-shop">🎵 TikTok Shop Launch</a>
-  <a href="https://yousell.online/shopify-launch">🛍️ Shopify Store Launch</a>
-  <a href="https://yousell.online/ai-bundle">🤖 AI Ecommerce Bundle</a>
-  <a href="https://yousell.online/pricing">Pricing</a>
-  <a href="https://yousell.online/case-studies">Results</a>
-  <a href="https://yousell.online/blog">Resources</a>
-  <a href="https://yousell.online/enterprise">Enterprise</a>
-  <a href="https://yousell.online/pricing" class="mobile-menu-cta">Get Started Today →</a>
+  <a href="/amazon-services">📦 Amazon Services</a>
+  <a href="/tiktok-shop">🎵 TikTok Shop Launch</a>
+  <a href="/shopify-launch">🛍️ Shopify Store Launch</a>
+  <a href="/ai-bundle">🤖 AI Ecommerce Bundle</a>
+  <a href="/pricing">Pricing</a>
+  <a href="/case-studies">Results</a>
+  <a href="/blog">Resources</a>
+  <a href="/enterprise">Enterprise</a>
+  <a href="/pricing" class="mobile-menu-cta">Get Started Today →</a>
 </div>
 
 <!-- ════════════════════════════════════════
@@ -1674,7 +1674,7 @@ const homepageHTML = `
     </p>
 
     <div class="hero-ctas">
-      <a href="https://yousell.online/pricing" class="btn-primary">
+      <a href="/pricing" class="btn-primary">
         Get Started Today <span class="btn-arrow">→</span>
       </a>
       <a href="#how-it-works" class="btn-secondary">
@@ -1840,7 +1840,7 @@ const homepageHTML = `
     </div>
 
     <div class="services-grid">
-      <a href="https://yousell.online/amazon-services" class="service-card reveal reveal-delay-1">
+      <a href="/amazon-services" class="service-card reveal reveal-delay-1">
         <div class="service-card-arrow">→</div>
         <div class="service-card-icon sc-amz">📦</div>
         <div class="service-card-tag">Amazon FBA</div>
@@ -1848,7 +1848,7 @@ const homepageHTML = `
         <p class="service-card-body">Product research, listings, PPC, inventory management, and growth — all handled by AI-powered specialists. No profit share. Ever.</p>
         <div class="service-card-price">From $997<span>/mo</span></div>
       </a>
-      <a href="https://yousell.online/tiktok-shop" class="service-card reveal reveal-delay-2">
+      <a href="/tiktok-shop" class="service-card reveal reveal-delay-2">
         <div class="service-card-arrow">→</div>
         <div class="service-card-icon sc-ttk">🎵</div>
         <div class="service-card-tag">TikTok Shop</div>
@@ -1856,7 +1856,7 @@ const homepageHTML = `
         <p class="service-card-body">Creator outreach, shoppable videos, live commerce, and paid ads. We build your TikTok revenue engine from day one.</p>
         <div class="service-card-price">From $997<span> one-time</span></div>
       </a>
-      <a href="https://yousell.online/shopify-launch" class="service-card reveal reveal-delay-3">
+      <a href="/shopify-launch" class="service-card reveal reveal-delay-3">
         <div class="service-card-arrow">→</div>
         <div class="service-card-icon sc-shp">🛍️</div>
         <div class="service-card-tag">Shopify Store</div>
@@ -1864,7 +1864,7 @@ const homepageHTML = `
         <p class="service-card-body">Premium store build with your first traffic strategy included free. Google Shopping, Meta Pixel, and welcome email sequence ready to go.</p>
         <div class="service-card-price">From $1,497<span> one-time</span></div>
       </a>
-      <a href="https://yousell.online/ai-bundle" class="service-card reveal reveal-delay-4">
+      <a href="/ai-bundle" class="service-card reveal reveal-delay-4">
         <div class="service-card-arrow">→</div>
         <div class="service-card-icon sc-ai">🤖</div>
         <div class="service-card-tag">AI Bundle</div>
@@ -1875,7 +1875,7 @@ const homepageHTML = `
     </div>
 
     <div class="services-cta reveal">
-      <a href="https://yousell.online/pricing" class="btn-secondary">See Full Pricing — No Sales Call Required →</a>
+      <a href="/pricing" class="btn-secondary">See Full Pricing — No Sales Call Required →</a>
     </div>
   </div>
 </section>
@@ -1962,7 +1962,7 @@ const homepageHTML = `
           <li>PPC campaign launch</li>
           <li>30-day support</li>
         </ul>
-        <a href="https://yousell.online/pricing" class="pricing-btn pricing-btn-outline">Get Started</a>
+        <a href="/pricing" class="pricing-btn pricing-btn-outline">Get Started</a>
       </div>
 
       <div class="pricing-card reveal reveal-delay-2">
@@ -1976,7 +1976,7 @@ const homepageHTML = `
           <li>10 creator outreach</li>
           <li>Basic analytics</li>
         </ul>
-        <a href="https://yousell.online/pricing" class="pricing-btn pricing-btn-outline">Get Started</a>
+        <a href="/pricing" class="pricing-btn pricing-btn-outline">Get Started</a>
       </div>
 
       <div class="pricing-card reveal reveal-delay-3">
@@ -1990,7 +1990,7 @@ const homepageHTML = `
           <li>Mobile optimised</li>
           <li>Payment gateway</li>
         </ul>
-        <a href="https://yousell.online/pricing" class="pricing-btn pricing-btn-outline">Get Started</a>
+        <a href="/pricing" class="pricing-btn pricing-btn-outline">Get Started</a>
       </div>
 
       <div class="pricing-card featured reveal reveal-delay-4">
@@ -2005,12 +2005,12 @@ const homepageHTML = `
           <li>Dedicated account manager</li>
           <li>30-day money-back guarantee</li>
         </ul>
-        <a href="https://yousell.online/pricing" class="pricing-btn pricing-btn-solid">Get Started →</a>
+        <a href="/pricing" class="pricing-btn pricing-btn-solid">Get Started →</a>
       </div>
     </div>
 
     <div class="pricing-cta reveal">
-      <a href="https://yousell.online/pricing" class="btn-secondary">Compare All Plans →</a>
+      <a href="/pricing" class="btn-secondary">Compare All Plans →</a>
     </div>
   </div>
 </section>
@@ -2050,7 +2050,7 @@ const homepageHTML = `
     </div>
 
     <div class="faq-cta reveal">
-      <a href="https://yousell.online/faq" class="btn-secondary">See All FAQs →</a>
+      <a href="/faq" class="btn-secondary">See All FAQs →</a>
     </div>
   </div>
 </section>
@@ -2065,7 +2065,7 @@ const homepageHTML = `
     <div class="section-tag">Ready to Start?</div>
     <h2 class="final-cta-title">Build Your Ecommerce Empire Today.</h2>
     <p class="final-cta-sub">Join 500+ entrepreneurs already selling on Amazon, TikTok Shop, and Shopify. No sales call. No contract. Just results.</p>
-    <a href="https://yousell.online/pricing" class="btn-primary" style="font-size:16px; padding:16px 36px;">
+    <a href="/pricing" class="btn-primary" style="font-size:16px; padding:16px 36px;">
       Get Started Today <span class="btn-arrow">→</span>
     </a>
     <div class="final-cta-note">
@@ -2083,7 +2083,7 @@ const homepageHTML = `
   <div class="container">
     <div class="footer-grid">
       <div class="footer-brand">
-        <a href="https://yousell.online/" class="footer-logo"><span class="fl-you">You</span>Sell.Online</a>
+        <a href="/" class="footer-logo"><span class="fl-you">You</span>Sell.Online</a>
         <p>AI-powered ecommerce services for Amazon, TikTok Shop, and Shopify. Transparent pricing. Guaranteed results. No profit share.</p>
         <div class="footer-rating">
           <span class="footer-stars">★★★★★</span>
@@ -2093,40 +2093,40 @@ const homepageHTML = `
       <div>
         <div class="footer-col-title">Solutions</div>
         <ul class="footer-links">
-          <li><a href="https://yousell.online/amazon-services">Amazon Services</a></li>
-          <li><a href="https://yousell.online/tiktok-shop">TikTok Shop</a></li>
-          <li><a href="https://yousell.online/shopify-launch">Shopify Launch</a></li>
-          <li><a href="https://yousell.online/ai-bundle">AI Bundle</a></li>
-          <li><a href="https://yousell.online/pricing">Pricing</a></li>
+          <li><a href="/amazon-services">Amazon Services</a></li>
+          <li><a href="/tiktok-shop">TikTok Shop</a></li>
+          <li><a href="/shopify-launch">Shopify Launch</a></li>
+          <li><a href="/ai-bundle">AI Bundle</a></li>
+          <li><a href="/pricing">Pricing</a></li>
         </ul>
       </div>
       <div>
         <div class="footer-col-title">Company</div>
         <ul class="footer-links">
-          <li><a href="https://yousell.online/about">About Us</a></li>
-          <li><a href="https://yousell.online/case-studies">Case Studies</a></li>
-          <li><a href="https://yousell.online/blog">Blog</a></li>
-          <li><a href="https://yousell.online/affiliate">Affiliate</a></li>
-          <li><a href="https://yousell.online/enterprise">Enterprise</a></li>
+          <li><a href="/about">About Us</a></li>
+          <li><a href="/case-studies">Case Studies</a></li>
+          <li><a href="/blog">Blog</a></li>
+          <li><a href="/affiliate">Affiliate</a></li>
+          <li><a href="/enterprise">Enterprise</a></li>
         </ul>
       </div>
       <div>
         <div class="footer-col-title">Resources</div>
         <ul class="footer-links">
-          <li><a href="https://yousell.online/free-guide">Free Guide</a></li>
-          <li><a href="https://yousell.online/free-tools">Free Tools</a></li>
-          <li><a href="https://yousell.online/community">Community</a></li>
-          <li><a href="https://yousell.online/faq">FAQ</a></li>
-          <li><a href="https://yousell.online/contact">Contact</a></li>
+          <li><a href="/free-guide">Free Guide</a></li>
+          <li><a href="/free-tools">Free Tools</a></li>
+          <li><a href="/community">Community</a></li>
+          <li><a href="/faq">FAQ</a></li>
+          <li><a href="/contact">Contact</a></li>
         </ul>
       </div>
       <div>
         <div class="footer-col-title">Legal</div>
         <ul class="footer-links">
-          <li><a href="https://yousell.online/privacy-policy">Privacy Policy</a></li>
-          <li><a href="https://yousell.online/terms-of-service">Terms of Service</a></li>
-          <li><a href="https://yousell.online/privacy-policy">Cookie Policy</a></li>
-          <li><a href="https://yousell.online/privacy-policy">GDPR</a></li>
+          <li><a href="/privacy-policy">Privacy Policy</a></li>
+          <li><a href="/terms-of-service">Terms of Service</a></li>
+          <li><a href="/privacy-policy">Cookie Policy</a></li>
+          <li><a href="/privacy-policy">GDPR</a></li>
         </ul>
       </div>
     </div>
