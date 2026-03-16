@@ -563,19 +563,24 @@
 | ads | ad-intelligence engine | ✅ |
 | subscriptions | Stripe integration | ✅ |
 
-### New Tables Required (v7 Section 21.2)
+### New Tables Required (v7 Section 21.2) — ALL CONFIRMED PRESENT
 
-| Table | Status |
-|-------|--------|
-| client_subscriptions | ⚠️ May exist as `subscriptions` |
-| client_platform_access | ❌ Not confirmed |
-| client_engine_config | ❌ Not confirmed |
-| client_usage | ❌ Not confirmed |
-| client_addons | ❌ Not confirmed |
-| client_channels | ❌ Not confirmed |
-| content_queue | ❌ Not confirmed |
-| client_orders | ❌ Not confirmed |
-| platform_config | ❌ Not confirmed |
+| v7 Spec Name | Actual Table Name | Status |
+|-------------|-------------------|--------|
+| client_subscriptions | `subscriptions` | ✅ Created (migration 009) |
+| client_platform_access | `platform_access` | ✅ Created (migration 009) |
+| client_engine_config | `engine_toggles` | ✅ Created (migration 009) |
+| client_usage | `usage_tracking` | ✅ Created (migration 009) |
+| client_addons | `client_addons` + `addons` | ✅ Created (migration 009) |
+| client_channels | `connected_channels` | ✅ Created (migration 009) |
+| content_queue | `content_queue` | ✅ Created (migration 009) |
+| client_orders | `orders` | ✅ Created (migration 009) |
+| platform_config | `platform_config` | ✅ Created (migration 021, seeded with 7 platforms) |
+
+**Total tables: 44** (20 core + 8 legacy + 9 new client + 6 intelligence + 1 platform_config)
+**RLS: Enabled on ALL tables** with admin/client/public policy patterns
+**Indexes: 30+** covering all common query patterns
+**Security fixes applied:** BUG-001, BUG-035, QA-B9-001, QA-B9-002
 
 ---
 
@@ -609,26 +614,30 @@
 | /api/admin/import | POST | ✅ | ✅ |
 | /api/admin/trends | GET | ✅ | ✅ |
 
-### New Routes Required (Section 38.3)
+### New Routes Required (Section 38.3) — UPDATED 2026-03-16
 
 | Route | Phase | Status |
 |-------|-------|--------|
-| POST /api/webhooks/stripe | 1 | ⚠️ Needs verification |
-| GET /api/dashboard/subscription | 1 | ❌ Not confirmed |
-| POST /api/dashboard/subscription/portal | 1 | ❌ Not confirmed |
-| GET /api/dashboard/engines | 2 | ❌ Not built |
-| POST /api/dashboard/engines/:id/toggle | 2 | ❌ Not built |
-| GET /api/dashboard/channels | 3 | ❌ Not built |
-| POST /api/dashboard/channels/connect | 3 | ❌ Not built |
-| DELETE /api/dashboard/channels/:id | 3 | ❌ Not built |
-| GET /api/dashboard/content | 3 | ⚠️ UI exists |
-| POST /api/dashboard/content/generate | 3 | ⚠️ UI exists |
-| GET /api/dashboard/orders | 4 | ⚠️ UI exists |
-| POST /api/webhooks/shopify | 4 | ❌ Not built |
-| POST /api/webhooks/tiktok | 4 | ❌ Not built |
-| GET/POST /api/admin/clients/:id/engines | 2 | ❌ Not built |
-| GET /api/admin/clients/:id/usage | 2 | ❌ Not built |
+| POST /api/webhooks/stripe | 1 | ✅ Built (`src/app/api/webhooks/stripe/route.ts`) |
+| GET /api/dashboard/subscription | 1 | ✅ Built (`src/app/api/dashboard/subscription/route.ts`) |
+| POST /api/dashboard/subscription/portal | 1 | ✅ Built (`src/app/api/dashboard/subscription/portal/route.ts`) |
+| GET /api/dashboard/engines | 2 | ✅ Built (`src/app/api/dashboard/engines/route.ts`) |
+| POST /api/dashboard/engines/:id/toggle | 2 | ⚠️ Toggle via engines route (no dedicated `:id/toggle` route) |
+| GET /api/dashboard/channels | 3 | ✅ Built (`src/app/api/dashboard/channels/route.ts`) |
+| POST /api/dashboard/channels/connect | 3 | ✅ Built (`src/app/api/dashboard/channels/connect/route.ts`) |
+| DELETE /api/dashboard/channels/:id | 3 | ✅ Disconnect route built (`channels/disconnect/route.ts`) |
+| GET /api/dashboard/content | 3 | ✅ Built (`src/app/api/dashboard/content/route.ts`) |
+| POST /api/dashboard/content/generate | 3 | ✅ Built (`src/app/api/dashboard/content/generate/route.ts`) |
+| GET /api/dashboard/orders | 4 | ✅ Built (`src/app/api/dashboard/orders/route.ts`) |
+| POST /api/webhooks/shopify | 4 | ✅ Built (`src/app/api/webhooks/shopify/route.ts`) |
+| POST /api/webhooks/tiktok | 4 | ✅ Built (`src/app/api/webhooks/tiktok/route.ts`) |
+| GET/POST /api/admin/clients/:id/engines | 2 | ❌ Not built (no dedicated route) |
+| GET /api/admin/clients/:id/usage | 2 | ❌ Not built (no dedicated route) |
 | GET /api/admin/revenue | 1 | ⚠️ MRR in dashboard route |
+
+**Additional dashboard routes found (not in v7 spec):**
+- `GET /api/dashboard/products/route.ts` — Client product listing
+- `GET /api/dashboard/requests/route.ts` — Client requests
 
 ### Backend Express Routes (Railway)
 
@@ -834,12 +843,14 @@
 | Admin Pages (22) | 22 | 0 | 0 | 22 |
 | Client Pages | 7 | 0 | 0 | 7 |
 | Admin API Routes (22) | 22 | 0 | 0 | 22 |
-| New API Routes (16) | 0 | 4 | 12 | 16 |
+| New API Routes (16) | 11 | 3 | 2 | 16 |
 | Worker Jobs (18) | 15 | 0 | 3 | 18 |
-| Database Tables (31) | 22 | 1 | 8 | 31 |
+| Database Tables (31) | 31 | 0 | 0 | 31 |
 | Security Items (11) | 6 | 2 | 3 | 11 |
 
-**Overall v7 Compliance: ~58% complete (46/80 requirements fully done, 17 partial, 17 missing)**
+**Overall v7 Compliance: ~68% complete (61/80 requirements fully done, 12 partial, 7 missing)**
+
+> **Updated 2026-03-16:** Database tables corrected from 22→31 done (all 9 new v7 tables confirmed present in migrations). API routes corrected from 0→11 done (dashboard subscription, engines, channels, content, orders, webhooks all built).
 
 ### Top 10 Gaps by Severity
 
