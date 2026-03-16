@@ -307,6 +307,124 @@ For each recommendation:
 
 ---
 
+## PHASE 2.5: n8n Automation Workflow Analysis
+
+> This phase runs AFTER Phase 2 market research and BEFORE Phase 3 documentation updates.
+
+### Data Source
+
+The file `n8n_templates.zip` in the repo root contains `n8n_templates.xlsx` — a spreadsheet of **8,806 free n8n automation workflows** with columns:
+
+| Column | Description |
+|--------|-------------|
+| # | Row number |
+| ID | n8n workflow ID |
+| Name | Workflow title |
+| Categories | Comma-separated categories |
+| Nodes Used | n8n nodes/integrations used |
+| Creator | Author username |
+| Total Views | Popularity metric |
+| Created Date | When published |
+| n8n URL | Direct link to workflow on n8n.io |
+
+### Pre-Analysis: Category Landscape
+
+The spreadsheet contains 37 unique categories. The most relevant to YOUSELL are:
+
+| Category | Description |
+|----------|-------------|
+| Content Creation | Content generation workflows |
+| AI Copywriting & Video Automation | AI-powered content pipelines |
+| Social Media Automation & Email Marketing Campaigns | Publishing & email sequences |
+| Marketing | Marketing automation |
+| Lead Generation | Lead capture & qualification |
+| Lead Nurturing/Interaction & AI Sales Agents | Sales automation |
+| Sales Operations & CRM Workflows | CRM and sales ops |
+| Product & Market Insights | Market research automation |
+| Enrichment & Qualification | Data enrichment |
+| Extraction, Analysis & Document Generation | Data extraction |
+| AI RAG, MCP & Knowledge Retrieval | Knowledge systems |
+| Multimodal AI & Content Generation | Multi-format content |
+
+Relevant keyword hit counts across all 8,806 workflows:
+- Shopify: 114 | TikTok: 74 | Amazon: 38 | E-commerce: 39
+- Content: 2,518 | Marketing: 617 | Social Media: 640 | Email: 1,800
+- SEO: 198 | Scraping: 72 | Stripe: 67 | CRM: 497
+- Lead: 1,050 | Sales: 820 | Influencer: 22 | Affiliate: 9
+- Product: 1,675 | Inventory: 38 | Order: 95 | Supplier: 10
+
+### Step 1: Extract and Filter
+
+Extract the zip file and read the spreadsheet. Filter workflows into YOUSELL-relevant buckets:
+
+**Bucket A — Product Discovery & Intelligence** (priority: HIGH)
+Filter by: categories containing "Product & Market Insights", "Extraction", or names/nodes containing shopify, amazon, tiktok, product research, scraping, competitor, trend, BSR, winning product
+
+**Bucket B — Content Creation & Marketing** (priority: HIGH)
+Filter by: categories containing "Content Creation", "AI Copywriting", "Social Media Automation", "Marketing", or names/nodes containing content, copywriting, social media, post, video, ad copy, email marketing, campaign
+
+**Bucket C — Sales, CRM & Lead Generation** (priority: MEDIUM)
+Filter by: categories containing "Lead Generation", "Lead Nurturing", "Sales Operations", or names/nodes containing lead, CRM, sales, customer, outreach, nurture
+
+**Bucket D — Supplier & Fulfillment** (priority: MEDIUM)
+Filter by: names/nodes containing supplier, fulfillment, inventory, order, shipping, tracking, warehouse
+
+**Bucket E — AI & Automation Infrastructure** (priority: MEDIUM)
+Filter by: categories containing "AI Agent", "AI RAG", or names/nodes containing AI agent, RAG, automation, webhook, Stripe, Supabase, BullMQ
+
+**Bucket F — Influencer & Affiliate** (priority: HIGH)
+Filter by: names/nodes containing influencer, affiliate, creator, partnership, commission, referral
+
+### Step 2: Rank and Evaluate
+
+For each bucket, identify the **top 10-15 most relevant workflows** based on:
+1. Direct applicability to a YOUSELL engine or feature
+2. Popularity (Total Views — higher = more proven)
+3. Recency (Created Date — prefer 2025-2026)
+4. Node compatibility (do they use services we already integrate with: Supabase, Stripe, Shopify, TikTok, Claude/OpenAI, Resend, Apify?)
+
+For each selected workflow:
+
+| Field | Detail |
+|-------|--------|
+| **Workflow ID & Name** | From spreadsheet |
+| **n8n URL** | Direct link |
+| **Views** | Popularity indicator |
+| **Nodes Used** | Key integrations |
+| **YOUSELL Engine Mapping** | Which engine/feature this enhances |
+| **Integration Strategy** | How to adapt this workflow for YOUSELL (n8n embed, port logic to BullMQ, API integration, or inspiration-only) |
+| **Implementation Effort** | S/M/L |
+| **Value Add** | What capability this gives us that we don't have today |
+
+### Step 3: Integration Recommendations
+
+Produce a prioritized list of n8n workflow integrations, grouped by implementation strategy:
+
+**Strategy 1 — Direct n8n Integration**
+Workflows we could run via n8n as a sidecar to our BullMQ workers. List which workflows, what they'd automate, and how they connect to our existing architecture.
+
+**Strategy 2 — Port Logic to BullMQ**
+Workflows whose logic we should adapt into our existing backend/src/jobs/ worker system. Explain the translation from n8n nodes to our TypeScript job handlers.
+
+**Strategy 3 — Inspiration for New Features**
+Workflows that reveal automation patterns we should build natively. Don't copy the workflow — extract the idea and design our own implementation.
+
+**Strategy 4 — Client-Facing Automation Templates**
+Workflows we could offer to YOUSELL clients as pre-built automations (competitive differentiator vs TopDawg/Sell The Trend/AutoDS). Think: "one-click marketing automation" or "auto-post winning products to social media."
+
+### Step 4: Output File
+
+**Create `docs/N8N_WORKFLOW_ANALYSIS.md`** containing:
+- Full bucket analysis with filtered workflow counts
+- Top 10-15 workflows per bucket with evaluation details
+- Integration recommendations by strategy
+- Priority implementation roadmap (which workflows to integrate first)
+- Architecture notes: how n8n fits alongside our existing BullMQ + Express backend
+
+Target: 300+ lines.
+
+---
+
 ## PHASE 3: Update Project Documentation
 
 Based on Phases 1 and 2, update the following files:
@@ -342,13 +460,14 @@ If Phase 4 new-feature tests or Phase 5 security tests are empty placeholders, o
 6. Do not skip any engine or requirement — exhaustive coverage is the goal.
 7. Commit after each Phase completion with a descriptive message.
 8. Update system/development_log.md after each Phase.
-9. Total output target: RTM should be 500+ lines, Improvement Plan should be 300+ lines, Research Log should be 400+ lines.
+9. Total output target: RTM should be 500+ lines, Improvement Plan should be 300+ lines, Research Log should be 400+ lines, n8n Analysis should be 300+ lines.
 10. Quality bar: A senior engineer unfamiliar with the project should be able to read the RTM and understand exactly what works, what doesn't, and what's next.
 11. **Research thoroughness**: Use WebSearch and WebFetch for EVERY competitor platform. Do not skip any. Use multiple search queries per niche. The research log must prove exhaustive coverage.
 12. **Research log is mandatory**: docs/RESEARCH_LOG.md must be created during Phase 2. Every search query, every URL fetched, every finding must be logged. This is non-negotiable.
 13. **YOUSELL positioning**: Always frame analysis through the lens that YOUSELL is model-agnostic (dropship OR bulk buy), AI-first, and covers discovery + content + marketing — not just product finding.
 14. **Niche coverage**: E-commerce intelligence, AI content creation, marketing automation, and supplier/fulfillment niches must ALL be researched. If any niche has fewer than 5 research entries in the log, keep researching.
-15. **Three deliverables minimum from Phase 2**: docs/RESEARCH_LOG.md, docs/IMPROVEMENT_PLAN.md, and the self-review annotations added back to docs/RTM_v7.md.
+15. **Four deliverables minimum from Phase 2 + 2.5**: docs/RESEARCH_LOG.md, docs/IMPROVEMENT_PLAN.md, docs/N8N_WORKFLOW_ANALYSIS.md, and the self-review annotations added back to docs/RTM_v7.md.
+16. **n8n analysis must be data-driven**: Read the actual spreadsheet. Don't guess workflow names — filter programmatically, then evaluate the top results. Use Bash with Python/openpyxl to parse the xlsx file.
 
 ## OUTPUT FILES SUMMARY
 
@@ -359,6 +478,7 @@ At the end of all 3 phases, the following files must exist:
 | `docs/RTM_v7.md` | Phase 1 | 500+ | Requirements Traceability Matrix |
 | `docs/RESEARCH_LOG.md` | Phase 2 | 400+ | Full audit trail of all market research |
 | `docs/IMPROVEMENT_PLAN.md` | Phase 2 | 300+ | Categorized improvement recommendations |
+| `docs/N8N_WORKFLOW_ANALYSIS.md` | Phase 2.5 | 300+ | n8n workflow evaluation and integration roadmap |
 | Updated `system/development_log.md` | Phase 3 | +50 lines | Session entry with audit findings |
 | Updated `system/ai_logic.md` | Phase 3 | as needed | Engine logic corrections |
 | Updated `system/yousell_master_qa_prompt_v7.md` | Phase 3 | +20 tests | New test cases for gaps |
