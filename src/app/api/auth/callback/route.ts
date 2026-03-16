@@ -3,11 +3,16 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
-  const code = searchParams.get("code");
-  const rawNext = searchParams.get("next") ?? "/dashboard";
+  const url = new URL(request.url);
+  const code = url.searchParams.get("code");
+  const rawNext = url.searchParams.get("next") ?? "/dashboard";
   // Prevent open redirect: must be a relative path, no protocol tricks
   const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/dashboard";
+
+  // Derive origin from host header to avoid Netlify deploy-preview URL issues
+  const host = request.headers.get("host") || url.host;
+  const protocol = host.includes("localhost") ? "http" : "https";
+  const origin = `${protocol}://${host}`;
 
   if (code) {
     const cookieStore = await cookies();
