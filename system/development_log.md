@@ -1984,3 +1984,21 @@ Preliminary recommendation: Option 3 (use n8n for prototyping content distributi
 
 - Updated `system/development_log.md` with RTM findings (this entry)
 - `system/project_check_prompt.md` rewritten to cover all 50 v7 spec sections (533 lines → comprehensive v2)
+
+### RTM Corrections (2026-03-16)
+
+After deeper codebase analysis via subagents:
+
+**Database Tables:** All 9 new v7 tables confirmed present (previously marked ❌):
+- `subscriptions` (migration 009), `platform_access` (009), `engine_toggles` (009)
+- `usage_tracking` (009), `client_addons` + `addons` (009), `connected_channels` (009)
+- `content_queue` (009), `orders` (009), `platform_config` (021, seeded with 7 platforms)
+- Total: 44 tables, 22 migrations, 30+ indexes, comprehensive RLS
+
+**API Routes:** 11 of 16 new routes confirmed built (previously marked ❌):
+- Dashboard: subscription, subscription/portal, engines, channels, channels/connect,
+  channels/disconnect, content, content/generate, orders, products, requests
+- Webhooks: shopify, tiktok (both exist alongside stripe and amazon)
+- Total: 57 routes (40 admin + 11 dashboard + 3 auth + 4 webhooks) — not 22 as initially tracked
+
+**Overall Compliance:** Updated from ~58% → ~68% (61/80 requirements done, 12 partial, 7 missing)
