@@ -20,9 +20,9 @@ export async function POST(request: NextRequest) {
   }
 
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
-  if (!webhookSecret) {
-    console.error('[Stripe Webhook] STRIPE_WEBHOOK_SECRET not configured')
-    return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 })
+  if (!webhookSecret || !process.env.STRIPE_SECRET_KEY) {
+    console.warn('[Stripe Webhook] Stripe not configured — billing coming soon')
+    return NextResponse.json({ error: 'Billing not yet configured' }, { status: 503 })
   }
 
   let event: Stripe.Event

@@ -57,19 +57,29 @@ export default function BillingPage() {
   const [plan, setPlan] = useState<Plan | null>(null)
   const [loading, setLoading] = useState(true)
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
+  const [billingAvailable, setBillingAvailable] = useState(true)
 
   useEffect(() => {
     authFetch('/api/dashboard/subscription')
-      .then(r => r.json())
+      .then(r => {
+        if (r.status === 503) {
+          setBillingAvailable(false)
+          return null
+        }
+        return r.json()
+      })
       .then(data => {
-        setSubscription(data.subscription)
-        setPlan(data.plan)
+        if (data) {
+          setSubscription(data.subscription)
+          setPlan(data.plan)
+        }
       })
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [])
 
   const handleCheckout = async (planId: string) => {
+    if (!billingAvailable) return
     setCheckoutLoading(planId)
     try {
       const res = await authFetch('/api/dashboard/subscription', {
@@ -113,6 +123,12 @@ export default function BillingPage() {
       {showSuccess && (
         <div className="rounded-lg bg-green-50 border border-green-200 p-4 text-green-800">
           Subscription activated successfully! Welcome to YouSell.
+        </div>
+      )}
+
+      {!billingAvailable && !loading && (
+        <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 text-amber-800">
+          Billing is coming soon. You can explore our plans below — checkout will be enabled shortly.
         </div>
       )}
 
@@ -190,7 +206,7 @@ export default function BillingPage() {
                       className="w-full"
                       variant={p.popular ? 'default' : 'outline'}
                       onClick={() => handleCheckout(p.id)}
-                      disabled={checkoutLoading === p.id}
+                      disabled={!billingAvailable || checkoutLoading === p.id}
                     >
                       {checkoutLoading === p.id ? 'Redirecting...' : (
                         <>

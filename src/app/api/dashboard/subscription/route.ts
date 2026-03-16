@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { authenticateClient, authenticateClientLite } from '@/lib/auth/client-api-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getStripe, PRICING_TIERS } from '@/lib/stripe'
+import { getStripe, isStripeConfigured, PRICING_TIERS } from '@/lib/stripe'
 
 // GET — Fetch current client subscription
 export async function GET(req: NextRequest) {
@@ -25,6 +25,10 @@ export async function GET(req: NextRequest) {
 // POST — Create Stripe Checkout session
 export async function POST(request: NextRequest) {
   try {
+    if (!isStripeConfigured()) {
+      return NextResponse.json({ error: 'Billing is not yet available. Coming soon!' }, { status: 503 })
+    }
+
     const client = await authenticateClientLite(request)
     const admin = createAdminClient()
 

@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authenticateClientLite } from '@/lib/auth/client-api-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getStripe } from '@/lib/stripe'
+import { getStripe, isStripeConfigured } from '@/lib/stripe'
 
 // POST — Create Stripe Customer Portal session
 export async function POST(req: NextRequest) {
   try {
+    if (!isStripeConfigured()) {
+      return NextResponse.json({ error: 'Billing is not yet available. Coming soon!' }, { status: 503 })
+    }
+
     const client = await authenticateClientLite(req)
     const admin = createAdminClient()
 
