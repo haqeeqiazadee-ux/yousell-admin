@@ -72,12 +72,12 @@ function generateBlueprintHtml(blueprint: Record<string, unknown>): string {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try { await authenticateAdmin(req); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
   const supabase = createAdminClient();
 
-  const { id } = params;
+  const { id } = await params;
 
   const { data: blueprint, error } = await supabase
     .from('launch_blueprints')
