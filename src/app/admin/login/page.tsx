@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import SocialLoginButtons from '@/components/auth/SocialLoginButtons'
 
 function getSupabase() {
   return createBrowserClient(
@@ -38,17 +37,6 @@ export default function LoginPage() {
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900">YouSell Admin</h1>
           <p className="text-gray-500 mt-2">Sign in to your account</p>
-        </div>
-
-        <SocialLoginButtons redirectTo="/admin" />
-
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="bg-white px-4 text-gray-500">or continue with email</span>
-          </div>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-5">
