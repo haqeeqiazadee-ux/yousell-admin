@@ -21,12 +21,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/admin', request.url))
   }
 
-  // If on client domain, redirect root to /dashboard (if logged in) or /pricing
+  // If on client domain, redirect root to /dashboard (if logged in) or /login
   if (isClientDomain && pathname === '/') {
     if (user) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
-    return NextResponse.redirect(new URL('/pricing', request.url))
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
   // Block client routes on admin subdomain
