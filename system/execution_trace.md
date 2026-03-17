@@ -144,4 +144,34 @@ Refactor plan:
 - **Files touched:** `src/lib/engines/tiktok-discovery.ts`
 - **Result:** SUCCESS — no new tsc errors (process.env errors are pre-existing project-wide: 149 total)
 - **Next step:** Batch 0.8 — Audit Product Extraction Engine for refactor
+- **Commit:** d2f353a
+
+------------------------------------------------------------
+
+### [2026-03-17 01:40] DONE — Batch 0.8: Audit Discovery Engine for refactor
+
+- **Task:** Map existing discovery.ts to new Engine interface
+- **Batch:** 0.8
+- **Action:** Read src/lib/engines/discovery.ts (369 lines). One export: runLiveDiscoveryScan(). Internal: scoreProduct(), toProductRow(), extractTags(), discoverPlatform(). Imports: 4 provider search functions, calculateFinalScore, getStageFromViralScore. One consumer: src/app/api/admin/scan/route.ts.
+- **Files touched:** system/execution_trace.md (audit only)
+- **Result:** SUCCESS
+- **Next step:** Batch 0.9 — Refactor Discovery Engine to engine pattern
+- **Commit:** pending
+
+Refactor plan:
+1. Add DiscoveryEngine class implementing Engine
+2. Config: name='discovery', deps=[], publishes PRODUCT_DISCOVERED + SCAN_COMPLETE + SCAN_ERROR
+3. Emit events after scan completion
+4. Keep runLiveDiscoveryScan as backward-compatible export
+
+------------------------------------------------------------
+
+### [2026-03-17 01:45] DONE — Batch 0.9: Refactor Discovery Engine
+
+- **Task:** Wrap Discovery Engine in Engine interface
+- **Batch:** 0.9
+- **Action:** Added DiscoveryEngine class, added EventBus emit for SCAN_COMPLETE and SCAN_ERROR, preserved runLiveDiscoveryScan export
+- **Files touched:** `src/lib/engines/discovery.ts`
+- **Result:** SUCCESS — clean tsc compile
+- **Next step:** Batch 0.10 — Audit Scoring Engine for refactor
 - **Commit:** pending
