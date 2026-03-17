@@ -66,3 +66,15 @@ Key Observations:
 3. Scoring is centralized in composite.ts (frontend) and scoring.ts (backend) — duplicated
 4. All engines use Supabase admin client singleton — good
 5. No circular dependencies between engines
+
+------------------------------------------------------------
+
+### [2026-03-17 01:10] DONE — Batch 0.2: Define engine interface types
+
+- **Task:** Create TypeScript interfaces for the engine system
+- **Batch:** 0.2
+- **Action:** Created `src/lib/engines/types.ts` with Engine, EngineConfig, EngineEvent, EventHandler interfaces, 21 engine names, common event payloads, and ENGINE_EVENTS constants
+- **Files touched:** `src/lib/engines/types.ts`
+- **Result:** SUCCESS — clean tsc compile
+- **Next step:** Batch 0.3 — Build the Event Bus
+- **Commit:** pending
