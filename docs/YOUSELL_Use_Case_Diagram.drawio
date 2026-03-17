@@ -1067,4 +1067,697 @@
     </mxGraphModel>
   </diagram>
 
+  <!-- PAGE 7: ENGINE INDEPENDENCE ARCHITECTURE — MASTER MAP -->
+  <diagram id="page7-engine-arch" name="7. Engine Independence Architecture">
+    <mxGraphModel dx="1800" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="2400">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="ea-title" value="YOUSELL Engine Independence Architecture — Each Engine = Potential Standalone SaaS" style="text;html=1;fontSize=22;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="400" y="20" width="1000" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea-subtitle" value="Every engine is a self-contained bounded context with its own API surface, data tables, BullMQ queues, and event contracts.&#xa;Engines communicate ONLY via the Event Bus (publish/subscribe) — never by direct DB access across boundaries." style="text;html=1;fontSize=12;fontStyle=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="400" y="60" width="1000" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- ========== SHARED INFRASTRUCTURE (CENTER) ========== -->
+        <mxCell id="ea-infra" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#999;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="1050" width="400" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea-infra-title" value="Shared Infrastructure (NOT an Engine)" style="text;html=1;fontSize=14;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="750" y="1060" width="300" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea-supabase" value="Supabase&#xa;(Auth + RLS + Realtime)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="720" y="1095" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea-redis" value="Redis / BullMQ&#xa;(Queue Broker)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="720" y="1145" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea-eventbus" value="Event Bus&#xa;(Supabase Realtime&#xa;or Redis Pub/Sub)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="720" y="1195" width="150" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea-apify" value="Apify Cloud&#xa;(Scraping Runtime)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="900" y="1095" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea-claude" value="Claude AI API&#xa;(Haiku / Sonnet)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="900" y="1145" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea-resend" value="Resend Email API" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="900" y="1195" width="150" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- ========== TIER 1: DISCOVERY LAYER (Top Row) ========== -->
+        <mxCell id="ea-tier1-label" value="TIER 1: DISCOVERY LAYER" style="text;html=1;fontSize=16;fontStyle=1;fillColor=#E3F2FD;strokeColor=#1565C0;rounded=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="50" y="120" width="2100" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Engine 1: Product Discovery -->
+        <mxCell id="eng1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1565C0;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="170" width="340" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng1-title" value="ENGINE 1: Product Discovery" style="text;html=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="175" width="220" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng1-api" value="API: /api/engine/discovery/*&#xa;POST /scan (quick|full|client|pod)&#xa;DELETE /scan/:id (cancel)&#xa;GET /products (paginated, filtered)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="200" width="320" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng1-data" value="Data: products, product_signals,&#xa;data_source_log, imported_files" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="260" width="320" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng1-queues" value="Queues: scan-queue, client-scan,&#xa;transform-queue, pod-discovery" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="295" width="320" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng1-pub" value="Publishes: product.discovered,&#xa;product.updated, scan.completed" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="330" width="155" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng1-sub" value="Subscribes: score.completed,&#xa;enrichment.completed" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFECB3;strokeColor=#FF8F00;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="225" y="330" width="155" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng1-saas" value="SaaS Potential: &quot;Product Radar&quot; — standalone trend discovery across 8 marketplaces" style="text;html=1;fontSize=9;fontStyle=2;fontColor=#1565C0;" vertex="1" parent="1">
+          <mxGeometry x="60" y="370" width="320" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- Engine 2: Trend Scout Agent -->
+        <mxCell id="eng2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1565C0;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="420" y="170" width="340" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng2-title" value="ENGINE 2: Trend Scout Agent" style="text;html=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="175" width="220" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng2-api" value="API: /api/engine/trends/*&#xa;GET /trends (velocity, stage)&#xa;GET /trends/:keyword/history&#xa;GET /trends/pre-viral (threshold)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="430" y="200" width="320" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng2-data" value="Data: trend_keywords, trend_history,&#xa;trend_stages, viral_signals" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="430" y="260" width="320" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng2-queues" value="Queues: trend-scout" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="430" y="295" width="320" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng2-pub" value="Publishes: trend.detected,&#xa;trend.pre_viral, trend.stage_changed" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="430" y="322" width="155" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng2-sub" value="Subscribes:&#xa;product.discovered" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFECB3;strokeColor=#FF8F00;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="595" y="322" width="155" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng2-saas" value="SaaS Potential: &quot;TrendSpy&quot; — pre-viral trend detection 2-3 weeks ahead" style="text;html=1;fontSize=9;fontStyle=2;fontColor=#1565C0;" vertex="1" parent="1">
+          <mxGeometry x="430" y="370" width="320" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- Engine 3: Multi-Source Data Fusion -->
+        <mxCell id="eng3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1565C0;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="790" y="170" width="340" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng3-title" value="ENGINE 3: Multi-Source Data Fusion" style="text;html=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="175" width="260" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng3-api" value="API: /api/engine/fusion/*&#xa;POST /merge (source, data)&#xa;GET /freshness/:productId&#xa;POST /import (csv, auto-detect source)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="800" y="200" width="320" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng3-data" value="Data: data_source_log,&#xa;column_mapping_templates,&#xa;product_score_snapshots" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="800" y="260" width="320" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng3-queues" value="Queues: (uses scoring-queue for rescore)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="800" y="300" width="320" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng3-pub" value="Publishes: data.merged,&#xa;data.import_completed" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="800" y="327" width="155" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng3-sub" value="Subscribes:&#xa;product.discovered" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFECB3;strokeColor=#FF8F00;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="965" y="327" width="155" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng3-saas" value="SaaS Potential: &quot;DataFuse&quot; — multi-source e-commerce data enrichment" style="text;html=1;fontSize=9;fontStyle=2;fontColor=#1565C0;" vertex="1" parent="1">
+          <mxGeometry x="800" y="370" width="320" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- ========== TIER 2: INTELLIGENCE LAYER ========== -->
+        <mxCell id="ea-tier2-label" value="TIER 2: INTELLIGENCE &amp; SCORING LAYER" style="text;html=1;fontSize=16;fontStyle=1;fillColor=#E8F5E9;strokeColor=#2E7D32;rounded=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="50" y="430" width="2100" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Engine 4: Composite Scoring -->
+        <mxCell id="eng4" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="480" width="340" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng4-title" value="ENGINE 4: Composite 3-Pillar Scoring" style="text;html=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="485" width="260" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng4-api" value="API: /api/engine/scoring/*&#xa;POST /score (productIds[])&#xa;POST /score/test (manual input)&#xa;GET /distribution (tier breakdown)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="510" width="320" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng4-data" value="Data: product_scores,&#xa;product_score_snapshots, scoring_config" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="570" width="320" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng4-queues" value="Queues: scoring-queue" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="605" width="320" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng4-pub" value="Publishes: score.completed,&#xa;score.tier_changed" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="632" width="155" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng4-sub" value="Subscribes: product.discovered,&#xa;data.merged" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFECB3;strokeColor=#FF8F00;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="225" y="632" width="155" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng4-formula" value="Formula: trend×0.40 + viral×0.35 + profit×0.25 | HOT≥80 WARM≥60 WATCH≥40" style="text;html=1;fontSize=8;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="60" y="667" width="320" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng4-saas" value="SaaS Potential: &quot;ScoreIQ&quot; — product viability scoring as a service" style="text;html=1;fontSize=9;fontStyle=2;fontColor=#2E7D32;" vertex="1" parent="1">
+          <mxGeometry x="60" y="685" width="320" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- Engine 5: POD Scoring -->
+        <mxCell id="eng5" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="420" y="480" width="340" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng5-title" value="ENGINE 5: POD Scoring Engine" style="text;html=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="485" width="220" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng5-api" value="API: /api/engine/pod-scoring/*&#xa;POST /score (podProductIds[])&#xa;GET /modifiers (config)&#xa;POST /validate-margin (cost, price)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="430" y="510" width="320" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng5-data" value="Data: pod_scores, pod_scoring_config&#xa;(extends product_scores with POD modifiers)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="430" y="570" width="320" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng5-pub" value="Publishes: pod.score.completed,&#xa;pod.margin_rejected" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="430" y="610" width="155" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng5-sub" value="Subscribes:&#xa;pod.design.discovered" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFECB3;strokeColor=#FF8F00;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="595" y="610" width="155" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng5-rule" value="Modifiers: design velocity, seasonal, saturation, 30%+ margin gate" style="text;html=1;fontSize=8;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="430" y="650" width="320" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng5-saas" value="SaaS Potential: &quot;POD Score&quot; — POD product viability checker" style="text;html=1;fontSize=9;fontStyle=2;fontColor=#2E7D32;" vertex="1" parent="1">
+          <mxGeometry x="430" y="685" width="320" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- Engine 6: Profitability & Logistics -->
+        <mxCell id="eng6" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="790" y="480" width="340" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng6-title" value="ENGINE 6: Profitability &amp; Logistics" style="text;html=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="485" width="260" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng6-api" value="API: /api/engine/profitability/*&#xa;POST /calculate (product, costs)&#xa;GET /margins/:productId&#xa;POST /fulfillment-recommend (product)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="800" y="510" width="320" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng6-data" value="Data: product_costs, margin_calculations,&#xa;fulfillment_recommendations" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="800" y="570" width="320" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng6-pub" value="Publishes: margin.calculated,&#xa;fulfillment.recommended" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="800" y="610" width="155" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng6-sub" value="Subscribes: score.completed,&#xa;supplier.found" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFECB3;strokeColor=#FF8F00;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="965" y="610" width="155" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng6-rule" value="Auto-recommends: DROPSHIP / WHOLESALE / POD / DIGITAL / AFFILIATE" style="text;html=1;fontSize=8;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="800" y="650" width="320" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng6-saas" value="SaaS Potential: &quot;MarginCalc&quot; — e-commerce profitability calculator" style="text;html=1;fontSize=9;fontStyle=2;fontColor=#2E7D32;" vertex="1" parent="1">
+          <mxGeometry x="800" y="685" width="320" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- Engine 7: Financial Modelling -->
+        <mxCell id="eng7" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="480" width="340" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng7-title" value="ENGINE 7: Financial Modelling" style="text;html=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="485" width="220" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng7-api" value="API: /api/engine/financial/*&#xa;POST /model (product, scenarios)&#xa;GET /models/:productId&#xa;GET /roi-projection/:modelId" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="510" width="320" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng7-data" value="Data: financial_models,&#xa;roi_projections, break_even_analysis" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="570" width="320" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng7-queues" value="Queues: financial-model" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="605" width="320" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng7-pub" value="Publishes:&#xa;financial.model_completed" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="632" width="155" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng7-sub" value="Subscribes: margin.calculated,&#xa;score.completed" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFECB3;strokeColor=#FF8F00;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1335" y="632" width="155" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng7-saas" value="SaaS Potential: &quot;UnitEcon&quot; — unit economics &amp; ROI modelling SaaS" style="text;html=1;fontSize=9;fontStyle=2;fontColor=#2E7D32;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="685" width="320" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- ========== TIER 3: ENRICHMENT LAYER ========== -->
+        <mxCell id="ea-tier3-label" value="TIER 3: ENRICHMENT LAYER" style="text;html=1;fontSize=16;fontStyle=1;fillColor=#FFF3E0;strokeColor=#E65100;rounded=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="50" y="740" width="2100" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Engine 8: Influencer Intelligence -->
+        <mxCell id="eng8" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="790" width="280" height="230" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng8-title" value="ENGINE 8: Influencer Intelligence" style="text;html=1;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="795" width="260" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng8-api" value="API: /api/engine/influencers/*&#xa;GET / (search, filter, rank)&#xa;GET /:id/profile&#xa;POST /match (productId)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="818" width="260" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng8-data" value="Data: influencers, influencer_scores,&#xa;influencer_matches" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="873" width="260" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng8-queues" value="Queues: influencer-refresh, influencer-outreach" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="903" width="260" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng8-pub" value="Pub: influencer.matched" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="60" y="930" width="125" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng8-sub" value="Sub: score.tier_changed" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFECB3;strokeColor=#FF8F00;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="195" y="930" width="125" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng8-saas" value="SaaS: &quot;CreatorMatch&quot; — influencer discovery &amp; matching" style="text;html=1;fontSize=8;fontStyle=2;fontColor=#E65100;" vertex="1" parent="1">
+          <mxGeometry x="60" y="957" width="260" height="15" as="geometry"/>
+        </mxCell>
+
+        <!-- Engine 9: Supplier Discovery -->
+        <mxCell id="eng9" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="790" width="280" height="230" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng9-title" value="ENGINE 9: Supplier Discovery" style="text;html=1;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="370" y="795" width="220" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng9-api" value="API: /api/engine/suppliers/*&#xa;GET / (search, MOQ, region)&#xa;POST /discover (product)&#xa;GET /:id/compare" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="370" y="818" width="260" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng9-data" value="Data: suppliers, supplier_products,&#xa;supplier_quotes" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="370" y="873" width="260" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng9-queues" value="Queues: supplier-refresh" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="370" y="903" width="260" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng9-pub" value="Pub: supplier.found" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="370" y="930" width="120" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng9-sub" value="Sub: score.completed" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFECB3;strokeColor=#FF8F00;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="500" y="930" width="120" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng9-saas" value="SaaS: &quot;SupplyLink&quot; — manufacturer discovery platform" style="text;html=1;fontSize=8;fontStyle=2;fontColor=#E65100;" vertex="1" parent="1">
+          <mxGeometry x="370" y="957" width="260" height="15" as="geometry"/>
+        </mxCell>
+
+        <!-- Engine 10: Competitor Store Intelligence -->
+        <mxCell id="eng10" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="670" y="790" width="280" height="230" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng10-title" value="ENGINE 10: Competitor Intelligence" style="text;html=1;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="795" width="260" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng10-api" value="API: /api/engine/competitors/*&#xa;GET / (stores, revenue est.)&#xa;GET /:id/ads&#xa;POST /monitor (storeUrl)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="680" y="818" width="260" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng10-data" value="Data: competitors, competitor_ads,&#xa;competitor_revenue_estimates" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="680" y="873" width="260" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng10-pub" value="Pub: competitor.mapped" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="680" y="910" width="125" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng10-sub" value="Sub: product.discovered" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFECB3;strokeColor=#FF8F00;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="815" y="910" width="125" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng10-saas" value="SaaS: &quot;SpyStore&quot; — competitor store &amp; ad intelligence" style="text;html=1;fontSize=8;fontStyle=2;fontColor=#E65100;" vertex="1" parent="1">
+          <mxGeometry x="680" y="957" width="260" height="15" as="geometry"/>
+        </mxCell>
+
+        <!-- Engine 11: Ad Intelligence -->
+        <mxCell id="eng11" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="980" y="790" width="280" height="230" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng11-title" value="ENGINE 11: Ad Intelligence Model" style="text;html=1;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="990" y="795" width="220" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng11-api" value="API: /api/engine/ads/*&#xa;GET /benchmarks (ROAS, CPA)&#xa;GET /campaigns/:productId&#xa;POST /monitor (adUrl)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="990" y="818" width="260" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng11-data" value="Data: ad_campaigns, ad_benchmarks,&#xa;ad_creative_library" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="990" y="873" width="260" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng11-pub" value="Pub: ad.benchmark_updated" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="990" y="910" width="130" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng11-sub" value="Sub: competitor.mapped" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFECB3;strokeColor=#FF8F00;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="910" width="120" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng11-saas" value="SaaS: &quot;AdIntel&quot; — ad performance benchmarking" style="text;html=1;fontSize=8;fontStyle=2;fontColor=#E65100;" vertex="1" parent="1">
+          <mxGeometry x="990" y="957" width="260" height="15" as="geometry"/>
+        </mxCell>
+
+        <!-- Engine 12: Launch Blueprint -->
+        <mxCell id="eng12" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1290" y="790" width="280" height="230" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng12-title" value="ENGINE 12: Launch Blueprint" style="text;html=1;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="795" width="220" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng12-api" value="API: /api/engine/blueprints/*&#xa;POST /generate (productId)&#xa;GET /:id&#xa;GET /:id/pdf (export)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="818" width="260" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng12-data" value="Data: launch_blueprints,&#xa;blueprint_templates" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="873" width="260" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng12-queues" value="Queues: blueprint-queue (Claude Sonnet)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="903" width="260" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng12-pub" value="Pub: blueprint.generated" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="930" width="125" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng12-sub" value="Sub: score.completed" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFECB3;strokeColor=#FF8F00;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1435" y="930" width="125" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng12-saas" value="SaaS: &quot;LaunchPad&quot; — AI product launch plan generator" style="text;html=1;fontSize=8;fontStyle=2;fontColor=#E65100;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="957" width="260" height="15" as="geometry"/>
+        </mxCell>
+
+        <!-- ========== LEGEND ========== -->
+        <mxCell id="ea-legend-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="1060" width="500" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea-legend-title" value="Legend — Engine Independence Principles" style="text;html=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="1065" width="300" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea-leg1" value="" style="rounded=0;fillColor=#C8E6C9;strokeColor=#2E7D32;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="1095" width="15" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea-leg1t" value="Publishes events (output contract)" style="text;html=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="1091" width="200" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea-leg2" value="" style="rounded=0;fillColor=#FFECB3;strokeColor=#FF8F00;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="1115" width="15" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea-leg2t" value="Subscribes to events (input dependency)" style="text;html=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="1111" width="240" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea-leg3" value="Isolation Rules:&#xa;1. No direct DB access across engine boundaries&#xa;2. All inter-engine comms via Event Bus only&#xa;3. Each engine owns its tables exclusively&#xa;4. Shared infra (Supabase, Redis, Apify, Claude) injected&#xa;5. Each engine has its own API namespace&#xa;6. Any engine extractable as standalone microservice" style="text;html=1;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="1140" width="480" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- (Continued on next pages: Engines 13-21) -->
+        <mxCell id="ea-continued" value="→ Continued on Page 8: Engines 13-21 (Client-Facing &amp; Operations Layer)" style="text;html=1;fontSize=12;fontStyle=3;align=center;" vertex="1" parent="1">
+          <mxGeometry x="500" y="1280" width="500" height="25" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- PAGE 8: ENGINE INDEPENDENCE — ENGINES 13-21 (CLIENT-FACING & OPS) -->
+  <diagram id="page8-engines-13-21" name="8. Engines 13-21 (Client &amp; Ops Layer)">
+    <mxGraphModel dx="1800" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="2000">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="eb-title" value="Engine Independence Architecture — Engines 13-21 (Client-Facing &amp; Operations)" style="text;html=1;fontSize=22;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="400" y="20" width="1000" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- ========== TIER 4: CLIENT-FACING LAYER ========== -->
+        <mxCell id="eb-tier4-label" value="TIER 4: CLIENT-FACING ENGINE LAYER" style="text;html=1;fontSize=16;fontStyle=1;fillColor=#EDE7F6;strokeColor=#4527A0;rounded=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="50" y="80" width="2100" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Engine 13: Client Allocation System -->
+        <mxCell id="eng13" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE7F6;strokeColor=#4527A0;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="130" width="340" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng13-title" value="ENGINE 13: Client Allocation System" style="text;html=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="135" width="260" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng13-api" value="API: /api/engine/allocation/*&#xa;POST /allocate (clientId, productIds[])&#xa;GET /allocations/:clientId&#xa;DELETE /allocations/:id (revoke)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D1C4E9;strokeColor=#4527A0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="160" width="320" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng13-data" value="Data: product_allocations,&#xa;client_preferences, recommendation_cache" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D1C4E9;strokeColor=#4527A0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="220" width="320" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng13-pub" value="Publishes: product.allocated,&#xa;product.deallocated" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="260" width="155" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng13-sub" value="Subscribes: score.completed,&#xa;client.preferences_updated" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFECB3;strokeColor=#FF8F00;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="225" y="260" width="155" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng13-widgets" value="Pre-computed Widgets: Today's Hot, Rising Stars,&#xa;Best for You, New Opportunities, Seasonal Picks" style="text;html=1;fontSize=8;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="60" y="300" width="320" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng13-saas" value="SaaS: &quot;SmartAlloc&quot; — AI product curation &amp; recommendation" style="text;html=1;fontSize=9;fontStyle=2;fontColor=#4527A0;" vertex="1" parent="1">
+          <mxGeometry x="60" y="330" width="320" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- Engine 14: Content Creation (Creative Studio) -->
+        <mxCell id="eng14" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE7F6;strokeColor=#4527A0;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="420" y="130" width="340" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng14-title" value="ENGINE 14: Creative Studio" style="text;html=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="135" width="220" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng14-api" value="API: /api/engine/content/*&#xa;POST /generate (product, type, platform)&#xa;GET /library/:clientId&#xa;GET /credits/:clientId&#xa;POST /brand-voice (config)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D1C4E9;strokeColor=#4527A0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="430" y="160" width="320" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng14-data" value="Data: content_items, content_credits,&#xa;brand_voices, content_templates" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D1C4E9;strokeColor=#4527A0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="430" y="230" width="320" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng14-queues" value="Queues: content-queue (Haiku bulk + Sonnet premium)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D1C4E9;strokeColor=#4527A0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="430" y="265" width="320" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng14-pub" value="Pub: content.generated,&#xa;content.approved" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="430" y="295" width="155" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng14-sub" value="Sub: product.allocated,&#xa;automation.auto_create" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFECB3;strokeColor=#FF8F00;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="595" y="295" width="155" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng14-types" value="Types: captions, ad copy, video scripts, email, blog/SEO, images, carousels" style="text;html=1;fontSize=8;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="430" y="330" width="320" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng14-saas" value="SaaS: &quot;ContentForge&quot; — AI marketing content for e-commerce" style="text;html=1;fontSize=9;fontStyle=2;fontColor=#4527A0;" vertex="1" parent="1">
+          <mxGeometry x="430" y="350" width="320" height="15" as="geometry"/>
+        </mxCell>
+
+        <!-- Engine 15: Content Publishing (Smart Publisher) -->
+        <mxCell id="eng15" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE7F6;strokeColor=#4527A0;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="790" y="130" width="340" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng15-title" value="ENGINE 15: Smart Publisher" style="text;html=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="135" width="220" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng15-api" value="API: /api/engine/publishing/*&#xa;POST /publish (contentId, platforms[])&#xa;POST /schedule (contentId, datetime)&#xa;GET /calendar/:clientId&#xa;GET /engagement/:contentId" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D1C4E9;strokeColor=#4527A0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="800" y="160" width="320" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng15-data" value="Data: publish_log, client_social_profiles,&#xa;publish_schedules, engagement_metrics" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D1C4E9;strokeColor=#4527A0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="800" y="230" width="320" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng15-queues" value="Queues: distribution-queue, engagement-tracking" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D1C4E9;strokeColor=#4527A0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="800" y="265" width="320" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng15-pub" value="Pub: content.published,&#xa;engagement.updated" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="800" y="295" width="155" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng15-sub" value="Sub: content.approved,&#xa;automation.auto_publish" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFECB3;strokeColor=#FF8F00;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="965" y="295" width="155" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng15-saas" value="SaaS: &quot;PostPilot&quot; — multi-channel social publishing" style="text;html=1;fontSize=9;fontStyle=2;fontColor=#4527A0;" vertex="1" parent="1">
+          <mxGeometry x="800" y="350" width="320" height="15" as="geometry"/>
+        </mxCell>
+
+        <!-- Engine 16: Store Integration (Shop Connect) -->
+        <mxCell id="eng16" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE7F6;strokeColor=#4527A0;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="130" width="340" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng16-title" value="ENGINE 16: Shop Connect" style="text;html=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="135" width="220" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng16-api" value="API: /api/engine/shop/*&#xa;POST /connect (platform, oauth)&#xa;POST /push (productId, storeId)&#xa;POST /push-batch (productIds[])&#xa;DELETE /channels/:id (disconnect)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D1C4E9;strokeColor=#4527A0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="160" width="320" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng16-data" value="Data: client_channels, shop_products,&#xa;encrypted_tokens (AES-256-GCM)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D1C4E9;strokeColor=#4527A0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="230" width="320" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng16-queues" value="Queues: shop-sync" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D1C4E9;strokeColor=#4527A0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="265" width="320" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng16-pub" value="Pub: shop.product_pushed,&#xa;shop.connected" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="295" width="155" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng16-sub" value="Sub: product.allocated,&#xa;automation.auto_push" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFECB3;strokeColor=#FF8F00;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1335" y="295" width="155" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng16-platforms" value="Platforms: Shopify (GraphQL), TikTok Shop (HMAC), Amazon (SP-API), Meta" style="text;html=1;fontSize=8;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="330" width="320" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng16-saas" value="SaaS: &quot;ShopSync&quot; — multi-platform product listing tool" style="text;html=1;fontSize=9;fontStyle=2;fontColor=#4527A0;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="350" width="320" height="15" as="geometry"/>
+        </mxCell>
+
+        <!-- Engine 17: Order Tracking -->
+        <mxCell id="eng17" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE7F6;strokeColor=#4527A0;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1530" y="130" width="340" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng17-title" value="ENGINE 17: Order Tracking" style="text;html=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1540" y="135" width="220" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng17-api" value="API: /api/engine/orders/*&#xa;GET /orders/:clientId&#xa;GET /orders/:id/tracking&#xa;POST /webhooks/shopify (orders)&#xa;POST /webhooks/tiktok (orders)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D1C4E9;strokeColor=#4527A0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1540" y="160" width="320" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng17-data" value="Data: orders, order_events,&#xa;shipment_tracking" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D1C4E9;strokeColor=#4527A0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1540" y="230" width="320" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng17-queues" value="Queues: order-tracking-queue" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D1C4E9;strokeColor=#4527A0;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1540" y="260" width="320" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng17-pub" value="Pub: order.received,&#xa;order.shipped, order.delivered" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1540" y="290" width="155" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng17-sub" value="Sub: shop.product_pushed,&#xa;pod.order.forwarded" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFECB3;strokeColor=#FF8F00;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1705" y="290" width="155" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng17-saas" value="SaaS: &quot;OrderFlow&quot; — unified order tracking across platforms" style="text;html=1;fontSize=9;fontStyle=2;fontColor=#4527A0;" vertex="1" parent="1">
+          <mxGeometry x="1540" y="350" width="320" height="15" as="geometry"/>
+        </mxCell>
+
+        <!-- ========== TIER 5: OPERATIONS LAYER ========== -->
+        <mxCell id="eb-tier5-label" value="TIER 5: OPERATIONS &amp; REVENUE LAYER (Admin-Only)" style="text;html=1;fontSize=16;fontStyle=1;fillColor=#FCE4EC;strokeColor=#C62828;rounded=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="50" y="400" width="2100" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Engine 18: Admin Command Center -->
+        <mxCell id="eng18" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE4EC;strokeColor=#C62828;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="450" width="400" height="270" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng18-title" value="ENGINE 18: Admin Command Center" style="text;html=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="455" width="300" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng18-desc" value="(YOUSELL's OWN stores — separate from client Shop Connect)" style="text;html=1;fontSize=9;fontStyle=2;fontColor=#C62828;" vertex="1" parent="1">
+          <mxGeometry x="60" y="475" width="380" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng18-api" value="API: /api/engine/command-center/*&#xa;GET /best-sellers (ranked pool)&#xa;POST /push (productId, platforms[])&#xa;GET /pipeline/:platform&#xa;GET /revenue (per-platform, weekly)&#xa;POST /stores/connect (platform, oauth)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F8BBD0;strokeColor=#C62828;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="495" width="380" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng18-data" value="Data: admin_store_connections, admin_product_listings,&#xa;admin_revenue_tracking (daily snapshots per platform)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F8BBD0;strokeColor=#C62828;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="575" width="380" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng18-queues" value="Queues: push-to-shopify, push-to-tiktok, push-to-amazon,&#xa;admin-product-push (fan-out)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F8BBD0;strokeColor=#C62828;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="610" width="380" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng18-pub" value="Pub: admin.product_listed,&#xa;admin.revenue_updated" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="650" width="185" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng18-sub" value="Sub: score.completed,&#xa;content.generated" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFECB3;strokeColor=#FF8F00;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="255" y="650" width="185" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng18-saas" value="SaaS: &quot;StoreHQ&quot; — multi-platform store management dashboard" style="text;html=1;fontSize=9;fontStyle=2;fontColor=#C62828;" vertex="1" parent="1">
+          <mxGeometry x="60" y="690" width="380" height="15" as="geometry"/>
+        </mxCell>
+
+        <!-- Engine 19: Affiliate Commission Engine -->
+        <mxCell id="eng19" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE4EC;strokeColor=#C62828;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="480" y="450" width="400" height="270" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng19-title" value="ENGINE 19: Affiliate Commission Engine" style="text;html=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="490" y="455" width="300" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng19-desc" value="(Dual-stream: Internal Content + Client Service commissions)" style="text;html=1;fontSize=9;fontStyle=2;fontColor=#C62828;" vertex="1" parent="1">
+          <mxGeometry x="490" y="475" width="380" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng19-api" value="API: /api/engine/affiliate/*&#xa;GET /programs (24+ with rates, cookies)&#xa;GET /referrals/:clientId&#xa;GET /commissions (per-platform, per-stream)&#xa;POST /content/generate (programId)&#xa;GET /revenue/monthly-rollup" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F8BBD0;strokeColor=#C62828;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="490" y="495" width="380" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng19-data" value="Data: affiliate_programs, affiliate_referrals,&#xa;affiliate_commissions, affiliate_content_log" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F8BBD0;strokeColor=#C62828;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="490" y="575" width="380" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng19-queues" value="Queues: affiliate-content-generate, affiliate-commission-track,&#xa;affiliate-refresh" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F8BBD0;strokeColor=#C62828;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="490" y="610" width="380" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng19-pub" value="Pub: affiliate.content_published,&#xa;affiliate.commission_earned" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="490" y="650" width="185" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng19-sub" value="Sub: shop.connected,&#xa;client.onboarded" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFECB3;strokeColor=#FF8F00;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="685" y="650" width="185" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng19-saas" value="SaaS: &quot;AffiliateHQ&quot; — affiliate program management &amp; tracking" style="text;html=1;fontSize=9;fontStyle=2;fontColor=#C62828;" vertex="1" parent="1">
+          <mxGeometry x="490" y="690" width="380" height="15" as="geometry"/>
+        </mxCell>
+
+        <!-- Engine 20: POD Intelligence (combines discovery + fulfillment) -->
+        <mxCell id="eng20" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE4EC;strokeColor=#C62828;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="910" y="450" width="400" height="270" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng20-title" value="ENGINE 20: POD Intelligence" style="text;html=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="920" y="455" width="300" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng20-desc" value="(Design discovery + mockups + fulfillment partner management)" style="text;html=1;fontSize=9;fontStyle=2;fontColor=#C62828;" vertex="1" parent="1">
+          <mxGeometry x="920" y="475" width="380" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng20-api" value="API: /api/engine/pod/*&#xa;POST /scan (design trend discovery)&#xa;GET /designs/:id (mockups)&#xa;POST /provision (productId, storeId)&#xa;POST /webhooks/printful (fulfillment)&#xa;POST /webhooks/printify (fulfillment)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F8BBD0;strokeColor=#C62828;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="920" y="495" width="380" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng20-data" value="Data: pod_designs, pod_products, pod_orders,&#xa;pod_providers, pod_mockup_cache" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F8BBD0;strokeColor=#C62828;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="920" y="575" width="380" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng20-queues" value="Queues: pod-discovery, pod-provision, pod-fulfillment-sync" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F8BBD0;strokeColor=#C62828;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="920" y="610" width="380" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng20-pub" value="Pub: pod.design.discovered,&#xa;pod.order.forwarded" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="920" y="642" width="185" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng20-sub" value="Sub: pod.score.completed,&#xa;shop.product_pushed" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFECB3;strokeColor=#FF8F00;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1115" y="642" width="185" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng20-partners" value="Partners: Printful (340+), Printify (900+), Gelato (100+), Gooten (150+)" style="text;html=1;fontSize=8;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="920" y="678" width="380" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng20-saas" value="SaaS: &quot;POD Studio&quot; — print-on-demand trend discovery &amp; management" style="text;html=1;fontSize=9;fontStyle=2;fontColor=#C62828;" vertex="1" parent="1">
+          <mxGeometry x="920" y="695" width="380" height="15" as="geometry"/>
+        </mxCell>
+
+        <!-- Engine 21: Automation Orchestrator -->
+        <mxCell id="eng21" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE4EC;strokeColor=#C62828;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1340" y="450" width="400" height="270" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng21-title" value="ENGINE 21: Automation Orchestrator" style="text;html=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1350" y="455" width="300" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng21-desc" value="(Manual / Assisted / Auto-Pilot with guardrails &amp; emergency controls)" style="text;html=1;fontSize=9;fontStyle=2;fontColor=#C62828;" vertex="1" parent="1">
+          <mxGeometry x="1350" y="475" width="380" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng21-api" value="API: /api/engine/automation/*&#xa;GET /config/:clientId&#xa;POST /level (feature, level)&#xa;POST /pause-all (clientId)&#xa;GET /activity-log/:clientId&#xa;GET /weekly-digest/:clientId" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F8BBD0;strokeColor=#C62828;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1350" y="495" width="380" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng21-data" value="Data: client_automation_config,&#xa;automation_activity_log, automation_rules" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F8BBD0;strokeColor=#C62828;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1350" y="575" width="380" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng21-pub" value="Pub: automation.auto_create,&#xa;automation.auto_publish,&#xa;automation.auto_push, automation.paused" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1350" y="615" width="185" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng21-sub" value="Sub: product.allocated,&#xa;content.generated,&#xa;order.received" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFECB3;strokeColor=#FF8F00;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1545" y="615" width="185" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng21-guards" value="Guardrails: daily spend cap, content cap, outreach cap, pause-on-error (3 fails),&#xa;quiet hours, undo window (5min before publish)" style="text;html=1;fontSize=8;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="1350" y="670" width="380" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="eng21-saas" value="SaaS: &quot;AutoPilot&quot; — intelligent e-commerce automation with guardrails" style="text;html=1;fontSize=9;fontStyle=2;fontColor=#C62828;" vertex="1" parent="1">
+          <mxGeometry x="1350" y="695" width="380" height="15" as="geometry"/>
+        </mxCell>
+
+        <!-- ========== ENGINE DEPENDENCY MAP ========== -->
+        <mxCell id="eb-dep-title" value="Inter-Engine Event Flow (All via Event Bus — No Direct Coupling)" style="text;html=1;fontSize=16;fontStyle=1;align=center;fillColor=#F5F5F5;strokeColor=#666;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="760" width="2100" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="eb-dep-flow" value="Discovery (1)&#xa;→ product.discovered&#xa;→ Trend Scout (2) + Data Fusion (3) + Competitor (10)&#xa;→ data.merged&#xa;→ Scoring (4) [+ POD Scoring (5) if POD]&#xa;→ score.completed&#xa;→ Profitability (6) + Financial (7) + Influencer (8) + Supplier (9) + Blueprint (12)&#xa;→ enrichment events&#xa;→ Allocation (13) [Admin approves]&#xa;→ product.allocated&#xa;→ Shop Connect (16) + Creative Studio (14) + Automation (21)&#xa;→ content.generated&#xa;→ Smart Publisher (15)&#xa;→ shop.product_pushed&#xa;→ Order Tracking (17)&#xa;→ order.received&#xa;→ Affiliate Engine (19) [auto-tracks commissions]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666;fontSize=10;align=left;spacingLeft=15;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="200" y="810" width="1400" height="220" as="geometry"/>
+        </mxCell>
+
+        <!-- SaaS Spin-off Summary -->
+        <mxCell id="eb-saas-title" value="SaaS Spin-Off Portfolio (21 Potential Products)" style="text;html=1;fontSize=14;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="200" y="1060" width="1400" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="eb-saas-list" value="1. Product Radar — trend discovery  |  2. TrendSpy — pre-viral detection  |  3. DataFuse — data enrichment  |  4. ScoreIQ — product scoring&#xa;5. POD Score — POD viability  |  6. MarginCalc — profitability  |  7. UnitEcon — financial modelling  |  8. CreatorMatch — influencer matching&#xa;9. SupplyLink — supplier discovery  |  10. SpyStore — competitor intel  |  11. AdIntel — ad benchmarks  |  12. LaunchPad — launch plans&#xa;13. SmartAlloc — product curation  |  14. ContentForge — AI content  |  15. PostPilot — social publishing  |  16. ShopSync — store listings&#xa;17. OrderFlow — order tracking  |  18. StoreHQ — store management  |  19. AffiliateHQ — affiliate tracking  |  20. POD Studio — POD management  |  21. AutoPilot — automation" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#999;fontSize=9;align=left;spacingLeft=10;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="200" y="1090" width="1400" height="90" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
 </mxfile>

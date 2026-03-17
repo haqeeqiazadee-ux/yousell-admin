@@ -2400,3 +2400,43 @@ Create comprehensive, production-ready use case diagrams and flowcharts covering
 - `docs/YOUSELL_Use_Case_Diagram.drawio`
 - `docs/YOUSELL_Flowcharts.drawio`
 - `system/development_log.md` — This entry
+
+------------------------------------------------------------
+
+## Session: 2026-03-17 — Engine Independence Architecture (Diagrams)
+
+### Task
+Restructure use case diagrams and flowcharts to ensure each of the 21 engines operates as a separate, independent bounded context — enabling any engine to be extracted as a standalone SaaS offering in the future.
+
+### What Was Built
+
+**`docs/YOUSELL_Use_Case_Diagram.drawio`** — expanded from 6 to 10 pages:
+- **Page 7 (NEW): Engine Independence Architecture — Engines 1-12**
+  - Organized into 3 tiers: Discovery (1-2), Intelligence/Scoring (3-6), Enrichment (7-12)
+  - Each engine shows: API namespace, owned data tables, BullMQ queues, published events, subscribed events, SaaS spin-off name
+- **Page 8 (NEW): Engine Independence Architecture — Engines 13-21**
+  - Client-Facing layer (13-17) and Operations layer (18-21)
+  - Inter-engine event flow diagram showing all publish/subscribe relationships
+  - SaaS spin-off portfolio summary for all 21 engines
+
+**`docs/YOUSELL_Flowcharts.drawio`** — expanded from 8 to 10 pages:
+- **Page 9 (NEW): Engine Event Bus & Communication**
+  - All 21 engines arranged in 5 tiers around a central Event Bus (Redis Pub/Sub + Supabase Realtime)
+  - Published events (green) and subscribed events (yellow) for each engine
+  - Extraction pattern annotation
+- **Page 10 (NEW): Engine Extraction Pattern**
+  - Before/after comparison: engine as part of monolith vs standalone SaaS
+  - 5-step extraction process: Copy → Migrate tables → Replace subscriptions → Replace publishes → Deploy
+  - Data isolation guarantee note
+
+### Design Principles
+- Each engine owns its API namespace (`/api/engine/{name}/*`)
+- No engine directly accesses another engine's data tables
+- All inter-engine communication via event bus (Redis Pub/Sub + Supabase Realtime)
+- Event contracts define the integration surface between engines
+- Any engine can be extracted with the 5-step process without affecting others
+
+### Files Modified
+- `docs/YOUSELL_Use_Case_Diagram.drawio` — Added pages 7-8
+- `docs/YOUSELL_Flowcharts.drawio` — Added pages 9-10
+- `system/development_log.md` — This entry
