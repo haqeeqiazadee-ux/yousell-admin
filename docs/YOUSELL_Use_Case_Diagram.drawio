@@ -1,0 +1,1070 @@
+<mxfile host="app.diagrams.net" agent="Claude Code" version="26.0.0" pages="6">
+
+  <!-- PAGE 1: SYSTEM OVERVIEW — ALL ACTORS & HIGH-LEVEL BOUNDARIES -->
+  <diagram id="page1-overview" name="1. System Overview">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Title -->
+        <mxCell id="title1" value="YOUSELL Platform — System Overview &amp; Actors" style="text;html=1;fontSize=22;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="400" y="20" width="800" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- ========== ACTORS (Left Side) ========== -->
+
+        <!-- Super Admin Actor -->
+        <mxCell id="actor-superadmin" value="Super Admin" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="160" width="40" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Admin Actor -->
+        <mxCell id="actor-admin" value="Admin Operator" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="340" width="40" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Client Actor -->
+        <mxCell id="actor-client" value="Client Business" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="520" width="40" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Viewer Actor -->
+        <mxCell id="actor-viewer" value="Viewer (Read-Only)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="700" width="40" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- ========== ACTORS (Right Side — External Systems) ========== -->
+
+        <!-- Background System Actor -->
+        <mxCell id="actor-system" value="Background&#xa;System (BullMQ)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="160" width="40" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Stripe -->
+        <mxCell id="actor-stripe" value="Stripe" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="340" width="40" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Apify -->
+        <mxCell id="actor-apify" value="Apify Cloud" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="520" width="40" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Claude AI -->
+        <mxCell id="actor-claude" value="Claude AI" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="700" width="40" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- POD Partners -->
+        <mxCell id="actor-pod" value="POD Partners&#xa;(Printful/Printify)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="880" width="40" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- ========== SYSTEM BOUNDARIES ========== -->
+
+        <!-- Main Website Boundary -->
+        <mxCell id="boundary-website" value="yousell.online — Main Website" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;spacingTop=-2;fillColor=#FAFAFA;strokeColor=#999999;fontSize=14;fontStyle=1;whiteSpace=wrap;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="80" width="300" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-signup" value="Sign Up /&#xa;Sign In" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="230" y="130" width="110" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-landing" value="View Landing&#xa;Page &amp; Pricing" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="370" y="130" width="110" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-subscribe" value="Subscribe&#xa;(Stripe Checkout)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="290" y="200" width="120" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- Admin Dashboard Boundary -->
+        <mxCell id="boundary-admin" value="admin.yousell.online — Admin Intelligence Engine" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;spacingTop=-2;fillColor=#F0F8FF;strokeColor=#6c8ebf;fontSize=14;fontStyle=1;whiteSpace=wrap;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="560" y="80" width="860" height="500" as="geometry"/>
+        </mxCell>
+
+        <!-- Admin Use Case Groups -->
+        <mxCell id="uc-discovery" value="Product Discovery&#xa;&amp; Scanning&#xa;(8 Channels)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="590" y="130" width="130" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-scoring" value="Composite&#xa;3-Pillar Scoring" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="750" y="130" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-enrichment" value="Enrichment&#xa;(Influencers, Suppliers,&#xa;Competitors, Financials)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="900" y="130" width="160" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-blueprints" value="Launch Blueprint&#xa;Generation&#xa;(Claude Sonnet)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="130" width="130" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-clients-mgmt" value="Client&#xa;Management&#xa;&amp; Allocation" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="590" y="240" width="130" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-import" value="CSV / Excel&#xa;Data Import" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="750" y="240" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-automation" value="Automation&#xa;Management" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="900" y="240" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-settings" value="System Settings&#xa;&amp; API Keys" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="240" width="130" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cmdcenter" value="Command Center&#xa;(YOUSELL Own Stores)&#xa;Push / Revenue / Pipeline" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="590" y="360" width="200" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-affiliate" value="Affiliate Revenue&#xa;Engine (Dual-Stream)&#xa;Content Factory" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="830" y="360" width="190" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-pod-admin" value="POD Intelligence&#xa;(Design Discovery,&#xa;Mockups, Fulfillment)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="360" width="180" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-trends" value="Trend Analysis&#xa;&amp; Keyword Velocity" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="130" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-notifications-admin" value="Notifications" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="240" width="120" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- Client Dashboard Boundary -->
+        <mxCell id="boundary-client" value="yousell.online/dashboard — Client SaaS Platform" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;spacingTop=-2;fillColor=#FFFFF0;strokeColor=#d6b656;fontSize=14;fontStyle=1;whiteSpace=wrap;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="620" width="1220" height="340" as="geometry"/>
+        </mxCell>
+
+        <!-- Client Use Cases -->
+        <mxCell id="uc-view-products" value="View Allocated&#xa;Products" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="230" y="670" width="120" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-request-products" value="Request&#xa;More Products" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="380" y="670" width="120" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-connect-stores" value="Connect Stores&#xa;(Shopify, TikTok,&#xa;Amazon, Meta)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="530" y="670" width="140" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-push-store" value="Push Products&#xa;to Store" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="700" y="670" width="120" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-content-create" value="Generate&#xa;Marketing Content&#xa;(Creative Studio)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="850" y="670" width="150" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-content-publish" value="Publish Content&#xa;(Smart Publisher)&#xa;via Ayrshare" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="670" width="140" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-subscription" value="Manage&#xa;Subscription&#xa;(Stripe Portal)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="670" width="130" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-engines" value="Toggle&#xa;Engines&#xa;On/Off" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="230" y="780" width="110" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-brand-voice" value="Configure&#xa;Brand Voice" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="370" y="780" width="110" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-social-connect" value="Connect Social&#xa;Accounts" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="510" y="780" width="120" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-calendar" value="Content&#xa;Calendar" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="660" y="780" width="110" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-orders" value="View &amp; Track&#xa;Orders" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="800" y="780" width="110" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-automation-client" value="Set Automation&#xa;Level (Manual /&#xa;Assisted / Auto-Pilot)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="940" y="780" width="150" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-influencer-outreach" value="Influencer&#xa;Outreach" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="780" width="110" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-analytics" value="Analytics &amp;&#xa;Performance" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="780" width="120" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-pause-all" value="Pause All&#xa;Automation&#xa;(Emergency)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="870" width="130" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- ========== KEY ASSOCIATION LINES ========== -->
+
+        <!-- Super Admin to Admin boundary -->
+        <mxCell id="e1" style="edgeStyle=none;strokeColor=#82b366;" edge="1" source="actor-superadmin" target="uc-settings" parent="1"/>
+        <mxCell id="e2" style="edgeStyle=none;strokeColor=#82b366;" edge="1" source="actor-superadmin" target="uc-cmdcenter" parent="1"/>
+
+        <!-- Admin to admin use cases -->
+        <mxCell id="e3" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="actor-admin" target="uc-discovery" parent="1"/>
+        <mxCell id="e4" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="actor-admin" target="uc-scoring" parent="1"/>
+        <mxCell id="e5" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="actor-admin" target="uc-enrichment" parent="1"/>
+        <mxCell id="e6" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="actor-admin" target="uc-blueprints" parent="1"/>
+        <mxCell id="e7" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="actor-admin" target="uc-clients-mgmt" parent="1"/>
+        <mxCell id="e8" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="actor-admin" target="uc-import" parent="1"/>
+        <mxCell id="e9" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="actor-admin" target="uc-automation" parent="1"/>
+        <mxCell id="e10" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="actor-admin" target="uc-cmdcenter" parent="1"/>
+        <mxCell id="e11" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="actor-admin" target="uc-affiliate" parent="1"/>
+        <mxCell id="e12" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="actor-admin" target="uc-pod-admin" parent="1"/>
+
+        <!-- Client to client use cases -->
+        <mxCell id="e20" style="edgeStyle=none;strokeColor=#d6b656;" edge="1" source="actor-client" target="uc-signup" parent="1"/>
+        <mxCell id="e21" style="edgeStyle=none;strokeColor=#d6b656;" edge="1" source="actor-client" target="uc-subscribe" parent="1"/>
+        <mxCell id="e22" style="edgeStyle=none;strokeColor=#d6b656;" edge="1" source="actor-client" target="uc-view-products" parent="1"/>
+        <mxCell id="e23" style="edgeStyle=none;strokeColor=#d6b656;" edge="1" source="actor-client" target="uc-connect-stores" parent="1"/>
+        <mxCell id="e24" style="edgeStyle=none;strokeColor=#d6b656;" edge="1" source="actor-client" target="uc-content-create" parent="1"/>
+        <mxCell id="e25" style="edgeStyle=none;strokeColor=#d6b656;" edge="1" source="actor-client" target="uc-content-publish" parent="1"/>
+        <mxCell id="e26" style="edgeStyle=none;strokeColor=#d6b656;" edge="1" source="actor-client" target="uc-automation-client" parent="1"/>
+
+        <!-- Viewer to limited use cases -->
+        <mxCell id="e30" style="edgeStyle=none;strokeColor=#666666;dashed=1;" edge="1" source="actor-viewer" target="uc-view-products" parent="1"/>
+
+        <!-- System to use cases -->
+        <mxCell id="e40" style="edgeStyle=none;strokeColor=#9673a6;" edge="1" source="actor-system" target="uc-discovery" parent="1"/>
+        <mxCell id="e41" style="edgeStyle=none;strokeColor=#9673a6;" edge="1" source="actor-system" target="uc-scoring" parent="1"/>
+        <mxCell id="e42" style="edgeStyle=none;strokeColor=#9673a6;" edge="1" source="actor-system" target="uc-enrichment" parent="1"/>
+        <mxCell id="e43" style="edgeStyle=none;strokeColor=#9673a6;" edge="1" source="actor-system" target="uc-content-publish" parent="1"/>
+
+        <!-- External systems -->
+        <mxCell id="e50" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="actor-stripe" target="uc-subscribe" parent="1"/>
+        <mxCell id="e51" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="actor-stripe" target="uc-subscription" parent="1"/>
+        <mxCell id="e52" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="actor-apify" target="uc-discovery" parent="1"/>
+        <mxCell id="e53" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="actor-claude" target="uc-blueprints" parent="1"/>
+        <mxCell id="e54" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="actor-claude" target="uc-content-create" parent="1"/>
+        <mxCell id="e55" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="actor-pod" target="uc-pod-admin" parent="1"/>
+        <mxCell id="e56" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="actor-pod" target="uc-orders" parent="1"/>
+
+        <!-- Legend -->
+        <mxCell id="legend-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="200" y="990" width="500" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-title" value="Legend" style="text;html=1;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="210" y="995" width="80" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg1" value="" style="ellipse;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="220" y="1025" width="20" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg1t" value="Existing (Built)" style="text;html=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="245" y="1023" width="100" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg2" value="" style="ellipse;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="220" y="1050" width="20" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg2t" value="New v8 Features (Planned)" style="text;html=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="245" y="1048" width="170" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg3" value="" style="ellipse;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="220" y="1075" width="20" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg3t" value="Client-Facing Features" style="text;html=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="245" y="1073" width="150" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg4" value="" style="ellipse;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="220" y="1100" width="20" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg4t" value="Emergency / Critical Controls" style="text;html=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="245" y="1098" width="200" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg5t" value="Solid line = Direct interaction  |  Dashed line = External system dependency" style="text;html=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="1030" width="260" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg6t" value="Green actors = Internal  |  Red actors = External systems" style="text;html=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="1070" width="260" height="30" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- PLACEHOLDER PAGES — will be filled in subsequent chunks -->
+  <diagram id="page2-admin-discovery" name="2. Admin — Discovery &amp; Intelligence">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1400">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="p2-title" value="Admin Dashboard — Product Discovery &amp; Intelligence Use Cases" style="text;html=1;fontSize=20;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="700" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- Admin Actor -->
+        <mxCell id="p2-admin" value="Admin&#xa;Operator" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="400" width="40" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- System Actor -->
+        <mxCell id="p2-system" value="BullMQ&#xa;Workers" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="300" width="40" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Apify -->
+        <mxCell id="p2-apify" value="Apify&#xa;Cloud" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="500" width="40" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Claude AI -->
+        <mxCell id="p2-claude" value="Claude AI" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="700" width="40" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== SCAN CONTROL GROUP ===== -->
+        <mxCell id="p2-scan-boundary" value="Scan Control" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#F0F8FF;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="150" y="70" width="500" height="230" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-quick-scan" value="UC-AD-01&#xa;Run Quick Scan&#xa;(TikTok + pytrends + Reddit)&#xa;~$0.05-0.20, 2-4 min" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="170" y="110" width="180" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-full-scan" value="UC-AD-02&#xa;Run Full Scan&#xa;(All 8 channels + POD)&#xa;~$0.50-2.50, 15-30 min" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="370" y="110" width="180" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-client-scan" value="UC-AD-03&#xa;Run Client Scan&#xa;(Niche-scoped pipeline)&#xa;~$0.30-1.50, 10-20 min" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="170" y="200" width="180" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-pod-scan" value="UC-AD-04&#xa;Run POD Scan&#xa;(Etsy + Redbubble + Merch)&#xa;~$0.20-0.80, 5-10 min" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="370" y="200" width="180" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cancel-scan" value="UC-AD-05&#xa;Cancel Running Scan" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="560" y="160" width="140" height="55" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== PRODUCT BROWSING GROUP ===== -->
+        <mxCell id="p2-products-boundary" value="Product Browsing &amp; Management" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#F0F8FF;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="150" y="320" width="500" height="250" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-view-all-products" value="UC-AD-06&#xa;View All Products&#xa;(Paginated, Filterable)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="170" y="360" width="160" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-platform-products" value="UC-AD-07&#xa;View Platform Products&#xa;(TikTok / Amazon / Shopify /&#xa;Pinterest / Digital / Affiliate / POD)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="360" width="200" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-product-detail" value="UC-AD-08&#xa;View Product Detail&#xa;(Scores, Signals, History)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="170" y="450" width="170" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-smart-filter" value="UC-AD-09&#xa;Smart Filters&#xa;(Score Tier / Platform /&#xa;Price / Trend Stage / Saved)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="370" y="450" width="190" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-csv-import" value="UC-AD-10&#xa;Import CSV/Excel&#xa;(Keepa / FastMoss /&#xa;Kalodata auto-detect)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="580" y="360" width="170" height="75" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== SCORING GROUP ===== -->
+        <mxCell id="p2-scoring-boundary" value="Scoring Engine" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#F0F8FF;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="70" width="420" height="230" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-score-dashboard" value="UC-AD-11&#xa;View Scoring Dashboard&#xa;(Tier Distribution)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="720" y="110" width="170" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-test-scoring" value="UC-AD-12&#xa;Test Scoring Algorithm&#xa;(Manual Input)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="920" y="110" width="170" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-manual-score" value="UC-AD-13&#xa;Manual Score Products" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="720" y="200" width="160" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-pod-scoring" value="UC-AD-14&#xa;POD-Adjusted Scoring&#xa;(Design Velocity, 30%+ Margin)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="910" y="200" width="190" height="65" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== ENRICHMENT GROUP ===== -->
+        <mxCell id="p2-enrich-boundary" value="Intelligence Enrichment" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#F0F8FF;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="320" width="700" height="250" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-influencers" value="UC-AD-15&#xa;Browse Influencer Database&#xa;(Search, Filter, Match Scores)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="720" y="360" width="190" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-suppliers" value="UC-AD-16&#xa;Browse Supplier Database&#xa;(MOQ, Pricing, Compare)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="940" y="360" width="180" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-competitors" value="UC-AD-17&#xa;Competitor Intelligence&#xa;(Store Maps, Ad Monitor)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="360" width="180" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-financial" value="UC-AD-18&#xa;Financial Modelling&#xa;(Unit Economics, Margin,&#xa;Break-Even, ROI)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="720" y="450" width="190" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-blueprint" value="UC-AD-19&#xa;Generate Launch Blueprint&#xa;(Claude Sonnet, On-Demand)&#xa;Export PDF" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="940" y="450" width="190" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-trends-detail" value="UC-AD-20&#xa;Trend Analysis&#xa;(Keyword Velocity,&#xa;Trend Stage Tracking)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="450" width="180" height="75" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== CLIENT MANAGEMENT GROUP ===== -->
+        <mxCell id="p2-clientmgmt-boundary" value="Client Management &amp; Allocation" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#F0F8FF;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="150" y="600" width="500" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-view-clients" value="UC-AD-21&#xa;View All Clients&#xa;(Accounts, Plans)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="170" y="640" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-create-client" value="UC-AD-22&#xa;Create Client Account&#xa;&amp; Assign Plan" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="640" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-allocate" value="UC-AD-23&#xa;Allocate Products&#xa;to Clients" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="170" y="720" width="160" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-client-usage" value="UC-AD-24&#xa;View Client Usage&#xa;&amp; Engine Status" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="720" width="160" height="55" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== ADMIN OPERATIONS GROUP ===== -->
+        <mxCell id="p2-ops-boundary" value="Admin Operations" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#F0F8FF;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="600" width="700" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-automation-jobs" value="UC-AD-25&#xa;Schedule &amp; Toggle&#xa;Automation Jobs" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="720" y="640" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cost-estimates" value="UC-AD-26&#xa;View Job Cost&#xa;Estimates" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="910" y="640" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-notif" value="UC-AD-27&#xa;Manage&#xa;Notifications" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="640" width="140" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-settings-admin" value="UC-AD-28&#xa;System Settings&#xa;(API Keys, Mode Toggle,&#xa;Automation Config)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="720" y="720" width="190" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-dashboard-kpi" value="UC-AD-29&#xa;View Dashboard KPIs&#xa;(Opportunity Feed,&#xa;System Status)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="940" y="720" width="170" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-mrr" value="UC-AD-30&#xa;View MRR &amp;&#xa;Subscription Analytics" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="720" width="170" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== CONNECTIONS ===== -->
+        <mxCell id="p2e1" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="p2-admin" target="uc-quick-scan" parent="1"/>
+        <mxCell id="p2e2" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="p2-admin" target="uc-full-scan" parent="1"/>
+        <mxCell id="p2e3" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="p2-admin" target="uc-client-scan" parent="1"/>
+        <mxCell id="p2e4" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="p2-admin" target="uc-view-all-products" parent="1"/>
+        <mxCell id="p2e5" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="p2-admin" target="uc-csv-import" parent="1"/>
+        <mxCell id="p2e6" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="p2-admin" target="uc-score-dashboard" parent="1"/>
+        <mxCell id="p2e7" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="p2-admin" target="uc-influencers" parent="1"/>
+        <mxCell id="p2e8" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="p2-admin" target="uc-view-clients" parent="1"/>
+        <mxCell id="p2e9" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="p2-admin" target="uc-allocate" parent="1"/>
+        <mxCell id="p2e10" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="p2-admin" target="uc-automation-jobs" parent="1"/>
+        <mxCell id="p2e11" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="p2-admin" target="uc-dashboard-kpi" parent="1"/>
+
+        <!-- System connections -->
+        <mxCell id="p2e20" style="edgeStyle=none;strokeColor=#9673a6;dashed=1;" edge="1" source="p2-system" target="uc-quick-scan" parent="1"/>
+        <mxCell id="p2e21" style="edgeStyle=none;strokeColor=#9673a6;dashed=1;" edge="1" source="p2-system" target="uc-full-scan" parent="1"/>
+        <mxCell id="p2e22" style="edgeStyle=none;strokeColor=#9673a6;dashed=1;" edge="1" source="p2-system" target="uc-manual-score" parent="1"/>
+
+        <!-- External connections -->
+        <mxCell id="p2e30" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p2-apify" target="uc-full-scan" parent="1"/>
+        <mxCell id="p2e31" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p2-apify" target="uc-pod-scan" parent="1"/>
+        <mxCell id="p2e32" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p2-claude" target="uc-blueprint" parent="1"/>
+        <mxCell id="p2e33" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p2-claude" target="uc-test-scoring" parent="1"/>
+
+        <!-- Include/Extend relationships -->
+        <mxCell id="p2ext1" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endSize=12;dashed=1;html=1;strokeColor=#999;" edge="1" source="uc-full-scan" target="uc-quick-scan" parent="1"/>
+        <mxCell id="p2ext2" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;" style="endArrow=open;endSize=12;dashed=1;html=1;strokeColor=#999;" edge="1" source="uc-pod-scoring" target="uc-manual-score" parent="1"/>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="page3-admin-cmdcenter" name="3. Admin — Command Center &amp; Affiliate">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1400">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="p3-title" value="Admin Dashboard — Command Center, POD &amp; Affiliate Revenue Use Cases" style="text;html=1;fontSize=20;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="250" y="20" width="800" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- Actors -->
+        <mxCell id="p3-admin" value="Admin&#xa;Operator" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="360" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3-system" value="BullMQ&#xa;Workers" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="200" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3-stores" value="External Stores&#xa;(Shopify/TikTok/&#xa;Amazon)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="400" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3-pod-partners" value="POD Partners&#xa;(Printful/Printify/&#xa;Gelato)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="600" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3-claude" value="Claude AI" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="800" width="40" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== COMMAND CENTER GROUP ===== -->
+        <mxCell id="p3-cmd-boundary" value="Admin Command Center (YOUSELL's Own Stores)" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#E8F5E9;strokeColor=#82b366;fontSize=13;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="70" width="700" height="300" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-best-sellers" value="UC-CC-01&#xa;View Best Sellers Pool&#xa;(Ranked by Final Score)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="160" y="110" width="180" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-push-tiktok" value="UC-CC-02&#xa;Push to TikTok Shop" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="370" y="110" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-push-amazon" value="UC-CC-03&#xa;Push to Amazon" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="540" y="110" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-push-shopify" value="UC-CC-04&#xa;Push to Shopify" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="700" y="110" width="130" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-push-all" value="UC-CC-05&#xa;Push to ALL Platforms&#xa;(Fan-Out Job)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="160" y="190" width="170" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-launch-marketing" value="UC-CC-06&#xa;Launch Marketing Campaign&#xa;(Ad Copy + Blueprint)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="190" width="190" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-inf-outreach" value="UC-CC-07&#xa;Influencer Outreach&#xa;(Match + Draft Emails)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="580" y="190" width="170" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-gen-content" value="UC-CC-08&#xa;Generate Content&#xa;(Captions, Video Scripts)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="160" y="265" width="170" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-fin-model" value="UC-CC-09&#xa;Run Financial Model&#xa;(Unit Economics + ROI)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="265" width="170" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-pipeline-view" value="UC-CC-10&#xa;Per-Platform Pipeline&#xa;(Draft→Listed→Active→&#xa;Performing→Archive)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="560" y="265" width="190" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-revenue-dash" value="UC-CC-11&#xa;Revenue Dashboard&#xa;(Per-Platform, Weekly,&#xa;Top 10 Products)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="880" y="110" width="180" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-connect-own-stores" value="UC-CC-12&#xa;Connect YOUSELL's&#xa;Own Stores (OAuth)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="880" y="210" width="170" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== POD INTELLIGENCE GROUP ===== -->
+        <mxCell id="p3-pod-boundary" value="POD Intelligence (Print-on-Demand)" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#E8F5E9;strokeColor=#82b366;fontSize=13;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="400" width="700" height="230" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-pod-discovery" value="UC-POD-01&#xa;POD Design Discovery&#xa;(Etsy + Redbubble +&#xa;Amazon Merch)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="160" y="440" width="180" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-pod-mockups" value="UC-POD-02&#xa;Generate POD Mockups&#xa;(Printful API)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="370" y="440" width="170" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-pod-score" value="UC-POD-03&#xa;POD Scoring&#xa;(Design Velocity,&#xa;30%+ Margin Gate)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="570" y="440" width="170" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-pod-push" value="UC-POD-04&#xa;Push POD Product&#xa;to Client Store&#xa;(Shopify + Printful)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="160" y="530" width="180" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-pod-order" value="UC-POD-05&#xa;POD Order Tracking&#xa;(Webhook Fulfillment)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="370" y="535" width="170" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-pod-subcats" value="UC-POD-06&#xa;Browse POD Sub-Categories&#xa;(Apparel, Home, Accessories,&#xa;Stationery, All-Over, Pet)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="570" y="530" width="200" height="75" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== AFFILIATE ENGINE GROUP ===== -->
+        <mxCell id="p3-aff-boundary" value="Affiliate Revenue Engine (Dual-Stream)" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#E8F5E9;strokeColor=#82b366;fontSize=13;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="660" width="700" height="300" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-aff-programs" value="UC-AFF-01&#xa;View Affiliate Programs&#xa;Database (24+ Programs,&#xa;Links, Rates, Cookie Windows)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="160" y="700" width="210" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-aff-referral" value="UC-AFF-02&#xa;Referral Tracker&#xa;(Client → Platform&#xa;Mapping)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="400" y="700" width="170" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-aff-commission" value="UC-AFF-03&#xa;Commission Log&#xa;(Per Platform, Per Stream)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="600" y="700" width="180" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-aff-stream1" value="UC-AFF-04&#xa;Stream 1: Internal Content&#xa;Revenue Dashboard&#xa;(Content Factory Output)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="160" y="800" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-aff-stream2" value="UC-AFF-05&#xa;Stream 2: Client Service&#xa;Revenue Dashboard&#xa;(Platform Provisioning)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="390" y="800" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-aff-content" value="UC-AFF-06&#xa;Generate Affiliate Content&#xa;(Reviews, Comparisons,&#xa;Tutorials, Guides)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="160" y="890" width="200" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-aff-monthly" value="UC-AFF-07&#xa;Monthly Rollup&#xa;with Growth Trend" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="400" y="890" width="170" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-aff-autotrack" value="UC-AFF-08&#xa;Auto-Track Referrals&#xa;(Detect Client&#xa;Platform Provisioning)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="600" y="800" width="190" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- Connections -->
+        <mxCell id="p3e1" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="p3-admin" target="uc-best-sellers" parent="1"/>
+        <mxCell id="p3e2" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="p3-admin" target="uc-push-all" parent="1"/>
+        <mxCell id="p3e3" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="p3-admin" target="uc-revenue-dash" parent="1"/>
+        <mxCell id="p3e4" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="p3-admin" target="uc-pod-discovery" parent="1"/>
+        <mxCell id="p3e5" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="p3-admin" target="uc-aff-programs" parent="1"/>
+        <mxCell id="p3e6" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="p3-admin" target="uc-aff-stream1" parent="1"/>
+        <mxCell id="p3e7" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="p3-admin" target="uc-aff-content" parent="1"/>
+        <mxCell id="p3e8" style="edgeStyle=none;strokeColor=#6c8ebf;" edge="1" source="p3-admin" target="uc-connect-own-stores" parent="1"/>
+
+        <!-- System connections -->
+        <mxCell id="p3e20" style="edgeStyle=none;strokeColor=#9673a6;dashed=1;" edge="1" source="p3-system" target="uc-push-tiktok" parent="1"/>
+        <mxCell id="p3e21" style="edgeStyle=none;strokeColor=#9673a6;dashed=1;" edge="1" source="p3-system" target="uc-push-amazon" parent="1"/>
+        <mxCell id="p3e22" style="edgeStyle=none;strokeColor=#9673a6;dashed=1;" edge="1" source="p3-system" target="uc-push-shopify" parent="1"/>
+        <mxCell id="p3e23" style="edgeStyle=none;strokeColor=#9673a6;dashed=1;" edge="1" source="p3-system" target="uc-aff-autotrack" parent="1"/>
+
+        <!-- External store connections -->
+        <mxCell id="p3e30" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p3-stores" target="uc-push-tiktok" parent="1"/>
+        <mxCell id="p3e31" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p3-stores" target="uc-push-amazon" parent="1"/>
+        <mxCell id="p3e32" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p3-stores" target="uc-push-shopify" parent="1"/>
+        <mxCell id="p3e33" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p3-pod-partners" target="uc-pod-mockups" parent="1"/>
+        <mxCell id="p3e34" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p3-pod-partners" target="uc-pod-order" parent="1"/>
+        <mxCell id="p3e35" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p3-claude" target="uc-gen-content" parent="1"/>
+        <mxCell id="p3e36" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p3-claude" target="uc-aff-content" parent="1"/>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="page4-client-dashboard" name="4. Client Dashboard">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1400">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="p4-title" value="Client Dashboard (yousell.online/dashboard) — All Use Cases" style="text;html=1;fontSize=20;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="700" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- Actors -->
+        <mxCell id="p4-client" value="Client&#xa;Business" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="450" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4-stripe" value="Stripe" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="130" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4-stores-ext" value="Store APIs&#xa;(Shopify/TikTok/&#xa;Amazon/Meta)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="330" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4-ayrshare" value="Ayrshare&#xa;(Publishing)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="530" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4-claude-ai" value="Claude AI" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="730" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4-pod-ext" value="POD Partners" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="930" width="40" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== SUBSCRIPTION & ONBOARDING ===== -->
+        <mxCell id="p4-sub-boundary" value="Subscription &amp; Onboarding" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#FFFFF0;strokeColor=#d6b656;fontSize=13;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="70" width="500" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-sub" value="UC-CD-01&#xa;Manage Subscription&#xa;(View Plan, Upgrade,&#xa;Stripe Customer Portal)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="160" y="110" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-onboard" value="UC-CD-02&#xa;Onboarding Flow&#xa;(Profile, Niche, Channels,&#xa;Brand Voice)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="390" y="110" width="190" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-upsell" value="UC-CD-03&#xa;Platform Upsell UI&#xa;(&quot;47 HOT products on&#xa;Amazon — upgrade&quot;)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="270" y="195" width="200" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== PRODUCT VIEWING ===== -->
+        <mxCell id="p4-prod-boundary" value="Product Management" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#FFFFF0;strokeColor=#d6b656;fontSize=13;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="290" width="500" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-viewprod" value="UC-CD-04&#xa;View Allocated Products&#xa;(Scoped to Client Platforms)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="160" y="330" width="200" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-request" value="UC-CD-05&#xa;Request More Products&#xa;(Product Request Form)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="390" y="330" width="190" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-recommendations" value="UC-CD-06&#xa;View Recommendations&#xa;(Best for You, Rising Stars,&#xa;Seasonal Picks)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="250" y="400" width="200" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== STORE INTEGRATION ===== -->
+        <mxCell id="p4-store-boundary" value="Shop Connect (Store Integration)" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#FFFFF0;strokeColor=#d6b656;fontSize=13;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="70" width="700" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-shopify" value="UC-CD-07&#xa;Connect Shopify Store&#xa;(OAuth)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="720" y="110" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-tiktok" value="UC-CD-08&#xa;Connect TikTok Shop&#xa;(OAuth + HMAC)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="890" y="110" width="160" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-amazon" value="UC-CD-09&#xa;Connect Amazon&#xa;(LWA OAuth)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1070" y="110" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-meta" value="UC-CD-10&#xa;Connect Meta&#xa;Commerce" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="110" width="140" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-pushprod" value="UC-CD-11&#xa;Push Product to Store&#xa;(Single + Batch)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="720" y="185" width="170" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-disconnect" value="UC-CD-12&#xa;Disconnect Channel" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="920" y="190" width="140" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== CONTENT CREATION & PUBLISHING ===== -->
+        <mxCell id="p4-content-boundary" value="Creative Studio &amp; Smart Publisher" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#FFFFF0;strokeColor=#d6b656;fontSize=13;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="290" width="700" height="280" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-gencontent" value="UC-CD-13&#xa;Generate Marketing Content&#xa;(Captions, Ad Copy, Video&#xa;Scripts, Email, Blog/SEO)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="720" y="330" width="210" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-genvideo" value="UC-CD-14&#xa;Generate Video Content&#xa;(Shotstack Templates)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="960" y="330" width="180" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-genimage" value="UC-CD-15&#xa;Generate Image / Carousel&#xa;(Bannerbear)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="330" width="180" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-library" value="UC-CD-16&#xa;View Content Library&#xa;(Text + Media Grid)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="720" y="425" width="170" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-publish" value="UC-CD-17&#xa;Publish Content&#xa;(via Ayrshare to&#xa;Connected Socials)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="920" y="420" width="180" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-schedule" value="UC-CD-18&#xa;Schedule Content&#xa;(Optimal Posting Times)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="420" width="170" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-calendar" value="UC-CD-19&#xa;Content Calendar&#xa;View" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="720" y="500" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-brandvoice" value="UC-CD-20&#xa;Configure Brand Voice&#xa;(Tone, Style, Keywords)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="890" y="500" width="180" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-social" value="UC-CD-21&#xa;Connect Social Accounts&#xa;(Instagram, TikTok, FB,&#xa;Pinterest, YouTube)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="495" width="190" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== ENGINE TOGGLES & AUTOMATION ===== -->
+        <mxCell id="p4-auto-boundary" value="Engines &amp; Automation Control" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#FFFFF0;strokeColor=#d6b656;fontSize=13;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="500" width="500" height="260" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-engines" value="UC-CD-22&#xa;Toggle Engines On/Off&#xa;(8 Modular Engines&#xa;Per Platform)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="160" y="540" width="190" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-autolevel" value="UC-CD-23&#xa;Set Automation Level&#xa;(Manual / Assisted /&#xa;Auto-Pilot)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="380" y="540" width="180" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-autopilot" value="UC-CD-24&#xa;Configure Auto-Pilot Rules&#xa;(Caps, Quiet Hours,&#xa;Categories, Price Range)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="160" y="625" width="210" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-pause" value="UC-CD-25&#xa;PAUSE ALL AUTOMATION&#xa;(Emergency Big Red Button)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="625" width="190" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-actlog" value="UC-CD-26&#xa;View Activity Log&#xa;(Full Audit Trail)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="280" y="710" width="170" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== ORDERS & ANALYTICS ===== -->
+        <mxCell id="p4-order-boundary" value="Orders, Analytics &amp; Influencers" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#FFFFF0;strokeColor=#d6b656;fontSize=13;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="600" width="700" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-orders" value="UC-CD-27&#xa;View Orders&#xa;(Status, Fulfillment,&#xa;Tracking)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="720" y="640" width="170" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-analytics" value="UC-CD-28&#xa;Analytics Dashboard&#xa;(Revenue, Profit,&#xa;Performance Per Product)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="920" y="640" width="200" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-influencer" value="UC-CD-29&#xa;Influencer Outreach&#xa;(One-Click Invite)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="640" width="170" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-weekly" value="UC-CD-30&#xa;Weekly Digest Email&#xa;(Auto-Pilot Summary)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="720" y="720" width="180" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-cd-download" value="UC-CD-31&#xa;Download for TikTok&#xa;(Content Export)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="930" y="720" width="170" height="55" as="geometry"/>
+        </mxCell>
+
+        <!-- Connections -->
+        <mxCell id="p4e1" style="edgeStyle=none;strokeColor=#d6b656;" edge="1" source="p4-client" target="uc-cd-sub" parent="1"/>
+        <mxCell id="p4e2" style="edgeStyle=none;strokeColor=#d6b656;" edge="1" source="p4-client" target="uc-cd-viewprod" parent="1"/>
+        <mxCell id="p4e3" style="edgeStyle=none;strokeColor=#d6b656;" edge="1" source="p4-client" target="uc-cd-shopify" parent="1"/>
+        <mxCell id="p4e4" style="edgeStyle=none;strokeColor=#d6b656;" edge="1" source="p4-client" target="uc-cd-gencontent" parent="1"/>
+        <mxCell id="p4e5" style="edgeStyle=none;strokeColor=#d6b656;" edge="1" source="p4-client" target="uc-cd-engines" parent="1"/>
+        <mxCell id="p4e6" style="edgeStyle=none;strokeColor=#d6b656;" edge="1" source="p4-client" target="uc-cd-pause" parent="1"/>
+        <mxCell id="p4e7" style="edgeStyle=none;strokeColor=#d6b656;" edge="1" source="p4-client" target="uc-cd-orders" parent="1"/>
+        <mxCell id="p4e8" style="edgeStyle=none;strokeColor=#d6b656;" edge="1" source="p4-client" target="uc-cd-analytics" parent="1"/>
+
+        <!-- External connections -->
+        <mxCell id="p4e20" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p4-stripe" target="uc-cd-sub" parent="1"/>
+        <mxCell id="p4e21" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p4-stores-ext" target="uc-cd-shopify" parent="1"/>
+        <mxCell id="p4e22" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p4-stores-ext" target="uc-cd-tiktok" parent="1"/>
+        <mxCell id="p4e23" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p4-stores-ext" target="uc-cd-amazon" parent="1"/>
+        <mxCell id="p4e24" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p4-stores-ext" target="uc-cd-meta" parent="1"/>
+        <mxCell id="p4e25" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p4-ayrshare" target="uc-cd-publish" parent="1"/>
+        <mxCell id="p4e26" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p4-claude-ai" target="uc-cd-gencontent" parent="1"/>
+        <mxCell id="p4e27" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p4-pod-ext" target="uc-cd-orders" parent="1"/>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="page5-background-jobs" name="5. Background System Jobs">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1400">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="p5-title" value="Background System — BullMQ Job Queues (23 Queues)" style="text;html=1;fontSize=20;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="350" y="20" width="600" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- System Actor -->
+        <mxCell id="p5-bullmq" value="BullMQ&#xa;Worker System&#xa;(Railway)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="450" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5-redis" value="Redis&#xa;(Queue Store)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="150" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5-apify" value="Apify&#xa;Cloud" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="350" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5-claude" value="Claude AI&#xa;(Haiku/Sonnet)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="550" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5-resend" value="Resend&#xa;(Email)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="750" width="40" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== DISCOVERY QUEUES (Built) ===== -->
+        <mxCell id="p5-disc-boundary" value="Discovery &amp; Scanning Queues (Built)" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#E8F5E9;strokeColor=#82b366;fontSize=12;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="70" width="550" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-scan" value="scan-queue&#xa;Product Discovery Scans&#xa;(All 8 Channels)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="160" y="110" width="170" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-client-scan" value="client-scan&#xa;Client-Scoped&#xa;Scan Pipeline" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="350" y="110" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-trend-scout" value="trend-scout&#xa;Pre-Viral Trend&#xa;Detection (6 Signals)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="520" y="110" width="160" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-transform" value="transform-queue&#xa;Raw → Product&#xa;Transformation" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="160" y="180" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-scoring" value="scoring-queue&#xa;Batch Scoring Jobs" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="330" y="180" width="140" height="45" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== CONTENT & PUBLISHING QUEUES (Planned) ===== -->
+        <mxCell id="p5-content-boundary" value="Content &amp; Publishing Queues (Planned)" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=12;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="270" width="550" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-content" value="content-queue&#xa;AI Content Generation&#xa;(Haiku Bulk, Sonnet Premium)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="160" y="310" width="200" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-distribution" value="distribution-queue&#xa;Content Distribution&#xa;to Channels" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="380" y="310" width="170" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-blueprint" value="blueprint-queue&#xa;Launch Blueprint&#xa;Generation (Sonnet)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="570" y="310" width="160" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-notification" value="notification-queue&#xa;Push + Email Alerts" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="160" y="380" width="160" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-order" value="order-tracking-queue&#xa;Order Status Email&#xa;Sequences" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="340" y="380" width="170" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-inf-outreach" value="influencer-outreach&#xa;Match + Email&#xa;Outreach" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="530" y="380" width="150" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== REFRESH QUEUES (Planned) ===== -->
+        <mxCell id="p5-refresh-boundary" value="Data Refresh Queues (Planned)" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=12;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="750" y="70" width="550" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-supplier-refresh" value="supplier-refresh&#xa;Supplier Data Refresh" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="770" y="110" width="155" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-inf-refresh" value="influencer-refresh&#xa;Influencer Metrics" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="945" y="110" width="150" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-aff-refresh" value="affiliate-refresh&#xa;Affiliate Program&#xa;Discovery" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1115" y="105" width="155" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-fin-model" value="financial-model&#xa;Financial Model&#xa;Generation" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="770" y="160" width="155" height="45" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== POD QUEUES (Planned Phase J) ===== -->
+        <mxCell id="p5-pod-boundary" value="POD Queues (Phase J)" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#E8F5E9;strokeColor=#82b366;fontSize=12;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="750" y="230" width="550" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-pod-disc" value="pod-discovery&#xa;POD Design Trend&#xa;Discovery" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="770" y="265" width="155" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-pod-prov" value="pod-provision&#xa;Push POD to&#xa;Client Stores" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="945" y="265" width="155" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-pod-fulfill" value="pod-fulfillment-sync&#xa;POD Order Sync&#xa;with Partners" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="265" width="160" height="55" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== COMMAND CENTER QUEUES (Phase K) ===== -->
+        <mxCell id="p5-cmd-boundary" value="Command Center Queues (Phase K)" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#E8F5E9;strokeColor=#82b366;fontSize=12;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="750" y="370" width="550" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-push-shopify" value="push-to-shopify&#xa;YOUSELL → Shopify&#xa;(GraphQL productSet)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="770" y="405" width="170" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-push-tiktok" value="push-to-tiktok&#xa;YOUSELL → TikTok&#xa;(product.save API)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="960" y="405" width="160" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-push-amazon" value="push-to-amazon&#xa;YOUSELL → Amazon&#xa;(SP-API Feeds)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="405" width="150" height="55" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== AFFILIATE QUEUES (Phase L) ===== -->
+        <mxCell id="p5-aff-boundary" value="Affiliate Queues (Phase L)" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#E8F5E9;strokeColor=#82b366;fontSize=12;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="750" y="510" width="550" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-aff-content" value="affiliate-content-generate&#xa;Generate Affiliate&#xa;Promo Content" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="770" y="545" width="180" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="q-aff-track" value="affiliate-commission-track&#xa;Track Commission Events" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="980" y="550" width="190" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- Connections -->
+        <mxCell id="p5e1" style="edgeStyle=none;strokeColor=#9673a6;" edge="1" source="p5-bullmq" target="q-scan" parent="1"/>
+        <mxCell id="p5e2" style="edgeStyle=none;strokeColor=#9673a6;" edge="1" source="p5-bullmq" target="q-content" parent="1"/>
+        <mxCell id="p5e3" style="edgeStyle=none;strokeColor=#9673a6;" edge="1" source="p5-bullmq" target="q-pod-disc" parent="1"/>
+        <mxCell id="p5e4" style="edgeStyle=none;strokeColor=#9673a6;" edge="1" source="p5-bullmq" target="q-push-shopify" parent="1"/>
+        <mxCell id="p5e5" style="edgeStyle=none;strokeColor=#9673a6;" edge="1" source="p5-bullmq" target="q-aff-content" parent="1"/>
+
+        <mxCell id="p5e10" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p5-apify" target="q-scan" parent="1"/>
+        <mxCell id="p5e11" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p5-apify" target="q-pod-disc" parent="1"/>
+        <mxCell id="p5e12" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p5-claude" target="q-content" parent="1"/>
+        <mxCell id="p5e13" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p5-claude" target="q-blueprint" parent="1"/>
+        <mxCell id="p5e14" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p5-claude" target="q-aff-content" parent="1"/>
+        <mxCell id="p5e15" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p5-resend" target="q-order" parent="1"/>
+        <mxCell id="p5e16" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p5-resend" target="q-notification" parent="1"/>
+        <mxCell id="p5e17" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p5-resend" target="q-inf-outreach" parent="1"/>
+
+        <!-- Legend -->
+        <mxCell id="p5-legend" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="750" y="650" width="550" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5-leg1" value="" style="ellipse;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="770" y="665" width="15" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5-leg1t" value="Built" style="text;html=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="790" y="661" width="40" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5-leg2" value="" style="ellipse;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="840" y="665" width="15" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5-leg2t" value="Planned (Core)" style="text;html=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="860" y="661" width="90" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5-leg3" value="" style="ellipse;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="960" y="665" width="15" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5-leg3t" value="New v8 (POD/CC/Affiliate)" style="text;html=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="980" y="661" width="160" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5-leg4" value="" style="ellipse;fillColor=#f5f5f5;strokeColor=#999;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="665" width="15" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5-leg4t" value="Pending (Not Started)" style="text;html=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="661" width="120" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5-leg5" value="All jobs: DISABLED by default (manual-first)  |  Cost: ~$15-35/mo at 1-5 clients" style="text;html=1;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="770" y="690" width="500" height="25" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="page6-main-website" name="6. Main Website &amp; Auth">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="p6-title" value="Main Website (yousell.online) — Auth, Onboarding &amp; Data Refresh Use Cases" style="text;html=1;fontSize=20;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="250" y="20" width="700" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- Actors -->
+        <mxCell id="p6-visitor" value="Visitor&#xa;(Unauthenticated)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f5f5f5;strokeColor=#666;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="180" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p6-client" value="Client&#xa;Business" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="430" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p6-supabase" value="Supabase&#xa;Auth" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="180" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p6-stripe" value="Stripe" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="400" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p6-middleware" value="Next.js&#xa;Middleware" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="600" width="40" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== PUBLIC WEBSITE ===== -->
+        <mxCell id="p6-pub-boundary" value="Public Website (No Auth Required)" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#FAFAFA;strokeColor=#999;fontSize=13;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="150" y="80" width="500" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-mw-landing" value="UC-MW-01&#xa;View Landing Page&#xa;(Features, Benefits)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="170" y="120" width="170" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-mw-pricing" value="UC-MW-02&#xa;View Pricing Plans&#xa;(Free / Pro / Enterprise)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="370" y="120" width="180" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-mw-signup" value="UC-MW-03&#xa;Sign Up&#xa;(Email + Password via&#xa;Supabase Auth)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="170" y="190" width="170" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-mw-signin" value="UC-MW-04&#xa;Sign In&#xa;(Email/Password or&#xa;Magic Link)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="370" y="190" width="160" height="55" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== AUTH & ROUTING ===== -->
+        <mxCell id="p6-auth-boundary" value="Auth &amp; Role-Based Routing" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#F0F8FF;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="150" y="290" width="500" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-mw-reset" value="UC-MW-05&#xa;Reset Password" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="170" y="330" width="140" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-mw-signout" value="UC-MW-06&#xa;Sign Out" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="340" y="330" width="120" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-mw-route" value="UC-MW-07&#xa;Role-Based Routing&#xa;(super_admin → /admin&#xa;client → /dashboard&#xa;viewer → /dashboard read-only)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="170" y="390" width="220" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-mw-rls" value="UC-MW-08&#xa;Row-Level Security&#xa;(Supabase RLS on&#xa;every table)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="420" y="390" width="180" height="65" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== SUBSCRIPTION FLOW ===== -->
+        <mxCell id="p6-stripe-boundary" value="Subscription Flow (Stripe)" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#FFFFF0;strokeColor=#d6b656;fontSize=13;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="80" width="500" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-mw-checkout" value="UC-MW-09&#xa;Stripe Checkout&#xa;(Plan Selection → Payment)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="720" y="120" width="190" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-mw-webhook" value="UC-MW-10&#xa;Stripe Webhook Handler&#xa;(Subscription Events)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="940" y="120" width="180" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-mw-portal" value="UC-MW-11&#xa;Customer Portal&#xa;(Upgrade / Downgrade /&#xa;Cancel / Payment Method)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="195" width="200" height="65" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== DATA REFRESH TIERS ===== -->
+        <mxCell id="p6-refresh-boundary" value="Data Refresh Tiers (Multi-Source Fusion)" style="shape=mxgraph.uml25.package;html=1;align=left;spacingLeft=10;verticalAlign=top;fillColor=#F0F8FF;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="310" width="500" height="280" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-tier1" value="Tier 1: Nightly Batch&#xa;(2 AM UTC daily)&#xa;Rescore, update trends,&#xa;refresh recommendations" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="720" y="350" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-tier2" value="Tier 2: Periodic Scrape&#xa;(HOT: 6h, WARM: 24h,&#xa;WATCH: 48h, COLD: weekly)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="950" y="350" width="200" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-tier3" value="Tier 3: Weekly Deep Scan&#xa;(Sunday 3 AM)&#xa;All 8 platforms,&#xa;$30-100/run" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="720" y="440" width="190" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-tier4" value="Tier 4: On-Demand&#xa;(Button Click)&#xa;Live scrape, serves stale&#xa;then refreshes" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="940" y="440" width="190" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-tier5" value="Tier 5: Admin Import&#xa;(CSV Upload)&#xa;Parse, map, merge, score" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="820" y="525" width="180" height="55" as="geometry"/>
+        </mxCell>
+
+        <!-- Connections -->
+        <mxCell id="p6e1" style="edgeStyle=none;strokeColor=#666;" edge="1" source="p6-visitor" target="uc-mw-landing" parent="1"/>
+        <mxCell id="p6e2" style="edgeStyle=none;strokeColor=#666;" edge="1" source="p6-visitor" target="uc-mw-pricing" parent="1"/>
+        <mxCell id="p6e3" style="edgeStyle=none;strokeColor=#666;" edge="1" source="p6-visitor" target="uc-mw-signup" parent="1"/>
+        <mxCell id="p6e4" style="edgeStyle=none;strokeColor=#d6b656;" edge="1" source="p6-client" target="uc-mw-signin" parent="1"/>
+        <mxCell id="p6e5" style="edgeStyle=none;strokeColor=#d6b656;" edge="1" source="p6-client" target="uc-mw-checkout" parent="1"/>
+        <mxCell id="p6e6" style="edgeStyle=none;strokeColor=#d6b656;" edge="1" source="p6-client" target="uc-mw-portal" parent="1"/>
+
+        <mxCell id="p6e10" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p6-supabase" target="uc-mw-signup" parent="1"/>
+        <mxCell id="p6e11" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p6-supabase" target="uc-mw-signin" parent="1"/>
+        <mxCell id="p6e12" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p6-supabase" target="uc-mw-rls" parent="1"/>
+        <mxCell id="p6e13" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p6-stripe" target="uc-mw-checkout" parent="1"/>
+        <mxCell id="p6e14" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p6-stripe" target="uc-mw-webhook" parent="1"/>
+        <mxCell id="p6e15" style="edgeStyle=none;strokeColor=#b85450;dashed=1;" edge="1" source="p6-stripe" target="uc-mw-portal" parent="1"/>
+        <mxCell id="p6e16" style="edgeStyle=none;strokeColor=#9673a6;dashed=1;" edge="1" source="p6-middleware" target="uc-mw-route" parent="1"/>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>
