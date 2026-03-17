@@ -2513,3 +2513,26 @@ Update all project documentation to reflect the engine independence architecture
 - `docs/USE_CASE_DIAGRAM.md`
 - `system/ai_logic.md`
 - `system/development_log.md` — This entry
+
+------------------------------------------------------------
+
+## 2026-03-17 — CLAUDE.md Hardened v2 Rewrite
+
+### Summary
+Rewrote `CLAUDE.md` from scratch with bulletproof memory safeguards and a live
+execution trace log system. The new prompt includes:
+
+- **Anti-Amnesia Contract** (Section 0) — six non-negotiable memory rules
+- **Mandatory Boot Sequence** (Section 1) — ordered file reads with verification output
+- **Context Compression Tripwire** (Section 2) — automatic detection and recovery
+- **Live Execution Trace Log** (Section 12) — append-only task journal in `system/execution_trace.md`
+- **Memory Safeguard Checklist** (Section 13) — pre-flight checks before every code change
+- **Hardened Guardrails** (Section 8) — expanded from 15 to 18 rules
+- **Task Execution Flow** (Section 15) — 8-step sequential flow with trace integration
+
+### Files Created
+- `system/execution_trace.md` — Live execution trace log (new)
+
+### Files Modified
+- `CLAUDE.md` — Complete rewrite (hardened v2)
+- `system/development_log.md` — This entry
