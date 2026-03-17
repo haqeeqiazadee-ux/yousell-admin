@@ -25,6 +25,7 @@
 15. [Print-on-Demand (POD) Content Strategy](#15-print-on-demand-pod-content-strategy)
 16. [Affiliate Content Factory](#16-affiliate-content-factory)
 17. [Admin Command Center (Best-Selling Products Dashboard)](#17-admin-command-center-best-selling-products-dashboard)
+18. [Engine Independence — Bounded Context Contracts](#18-engine-independence--bounded-context-contracts-new)
 
 ---
 
@@ -1280,4 +1281,91 @@ This is the ADMIN's profit-maximizing platform for YOUR OWN shops. Client-facing
 
 ---
 
-*This document supplements the YouSell Platform Technical Specification v7. In case of conflict, v7 governs unless this document explicitly updates a v7 section.*
+---
+
+# 18. ENGINE INDEPENDENCE — BOUNDED CONTEXT CONTRACTS (NEW)
+
+**Reference:** Technical Specification v8, Section 9A
+
+The three engines in this document (Shop Connect, Creative Studio, Smart Publisher) plus the supporting engines (Affiliate Commission, POD Intelligence, Command Center) are each a **bounded context** with strict independence guarantees.
+
+## 18.1 Engine Ownership Matrix
+
+| Engine | Owned Tables | Owned Queues | API Namespace |
+|--------|-------------|--------------|---------------|
+| Shop Connect | `connected_stores`, `store_tokens`, `product_listings`, `shop_products` | `push-to-shopify`, `push-to-tiktok`, `push-to-amazon` | `/api/engine/shop-connect` |
+| Creative Studio | `content_items`, `content_templates`, `brand_voices`, `content_credits` | `content-queue` | `/api/engine/creative-studio` |
+| Smart Publisher | `publish_logs`, `channel_configs`, `ayrshare_profiles` | `distribution-queue` | `/api/engine/smart-publisher` |
+| Affiliate Commission | `affiliate_commissions`, `affiliate_links`, `commission_events` | `affiliate-content-generate`, `affiliate-commission-track`, `affiliate-refresh` | `/api/engine/affiliate-commission` |
+| POD Intelligence | `pod_designs`, `pod_mockups`, `pod_trends` | `pod-discovery`, `pod-provision`, `pod-fulfillment-sync` | `/api/engine/pod-intelligence` |
+| Command Center | `command_actions`, `deployment_logs` | — | `/api/engine/command-center` |
+
+## 18.2 Event Contracts Between Engines
+
+These engines communicate **only** through the event bus (Redis Pub/Sub + Supabase Realtime). Direct table access across engines is prohibited.
+
+### Shop Connect Events
+
+| Event | Direction | Payload | Subscribers |
+|-------|-----------|---------|------------|
+| `product.allocated` | Inbound (from Client Allocation) | `{ product_id, client_id, channel }` | Shop Connect pushes to store |
+| `product.pushed_to_store` | Outbound | `{ product_id, store_id, platform, listing_url }` | Order Tracking |
+| `store.connected` | Outbound | `{ client_id, platform, store_url }` | Affiliate Commission (for referral tracking) |
+
+### Creative Studio Events
+
+| Event | Direction | Payload | Subscribers |
+|-------|-----------|---------|------------|
+| `product.allocated` | Inbound (from Client Allocation) | `{ product_id, client_id, content_types[] }` | Creative Studio generates content |
+| `content.generated` | Outbound | `{ content_id, product_id, type, status }` | Smart Publisher |
+| `brand_voice.updated` | Outbound | `{ client_id, voice_config }` | (Internal — triggers content re-evaluation) |
+
+### Smart Publisher Events
+
+| Event | Direction | Payload | Subscribers |
+|-------|-----------|---------|------------|
+| `content.generated` | Inbound (from Creative Studio) | `{ content_id, type, platforms[] }` | Smart Publisher queues for distribution |
+| `content.published` | Outbound | `{ content_id, platform, post_url, published_at }` | Affiliate Commission (for link tracking) |
+| `content.publish_failed` | Outbound | `{ content_id, platform, error, retry_count }` | (Notification/monitoring) |
+
+### Command Center Events
+
+| Event | Direction | Payload | Subscribers |
+|-------|-----------|---------|------------|
+| `product.scored` (HOT) | Inbound (from Composite Scoring) | `{ product_id, final_score, tier: "HOT" }` | Command Center displays for admin action |
+| `command.product_deployed` | Outbound | `{ product_id, channel, action }` | Shop Connect (push), Creative Studio (generate) |
+
+### Affiliate Commission Events
+
+| Event | Direction | Payload | Subscribers |
+|-------|-----------|---------|------------|
+| `content.published` | Inbound (from Smart Publisher) | `{ content_id, affiliate_links[] }` | Commission tracking for Stream 1 |
+| `order.fulfilled` | Inbound (from Order Tracking) | `{ order_id, referral_source }` | Commission tracking for Stream 2 |
+| `commission.earned` | Outbound | `{ commission_id, stream, amount, source }` | (Dashboard display) |
+
+## 18.3 Data Isolation Rules
+
+1. **Shop Connect** never reads `content_items` directly. It receives product data via `product.allocated` events.
+2. **Creative Studio** never reads `connected_stores`. It generates content without knowing store details.
+3. **Smart Publisher** never reads `content_templates`. It receives ready-to-publish content via `content.generated` events.
+4. **Command Center** never writes to shop or content tables. It publishes `command.product_deployed` and the owning engines handle execution.
+5. **Affiliate Commission** never modifies content or orders. It only reads events to compute commissions.
+
+## 18.4 SaaS Extraction Readiness
+
+Each engine can be extracted as a standalone SaaS product:
+
+| Engine | Spin-Off Name | Standalone Value Proposition |
+|--------|--------------|------------------------------|
+| Shop Connect | StoreSync | Multi-platform e-commerce product sync |
+| Creative Studio | ContentForge | AI-powered marketing content generation |
+| Smart Publisher | PublishPilot | Multi-channel social media scheduling |
+| Command Center | CommandOps | Best-seller deployment dashboard |
+| Affiliate Commission | AffiliateHub | Dual-stream affiliate revenue tracking |
+| POD Intelligence | PODGenius | Print-on-demand trend discovery + fulfillment |
+
+**Extraction follows the 5-step process defined in v8 Spec Section 9A.7.**
+
+---
+
+*This document supplements the YouSell Platform Technical Specification v8. In case of conflict, v8 governs unless this document explicitly updates a v8 section.*

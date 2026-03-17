@@ -1,9 +1,50 @@
 # YOUSELL — Step-by-Step Execution Plan
 
-## Version 1.0 — March 2026
+## Version 1.1 — March 2026
 
 **Purpose:** Automated execution plan for implementing the Content Creation, Publishing & Shop Integration strategy.
-**Estimated Timeline:** 28 weeks (Phases 2A through 7)
+**Estimated Timeline:** 30 weeks (Phase 0 + Phases 2A through 7)
+
+---
+
+## PHASE 0: ENGINE INDEPENDENCE FOUNDATION (Weeks -2 to 0)
+
+**Goal:** Establish the bounded context architecture before building new engines, ensuring every new feature follows the engine independence pattern from day one.
+
+**Reference:** Technical Specification v8, Section 9A — Engine Independence Architecture
+
+### Week -2: Event Bus & Engine Contract Skeleton
+
+| # | Task | Files to Create/Modify | Automated? |
+|---|------|----------------------|-----------|
+| 0A.1 | Create event bus library (Redis Pub/Sub wrapper) | `backend/src/lib/event-bus.ts` | Yes |
+| 0A.2 | Define TypeScript event contract interfaces | `backend/src/types/engine-events.ts` | Yes |
+| 0A.3 | Create engine registration helper (API namespace, owned tables, owned queues) | `backend/src/lib/engine-registry.ts` | Yes |
+| 0A.4 | Create event publisher utility (publish to Redis channel) | `backend/src/lib/event-publisher.ts` | Yes |
+| 0A.5 | Create event subscriber utility (subscribe with typed handlers) | `backend/src/lib/event-subscriber.ts` | Yes |
+| 0A.6 | Add Supabase Realtime bridge (forward Redis events to Supabase channels for frontend) | `backend/src/lib/realtime-bridge.ts` | Yes |
+| 0A.7 | Write unit tests for event bus | `tests/unit/event-bus.test.ts` | Yes |
+
+### Week -1: Engine Directory Structure & Migration
+
+| # | Task | Files to Create/Modify | Automated? |
+|---|------|----------------------|-----------|
+| 0B.1 | Create engine directory structure convention | `backend/src/engines/README.md` | Yes |
+| 0B.2 | Create engine template (API routes, subscriber, publisher) | `backend/src/engines/_template/` | Yes |
+| 0B.3 | Refactor existing scan-queue to Product Discovery engine pattern | `backend/src/engines/product-discovery/` | Yes |
+| 0B.4 | Refactor existing trend-scout to Trend Scout engine pattern | `backend/src/engines/trend-scout/` | Yes |
+| 0B.5 | Refactor existing scoring logic to Composite Scoring engine pattern | `backend/src/engines/composite-scoring/` | Yes |
+| 0B.6 | Add queue ownership annotations to existing queue definitions | `backend/src/lib/queue.ts` | Yes |
+| 0B.7 | Create Supabase migration: add `engine_owner` column to queue metadata | `supabase/migrations/xxx_engine_ownership.sql` | Yes |
+| 0B.8 | Write integration test: engine A publishes → engine B receives | `tests/integration/engine-communication.test.ts` | Yes |
+
+**Validation Checkpoint:** Can Engine A publish an event and Engine B receive it? Does the engine template work? Are existing queues correctly assigned to their owning engines?
+
+**Exit Criteria:**
+- Event bus operational with publish/subscribe working
+- Engine template validated with at least 3 migrated engines
+- All existing queues annotated with engine ownership
+- Integration test passing for cross-engine communication
 
 ---
 

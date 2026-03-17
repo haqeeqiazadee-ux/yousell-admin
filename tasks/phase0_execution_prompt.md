@@ -16,7 +16,7 @@ Before writing ANY code in ANY session, Claude MUST:
 ```
 1. Read CLAUDE.md
 2. Read tasks/phase0_execution_prompt.md (THIS FILE)
-3. Read tasks/EXECUTION_TRACE.md (live progress log)
+3. Read system/execution_trace.md (live progress log)
 4. Read system/development_log.md (last 50 lines)
 5. Read docs/YouSell_Platform_Technical_Specification_v8.md (Sections 1-8)
 ```
@@ -24,7 +24,7 @@ Before writing ANY code in ANY session, Claude MUST:
 If ANY of these files are missing, STOP and alert the user.
 
 ### Rule 2: Execution Trace Log
-Every micro-batch completion MUST be logged to `tasks/EXECUTION_TRACE.md`.
+Every micro-batch completion MUST be logged to `system/execution_trace.md`.
 Format:
 
 ```
@@ -48,7 +48,7 @@ ALWAYS read the trace log and repo files. Chat memory is disposable. Files are t
 ### Rule 4: Compression Recovery
 If chat gets compressed or a new session starts:
 1. Read this file FIRST
-2. Read EXECUTION_TRACE.md to find last completed batch
+2. Read system/execution_trace.md to find last completed batch
 3. Resume from the NEXT incomplete batch
 4. Do NOT re-do completed work
 5. Do NOT ask "where were we?" — the trace log tells you
@@ -104,8 +104,8 @@ If Claude gets stuck on a batch, it stops and asks — never bulldozes forward.
 
 ### BATCH 0.1 — Audit existing engine files
 **Goal:** Read every file in src/lib/engines/ and backend/src/jobs/ and document what exists.
-**Output:** Update EXECUTION_TRACE.md with a complete inventory.
-**Files changed:** tasks/EXECUTION_TRACE.md only
+**Output:** Update system/execution_trace.md with a complete inventory.
+**Files changed:** system/execution_trace.md only
 **Commit:** `phase0/0.1: audit existing engines and jobs`
 
 ---
@@ -157,8 +157,8 @@ If Claude gets stuck on a batch, it stops and asks — never bulldozes forward.
 
 ### BATCH 0.6 — Audit + plan TikTok Discovery Engine refactor
 **Goal:** Read the existing TikTok discovery code, map it to the new engine interface.
-**Output:** Document in EXECUTION_TRACE.md what needs to change.
-**Files changed:** tasks/EXECUTION_TRACE.md only
+**Output:** Document in system/execution_trace.md what needs to change.
+**Files changed:** system/execution_trace.md only
 **Commit:** `phase0/0.6: audit tiktok discovery engine for refactor`
 
 ---
@@ -178,8 +178,8 @@ If Claude gets stuck on a batch, it stops and asks — never bulldozes forward.
 
 ### BATCH 0.8 — Audit + plan Product Extraction Engine refactor
 **Goal:** Read existing product extraction code, map to engine interface.
-**Output:** Document in EXECUTION_TRACE.md.
-**Files changed:** tasks/EXECUTION_TRACE.md only
+**Output:** Document in system/execution_trace.md.
+**Files changed:** system/execution_trace.md only
 **Commit:** `phase0/0.8: audit product extraction engine for refactor`
 
 ---
@@ -194,8 +194,8 @@ If Claude gets stuck on a batch, it stops and asks — never bulldozes forward.
 
 ### BATCH 0.10 — Audit + plan Scoring Engine refactor
 **Goal:** Read existing scoring code, map to engine interface.
-**Output:** Document in EXECUTION_TRACE.md.
-**Files changed:** tasks/EXECUTION_TRACE.md only
+**Output:** Document in system/execution_trace.md.
+**Files changed:** system/execution_trace.md only
 **Commit:** `phase0/0.10: audit scoring engine for refactor`
 
 ---
@@ -223,7 +223,7 @@ If Claude gets stuck on a batch, it stops and asks — never bulldozes forward.
 **Goal:** Update development_log.md and any relevant docs.
 **Files to update:**
 - `system/development_log.md` — add Phase 0 completion entry
-- `tasks/EXECUTION_TRACE.md` — mark Phase 0 COMPLETE
+- `system/execution_trace.md` — mark Phase 0 COMPLETE
 **Commit:** `phase0/0.13: update docs — phase 0 complete`
 
 ---
@@ -233,13 +233,26 @@ If Claude gets stuck on a batch, it stops and asks — never bulldozes forward.
 1. **One batch at a time.** Never skip ahead.
 2. **Audit before modify.** Every refactor batch has an audit batch before it.
 3. **Read before write.** Always read existing files before modifying them.
-4. **Log everything.** Every batch completion goes to EXECUTION_TRACE.md.
+4. **Log everything.** Every batch completion goes to system/execution_trace.md.
 5. **Commit often.** One commit per batch. Small, reversible.
 6. **Stop on confusion.** If anything is unclear, ask the user. Never guess.
 7. **No side quests.** Don't refactor unrelated code. Don't add features not in the batch.
 8. **Preserve behavior.** Refactoring must NOT change external behavior.
 9. **Test after each batch.** At minimum, run `npx tsc --noEmit` to verify types.
 10. **Update trace BEFORE committing.** The trace log is part of the commit.
+
+### Parallelism & Speed
+- Use subagents for ALL independent research and exploration tasks
+- Launch multiple subagents simultaneously whenever possible
+- Never do sequentially what can be done in parallel
+- Keep the main context window clean — offload heavy reads to subagents
+
+### Quality Gates
+- Every new file must be TypeScript with proper types
+- Every new module must import from existing `src/lib/supabase/*` clients (never create new ones)
+- No `any` types unless absolutely unavoidable
+- Respect Netlify deployment constraints (no long-running processes in API routes)
+- Backend workers stay in `backend/`, frontend stays in `src/`
 
 ---
 
@@ -250,7 +263,21 @@ Once Phase 0 is complete:
 - **Phase C (Frontend Design):** Design UI against the new engine-based architecture
 - **Phase D (Frontend Build):** Implement the designs
 
-These are NOT started until Phase 0 is verified complete in EXECUTION_TRACE.md.
+These are NOT started until Phase 0 is verified complete in system/execution_trace.md.
+
+---
+
+## ANTI-DRIFT CHECKLIST
+
+Before starting ANY batch, Claude must verify:
+
+- [ ] I read system/execution_trace.md and know the last completed batch
+- [ ] I am working on the NEXT batch in sequence
+- [ ] I am on the correct git branch
+- [ ] I have read all files I'm about to modify
+- [ ] I understand what this batch does and what it does NOT do
+- [ ] I will update system/execution_trace.md when done
+- [ ] I will commit with the correct message format
 
 ---
 
@@ -260,24 +287,27 @@ These are NOT started until Phase 0 is verified complete in EXECUTION_TRACE.md.
 |----------|---------|-----------|
 | `CLAUDE.md` | Project rules | Every session start |
 | `tasks/phase0_execution_prompt.md` | This file — execution plan | Every session start |
-| `tasks/EXECUTION_TRACE.md` | Live progress log | Every session start + after each batch |
+| `system/execution_trace.md` | Live progress log | Every session start + after each batch |
 | `system/development_log.md` | Historical changes | Session start |
 | `docs/YouSell_Platform_Technical_Specification_v8.md` | Master architecture | When implementing engine interfaces |
 | `system/ai_logic.md` | Business logic rules | When touching scoring or pipeline logic |
 
 ---
 
-## ANTI-DRIFT CHECKLIST
+## SUCCESS CRITERIA
 
-Before starting ANY batch, Claude must verify:
-
-- [ ] I read EXECUTION_TRACE.md and know the last completed batch
-- [ ] I am working on the NEXT batch in sequence
-- [ ] I am on the correct git branch
-- [ ] I have read all files I'm about to modify
-- [ ] I understand what this batch does and what it does NOT do
-- [ ] I will update EXECUTION_TRACE.md when done
-- [ ] I will commit with the correct message format
+Phase 0 is complete when:
+- [ ] Event bus exists with typed events
+- [ ] Engine registry exists and can list/health-check engines
+- [ ] 3 engines (Product Discovery, Scoring, Clustering) are migrated to engine pattern
+- [ ] Engines communicate via events, not direct imports
+- [ ] All API routes map to engine namespaces per v8 spec
+- [ ] Backend queue jobs have ownership annotations
+- [ ] Old routes still work (backward compat wrappers)
+- [ ] Integration tests pass
+- [ ] `system/development_log.md` is updated
+- [ ] `tasks/todo.md` reflects completion
+- [ ] All changes committed and pushed
 
 ---
 

@@ -65,6 +65,7 @@ These are non-negotiable architectural rules that govern all development:
 6. **Context recovery from repo.** Claude Code must read continuity files before making changes — never rely on chat memory.
 7. **Preserve useful prior work.** Never rebuild completed functionality. Inspect before creating.
 8. **Correct faulty assumptions.** Update weak architecture when the latest session introduces better patterns.
+9. **Engine independence by default.** Every engine is a bounded context with its own API namespace, data tables, queues, and event contracts. Engines communicate only through the event bus. See Section 9A.
 
 ---
 
@@ -1052,6 +1053,192 @@ Stream 2 (Client Service):
 4. affiliate-commission-track queue records client-service commissions
 5. Dual-stream revenue visible in admin dashboard
 ```
+
+---
+
+## Section 9A — Engine Independence Architecture (NEW)
+
+The YOUSELL platform is composed of 21 independent engines, each designed as a **bounded context** that can be extracted as a standalone SaaS offering. This section defines the engine independence contract.
+
+### 9A.1 Core Independence Principles
+
+1. **Own API Namespace.** Each engine exposes routes under `/api/engine/{engine-name}/*`. No engine accesses another engine's routes internally.
+2. **Own Data Tables.** Each engine owns specific Supabase tables. No engine directly queries another engine's tables.
+3. **Own Queues.** Each engine owns one or more BullMQ queues. No engine enqueues jobs on another engine's queue.
+4. **Event-Driven Communication.** Engines communicate exclusively via an event bus (Redis Pub/Sub + Supabase Realtime). An engine publishes events; other engines subscribe.
+5. **No Shared State.** If two engines need the same data, they subscribe to the same event and maintain their own local copy.
+
+### 9A.2 Event Bus Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                   EVENT BUS                              │
+│         Redis Pub/Sub + Supabase Realtime               │
+│                                                         │
+│  Published Events → Topic Channels → Subscriber Engines │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Event Contract Format:**
+```json
+{
+  "event_type": "product.scored",
+  "source_engine": "composite-scoring",
+  "timestamp": "ISO-8601",
+  "payload": { "product_id": "uuid", "final_score": 82, "tier": "HOT" },
+  "correlation_id": "uuid"
+}
+```
+
+All events are fire-and-forget. The publishing engine does not wait for subscribers. Failed subscribers retry independently.
+
+### 9A.3 Complete Engine Registry (21 Engines)
+
+#### Tier 1 — Discovery Layer
+
+| # | Engine | API Namespace | Owned Tables | Owned Queues | Publishes | Subscribes |
+|---|--------|--------------|--------------|--------------|-----------|------------|
+| 1 | Product Discovery | `/api/engine/product-discovery` | `raw_listings`, `scan_logs` | `scan-queue`, `client-scan` | `product.discovered`, `scan.completed` | — |
+| 2 | Trend Scout | `/api/engine/trend-scout` | `trend_signals`, `trend_snapshots` | `trend-scout` | `trend.detected`, `trend.expired` | `product.discovered` |
+
+#### Tier 2 — Intelligence & Scoring Layer
+
+| # | Engine | API Namespace | Owned Tables | Owned Queues | Publishes | Subscribes |
+|---|--------|--------------|--------------|--------------|-----------|------------|
+| 3 | Data Fusion | `/api/engine/data-fusion` | `fused_products`, `source_mappings` | `transform-queue` | `product.fused` | `product.discovered` |
+| 4 | Composite Scoring | `/api/engine/composite-scoring` | `product_scores`, `score_history` | `scoring-queue` | `product.scored` | `product.fused` |
+| 5 | POD Scoring | `/api/engine/pod-scoring` | `pod_scores`, `pod_modifiers` | — (uses `scoring-queue`) | `pod.scored` | `product.fused` (POD subset) |
+| 6 | Profitability | `/api/engine/profitability` | `profitability_models`, `cost_breakdowns` | `financial-model` | `product.profitability_calculated` | `product.scored` |
+
+#### Tier 3 — Enrichment Layer
+
+| # | Engine | API Namespace | Owned Tables | Owned Queues | Publishes | Subscribes |
+|---|--------|--------------|--------------|--------------|-----------|------------|
+| 7 | Financial Modelling | `/api/engine/financial-modelling` | `financial_models`, `revenue_projections` | — (uses `financial-model`) | `product.financial_model_ready` | `product.profitability_calculated` |
+| 8 | Influencer Intelligence | `/api/engine/influencer-intelligence` | `influencers`, `influencer_metrics`, `creator_matches` | `influencer-outreach`, `influencer-refresh` | `influencer.matched`, `influencer.refreshed` | `product.scored` (60+) |
+| 9 | Supplier Discovery | `/api/engine/supplier-discovery` | `suppliers`, `supplier_quotes` | `supplier-refresh` | `supplier.matched`, `supplier.refreshed` | `product.scored` (60+) |
+| 10 | Competitor Intelligence | `/api/engine/competitor-intelligence` | `competitor_stores`, `competitor_products` | — | `competitor.analyzed` | `product.scored` (60+) |
+| 11 | Ad Intelligence | `/api/engine/ad-intelligence` | `ad_campaigns`, `ad_performance` | — | `ad.intelligence_ready` | `product.scored` (75+) |
+| 12 | Launch Blueprint | `/api/engine/launch-blueprint` | `blueprints`, `blueprint_steps` | `blueprint-queue` | `blueprint.generated` | `product.financial_model_ready` |
+
+#### Tier 4 — Client-Facing Layer
+
+| # | Engine | API Namespace | Owned Tables | Owned Queues | Publishes | Subscribes |
+|---|--------|--------------|--------------|--------------|-----------|------------|
+| 13 | Client Allocation | `/api/engine/client-allocation` | `client_products`, `allocation_logs` | — | `product.allocated` | `product.scored` (HOT), `blueprint.generated` |
+| 14 | Creative Studio | `/api/engine/creative-studio` | `content_items`, `content_templates`, `brand_voices` | `content-queue` | `content.generated` | `product.allocated` |
+| 15 | Smart Publisher | `/api/engine/smart-publisher` | `publish_logs`, `channel_configs` | `distribution-queue` | `content.published` | `content.generated` |
+| 16 | Shop Connect | `/api/engine/shop-connect` | `connected_stores`, `store_tokens`, `product_listings` | `push-to-shopify`, `push-to-tiktok`, `push-to-amazon` | `product.pushed_to_store` | `product.allocated` |
+| 17 | Order Tracking | `/api/engine/order-tracking` | `orders`, `order_events`, `fulfillment_records` | `order-tracking-queue` | `order.received`, `order.fulfilled` | `product.pushed_to_store` |
+
+#### Tier 5 — Operations & Revenue Layer
+
+| # | Engine | API Namespace | Owned Tables | Owned Queues | Publishes | Subscribes |
+|---|--------|--------------|--------------|--------------|-----------|------------|
+| 18 | Command Center | `/api/engine/command-center` | `command_actions`, `deployment_logs` | — | `command.product_deployed` | `product.scored` (HOT) |
+| 19 | Affiliate Commission | `/api/engine/affiliate-commission` | `affiliate_commissions`, `affiliate_links`, `commission_events` | `affiliate-content-generate`, `affiliate-commission-track`, `affiliate-refresh` | `commission.earned` | `content.published`, `order.fulfilled` |
+| 20 | POD Intelligence | `/api/engine/pod-intelligence` | `pod_designs`, `pod_mockups`, `pod_trends` | `pod-discovery`, `pod-provision`, `pod-fulfillment-sync` | `pod.design_ready`, `pod.order_fulfilled` | `trend.detected` (POD subset) |
+| 21 | Automation Orchestrator | `/api/engine/automation-orchestrator` | `automation_rules`, `automation_logs`, `schedule_configs` | `notification-queue` | `automation.triggered` | All engine events (configurable) |
+
+### 9A.4 Inter-Engine Event Flow
+
+```
+Product Discovery ──product.discovered──→ Trend Scout
+                                        → Data Fusion
+Data Fusion ────────product.fused──────→ Composite Scoring
+                                        → POD Scoring (POD subset)
+Composite Scoring ──product.scored─────→ Profitability
+                                        → Influencer Intelligence (60+)
+                                        → Supplier Discovery (60+)
+                                        → Competitor Intelligence (60+)
+                                        → Ad Intelligence (75+)
+                                        → Client Allocation (HOT)
+                                        → Command Center (HOT)
+Profitability ──────profitability───────→ Financial Modelling
+Financial Modelling ─financial_model───→ Launch Blueprint
+Launch Blueprint ───blueprint──────────→ Client Allocation
+Client Allocation ──product.allocated──→ Creative Studio
+                                        → Shop Connect
+Creative Studio ────content.generated──→ Smart Publisher
+Smart Publisher ────content.published──→ Affiliate Commission
+Shop Connect ───────product.pushed─────→ Order Tracking
+Order Tracking ─────order.fulfilled────→ Affiliate Commission
+Trend Scout ────────trend.detected─────→ POD Intelligence (POD subset)
+```
+
+### 9A.5 Queue-to-Engine Ownership Map
+
+This supersedes the flat registry in Section 15.2 by assigning each queue to its owning engine:
+
+| Queue | Owner Engine |
+|-------|-------------|
+| `scan-queue` | Product Discovery |
+| `client-scan` | Product Discovery |
+| `trend-scout` | Trend Scout |
+| `transform-queue` | Data Fusion |
+| `scoring-queue` | Composite Scoring + POD Scoring |
+| `financial-model` | Profitability + Financial Modelling |
+| `influencer-outreach` | Influencer Intelligence |
+| `influencer-refresh` | Influencer Intelligence |
+| `supplier-refresh` | Supplier Discovery |
+| `blueprint-queue` | Launch Blueprint |
+| `content-queue` | Creative Studio |
+| `distribution-queue` | Smart Publisher |
+| `push-to-shopify` | Shop Connect |
+| `push-to-tiktok` | Shop Connect |
+| `push-to-amazon` | Shop Connect |
+| `order-tracking-queue` | Order Tracking |
+| `affiliate-content-generate` | Affiliate Commission |
+| `affiliate-commission-track` | Affiliate Commission |
+| `affiliate-refresh` | Affiliate Commission |
+| `pod-discovery` | POD Intelligence |
+| `pod-provision` | POD Intelligence |
+| `pod-fulfillment-sync` | POD Intelligence |
+| `notification-queue` | Automation Orchestrator |
+
+### 9A.6 SaaS Spin-Off Portfolio
+
+Each engine can be extracted as a standalone product:
+
+| Engine | Spin-Off Name | Target Market |
+|--------|--------------|---------------|
+| Product Discovery | ScoutFlow | E-commerce researchers |
+| Trend Scout | TrendRadar | Market analysts |
+| Data Fusion | FuseData | Data engineers |
+| Composite Scoring | ScoreIQ | Product evaluators |
+| POD Scoring | PODScore | Print-on-demand sellers |
+| Profitability | ProfitLens | E-commerce analysts |
+| Financial Modelling | ModelCast | Financial planners |
+| Influencer Intelligence | InfluenceIQ | Marketing agencies |
+| Supplier Discovery | SupplyMatch | Sourcing teams |
+| Competitor Intelligence | CompeteWatch | Competitive analysts |
+| Ad Intelligence | AdInsight | Media buyers |
+| Launch Blueprint | LaunchPad | Product launchers |
+| Client Allocation | AllocateAI | SaaS platforms |
+| Creative Studio | ContentForge | Content teams |
+| Smart Publisher | PublishPilot | Social media managers |
+| Shop Connect | StoreSync | Multi-channel sellers |
+| Order Tracking | TrackFlow | E-commerce operations |
+| Command Center | CommandOps | Operations managers |
+| Affiliate Commission | AffiliateHub | Affiliate marketers |
+| POD Intelligence | PODGenius | POD entrepreneurs |
+| Automation Orchestrator | AutoFlow | Workflow automation |
+
+### 9A.7 Engine Extraction Process
+
+Any engine can be extracted to standalone SaaS in 5 steps:
+
+1. **Copy** — Clone engine code to a dedicated repository
+2. **Migrate Tables** — Move owned tables to a dedicated Supabase project
+3. **Replace Subscriptions** — Convert event subscriptions to webhook endpoints (inbound)
+4. **Replace Publishes** — Convert event publishes to webhook callouts (outbound)
+5. **Deploy Independently** — Deploy on its own Railway/Netlify/Vercel instance
+
+**Data Isolation Guarantee:** After extraction, the remaining platform continues operating without modification. The extracted engine receives data via webhooks instead of the internal event bus.
+
+### 9A.8 Architecture Principle 9 (Addition to Section 1.3)
+
+**9. Engine independence by default.** Every engine is a bounded context. Engines communicate only through the event bus. No engine directly accesses another engine's tables, queues, or internal functions. This ensures any engine can be extracted as a standalone SaaS without refactoring the rest of the platform.
 
 ---
 
