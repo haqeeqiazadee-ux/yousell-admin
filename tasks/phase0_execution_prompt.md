@@ -1,53 +1,251 @@
-# Phase 0 Execution Prompt — Event Bus + Engine Refactor
+# PHASE 0 — EXECUTION PROMPT (Bulletproof Edition)
 
-Paste this entire prompt to Claude to execute Phase A and Phase B autonomously.
+## PURPOSE
 
----
-
-## CONTEXT RECOVERY (Do this first — non-negotiable)
-
-Read these files in parallel to recover full project context:
-
-1. `CLAUDE.md` — project rules and guardrails
-2. `docs/YouSell_Platform_Technical_Specification_v8.md` — canonical architecture (v8 is the source of truth)
-3. `system/development_log.md` — what's been done
-4. `system/ai_logic.md` — platform operational logic
-5. `tasks/todo.md` — current task state
-6. `tasks/lessons.md` — past mistakes to avoid
-7. `tasks/execution_plan.md` — the full execution plan
-8. `docs/USE_CASE_DIAGRAM.md` — use case diagrams and data flows
-
-After reading, produce a 5-line summary of: current state, what Phase 0 requires, and confirm you're ready. Then immediately begin work.
+This prompt governs the Phase 0 implementation of the YOUSELL platform upgrade.
+Phase 0 = Build event bus + engine registry + refactor 3 existing engines.
+This is the FOUNDATION — everything else depends on it.
 
 ---
 
-## MISSION
+## MEMORY SAFEGUARDS — NON-NEGOTIABLE
 
-Execute **Phase A** (Event Bus + Engine Registry + 3 Engine Migrations) and **Phase B** (Refactor remaining API routes to engine namespaces + queue ownership) to align the existing codebase with the v8 specification.
+### Rule 1: Context Recovery Protocol
+Before writing ANY code in ANY session, Claude MUST:
 
-**You must not stop, ask questions, or wait for approval between tasks.** Work autonomously in small batches. If blocked, find an alternative path and keep moving. Use subagents aggressively for parallel work.
+```
+1. Read CLAUDE.md
+2. Read tasks/phase0_execution_prompt.md (THIS FILE)
+3. Read system/execution_trace.md (live progress log)
+4. Read system/development_log.md (last 50 lines)
+5. Read docs/YouSell_Platform_Technical_Specification_v8.md (Sections 1-8)
+```
+
+If ANY of these files are missing, STOP and alert the user.
+
+### Rule 2: Execution Trace Log
+Every micro-batch completion MUST be logged to `system/execution_trace.md`.
+Format:
+
+```
+## [BATCH_ID] — [SHORT_DESCRIPTION]
+- Status: COMPLETE | IN_PROGRESS | BLOCKED
+- Files changed: [list]
+- Committed: YES/NO (hash)
+- Timestamp: [ISO date]
+- Notes: [any context needed for recovery]
+```
+
+### Rule 3: Never Trust Chat Memory
+Claude must NEVER rely on conversation history for:
+- What was already built
+- What batch comes next
+- What the architecture looks like
+- What files exist
+
+ALWAYS read the trace log and repo files. Chat memory is disposable. Files are truth.
+
+### Rule 4: Compression Recovery
+If chat gets compressed or a new session starts:
+1. Read this file FIRST
+2. Read system/execution_trace.md to find last completed batch
+3. Resume from the NEXT incomplete batch
+4. Do NOT re-do completed work
+5. Do NOT ask "where were we?" — the trace log tells you
+
+### Rule 5: One Batch = One Commit
+Each micro-batch gets its own commit with message format:
+`phase0/[batch-id]: [description]`
+
+---
+
+## WHAT EXISTS TODAY (Snapshot)
+
+```
+src/
+├── app/           → Next.js pages (admin, dashboard, login, signup, pricing, api routes)
+├── components/    → UI components (admin-sidebar, product-card, score-badge, etc.)
+├── hooks/         → React hooks
+├── lib/
+│   ├── engines/   → EXISTING engine files (need audit)
+│   ├── providers/ → Provider abstractions
+│   ├── scoring/   → Scoring logic
+│   ├── supabase/  → Supabase client
+│   └── types/     → TypeScript types
+├── middleware.ts   → Auth/routing middleware
+backend/
+├── src/
+│   ├── index.ts   → Express entry point
+│   ├── worker.ts  → BullMQ worker entry
+│   ├── jobs/      → Job handlers
+│   └── lib/       → Backend utilities
+supabase/
+└── migrations/    → Database migrations
+```
+
+---
+
+## PHASE 0 OBJECTIVE
+
+Build the **engine-based architecture** defined in v8 spec:
+1. **Event Bus** — Central pub/sub for inter-engine communication
+2. **Engine Registry** — Register, discover, and manage all engines
+3. **Refactor 3 existing engines** — Align TikTok Discovery, Product Extraction, and Scoring to the new pattern
+
+---
+
+## MICRO-BATCH BREAKDOWN
+
+Each batch is deliberately small — 1 to 3 files max.
+Each batch is independently committable and testable.
+If Claude gets stuck on a batch, it stops and asks — never bulldozes forward.
+
+---
+
+### BATCH 0.1 — Audit existing engine files
+**Goal:** Read every file in src/lib/engines/ and backend/src/jobs/ and document what exists.
+**Output:** Update system/execution_trace.md with a complete inventory.
+**Files changed:** system/execution_trace.md only
+**Commit:** `phase0/0.1: audit existing engines and jobs`
+
+---
+
+### BATCH 0.2 — Define engine interface types
+**Goal:** Create the TypeScript interfaces that ALL engines must implement.
+**Files to create:** `src/lib/engines/types.ts`
+**Key types:**
+- `EngineConfig` — name, version, dependencies, queues owned
+- `EngineStatus` — running, paused, error, idle
+- `EngineEvent` — event type, payload, source engine, timestamp
+- `Engine` — interface with init(), start(), stop(), status(), handleEvent()
+**Commit:** `phase0/0.2: define engine interface types`
+
+---
+
+### BATCH 0.3 — Build the Event Bus
+**Goal:** Central pub/sub that engines use to communicate.
+**Files to create:** `src/lib/engines/event-bus.ts`
+**Requirements:**
+- In-memory pub/sub (no external deps needed yet)
+- Type-safe event emission and subscription
+- Event history buffer (last 100 events) for debugging
+- Singleton pattern (one bus per process)
+**Commit:** `phase0/0.3: build event bus`
+
+---
+
+### BATCH 0.4 — Build the Engine Registry
+**Goal:** Central registry where engines register themselves.
+**Files to create:** `src/lib/engines/registry.ts`
+**Requirements:**
+- Register/unregister engines by name
+- Get engine by name
+- List all registered engines with status
+- Dependency resolution (engine A depends on engine B)
+- Uses Event Bus to broadcast engine lifecycle events
+**Commit:** `phase0/0.4: build engine registry`
+
+---
+
+### BATCH 0.5 — Create engine barrel export
+**Goal:** Clean public API for the engine system.
+**Files to create:** `src/lib/engines/index.ts`
+**Exports:** EventBus, EngineRegistry, all types
+**Commit:** `phase0/0.5: create engine barrel export`
+
+---
+
+### BATCH 0.6 — Audit + plan TikTok Discovery Engine refactor
+**Goal:** Read the existing TikTok discovery code, map it to the new engine interface.
+**Output:** Document in system/execution_trace.md what needs to change.
+**Files changed:** system/execution_trace.md only
+**Commit:** `phase0/0.6: audit tiktok discovery engine for refactor`
+
+---
+
+### BATCH 0.7 — Refactor TikTok Discovery Engine to engine pattern
+**Goal:** Wrap existing TikTok discovery logic in the Engine interface.
+**Files to modify:** Existing TikTok engine file(s)
+**Requirements:**
+- Implements Engine interface
+- Registers with EngineRegistry on init
+- Emits events via EventBus (product_discovered, scan_complete, scan_error)
+- Preserves ALL existing functionality
+- Does NOT break existing API routes or workers
+**Commit:** `phase0/0.7: refactor tiktok discovery engine`
+
+---
+
+### BATCH 0.8 — Audit + plan Product Extraction Engine refactor
+**Goal:** Read existing product extraction code, map to engine interface.
+**Output:** Document in system/execution_trace.md.
+**Files changed:** system/execution_trace.md only
+**Commit:** `phase0/0.8: audit product extraction engine for refactor`
+
+---
+
+### BATCH 0.9 — Refactor Product Extraction Engine to engine pattern
+**Goal:** Wrap existing product extraction logic in Engine interface.
+**Files to modify:** Existing product extraction file(s)
+**Requirements:** Same as Batch 0.7 pattern.
+**Commit:** `phase0/0.9: refactor product extraction engine`
+
+---
+
+### BATCH 0.10 — Audit + plan Scoring Engine refactor
+**Goal:** Read existing scoring code, map to engine interface.
+**Output:** Document in system/execution_trace.md.
+**Files changed:** system/execution_trace.md only
+**Commit:** `phase0/0.10: audit scoring engine for refactor`
+
+---
+
+### BATCH 0.11 — Refactor Scoring Engine to engine pattern
+**Goal:** Wrap existing scoring logic in Engine interface.
+**Files to modify:** Existing scoring file(s)
+**Requirements:** Same as Batch 0.7 pattern.
+**Commit:** `phase0/0.11: refactor scoring engine`
+
+---
+
+### BATCH 0.12 — Integration verification
+**Goal:** Verify all 3 engines register, communicate via event bus, and existing functionality works.
+**Actions:**
+- TypeScript compile check (`npx tsc --noEmit`)
+- Verify imports resolve correctly
+- Manual trace: simulate engine lifecycle in a test script
+**Files to create:** `src/lib/engines/__tests__/integration.test.ts` (if test framework exists)
+**Commit:** `phase0/0.12: integration verification`
+
+---
+
+### BATCH 0.13 — Update architecture docs
+**Goal:** Update development_log.md and any relevant docs.
+**Files to update:**
+- `system/development_log.md` — add Phase 0 completion entry
+- `system/execution_trace.md` — mark Phase 0 COMPLETE
+**Commit:** `phase0/0.13: update docs — phase 0 complete`
 
 ---
 
 ## EXECUTION RULES
+
+1. **One batch at a time.** Never skip ahead.
+2. **Audit before modify.** Every refactor batch has an audit batch before it.
+3. **Read before write.** Always read existing files before modifying them.
+4. **Log everything.** Every batch completion goes to system/execution_trace.md.
+5. **Commit often.** One commit per batch. Small, reversible.
+6. **Stop on confusion.** If anything is unclear, ask the user. Never guess.
+7. **No side quests.** Don't refactor unrelated code. Don't add features not in the batch.
+8. **Preserve behavior.** Refactoring must NOT change external behavior.
+9. **Test after each batch.** At minimum, run `npx tsc --noEmit` to verify types.
+10. **Update trace BEFORE committing.** The trace log is part of the commit.
 
 ### Parallelism & Speed
 - Use subagents for ALL independent research and exploration tasks
 - Launch multiple subagents simultaneously whenever possible
 - Never do sequentially what can be done in parallel
 - Keep the main context window clean — offload heavy reads to subagents
-
-### Small Batch Pattern
-- Each batch = 1 discrete, testable unit of work
-- After each batch: commit with a clear message, update `system/development_log.md`
-- Do NOT accumulate large uncommitted changes
-- If a batch fails, fix it before moving on
-
-### Memory Management
-- If context feels compressed or you lose track, STOP and re-read `CLAUDE.md` + `system/development_log.md`
-- Update `system/development_log.md` after EVERY batch (not just at the end)
-- Update `tasks/todo.md` to reflect progress as you go
-- Update `tasks/lessons.md` if you hit any gotchas
 
 ### Quality Gates
 - Every new file must be TypeScript with proper types
@@ -58,116 +256,41 @@ Execute **Phase A** (Event Bus + Engine Registry + 3 Engine Migrations) and **Ph
 
 ---
 
-## PHASE A — Event Bus + Engine Registry + 3 Engine Migrations
+## WHAT COMES AFTER PHASE 0
 
-### Batch A1: Audit Current State
-- Use subagents in parallel to map:
-  - All existing API routes under `src/app/api/admin/` — list every route, what it does, what tables it reads/writes
-  - All existing backend jobs under `backend/jobs/` — list every job, what queue it uses, what tables it touches
-  - All existing engine modules under `src/lib/engines/` — list every engine, its inputs/outputs
-  - All existing provider modules under `src/lib/providers/` — list every provider, its external API calls
-- Produce a dependency map: which engines call which providers, which share tables
-- Save audit results to `tasks/phase0_audit.md`
-- **Commit**: "audit: map current engine dependencies and API routes for v8 alignment"
+Once Phase 0 is complete:
+- **Phase B (Backend Alignment):** Refactor remaining API routes to engine namespaces, add queue ownership annotations
+- **Phase C (Frontend Design):** Design UI against the new engine-based architecture
+- **Phase D (Frontend Build):** Implement the designs
 
-### Batch A2: Event Bus Skeleton
-- Create `src/lib/events/` directory with:
-  - `event-bus.ts` — lightweight in-process event emitter (typed events, subscribe/publish/unsubscribe)
-  - `event-types.ts` — define all cross-engine event types from v8 spec (e.g., `product.discovered`, `product.scored`, `trend.detected`, `cluster.formed`, `creator.matched`, `supplier.found`, `content.generated`, `order.placed`)
-  - `index.ts` — barrel export
-- Keep it simple: in-process pub/sub first. No external message broker. This is a decoupling layer, not a distributed system.
-- Events must be typed with TypeScript generics so subscribers get proper payload types.
-- **Commit**: "feat: add typed event bus skeleton for engine decoupling"
-
-### Batch A3: Engine Registry
-- Create `src/lib/engines/registry.ts`:
-  - Engine interface: `{ name, version, status, healthCheck(), init(), shutdown() }`
-  - Registry: register/unregister engines, get engine by name, list all, health check all
-  - Each engine owns its queue namespace (e.g., `engine:product-discovery:*`)
-- Create `src/lib/engines/types.ts` — shared engine types
-- Update `src/lib/engines/index.ts` barrel export
-- **Commit**: "feat: add engine registry with health checks and queue ownership"
-
-### Batch A4: Migrate Engine 1 — Product Discovery
-- Refactor the existing TikTok discovery + product scan logic into a self-contained engine:
-  - `src/lib/engines/product-discovery/index.ts` — engine entry point, registers with registry
-  - `src/lib/engines/product-discovery/handlers.ts` — business logic (moved from current locations)
-  - `src/lib/engines/product-discovery/events.ts` — events this engine publishes/subscribes to
-  - `src/lib/engines/product-discovery/types.ts` — engine-specific types
-- Wire it to publish `product.discovered` events via the event bus
-- Update existing API routes to delegate to this engine (don't break existing routes yet — wrap them)
-- **Commit**: "refactor: migrate product discovery to engine pattern with event publishing"
-
-### Batch A5: Migrate Engine 2 — Scoring Engine
-- Refactor `backend/lib/scoring.ts` + related logic into:
-  - `src/lib/engines/scoring/index.ts`
-  - `src/lib/engines/scoring/three-pillar.ts` — the scoring formula
-  - `src/lib/engines/scoring/events.ts` — subscribes to `product.discovered`, publishes `product.scored`
-  - `src/lib/engines/scoring/types.ts`
-- The scoring engine should react to product discovery events automatically
-- **Commit**: "refactor: migrate scoring engine with event-driven product evaluation"
-
-### Batch A6: Migrate Engine 3 — Product Clustering
-- Refactor `src/lib/engines/clustering.ts` into:
-  - `src/lib/engines/clustering/index.ts`
-  - `src/lib/engines/clustering/handlers.ts`
-  - `src/lib/engines/clustering/events.ts` — subscribes to `product.scored`, publishes `cluster.formed`
-  - `src/lib/engines/clustering/types.ts`
-- **Commit**: "refactor: migrate clustering engine with event-driven cluster formation"
-
-### Batch A7: Integration Test
-- Create `tests/phase0-engine-integration.test.ts`:
-  - Test event bus pub/sub works
-  - Test engine registry lists all 3 engines
-  - Test event chain: discover → score → cluster
-- Run the tests and fix any failures
-- **Commit**: "test: add Phase 0 engine integration tests"
+These are NOT started until Phase 0 is verified complete in system/execution_trace.md.
 
 ---
 
-## PHASE B — API Route Namespace Alignment + Queue Ownership
+## ANTI-DRIFT CHECKLIST
 
-### Batch B1: Plan Route Migration
-- Compare current API routes against v8 spec's engine namespace pattern
-- Create a migration map: `current route → new route → engine owner`
-- Document in `tasks/phase0_route_migration.md`
-- Identify which routes can be aliased (backward compat) vs which need full moves
-- **Commit**: "docs: plan API route migration to engine namespaces"
+Before starting ANY batch, Claude must verify:
 
-### Batch B2-B6: Migrate Routes (one engine namespace per batch)
-For each engine namespace in the v8 spec:
-- Create the new namespaced API route if it doesn't exist
-- Delegate to the appropriate engine module
-- Keep old routes working as thin redirects/wrappers (don't break anything)
-- Add queue ownership annotations to backend jobs (which engine owns which queue)
-- **Commit each batch separately** with message: "refactor: migrate [engine-name] API routes to v8 namespace"
-
-### Batch B7: Cleanup & Documentation
-- Update `docs/YouSell_Platform_Technical_Specification_v8.md` if any implementation deviates from spec (document WHY)
-- Update `system/development_log.md` with full Phase 0 summary
-- Update `tasks/todo.md` — mark Phase 0 complete
-- Update `tasks/execution_plan.md` — mark Phase A and B complete
-- Final commit: "docs: complete Phase 0 documentation updates"
+- [ ] I read system/execution_trace.md and know the last completed batch
+- [ ] I am working on the NEXT batch in sequence
+- [ ] I am on the correct git branch
+- [ ] I have read all files I'm about to modify
+- [ ] I understand what this batch does and what it does NOT do
+- [ ] I will update system/execution_trace.md when done
+- [ ] I will commit with the correct message format
 
 ---
 
-## COMMIT & PUSH RULES
+## REFERENCE DOCUMENTS
 
-- Branch: work on the current development branch
-- Commit after EVERY batch (A1, A2, A3... B1, B2...)
-- Push after completing Phase A and again after completing Phase B
-- Commit messages must be conventional: `type: description` (feat, refactor, test, docs, fix, audit)
-
----
-
-## IF YOU GET STUCK
-
-1. Re-read `CLAUDE.md` and `system/development_log.md`
-2. Check `tasks/lessons.md` for known patterns
-3. If a batch is too large, split it into sub-batches
-4. If an external dependency is missing, mock it and move on
-5. If a test fails, fix it inline — don't skip it
-6. NEVER ask the user what to do — make a decision, document why, and keep moving
+| Document | Purpose | Read When |
+|----------|---------|-----------|
+| `CLAUDE.md` | Project rules | Every session start |
+| `tasks/phase0_execution_prompt.md` | This file — execution plan | Every session start |
+| `system/execution_trace.md` | Live progress log | Every session start + after each batch |
+| `system/development_log.md` | Historical changes | Session start |
+| `docs/YouSell_Platform_Technical_Specification_v8.md` | Master architecture | When implementing engine interfaces |
+| `system/ai_logic.md` | Business logic rules | When touching scoring or pipeline logic |
 
 ---
 
@@ -186,4 +309,7 @@ Phase 0 is complete when:
 - [ ] `tasks/todo.md` reflects completion
 - [ ] All changes committed and pushed
 
-**BEGIN IMMEDIATELY. No preamble. Read context files, summarize in 5 lines, then start Batch A1.**
+---
+
+*This prompt is the contract between the user and Claude for Phase 0 execution.
+Any deviation from this prompt requires explicit user approval.*
