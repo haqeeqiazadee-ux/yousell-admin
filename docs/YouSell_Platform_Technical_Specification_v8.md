@@ -177,6 +177,13 @@ The platform automatically recommends the optimal fulfillment method for each pr
 | SaaS, subscription, service | | | | | ✓ |
 | Unknown/mixed | Flag for admin manual review | | | | |
 
+**Fulfillment Decision Tree (Physical Products):**
+- IF physical + price < $30 + fast-ship supplier available → **DROPSHIP**
+- IF physical + price $30–100 + high demand signals → **WHOLESALE**
+- IF physical + price > $100 → **WHOLESALE ONLY** (margins justify bulk)
+- IF physical + supplier offers dropship API → **SHOW BOTH OPTIONS**
+- ALWAYS show margin comparison table side-by-side (dropship vs wholesale vs POD)
+
 ---
 
 ## Section 3 — Business Objective & SaaS Positioning
@@ -1422,6 +1429,16 @@ Data freshness affects its scoring weight:
 **Tier 5: Admin Manual Import** — CSV upload
 - Parse + map + merge + score
 - Free (data already purchased externally)
+
+**Admin CSV Import Workflow (8 Steps):**
+1. Admin uploads CSV/Excel file
+2. System auto-detects source (Keepa / FastMoss / Kalodata) from column headers
+3. Pre-built column mapping applied per source type
+4. Preview: New (X) / Update (Y) / Skip (Z) products shown
+5. Admin confirms import
+6. Products merged into DB (dedup by platform + external_id or URL or title)
+7. Scores recalculated with enriched data
+8. Import logged in `imported_files` table
 
 ### 16A.4 Dashboard Recommendation Widgets
 
@@ -3606,6 +3623,18 @@ Full strategy documented at `docs/content_publishing_shop_integration_strategy.m
 | **Scheduled** | Content generated → client sets date/time per batch → auto-publishes | Client | Available |
 | **Smart Schedule** | System picks optimal posting times based on audience analytics → client approves | System suggests, client approves | Available |
 | **Auto-Pilot** | Content auto-generated weekly → auto-scheduled → auto-published. Client receives weekly digest. | System (client can pause/override) | OFF — requires explicit opt-in |
+
+### J.5A Platform-Specific Content Output Formats
+
+| Platform | Content Output |
+|---|---|
+| TikTok | Video script + trending hashtags + hook line |
+| Amazon | A+ listing copy + backend keywords + bullet points |
+| Shopify | Product page copy + meta desc + SEO tags |
+| Pinterest | Pin description + board suggestions + SEO keywords |
+| Digital | Course/template description + benefit bullets |
+| Affiliate | Review post + comparison table + CTA |
+| POD | Mockup images + design story + lifestyle caption |
 
 ### J.6 Ayrshare Integration Details
 
