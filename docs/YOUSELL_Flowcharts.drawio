@@ -1,0 +1,915 @@
+<mxfile host="app.diagrams.net" agent="Claude Code" version="26.0.0" pages="8">
+
+  <!-- PAGE 1: PRODUCT DISCOVERY PIPELINE -->
+  <diagram id="flow1-discovery" name="1. Product Discovery Pipeline">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1200">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="f1-title" value="Product Discovery Pipeline — End-to-End Flow" style="text;html=1;fontSize=20;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="350" y="20" width="500" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- START -->
+        <mxCell id="f1-start" value="Admin Clicks&#xa;Scan Button" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;arcSize=50;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="560" y="80" width="140" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- Decision: Scan Type -->
+        <mxCell id="f1-scantype" value="Scan Type?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="570" y="170" width="120" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1-e1" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f1-start" target="f1-scantype" parent="1"/>
+
+        <!-- Quick Scan Path -->
+        <mxCell id="f1-quick" value="Quick Scan&#xa;TikTok Creative Center&#xa;+ pytrends + Reddit" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="200" y="190" width="180" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1-e2" value="Quick" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f1-scantype" target="f1-quick" parent="1"/>
+
+        <!-- Full Scan Path -->
+        <mxCell id="f1-full" value="Full Scan&#xa;All 8 Channels&#xa;(incl. POD)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="880" y="190" width="160" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1-e3" value="Full" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f1-scantype" target="f1-full" parent="1"/>
+
+        <!-- Client Scan -->
+        <mxCell id="f1-client" value="Client Scan&#xa;(Niche-Scoped)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="560" y="290" width="140" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1-e3b" value="Client" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f1-scantype" target="f1-client" parent="1"/>
+
+        <!-- BullMQ enqueue -->
+        <mxCell id="f1-enqueue" value="Enqueue to BullMQ&#xa;scan-queue / client-scan&#xa;/ pod-discovery" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="510" y="370" width="200" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1-e4" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f1-quick" target="f1-enqueue" parent="1"/>
+        <mxCell id="f1-e5" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f1-full" target="f1-enqueue" parent="1"/>
+        <mxCell id="f1-e6" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f1-client" target="f1-enqueue" parent="1"/>
+
+        <!-- Worker picks up -->
+        <mxCell id="f1-worker" value="BullMQ Worker&#xa;Picks Up Job" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="540" y="460" width="150" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1-e7" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f1-enqueue" target="f1-worker" parent="1"/>
+
+        <!-- Apify Scraping -->
+        <mxCell id="f1-apify" value="Apify Actor Runs&#xa;(per-platform scrapers)&#xa;TikTok / Amazon / Shopify /&#xa;Pinterest / Etsy / Redbubble" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="490" y="540" width="240" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1-e8" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f1-worker" target="f1-apify" parent="1"/>
+
+        <!-- Raw Data Collection -->
+        <mxCell id="f1-raw" value="Raw Data Collected&#xa;(Products, Prices, Sales,&#xa;Reviews, Trends)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="510" y="650" width="200" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1-e9" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f1-apify" target="f1-raw" parent="1"/>
+
+        <!-- Deduplication -->
+        <mxCell id="f1-dedup" value="Deduplication&#xa;(platform + external_id)&#xa;Update existing / Create new" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="510" y="740" width="200" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1-e10" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f1-raw" target="f1-dedup" parent="1"/>
+
+        <!-- Signal Extraction -->
+        <mxCell id="f1-signals" value="Signal Extraction&#xa;(Sales velocity, Creator promo,&#xa;Ad activity, Engagement,&#xa;Price competitiveness)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="500" y="830" width="220" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1-e11" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f1-dedup" target="f1-signals" parent="1"/>
+
+        <!-- Store to Supabase -->
+        <mxCell id="f1-store" value="Store to Supabase&#xa;products table&#xa;+ data_source_log" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="555" y="930" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1-e12" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f1-signals" target="f1-store" parent="1"/>
+
+        <!-- Scoring -->
+        <mxCell id="f1-score" value="3-Pillar Composite Scoring&#xa;(Trend × 0.40 + Viral × 0.35&#xa;+ Profit × 0.25)&#xa;Claude Haiku for bulk" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="1030" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1-e13" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f1-store" target="f1-score" parent="1"/>
+
+        <!-- Tier Assignment -->
+        <mxCell id="f1-tier" value="Tier Assignment&#xa;HOT ≥80 | WARM ≥60&#xa;WATCH ≥40 | COLD &lt;40" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="530" y="1130" width="170" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1-e14" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f1-score" target="f1-tier" parent="1"/>
+
+        <!-- END: Dashboard Update -->
+        <mxCell id="f1-end" value="Products Available&#xa;in Admin Dashboard&#xa;(Realtime Update)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;arcSize=50;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="530" y="1240" width="180" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1-e15" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f1-tier" target="f1-end" parent="1"/>
+
+        <!-- Side: Top 5 Sonnet -->
+        <mxCell id="f1-sonnet" value="Top 5 HOT Products →&#xa;Claude Sonnet Deep Analysis&#xa;(Full Scan Only)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="800" y="1140" width="200" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1-e16" value="HOT" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f1-tier" target="f1-sonnet" parent="1"/>
+
+        <!-- Side: Supabase Realtime -->
+        <mxCell id="f1-realtime" value="Supabase Realtime&#xa;broadcasts update to&#xa;all connected admin clients" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="200" y="1140" width="200" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1-e17" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="f1-tier" target="f1-realtime" parent="1"/>
+
+        <!-- Cost annotation -->
+        <mxCell id="f1-cost" value="Cost per scan:&#xa;Quick: $0.05-0.20&#xa;Full: $0.50-2.50&#xa;Client: $0.30-1.50&#xa;POD: $0.20-0.80" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#FFFDE7;strokeColor=#999;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="50" y="370" width="140" height="90" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- PAGE 2: SCORING & ENRICHMENT FLOW -->
+  <diagram id="flow2-scoring" name="2. Scoring &amp; Enrichment Flow">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1100">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="f2-title" value="Scoring, Enrichment &amp; Client Allocation Flow" style="text;html=1;fontSize=20;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="350" y="20" width="500" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- Start -->
+        <mxCell id="f2-start" value="Product in DB&#xa;(Post-Discovery)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;arcSize=50;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="560" y="80" width="150" height="45" as="geometry"/>
+        </mxCell>
+
+        <!-- Composite Scoring -->
+        <mxCell id="f2-scoring" value="3-Pillar Composite Scoring" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="530" y="160" width="210" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-e1" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f2-start" target="f2-scoring" parent="1"/>
+
+        <!-- Three pillars side by side -->
+        <mxCell id="f2-trend" value="Trend Score (40%)&#xa;• Demand velocity&#xa;• Search volume&#xa;• Social mentions&#xa;• Growth trajectory" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="200" y="240" width="180" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-viral" value="Viral Score (35%)&#xa;• Creator convergence&#xa;• Engagement rate&#xa;• UGC volume&#xa;• Platform velocity" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="530" y="240" width="180" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-profit" value="Profit Score (25%)&#xa;• Unit margin&#xa;• Shipping cost&#xa;• Competition level&#xa;• Supplier availability" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="860" y="240" width="180" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-e2" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f2-scoring" target="f2-trend" parent="1"/>
+        <mxCell id="f2-e3" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f2-scoring" target="f2-viral" parent="1"/>
+        <mxCell id="f2-e4" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f2-scoring" target="f2-profit" parent="1"/>
+
+        <!-- POD modifier -->
+        <mxCell id="f2-pod-check" value="Is POD&#xa;Product?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="575" y="370" width="100" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-e5" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f2-viral" target="f2-pod-check" parent="1"/>
+
+        <mxCell id="f2-pod-mod" value="Apply POD Modifiers&#xa;• Design trend velocity&#xa;• Seasonal relevance&#xa;• Niche saturation&#xa;• 30%+ margin gate" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="800" y="370" width="180" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-e6" value="Yes" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f2-pod-check" target="f2-pod-mod" parent="1"/>
+
+        <!-- Final Score -->
+        <mxCell id="f2-final" value="Final Score Calculated&#xa;final = trend×0.40 + viral×0.35 + profit×0.25" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="470" y="490" width="300" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-e7" value="No" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f2-pod-check" target="f2-final" parent="1"/>
+        <mxCell id="f2-e8" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f2-pod-mod" target="f2-final" parent="1"/>
+
+        <!-- Tier decision -->
+        <mxCell id="f2-tierdec" value="Score&#xa;Tier?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="575" y="570" width="100" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-e9" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f2-final" target="f2-tierdec" parent="1"/>
+
+        <!-- HOT path -->
+        <mxCell id="f2-hot" value="HOT (≥80)&#xa;→ Full Enrichment" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="580" width="160" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-e10" value="≥80" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f2-tierdec" target="f2-hot" parent="1"/>
+
+        <!-- WARM path -->
+        <mxCell id="f2-warm" value="WARM (≥60)&#xa;→ Partial Enrichment" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="860" y="580" width="160" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-e11" value="≥60" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f2-tierdec" target="f2-warm" parent="1"/>
+
+        <!-- COLD/WATCH -->
+        <mxCell id="f2-cold" value="WATCH/COLD (&lt;60)&#xa;→ Archive / Monitor" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="580" width="170" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-e12" value="&lt;60" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f2-tierdec" target="f2-cold" parent="1"/>
+
+        <!-- Enrichment steps -->
+        <mxCell id="f2-enrich-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0F8FF;strokeColor=#6c8ebf;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="660" width="340" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-enrich-title" value="Enrichment Process" style="text;html=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="230" y="665" width="140" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-sup" value="1. Supplier Discovery&#xa;(China, UK, EU, USA)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="140" y="690" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-inf" value="2. Influencer Matching&#xa;(Niche, Audience, Engagement)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="140" y="740" width="190" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-comp" value="3. Competitor Analysis&#xa;(Who sells this already)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="140" y="790" width="170" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-margin" value="4. Margin Calculation&#xa;(Full unit economics)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="330" y="740" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-fulfill" value="5. Fulfillment Recommendation&#xa;DROPSHIP/WHOLESALE/POD/&#xa;DIGITAL/AFFILIATE" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="290" y="790" width="200" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-e13" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f2-hot" target="f2-sup" parent="1"/>
+
+        <!-- Admin Review -->
+        <mxCell id="f2-review" value="Admin Reviews&#xa;Product" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="570" y="710" width="110" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-e14" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f2-enrich-box" target="f2-review" parent="1"/>
+
+        <!-- Approve/Reject -->
+        <mxCell id="f2-approve" value="Approve →&#xa;Mark visible_to_client = true" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="530" y="820" width="190" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-reject" value="Reject →&#xa;Archive" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999;" vertex="1" parent="1">
+          <mxGeometry x="780" y="720" width="120" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-e15" value="Approve" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f2-review" target="f2-approve" parent="1"/>
+        <mxCell id="f2-e16" value="Reject" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f2-review" target="f2-reject" parent="1"/>
+
+        <!-- Allocation -->
+        <mxCell id="f2-allocate" value="Allocate to Client&#xa;(Based on niche, tier,&#xa;geographic constraints)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="510" y="900" width="210" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-e17" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f2-approve" target="f2-allocate" parent="1"/>
+
+        <!-- Client sees -->
+        <mxCell id="f2-clientsee" value="Product Appears in&#xa;Client Dashboard&#xa;(Supabase Realtime)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;arcSize=50;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="530" y="990" width="180" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-e18" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f2-allocate" target="f2-clientsee" parent="1"/>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- PAGE 3: CLIENT ONBOARDING & SUBSCRIPTION -->
+  <diagram id="flow3-onboarding" name="3. Client Onboarding &amp; Subscription">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1000">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="f3-title" value="Client Onboarding &amp; Subscription Flow" style="text;html=1;fontSize=20;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="500" height="35" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="f3-start" value="Visitor Lands&#xa;on yousell.online" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;arcSize=50;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="470" y="80" width="160" height="45" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="f3-pricing" value="Views Pricing Page&#xa;(Free / Pro / Enterprise)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="470" y="160" width="170" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="f3-e1" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f3-start" target="f3-pricing" parent="1"/>
+
+        <mxCell id="f3-signup" value="Sign Up&#xa;(Supabase Auth)&#xa;Email + Password" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="475" y="240" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f3-e2" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f3-pricing" target="f3-signup" parent="1"/>
+
+        <mxCell id="f3-checkout" value="Stripe Checkout&#xa;(Plan Payment)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="480" y="325" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="f3-e3" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f3-signup" target="f3-checkout" parent="1"/>
+
+        <mxCell id="f3-webhook" value="Stripe Webhook →&#xa;Update subscription_status&#xa;in Supabase" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="460" y="400" width="190" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f3-e4" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f3-checkout" target="f3-webhook" parent="1"/>
+
+        <mxCell id="f3-role" value="Role Assigned: client&#xa;(Supabase user_metadata)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="465" y="485" width="180" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="f3-e5" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f3-webhook" target="f3-role" parent="1"/>
+
+        <mxCell id="f3-middleware" value="Next.js Middleware →&#xa;Route to /dashboard&#xa;(requireClient)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="465" y="560" width="180" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f3-e6" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f3-role" target="f3-middleware" parent="1"/>
+
+        <mxCell id="f3-onboard" value="Onboarding Flow&#xa;1. Select niche&#xa;2. Choose platforms&#xa;3. Configure brand voice&#xa;4. Connect first store" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="450" y="645" width="200" height="85" as="geometry"/>
+        </mxCell>
+        <mxCell id="f3-e7" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f3-middleware" target="f3-onboard" parent="1"/>
+
+        <mxCell id="f3-affiliate" value="Auto-Track Affiliate Referrals&#xa;(Shopify, Printful, Klaviyo, etc.)&#xa;→ affiliate_referrals table" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="750" y="660" width="220" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="f3-e8" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="f3-onboard" target="f3-affiliate" parent="1"/>
+
+        <mxCell id="f3-dashboard" value="Client Dashboard&#xa;Ready&#xa;(Products + Engines)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;arcSize=50;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="470" y="770" width="170" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f3-e9" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f3-onboard" target="f3-dashboard" parent="1"/>
+
+        <!-- Upsell side path -->
+        <mxCell id="f3-upsell" value="Platform-Gated Upsell&#xa;&quot;47 HOT products on&#xa;Amazon — upgrade to unlock&quot;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="750" y="780" width="210" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="f3-e10" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="f3-dashboard" target="f3-upsell" parent="1"/>
+
+        <!-- Revenue stacking note -->
+        <mxCell id="f3-note" value="Revenue Stacking per Client:&#xa;• Shopify (~$150 bounty)&#xa;• Printful (10% × 12mo)&#xa;• Klaviyo (up to 20%)&#xa;• Stripe ($500-2,500)&#xa;= 4-5 simultaneous commissions" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#FFFDE7;strokeColor=#999;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="100" y="640" width="210" height="110" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- PLACEHOLDER PAGES 4-8 -->
+  <diagram id="flow4-content" name="4. Content Creation &amp; Publishing">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1200">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="f4-title" value="Content Creation (Creative Studio) &amp; Publishing (Smart Publisher) Flow" style="text;html=1;fontSize=20;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="250" y="20" width="700" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- Start -->
+        <mxCell id="f4-start" value="Client Selects&#xa;Product for Content" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;arcSize=50;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="530" y="80" width="170" height="45" as="geometry"/>
+        </mxCell>
+
+        <!-- Brand Voice Check -->
+        <mxCell id="f4-brand" value="Brand Voice&#xa;Configured?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="565" y="160" width="110" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4-e1" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f4-start" target="f4-brand" parent="1"/>
+
+        <mxCell id="f4-brandsetup" value="Setup Brand Voice&#xa;(Tone, Style, Keywords)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="800" y="170" width="180" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4-e1b" value="No" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f4-brand" target="f4-brandsetup" parent="1"/>
+
+        <!-- Content Brief -->
+        <mxCell id="f4-brief" value="AI Generates Content Brief&#xa;(Claude Haiku)&#xa;• Target platforms&#xa;• Suggested content types&#xa;• Key messaging points" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="490" y="270" width="230" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4-e2" value="Yes" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f4-brand" target="f4-brief" parent="1"/>
+
+        <!-- Client Review Brief -->
+        <mxCell id="f4-review" value="Client Reviews&#xa;&amp; Edits Brief" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="560" y="385" width="110" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4-e3" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f4-brief" target="f4-review" parent="1"/>
+
+        <!-- Content Type Decision -->
+        <mxCell id="f4-type" value="Content&#xa;Type?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="565" y="490" width="100" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4-e4" value="Approve" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f4-review" target="f4-type" parent="1"/>
+
+        <!-- Text Content -->
+        <mxCell id="f4-text" value="Text Content&#xa;(Claude Haiku)&#xa;• Social captions&#xa;• Ad copy&#xa;• Video scripts&#xa;• Email sequences&#xa;• Blog/SEO" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="200" y="480" width="160" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4-e5" value="Text" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f4-type" target="f4-text" parent="1"/>
+
+        <!-- Video Content -->
+        <mxCell id="f4-video" value="Video Content&#xa;(Shotstack API)&#xa;• 8 core templates&#xa;• Product showcase&#xa;• Lifestyle shots" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="800" y="480" width="160" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4-e6" value="Video" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f4-type" target="f4-video" parent="1"/>
+
+        <!-- Image Content -->
+        <mxCell id="f4-image" value="Image / Carousel&#xa;(Bannerbear API)&#xa;• Product images&#xa;• Carousel slides&#xa;• Ad creatives" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="480" width="160" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4-e7" value="Image" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f4-type" target="f4-image" parent="1"/>
+
+        <!-- BullMQ Queue -->
+        <mxCell id="f4-queue" value="Enqueue to&#xa;content-queue&#xa;(BullMQ)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="530" y="620" width="170" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4-e8" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f4-text" target="f4-queue" parent="1"/>
+        <mxCell id="f4-e9" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f4-video" target="f4-queue" parent="1"/>
+        <mxCell id="f4-e10" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f4-image" target="f4-queue" parent="1"/>
+
+        <!-- Content Library -->
+        <mxCell id="f4-library" value="Content Saved to&#xa;Content Library&#xa;(content_items table)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="545" y="700" width="160" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4-e11" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f4-queue" target="f4-library" parent="1"/>
+
+        <!-- Credits Check -->
+        <mxCell id="f4-credits" value="Content Credits&#xa;Deducted&#xa;(Per Plan Tier)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="710" width="150" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4-e11b" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="f4-library" target="f4-credits" parent="1"/>
+
+        <!-- PUBLISHING SECTION -->
+        <mxCell id="f4-pub-header" value="Smart Publisher (Ayrshare)" style="text;html=1;fontSize=16;fontStyle=1;align=center;fillColor=#F0F8FF;strokeColor=#6c8ebf;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="420" y="790" width="350" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Automation Level -->
+        <mxCell id="f4-autolevel" value="Automation&#xa;Level?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="565" y="840" width="110" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4-e12" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f4-library" target="f4-autolevel" parent="1"/>
+
+        <!-- Manual -->
+        <mxCell id="f4-manual" value="Manual: Client clicks&#xa;&quot;Publish&quot; or &quot;Download&quot;&#xa;per content item" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="200" y="850" width="190" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4-e13" value="Manual" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f4-autolevel" target="f4-manual" parent="1"/>
+
+        <!-- Assisted -->
+        <mxCell id="f4-assisted" value="Assisted: System schedules,&#xa;client reviews &amp; approves&#xa;(4hr approval window)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="510" y="940" width="200" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4-e14" value="Assisted" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f4-autolevel" target="f4-assisted" parent="1"/>
+
+        <!-- Auto-Pilot -->
+        <mxCell id="f4-auto" value="Auto-Pilot: System publishes&#xa;on optimal schedule&#xa;(within guardrails)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="850" y="850" width="190" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4-e15" value="Auto-Pilot" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f4-autolevel" target="f4-auto" parent="1"/>
+
+        <!-- Ayrshare Publish -->
+        <mxCell id="f4-ayrshare" value="Ayrshare API →&#xa;Publish to Connected&#xa;Social Accounts&#xa;(IG, TikTok, FB, Pinterest, YT)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="480" y="1030" width="230" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4-e16" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f4-manual" target="f4-ayrshare" parent="1"/>
+        <mxCell id="f4-e17" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f4-assisted" target="f4-ayrshare" parent="1"/>
+        <mxCell id="f4-e18" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f4-auto" target="f4-ayrshare" parent="1"/>
+
+        <!-- Engagement Tracking -->
+        <mxCell id="f4-engagement" value="Daily Engagement Pull&#xa;(Likes, Comments, Shares)&#xa;→ Performance Feedback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;arcSize=50;" vertex="1" parent="1">
+          <mxGeometry x="490" y="1120" width="210" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4-e19" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f4-ayrshare" target="f4-engagement" parent="1"/>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="flow5-shop" name="5. Shop Integration &amp; Order">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1200">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="f5-title" value="Shop Connect (Store Integration) &amp; Order Tracking Flow" style="text;html=1;fontSize=20;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="600" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- Start -->
+        <mxCell id="f5-start" value="Client Clicks&#xa;&quot;Connect Store&quot;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;arcSize=50;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="540" y="80" width="160" height="45" as="geometry"/>
+        </mxCell>
+
+        <!-- Platform choice -->
+        <mxCell id="f5-platform" value="Which&#xa;Platform?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="570" y="160" width="100" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="f5-e1" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f5-start" target="f5-platform" parent="1"/>
+
+        <!-- Shopify OAuth -->
+        <mxCell id="f5-shopify" value="Shopify OAuth 2.0&#xa;→ App installed on&#xa;client's Shopify store" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="150" y="170" width="180" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f5-e2" value="Shopify" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f5-platform" target="f5-shopify" parent="1"/>
+
+        <!-- TikTok OAuth -->
+        <mxCell id="f5-tiktok" value="TikTok Shop OAuth&#xa;+ HMAC-SHA256 Signing" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="900" y="170" width="180" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f5-e3" value="TikTok" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f5-platform" target="f5-tiktok" parent="1"/>
+
+        <!-- Amazon LWA -->
+        <mxCell id="f5-amazon" value="Amazon LWA OAuth&#xa;(Login with Amazon)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="150" y="240" width="170" height="40" as="geometry"/>
+        </mxCell>
+        <!-- Meta -->
+        <mxCell id="f5-meta" value="Meta Business Extension&#xa;OAuth" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="900" y="240" width="170" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- Token Storage -->
+        <mxCell id="f5-token" value="Encrypt Token (AES-256-GCM)&#xa;→ Store in client_channels table&#xa;(Supabase)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="470" y="310" width="250" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f5-e4" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f5-shopify" target="f5-token" parent="1"/>
+        <mxCell id="f5-e5" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f5-tiktok" target="f5-token" parent="1"/>
+
+        <!-- Push Product -->
+        <mxCell id="f5-push-header" value="Product Push Flow" style="text;html=1;fontSize=16;fontStyle=1;align=center;fillColor=#F0F8FF;strokeColor=#6c8ebf;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="400" width="300" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="f5-select" value="Client Selects Product(s)&#xa;→ Clicks &quot;Push to Store&quot;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="490" y="460" width="210" height="45" as="geometry"/>
+        </mxCell>
+
+        <!-- Push type -->
+        <mxCell id="f5-pushtype" value="Single or&#xa;Batch?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="565" y="540" width="100" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="f5-e6" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f5-select" target="f5-pushtype" parent="1"/>
+
+        <!-- Shopify productSet -->
+        <mxCell id="f5-graphql" value="Shopify GraphQL&#xa;productSet mutation&#xa;(title, description, images,&#xa;variants, pricing)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="200" y="550" width="190" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="f5-e7" value="Shopify" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f5-pushtype" target="f5-graphql" parent="1"/>
+
+        <!-- TikTok product.save -->
+        <mxCell id="f5-tiktoksave" value="TikTok product.save API&#xa;(Category mapping required,&#xa;product goes to review)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="850" y="550" width="200" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="f5-e8" value="TikTok" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f5-pushtype" target="f5-tiktoksave" parent="1"/>
+
+        <!-- Shop Products table -->
+        <mxCell id="f5-db" value="Record in shop_products&#xa;table (status: pending →&#xa;listed → active)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="530" y="650" width="180" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="f5-e9" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f5-graphql" target="f5-db" parent="1"/>
+        <mxCell id="f5-e10" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f5-tiktoksave" target="f5-db" parent="1"/>
+
+        <!-- ORDER FLOW -->
+        <mxCell id="f5-order-header" value="Order Flow (Post-Sale)" style="text;html=1;fontSize=16;fontStyle=1;align=center;fillColor=#FFFFF0;strokeColor=#d6b656;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="740" width="300" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="f5-customer" value="Customer Places Order&#xa;on Client's Store" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;arcSize=50;" vertex="1" parent="1">
+          <mxGeometry x="510" y="800" width="180" height="45" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="f5-webhook-order" value="Platform Webhook →&#xa;/api/webhooks/shopify/orders&#xa;or /api/webhooks/tiktok-shop/orders" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="470" y="880" width="250" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f5-e11" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f5-customer" target="f5-webhook-order" parent="1"/>
+
+        <!-- Fulfillment decision -->
+        <mxCell id="f5-fulfill" value="Fulfillment&#xa;Model?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="565" y="960" width="100" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="f5-e12" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f5-webhook-order" target="f5-fulfill" parent="1"/>
+
+        <mxCell id="f5-dropship" value="DROPSHIP:&#xa;Forward to supplier" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="200" y="970" width="160" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="f5-pod-fulfill" value="POD: Forward to&#xa;Printful/Printify&#xa;(Auto-manufacture + ship)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="860" y="965" width="190" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f5-e13" value="Dropship" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f5-fulfill" target="f5-dropship" parent="1"/>
+        <mxCell id="f5-e14" value="POD" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f5-fulfill" target="f5-pod-fulfill" parent="1"/>
+
+        <!-- Order Tracking -->
+        <mxCell id="f5-tracking" value="Order Tracking Emails&#xa;(Resend API)&#xa;Confirmation → Shipped → Delivered" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="470" y="1070" width="250" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f5-e15" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f5-fulfill" target="f5-tracking" parent="1"/>
+
+        <mxCell id="f5-end" value="Order Complete&#xa;Revenue Tracked" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;arcSize=50;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="530" y="1150" width="160" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="f5-e16" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f5-tracking" target="f5-end" parent="1"/>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="flow6-pod" name="6. POD Pipeline">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1200">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="f6-title" value="Print-on-Demand (POD) Full Pipeline — Discovery to Fulfillment" style="text;html=1;fontSize=20;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="600" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 1 -->
+        <mxCell id="f6-s1" value="1. POD Trend Discovery&#xa;Apify scrapers: Etsy trending,&#xa;Redbubble best sellers,&#xa;Amazon Merch, TikTok Creative&#xa;Center, Pinterest boards" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="480" y="80" width="250" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 2 -->
+        <mxCell id="f6-s2" value="2. Design Concept Generation&#xa;AI identifies hot design niches&#xa;(aesthetics, keywords, sub-categories)&#xa;Apparel | Home | Accessories |&#xa;Stationery | All-Over | Pet" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="480" y="210" width="250" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="f6-e1" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f6-s1" target="f6-s2" parent="1"/>
+
+        <!-- Step 3: Mockup -->
+        <mxCell id="f6-s3" value="3. Mockup Generation&#xa;Printful Mockup Generator API&#xa;→ Product on lifestyle backgrounds&#xa;→ Multiple mockup variants" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="480" y="340" width="250" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="f6-e2" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f6-s2" target="f6-s3" parent="1"/>
+
+        <!-- Step 4: Scoring -->
+        <mxCell id="f6-s4" value="4. POD-Adjusted 3-Pillar Scoring&#xa;• Design trend velocity (+)&#xa;• Seasonal relevance (+)&#xa;• Niche saturation (−)&#xa;• Margin must exceed 30%&#xa;• Cheapest partner gets bonus" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="480" y="455" width="250" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="f6-e3" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f6-s3" target="f6-s4" parent="1"/>
+
+        <!-- Decision: Score threshold -->
+        <mxCell id="f6-dec" value="Score&#xa;≥ 80?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="565" y="590" width="90" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="f6-e4" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f6-s4" target="f6-dec" parent="1"/>
+
+        <mxCell id="f6-suggest" value="5. HOT Products →&#xa;Auto-Suggested to Admin" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="490" y="695" width="210" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="f6-e5" value="Yes" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f6-dec" target="f6-suggest" parent="1"/>
+
+        <mxCell id="f6-archive" value="Archive / Monitor" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999;" vertex="1" parent="1">
+          <mxGeometry x="850" y="600" width="140" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="f6-e6" value="No" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f6-dec" target="f6-archive" parent="1"/>
+
+        <!-- Step 6: Admin approves -->
+        <mxCell id="f6-s6" value="6. Admin Approves →&#xa;Product Pushed to Client Stores&#xa;(Shopify + TikTok Shop)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="470" y="775" width="250" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f6-e7" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f6-suggest" target="f6-s6" parent="1"/>
+
+        <!-- Step 7: Fulfillment attached -->
+        <mxCell id="f6-s7" value="7. POD Fulfillment Partner Attached&#xa;(Printful / Printify / Gelato)&#xa;Compare: cost, coverage, margin" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="470" y="860" width="250" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="f6-e8" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f6-s6" target="f6-s7" parent="1"/>
+
+        <!-- Step 8: Customer order -->
+        <mxCell id="f6-s8" value="8. Customer Orders →&#xa;Webhook Triggers →&#xa;POD Partner Manufactures&#xa;&amp; Ships Direct to Customer" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="470" y="950" width="250" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="f6-e9" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f6-s7" target="f6-s8" parent="1"/>
+
+        <!-- End -->
+        <mxCell id="f6-end" value="Order Tracking →&#xa;Delivery Confirmation&#xa;(Zero Inventory Risk)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;arcSize=50;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="490" y="1055" width="210" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f6-e10" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f6-s8" target="f6-end" parent="1"/>
+
+        <!-- Margin examples (side note) -->
+        <mxCell id="f6-margins" value="POD Margins by Sub-Cat:&#xa;• Apparel: 40–60%&#xa;• Accessories: 35–55%&#xa;• Home &amp; Living: 30–50%&#xa;• Stationery: 40–65%&#xa;• All-Over Print: 35–50%&#xa;• Pet Products: 35–55%" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#FFFDE7;strokeColor=#999;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="850" y="450" width="180" height="130" as="geometry"/>
+        </mxCell>
+
+        <!-- Partners note -->
+        <mxCell id="f6-partners" value="Fulfillment Partners:&#xa;• Printful: 340+ products, 10% affiliate&#xa;• Printify: 900+ products, 5% affiliate&#xa;• Gelato: 100+ global, $500/referral&#xa;• Gooten: 150+ budget option" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#FFFDE7;strokeColor=#999;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="850" y="860" width="230" height="100" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="flow7-cmdcenter" name="7. Command Center Operations">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1100">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="f7-title" value="Admin Command Center — Product Push &amp; Revenue Tracking Flow" style="text;html=1;fontSize=20;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="600" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- Best Sellers Pool -->
+        <mxCell id="f7-pool" value="Best Sellers Pool&#xa;(Products ranked by final_score,&#xa;HOT tier first)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;arcSize=50;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="490" y="80" width="230" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- Admin selects product -->
+        <mxCell id="f7-select" value="Admin Selects Product&#xa;→ Clicks Action Button" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="510" y="170" width="190" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="f7-e1" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f7-pool" target="f7-select" parent="1"/>
+
+        <!-- Action choice -->
+        <mxCell id="f7-action" value="Action?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="570" y="250" width="80" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="f7-e2" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f7-select" target="f7-action" parent="1"/>
+
+        <!-- Push to Platform -->
+        <mxCell id="f7-push" value="Push to Platform" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="260" width="140" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="f7-e3" value="Push" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f7-action" target="f7-push" parent="1"/>
+
+        <!-- Platform fan-out -->
+        <mxCell id="f7-shopify" value="push-to-shopify&#xa;GraphQL productSet" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="30" y="340" width="140" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="f7-tiktok" value="push-to-tiktok&#xa;product.save API" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="185" y="340" width="130" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="f7-amazon-push" value="push-to-amazon&#xa;SP-API Feeds" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="100" y="395" width="130" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="f7-e3b" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f7-push" target="f7-shopify" parent="1"/>
+        <mxCell id="f7-e3c" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f7-push" target="f7-tiktok" parent="1"/>
+
+        <!-- Marketing -->
+        <mxCell id="f7-marketing" value="Launch Marketing&#xa;→ content-queue&#xa;(Ad copy + campaign)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="400" y="350" width="170" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f7-e4" value="Marketing" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f7-action" target="f7-marketing" parent="1"/>
+
+        <!-- Influencer -->
+        <mxCell id="f7-influencer" value="Influencer Outreach&#xa;→ influencer-outreach queue&#xa;(Match creators + emails)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="660" y="350" width="190" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f7-e5" value="Influencer" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f7-action" target="f7-influencer" parent="1"/>
+
+        <!-- Content -->
+        <mxCell id="f7-content" value="Generate Content&#xa;→ content-queue&#xa;(Captions, video scripts)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="920" y="350" width="180" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f7-e6" value="Content" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f7-action" target="f7-content" parent="1"/>
+
+        <!-- Financial -->
+        <mxCell id="f7-financial" value="Financial Model&#xa;→ financial-model queue&#xa;(Unit economics + ROI)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="260" width="180" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f7-e7" value="Financial" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f7-action" target="f7-financial" parent="1"/>
+
+        <!-- BullMQ convergence -->
+        <mxCell id="f7-bullmq" value="All Actions →&#xa;BullMQ Background Jobs&#xa;(No inline execution)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="480" y="460" width="230" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="f7-e8" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f7-marketing" target="f7-bullmq" parent="1"/>
+        <mxCell id="f7-e9" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f7-influencer" target="f7-bullmq" parent="1"/>
+
+        <!-- Listing created -->
+        <mxCell id="f7-listing" value="admin_product_listings&#xa;table updated&#xa;Status: Draft → Listed → Active&#xa;→ Performing → Archive" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="500" y="545" width="210" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="f7-e10" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f7-bullmq" target="f7-listing" parent="1"/>
+
+        <!-- REVENUE SECTION -->
+        <mxCell id="f7-rev-header" value="Revenue Tracking Dashboard" style="text;html=1;fontSize=16;fontStyle=1;align=center;fillColor=#E8F5E9;strokeColor=#82b366;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="420" y="650" width="350" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Per-platform pipeline -->
+        <mxCell id="f7-pipeline" value="Per-Platform Pipeline View&#xa;TikTok | Amazon | Shopify | Etsy | POD&#xa;• Products live&#xa;• Weekly revenue&#xa;• Conversion rates" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="200" y="710" width="230" height="85" as="geometry"/>
+        </mxCell>
+
+        <!-- Revenue dashboard -->
+        <mxCell id="f7-revenue" value="Revenue Dashboard&#xa;• Real-time aggregation&#xa;• Platform breakdown&#xa;• Top 10 performing products&#xa;• Profit margin tracker&#xa;(cost vs revenue vs net)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="500" y="710" width="230" height="95" as="geometry"/>
+        </mxCell>
+
+        <!-- admin_revenue_tracking -->
+        <mxCell id="f7-revdb" value="admin_revenue_tracking&#xa;(Daily snapshots per&#xa;platform per product)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="810" y="720" width="200" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Store connections -->
+        <mxCell id="f7-stores" value="admin_store_connections&#xa;(YOUSELL's own OAuth tokens&#xa;for Shopify, TikTok, Amazon, Etsy)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="810" y="820" width="230" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Key distinction -->
+        <mxCell id="f7-note" value="KEY DISTINCTION:&#xa;Command Center = YOUSELL's OWN stores&#xa;Shop Connect = CLIENT stores&#xa;These are completely separate systems." style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#FFFDE7;strokeColor=#999;fontSize=10;fontStyle=1;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="100" y="870" width="280" height="80" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="flow8-affiliate" name="8. Affiliate Commission System">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1200">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="f8-title" value="Affiliate Commission Engine — Dual Revenue Stream Flow" style="text;html=1;fontSize=20;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="600" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- Two streams split -->
+        <mxCell id="f8-header" value="YOUSELL Earns From TWO Simultaneous Revenue Streams" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="380" y="80" width="400" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== STREAM 1 (LEFT) ===== -->
+        <mxCell id="f8-s1-header" value="Stream 1: Internal Content Revenue&#xa;(Admin-Only — Zero Client Visibility)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="50" y="160" width="300" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="f8-e1" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f8-header" target="f8-s1-header" parent="1"/>
+
+        <mxCell id="f8-s1-content" value="Content Factory Generates&#xa;Affiliate Marketing Content&#xa;(Claude Haiku bulk / Sonnet premium)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="50" y="240" width="300" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="f8-s1-types" value="Content Types:&#xa;• Tool comparison articles (Weekly)&#xa;• &quot;Best X for Y&quot; posts (3x/week)&#xa;• Tutorials / walkthroughs (2x/week)&#xa;• Seasonal promo roundups (Monthly)&#xa;• Case studies (Monthly)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="50" y="320" width="300" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="f8-e2" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f8-s1-content" target="f8-s1-types" parent="1"/>
+
+        <mxCell id="f8-s1-publish" value="Publish via YOUSELL's Own&#xa;Social/Blog Channels&#xa;(Ayrshare + Blog)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="75" y="455" width="250" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="f8-e3" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f8-s1-types" target="f8-s1-publish" parent="1"/>
+
+        <mxCell id="f8-s1-track" value="Track Per Content Piece:&#xa;Clicks → Signups → Commissions&#xa;affiliate_content_log table" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="65" y="535" width="270" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f8-e4" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f8-s1-publish" target="f8-s1-track" parent="1"/>
+
+        <mxCell id="f8-s1-revenue" value="Stream 1 Revenue Projection:&#xa;M1-3: $100-500/mo&#xa;M4-6: $1,000-3,000/mo&#xa;M7-12: $3,000-10,000/mo&#xa;Y2+: $10,000-30,000/mo" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="65" y="620" width="270" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="f8-e5" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f8-s1-track" target="f8-s1-revenue" parent="1"/>
+
+        <!-- ===== STREAM 2 (RIGHT) ===== -->
+        <mxCell id="f8-s2-header" value="Stream 2: Client Service Revenue&#xa;(Platform Provisioning Commissions)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="810" y="160" width="300" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="f8-e6" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f8-header" target="f8-s2-header" parent="1"/>
+
+        <mxCell id="f8-s2-trigger" value="Client Onboards →&#xa;Provisions Tools via YOUSELL&#xa;(Each sign-up = affiliate commission)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="810" y="240" width="300" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="f8-s2-stack" value="Revenue Stacking (Per Client):&#xa;• Shopify (~$150 bounty)&#xa;• Printful (10% × 12mo = ~$240)&#xa;• Klaviyo (up to 20% recurring = ~$81)&#xa;• Spocket (25% × 15mo = ~$125)&#xa;• Stripe ($500-2,500/merchant)&#xa;• PayPal ($500-2,500/merchant)&#xa;= 4-5 simultaneous commissions" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="810" y="320" width="300" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="f8-e7" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f8-s2-trigger" target="f8-s2-stack" parent="1"/>
+
+        <mxCell id="f8-s2-autotrack" value="Auto-Track Referrals&#xa;(Detect when client provisions&#xa;each platform, log to&#xa;affiliate_referrals table)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="835" y="485" width="250" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="f8-e8" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f8-s2-stack" target="f8-s2-autotrack" parent="1"/>
+
+        <mxCell id="f8-s2-commissions" value="Commission Logger&#xa;(affiliate_commissions table)&#xa;Per referral: amount, period, paid_at" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="835" y="580" width="250" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f8-e9" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f8-s2-autotrack" target="f8-s2-commissions" parent="1"/>
+
+        <mxCell id="f8-s2-revenue" value="Stream 2 Revenue (50 clients Y1):&#xa;~$95,210 estimated total&#xa;(Compounding passive income&#xa;ON TOP of subscriptions)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="840" y="665" width="240" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="f8-e10" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f8-s2-commissions" target="f8-s2-revenue" parent="1"/>
+
+        <!-- ===== CONVERGE TO DASHBOARD ===== -->
+        <mxCell id="f8-dashboard" value="Affiliate Revenue Dashboard (Admin Only)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="370" y="800" width="420" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="f8-e11" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f8-s1-revenue" target="f8-dashboard" parent="1"/>
+        <mxCell id="f8-e12" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f8-s2-revenue" target="f8-dashboard" parent="1"/>
+
+        <!-- Dashboard components -->
+        <mxCell id="f8-programs" value="Affiliate Programs&#xa;Database (24+)&#xa;Links, Rates,&#xa;Cookie Windows" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="150" y="880" width="150" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="f8-referrals" value="Referral Tracker&#xa;Client → Platform&#xa;Mapping + Timestamps" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="330" y="880" width="160" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="f8-commlog" value="Commission Log&#xa;Cumulative Per&#xa;Platform Per Stream" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="520" y="880" width="160" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="f8-dualstats" value="Dual Stats View&#xa;Stream 1 vs Stream 2&#xa;Side-by-Side" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="710" y="880" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="f8-monthly" value="Monthly Rollup&#xa;with Growth Trend" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="890" y="880" width="150" height="45" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="f8-e13" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f8-dashboard" target="f8-programs" parent="1"/>
+        <mxCell id="f8-e14" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f8-dashboard" target="f8-referrals" parent="1"/>
+        <mxCell id="f8-e15" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f8-dashboard" target="f8-commlog" parent="1"/>
+        <mxCell id="f8-e16" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f8-dashboard" target="f8-dualstats" parent="1"/>
+        <mxCell id="f8-e17" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="f8-dashboard" target="f8-monthly" parent="1"/>
+
+        <!-- DB tables -->
+        <mxCell id="f8-dbtables" value="Database Tables:&#xa;• affiliate_programs — Master list&#xa;• affiliate_referrals — Referral events&#xa;• affiliate_commissions — Commission records&#xa;• affiliate_content_log — Content tracking" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#FFFDE7;strokeColor=#999;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="370" y="980" width="280" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Key insight -->
+        <mxCell id="f8-insight" value="KEY BUSINESS MODEL INSIGHT:&#xa;YOUSELL = Discovery + Automation Layer&#xa;NOT an affiliate middleman.&#xa;Subscription justified by ongoing content,&#xa;automated distribution, performance tracking,&#xa;and weekly new opportunity alerts." style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#E8F5E9;strokeColor=#82b366;fontSize=10;fontStyle=1;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="750" y="980" width="300" height="100" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>

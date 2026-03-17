@@ -2368,3 +2368,35 @@ Ran 4 parallel research agents to verify all numbers, rates, and estimates added
 ### Files Modified
 - `docs/YouSell_Platform_Technical_Specification_v8.md` — 107 insertions, 99 deletions (net +8 lines)
 - `system/development_log.md` — This entry
+
+------------------------------------------------------------
+
+## Session: 2026-03-17 — Production Use Case Diagrams & Flowcharts
+
+### Task
+Create comprehensive, production-ready use case diagrams and flowcharts covering every use case across the entire YOUSELL platform using draw.io XML format.
+
+### What Was Built
+
+**File 1: `docs/YOUSELL_Use_Case_Diagram.drawio`** (6 pages)
+- Page 1: System Overview — All actors and high-level system boundaries
+- Page 2: Admin — Product Discovery & Intelligence (30 use cases)
+- Page 3: Admin — Command Center (12), POD Intelligence (6), Affiliate Revenue Engine (8)
+- Page 4: Client Dashboard — All 31 use cases
+- Page 5: Background System — All 23 BullMQ job queues
+- Page 6: Main Website & Auth — Public pages, Stripe, data refresh tiers
+
+**File 2: `docs/YOUSELL_Flowcharts.drawio`** (8 pages)
+- Page 1: Product Discovery Pipeline
+- Page 2: Scoring & Enrichment Flow
+- Page 3: Client Onboarding & Subscription
+- Page 4: Content Creation & Publishing
+- Page 5: Shop Integration & Order
+- Page 6: POD Pipeline
+- Page 7: Command Center Operations
+- Page 8: Affiliate Commission System
+
+### Files Created
+- `docs/YOUSELL_Use_Case_Diagram.drawio`
+- `docs/YOUSELL_Flowcharts.drawio`
+- `system/development_log.md` — This entry
