@@ -357,6 +357,74 @@ All scoring, discovery, and enrichment logic applies across all eight channels.
 
 ---
 
+## INTER-ENGINE OPERATIONAL CONTRACTS (NEW — Engine Independence)
+
+**Reference:** Technical Specification v8, Section 9A
+
+### Communication Rule
+
+Engines never directly call each other's functions or read each other's database tables. All cross-engine data flow uses the event bus (Redis Pub/Sub + Supabase Realtime).
+
+### Scoring Pipeline Contract
+
+The scoring pipeline spans 4 engines, each with a strict handoff:
+
+```
+Product Discovery ──product.discovered──→ Data Fusion
+Data Fusion ────────product.fused──────→ Composite Scoring
+Composite Scoring ──product.scored─────→ Profitability Engine
+```
+
+**Rules:**
+- Product Discovery emits `product.discovered` with raw product data. It does NOT score.
+- Data Fusion merges multi-source data into a unified product record. It does NOT score.
+- Composite Scoring applies the 3-pillar formula (trend × 0.40 + viral × 0.35 + profit × 0.25). It does NOT enrich.
+- Profitability Engine computes margins, logistics costs, and ROI. It does NOT modify scores.
+
+### Enrichment Trigger Contract
+
+Enrichment engines activate based on score thresholds from `product.scored` events:
+
+| Threshold | Triggered Engines |
+|-----------|------------------|
+| score >= 60 | Influencer Intelligence, Supplier Discovery, Competitor Intelligence |
+| score >= 75 | Ad Intelligence (premium — uses Claude Sonnet) |
+| score >= 80 (HOT) | Client Allocation, Command Center |
+
+**Rule:** Enrichment engines subscribe to `product.scored` and filter locally. The Composite Scoring engine does NOT selectively publish to different engines.
+
+### Content Pipeline Contract
+
+```
+Client Allocation ──product.allocated──→ Creative Studio
+Creative Studio ────content.generated──→ Smart Publisher
+Smart Publisher ────content.published──→ Affiliate Commission
+```
+
+**Rules:**
+- Creative Studio generates content only for allocated products. It never generates content speculatively.
+- Smart Publisher distributes only `content.generated` events with `status: approved` (or auto-approved if automation level permits).
+- Affiliate Commission passively tracks published content for affiliate link performance. It never modifies content.
+
+### POD Pipeline Contract
+
+```
+Trend Scout ──trend.detected (POD)──→ POD Intelligence
+POD Intelligence ──pod.design_ready──→ POD Scoring
+POD Scoring ──pod.scored──→ Command Center (if HOT)
+```
+
+**Rule:** POD Intelligence owns the full design-to-mockup lifecycle. It publishes `pod.design_ready` only when mockups are complete.
+
+### Failure Isolation Contract
+
+- If any engine fails, other engines continue operating on their existing data.
+- Failed events are retried 3 times with exponential backoff, then moved to a dead-letter queue.
+- No engine blocks waiting for another engine's response (fire-and-forget pattern).
+- The Automation Orchestrator monitors all engine health and can pause/resume individual engines.
+
+---
+
 ## FINAL PRINCIPLE
 
 The goal of the YouSell platform is to convert **complex market signals into actionable ecommerce opportunities**.
@@ -366,5 +434,6 @@ All system components must support this objective while preserving:
 - client isolation
 - operational reliability
 - intelligent automation
+- **engine independence** (any engine extractable as standalone SaaS)
 
 Any system modification must respect the logic defined in this file.
