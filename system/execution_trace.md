@@ -174,4 +174,16 @@ Refactor plan:
 - **Files touched:** `src/lib/engines/discovery.ts`
 - **Result:** SUCCESS — clean tsc compile
 - **Next step:** Batch 0.10 — Audit Scoring Engine for refactor
+- **Commit:** 3f78969
+
+------------------------------------------------------------
+
+### [2026-03-17 01:50] DONE — Batch 0.10-0.11: Audit + Refactor Scoring Engine
+
+- **Task:** Wrap Scoring in Engine interface
+- **Batch:** 0.10-0.11
+- **Action:** Created src/lib/engines/scoring-engine.ts — thin Engine wrapper around pure scoring functions in composite.ts. Emits PRODUCT_SCORED and PRODUCT_REJECTED events. Subscribes to PRODUCT_DISCOVERED for future auto-scoring. Updated barrel export to include all 3 engine classes.
+- **Files touched:** `src/lib/engines/scoring-engine.ts`, `src/lib/engines/index.ts`
+- **Result:** SUCCESS — clean tsc compile
+- **Next step:** Batch 0.12 — Integration verification
 - **Commit:** pending

@@ -31,3 +31,8 @@ export type {
 
 // ─── Constants ────────────────────────────────────────────
 export { ENGINE_EVENTS } from './types';
+
+// ─── Engine Implementations ──────────────────────────────
+export { TikTokDiscoveryEngine } from './tiktok-discovery';
+export { DiscoveryEngine } from './discovery';
+export { ScoringEngine } from './scoring-engine';
