@@ -2230,3 +2230,30 @@ Comprehensive update of ALL remaining project documents that were missed in the 
 
 ### Verification
 All 10 docs files, all system files, and all task files have been read and verified to contain POD Channel #8, Admin Command Center, and Affiliate Commission Engine content.
+
+---
+
+## Session: 2026-03-17 (Part 3) — v8 Technical Specification Created
+
+### What Was Done
+Created `docs/YouSell_Platform_Technical_Specification_v8.md` — a comprehensive 3,202-line master specification that merges v7 (2,683 lines) with all new content from 9 satellite documents.
+
+### Key v7 → v8 Changes
+1. **POD Channel #8 fully integrated** — throughout all sections (discovery, scoring, queues, API routes, database, frontend, phases)
+2. **Admin Command Center** — dashboard layout (ASCII), BullMQ push-to-store jobs, revenue tracking, new API routes
+3. **Affiliate Commission Engine** — dual-stream tracking, 24+ affiliate programs, content factory, commission database
+4. **8 new BullMQ queues** — 23 total (pod-discovery, pod-provision, pod-fulfillment-sync, push-to-shopify, push-to-tiktok, push-to-amazon, affiliate-content-generate, affiliate-commission-track)
+5. **7 new database tables** — admin_store_connections, admin_product_listings, admin_revenue_tracking, affiliate_referrals, affiliate_commissions, affiliate_content_log, pod_designs
+6. **15 new API routes** — POD, Command Center, Affiliate Engine endpoints
+7. **Revenue multiplier expanded** — $124K/yr estimate with 17 affiliate programs detailed
+8. **Competitive landscape** — Tier 9 (POD platforms), Tier 10 (Affiliate programs)
+9. **Development phases updated** — Phase J (POD weeks 15-16), Phase K (Command Center weeks 17-18), Phase L (Affiliate Engine weeks 19-20)
+10. **New appendices** — Appendix J (Content Publishing Strategy), Appendix K (Market Research Summary)
+
+### Files Modified
+- `docs/YouSell_Platform_Technical_Specification_v8.md` — CREATED (3,202 lines)
+- `CLAUDE.md` — Updated all v7 references to v8
+- `system/development_log.md` — This entry
+
+### Canonical Document Hierarchy
+v8 is now the single authoritative architecture reference. v7 is superseded.
