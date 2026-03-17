@@ -184,6 +184,28 @@ The platform automatically recommends the optimal fulfillment method for each pr
 - IF physical + supplier offers dropship API → **SHOW BOTH OPTIONS**
 - ALWAYS show margin comparison table side-by-side (dropship vs wholesale vs POD)
 
+**Platform-Specific Fulfillment Rules:**
+
+| Platform | Fulfillment Constraint | Impact |
+|---|---|---|
+| **TikTok Shop** | Must ship within 2–3 days; long-ship = suspension | US-based fulfillment only; no direct AliExpress dropship |
+| **Amazon FBA** | Must be seller of record; no 3rd-party branding | Wholesale/FBA or Private Label required |
+| **Amazon FBM** | Self-fulfilled; less Buy Box weight | Dropship acceptable but lower ranking |
+| **Shopify** | Full flexibility, any model works | All fulfillment types supported |
+| **Pinterest** | Traffic driver, not direct seller | Links to Shopify/Amazon store; no native checkout |
+| **Etsy** | Production partner or handmade required for POD | Must use Printful/Printify integration |
+
+**Economic Comparison by Fulfillment Model:**
+
+| Model | Upfront Cost | Typical Margin | Risk Level | Time to Market | Best For |
+|---|---|---|---|---|---|
+| **Dropship** | $0 | 10–30% | Low | Days | Physical products <$30, testing demand |
+| **Wholesale/Bulk** | $500–5,000 | 30–50% | Medium | Weeks | Proven demand, $30–100 products |
+| **Private Label** | $2,000–10,000+ | 40–70% | High | Months | $100+ products, brand-building |
+| **Print-on-Demand** | $0 | 15–35% (up to 60% on stickers/posters) | Low | Days | Custom designs, apparel, accessories |
+| **Affiliate** | $0 | 1–45% commission | Zero | Immediate | SaaS, AI tools, digital products |
+| **Digital Products** | $0 | 80–97% (platform fees only) | Low | Days | Templates, courses, eBooks, tools |
+
 ---
 
 ## Section 3 — Business Objective & SaaS Positioning
@@ -315,6 +337,27 @@ Every YOUSELL subscription that provisions tools for clients may generate indire
 
 YOUSELL uses its own content engine, influencer network, and publishing pipeline to promote tools/platforms and earn affiliate commissions. This is a non-stop content factory for all affiliate platforms, visible only in the admin dashboard.
 
+**Internal Revenue Projections:**
+
+| Phase | Timeline | Estimated Revenue | Key Activities |
+|---|---|---|---|
+| Ramp-up | Month 1–3 | $100–500/mo | Setup affiliate accounts, initial content, seed SEO |
+| Growth | Month 4–6 | $1,000–3,000/mo | SEO traffic building, email list growth, content cadence |
+| Compounding | Month 7–12 | $3,000–10,000/mo | Compounding recurring commissions, authority established |
+| Maturity | Year 2+ | $10,000–30,000/mo | Compound effect, multiple content channels, brand authority |
+
+**Visibility:** Admin dashboard ONLY. Zero client visibility. Exposing AI affiliate opportunities would reveal competitor platforms (Jasper, Copy.ai, etc.) that clients might switch to, and protects YOUSELL's internal revenue stream.
+
+**Competitive Landscape for Affiliate Content:**
+
+| Competitor | Model | Scale | Revenue Est. |
+|---|---|---|---|
+| **Futurepedia** | AI tool directory, affiliate-only revenue | 2,000+ tools, 5M+ monthly visitors | Significant (affiliate-only) |
+| **There's An AI For That** | AI tool directory | 11,000+ tools | Directory model |
+| **Matt Wolfe (YouTube)** | AI review content | YouTube channel | Est. $20–50K/month from AI affiliates |
+
+**Key insight:** NO existing player is a SaaS platform earning affiliate revenue as secondary income. YOUSELL would be unique in combining intelligence platform + affiliate earnings. The directories above earn ONLY from affiliates; YOUSELL earns from subscriptions PLUS affiliates.
+
 **Stream 2: Client Service Affiliate Revenue**
 
 When YOUSELL provisions tools for clients (Shopify stores, Klaviyo accounts, Printful connections, Spocket subscriptions), each provisioning generates affiliate commission for YOUSELL.
@@ -345,6 +388,8 @@ When YOUSELL provisions tools for clients (Shopify stores, Klaviyo accounts, Pri
 | **Estimated Total Year 1** | | **~$124,266** |
 
 *On top of YOUSELL subscription revenue. Scales linearly with client count. Conservative estimates — actual depends on conversion rates and client adoption.*
+
+**Dual Payment Setup Revenue Multiplication:** Every client setting up both Stripe ($2,500 referral) and PayPal ($2,500 referral) generates $5,000 in one-time bounties per client. At 50 clients with dual setup, that's $250,000 in payment referral revenue alone.
 
 **Highest-Priority Affiliate Integrations:**
 
@@ -664,6 +709,39 @@ Currently NOT connected. The required integration:
 **Goal:** Digital products paying high affiliate commissions promotable via content or influencers.
 
 **Data Sources:** Gumroad public top sellers (Apify), Etsy digital products (Apify), ClickBank marketplace, ShareASale directory, Udemy top courses, AppSumo public scrape.
+
+**Digital Product Platform Economics:**
+
+| Platform | Creator Gets | Best For | Notes |
+|---|---|---|---|
+| Gumroad | 90% | Everything digital | Simplest setup, instant payout |
+| Etsy | ~87% | Printables, templates, planners | Built-in marketplace traffic |
+| Amazon KDP | 35–70% | eBooks, guides | 35% for <$2.99 or >$9.99; 70% for $2.99–$9.99 |
+| Shopify | ~97% | Own brand, full control | Highest margin but no marketplace traffic |
+| Whop | ~97% (0% platform fee) | Memberships, software, digital | Emerging platform, strong for recurring |
+| Creative Market | 40% | Design assets | Curated marketplace, design-focused |
+
+**Affiliate Commission by Digital Product Type:**
+
+| Product Type | Avg Commission | Recurring? | Best Network |
+|---|---|---|---|
+| AI Tools | 20–45% | Yes (monthly) | PartnerStack, direct |
+| SaaS Software | 20–40% | Yes (monthly) | Impact, PartnerStack |
+| Online Courses | 30–50% | Usually one-time | ClickBank, direct |
+| eBooks | 4.5–75% | One-time | Amazon (4.5%), ClickBank (75%) |
+| Templates/Themes | 10–50% | One-time | ShareASale, direct |
+
+**Content Marketing Strategy by Channel:**
+
+| Channel | Content Type | Best Products | Expected Conversion |
+|---|---|---|---|
+| **TikTok** | Screen recording tutorials, "I made $X" videos | Templates, AI tools | 1–3% |
+| **Pinterest** | SEO pins, product mockups | Printables, planners | 2–5% |
+| **YouTube** | Tutorials, reviews, comparisons | Courses, software | 5–10% |
+| **Blog/SEO** | Comparison posts, listicles, how-to guides | All digital | 3–8% |
+| **Email** | Welcome + launch sequences | All digital | 3–8% |
+
+**Shopify as Affiliate Hub Strategy:** Create Shopify stores as "curated marketplace" review sites where each product page has "Buy Now" linking to an affiliate URL. Use ThirstyAffiliates or Lasso for link management. Can mix own digital products + affiliate recommendations. Shopify analytics provides conversion tracking.
 
 ### 8.6 AI Affiliate Programs Module
 
@@ -1286,6 +1364,14 @@ Located at `backend/src/lib/queue.ts`.
 
 **When to reconsider n8n:** If non-technical admins need to modify workflows without code changes, or if client-facing workflow customization becomes a feature.
 
+**Detailed Performance Rationale:**
+- **Network hops:** n8n adds network hops (n8n server → our API → Supabase) vs native BullMQ in-process execution on Railway (lower latency)
+- **Batch processing:** n8n's execution model is less efficient for batch processing patterns (scanning 100+ products per run)
+- **Cost at scale:** n8n self-hosted on Railway adds ~$5–20/month base; n8n cloud pricing becomes significant at 10K+ executions vs flat Railway cost
+- **POD fulfillment queues** require custom request signing (Printful API tokens), webhook handling for order status, and tight coupling with product database for inventory sync — all better handled natively in BullMQ than through n8n's generic HTTP nodes
+
+**Future Premium Feature (Post-100 Clients):** Consider offering n8n-based automation templates as a premium feature for clients who want custom workflow builders. This positions n8n as a competitive differentiator vs TopDawg/Sell The Trend/AutoDS, offering client-facing automation capabilities. Revisit when client volume exceeds 100+ and clients request custom automation workflows.
+
 ---
 
 ## Section 16 — Scheduler and Cost-Control Strategy
@@ -1449,6 +1535,21 @@ Data freshness affects its scoring weight:
 7. Scores recalculated with enriched data
 8. Import logged in `imported_files` table
 
+### 16A.3A Competitor Data Architecture Comparison
+
+Understanding how competitors handle data refresh informs YOUSELL's tier strategy:
+
+| Platform | Data Strategy | Refresh Rate | Pre-Computed? | Key Feature |
+|---|---|---|---|---|
+| **Sell The Trend** | Batch scrape + scored DB | Daily–Weekly | Yes (Nexus engine) | Nexus product scoring |
+| **AutoDS** | 500M+ product catalog | 1–24 hours | Yes (monitoring engine) | Price/stock monitoring |
+| **Jungle Scout** | 500M+ Amazon products | Daily BSR | Yes (Opportunity Finder) | BSR + demand estimation |
+| **Helium 10** | 2B+ Amazon data points | Daily–real-time | Yes (Black Box) | Keyword + product research |
+| **FastMoss** | TikTok focus | Daily | Yes (Hot Products) | 180M+ creator database |
+| **Kalodata** | TikTok focus | 15-minute cycle | Yes (rankings) | Real-time TikTok sales data |
+
+**YOUSELL positioning:** Tier 1 nightly batch + Tier 2 periodic scrape delivers competitive refresh rates for our initial scale. Target sub-30-minute refresh for HOT products once Keepa and direct APIs are integrated.
+
 ### 16A.4 Dashboard Recommendation Widgets
 
 Pre-computed by Tier 1 nightly batch job:
@@ -1581,6 +1682,25 @@ return fetchFromApifyAndScrapeCreators() // always available fallback
 - **Key data:** Historical prices, BSR, Buy Box, offers, deals, review trends
 - **Best for:** Enriching Amazon products with historical signals
 
+### 18.5A API Availability & Pricing Matrix (NEW v8)
+
+Comprehensive view of all data source APIs evaluated for the platform:
+
+| Source | Public API? | Data Export? | Pricing | Best Data | YOUSELL Use |
+|---|---|---|---|---|---|
+| **Keepa** | Yes (token-based) | Yes (CSV) | $19–149/mo | Amazon price history, BSR, deals | Tier 2 enrichment |
+| **FastMoss** | No (Enterprise only) | Yes (CSV export) | $29–109/mo | TikTok product/creator analytics | CSV import fallback |
+| **Kalodata** | No (Enterprise only) | Yes (CSV export) | $45–110/mo | TikTok sales, 15-min refresh | CSV import fallback |
+| **Google Trends** | Unofficial (pytrends) | N/A | Free | Search trends, seasonal patterns | Tier 1 scoring input |
+| **Amazon SP-API** | Yes (official) | N/A | Free (approval needed) | Catalog, orders, fees | Direct integration |
+| **SerpAPI** | Yes | N/A | $50–250/mo | Google Shopping, SERP data | On-demand enrichment |
+| **Jungle Scout Cobalt** | Yes (enterprise) | N/A | $500+/mo | Amazon deep intelligence | Not viable at launch |
+| **TikTok Research API** | Yes (approval needed) | N/A | Free (rate-limited) | Trending content, hashtags | Pending approval |
+| **Pinterest Business API** | Yes | N/A | Free | Pin analytics, trends | Direct integration |
+| **Apify** | Yes (actor marketplace) | N/A | $5–49/mo | All platforms via scraping | Primary fallback |
+
+**Data Source Priority:** Use official APIs first (free/low cost), Keepa for Amazon enrichment, Apify as universal fallback, CSV import from FastMoss/Kalodata for TikTok intelligence when direct API unavailable.
+
 ### 18.6 Shop Platform API Research (NEW v8)
 
 | Platform API | Key Details | Status |
@@ -1588,6 +1708,8 @@ return fetchFromApifyAndScrapeCreators() // always available fallback
 | **Shopify GraphQL Admin API** | REST is LEGACY (Oct 2024). Must use GraphQL from April 2025. Key mutations: `productSet`, `productCreate`, `productCreateMedia`. Scopes: `write_products`, `read_products`, `write_inventory`. | Not built |
 | **TikTok Shop Partner API** | OAuth 2.0 + HMAC-SHA256 signing. Product save requires ALL fields. Rate: 50 req/sec per store. US Portal separate from Global. | Not built |
 | **Meta Commerce** | In-app checkout ended Sept 2025. Now drives traffic to merchant's external site. Batch API: `POST /{catalog_id}/items_batch`. Instagram Basic Display ended Dec 2024. | Not built |
+
+**Meta In-App Checkout Sunset Impact:** Instagram/Facebook in-app checkout is no longer available for new products (ended Sept 2025). All Meta commerce now redirects to the merchant's external site (Shopify/own store). This means the Digital Products channel cannot rely on Meta native checkout — all digital product sales must route through Gumroad, Shopify, or similar external platforms. Plan accordingly for the Pinterest Commerce module (also a traffic driver, not a direct seller).
 | **Amazon SP-API** | Replaces MWS. Feed-based product listing. Complex request signing. | Not built |
 
 ### 18.7 TikTok Content API — Critical Limitation (NEW v8)
@@ -3282,6 +3404,8 @@ Plus estimated **$124K/yr affiliate commission revenue** at 50 clients (scales l
 | Inappropriate auto-published content | Brand damage, platform ban | Content moderation check (Claude Haiku) before all auto-publishing |
 | OAuth token expiry undetected | Integration silently breaks | Daily health check job + immediate notification to client |
 | Content generation quality inconsistent | Client dissatisfaction | Brand voice calibration, quality scoring, human review option |
+| Meta in-app checkout sunset (Sept 2025) | No native Meta checkout for digital products | Route all sales through Shopify/Gumroad; Meta is traffic driver only |
+| Shopify REST API deprecation (April 2025) | REST endpoints will stop working | Must use GraphQL Admin API from day one; no REST fallback |
 
 ---
 
@@ -3782,6 +3906,24 @@ This appendix summarises the market research documented in full at `docs/MARKET_
 | Printful | 340+ products | $8–15 | $25–35 | 55–65% |
 | Printify | 900+ products | $5–12 | $22–30 | 55–70% |
 | Gelato | 100+ products | $7–14 | $24–32 | 50–60% |
+| Gooten | 150+ products | $6–13 | $23–30 | 55–65% |
+
+**POD Affiliate Programs:**
+
+| Partner | Commission | Duration | Type |
+|---|---|---|---|
+| Printful | 10% of order value | 12 months per referral | Recurring |
+| Printify | 5% of order value | 12 months per referral | Recurring |
+| Gelato | Varies by region (up to $500) | Per-order | One-time bounty |
+| Gooten | Custom partnership | Negotiable | Custom |
+
+**YOUSELL POD Strategy (6-Step Process):**
+1. **Discovery:** Use Etsy/Redbubble/Amazon trending to find winning design niches
+2. **Validation:** Cross-reference with TikTok/Pinterest trends for viral potential
+3. **Creation:** AI-generated design concepts + Printful Mockup Generator API
+4. **Distribution:** Push to client stores (Shopify/TikTok/Etsy) with POD fulfillment attached
+5. **Fulfillment:** Zero inventory — POD partner handles manufacturing + shipping
+6. **Margins:** 30–60% typical, higher than most dropship products
 
 ### POD Sub-Category Demand
 
@@ -3793,6 +3935,77 @@ This appendix summarises the market research documented in full at `docs/MARKET_
 | Tote Bags | High | Medium | Medium | 40–55% |
 | Posters & Wall Art | Very High | High | High | 50–70% |
 | Stickers | Very High | Low | Very High | 60–80% |
+| Notebooks/Planners | High | Medium | Medium | 40–65% |
+
+### Comprehensive Affiliate Program Database (60+ Programs)
+
+Full database of researched affiliate programs across all categories relevant to YOUSELL clients.
+
+**Tier 1 — High Commission (30%+):**
+
+| Program | Commission | Cookie | Recurring | Category |
+|---|---|---|---|---|
+| Copy.ai | 45% first year | 30 days | First year | AI Content |
+| Spocket | 20–30% LIFETIME | 30 days | **Lifetime** | Dropshipping |
+| ManyChat | 35% recurring | 90 days | Yes | Marketing Automation |
+| GetResponse | 33% recurring OR $100 bounty | 120 days | Yes | Email Marketing |
+| Canva | 36% per Pro signup | 30 days | No | Design |
+| Taskade | 30% recurring | 30 days | Yes | AI Productivity |
+| Writesonic | 30% lifetime | 90 days | Yes | AI Content |
+| HubSpot | 30% recurring (1 year) | 180 days | Yes (1yr) | CRM/Marketing |
+| ConvertKit | 30% recurring | 90 days | Yes | Email Marketing |
+| SpyFu | 40% recurring | — | Yes | SEO/Research |
+
+**Tier 2 — Mid Commission (20–29%):**
+
+| Program | Commission | Cookie | Recurring | Category |
+|---|---|---|---|---|
+| Jasper AI | 25–30% | 30 days | Yes | AI Content |
+| Pictory | 30% recurring | 90 days | Yes | AI Video |
+| Surfer SEO | 25% recurring | Cookieless | Yes | SEO |
+| Semrush | $200/sub + $10/trial | 120 days | No | SEO/Research |
+| ElevenLabs | 25% | 30 days | Yes | AI Voice |
+| Frase.io | 25% recurring | 30 days | Yes | AI SEO |
+| Zapier | 25% | 30 days | Yes | Automation |
+| Otter.ai | 25% | 30 days | Yes | AI Transcription |
+| InVideo AI | 25% | 30 days | Yes | AI Video |
+| Scalenut | 25% | 30 days | Yes | AI Content |
+| Anyword | 25% | 30 days | Yes | AI Copywriting |
+| Visme | 25% recurring | 60 days | Yes | Design |
+| Synthesia | 25% | 30 days | No | AI Video |
+| Creatify AI | 25% + bonus | 30 days | Yes | AI Creative |
+| Omnisend | 20% recurring (24 months) | 90 days | Yes (24mo) | Email Marketing |
+| Shopify Partner | 20% recurring | — | Yes | E-Commerce |
+| Zendrop | 20% recurring | 30 days | Yes | Dropshipping |
+| DSers | 20% recurring | 30 days | Yes | Dropshipping |
+| ActiveCampaign | 20–30% recurring | 90 days | Yes | Email Marketing |
+| BigCommerce | 200% first payment | 90 days | No | E-Commerce |
+| Ecwid | 20% lifetime recurring | 30 days | **Lifetime** | E-Commerce |
+
+**Tier 3 — Lower Commission / High-Value Bounties:**
+
+| Program | Commission | Cookie | Type | Category |
+|---|---|---|---|---|
+| Stripe | $2,500 per merchant | — | One-time bounty | Payments |
+| PayPal | $2,500 per merchant | — | One-time bounty | Payments |
+| Printful | 10% of sales (12 months) | 30 days | Recurring (12mo) | POD |
+| Printify | 5% of sales (12 months) | 30 days | Recurring (12mo) | POD |
+| Gelato | Up to $500 per referral | — | One-time bounty | POD |
+| Klaviyo | 10–20% recurring | 30 days | Recurring | Email Marketing |
+| ShipBob | 10% for 6 months + $200 bonus | — | Recurring (6mo) | Fulfillment |
+| Wix | $100 per sale | 30 days | One-time bounty | Website Builder |
+| Squarespace | Per referral | 45 days | One-time | Website Builder |
+| Mailchimp | Variable | 30 days | Variable | Email Marketing |
+| Square | Per referral | — | One-time | Payments |
+| CJ Dropshipping | 3% of order value | — | Per-order | Dropshipping |
+| Ahrefs | Per referral | 60 days | Variable | SEO |
+| Crello/VistaCreate | Varies | 30 days | Variable | Design |
+
+**Priority Rankings:**
+1. **Lifetime recurring programs** (Spocket, Ecwid, Writesonic) — compound forever
+2. **High-value bounties** (Stripe $2,500, PayPal $2,500, Wix $100) — immediate revenue
+3. **Long cookie windows** (HubSpot 180d, GetResponse 120d, Semrush 120d) — higher conversion probability
+4. **Note on Omnisend:** 24-month cookie window is a significant advantage over Klaviyo's 30-day window for the same use case (email marketing)
 
 ### Competitor Pricing Comparison
 

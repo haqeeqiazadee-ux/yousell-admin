@@ -2290,3 +2290,33 @@ Ran 6 parallel audit agents comparing v8 against all 10 source documents. Identi
 ### Files Modified
 - `docs/YouSell_Platform_Technical_Specification_v8.md` — Updated (3,202 → 3,841 lines, +639 lines)
 - `system/development_log.md` — This entry
+
+## Session: 2026-03-17 (Part 5) — v8 Deep Gap Fill from N8N & Market Research Audits
+
+### What Was Done
+Processed findings from 2 additional audit agents (N8N_WORKFLOW_ANALYSIS.md and MARKET_RESEARCH_LOG_SESSION3.md vs v8). Added 213 lines of high-value operational tables and strategy details.
+
+### Content Added to v8
+1. **Platform-specific fulfillment rules table** (Section 2.4) — TikTok 2-3 day shipping, Amazon seller-of-record, Etsy production partner rules
+2. **Economic comparison table** (Section 2.4) — Dropship vs Wholesale vs Private Label vs POD vs Affiliate vs Digital (upfront cost, margin, risk, time-to-market)
+3. **Digital product platform economics** (Section 8.5) — Gumroad 90%, Etsy 87%, Whop 97%, etc.
+4. **Affiliate commission by product type** (Section 8.5) — AI Tools, SaaS, Courses, eBooks, Templates with avg commissions
+5. **Content marketing strategy by channel** (Section 8.5) — TikTok/Pinterest/YouTube/Blog/Email with conversion rates
+6. **Shopify as affiliate hub strategy** (Section 8.5) — Curated marketplace model
+7. **Internal affiliate revenue projections** (Section 3.6) — Month 1-3 through Year 2+ revenue ramp
+8. **Competitive landscape for affiliate content** (Section 3.6) — Futurepedia, There's An AI For That, Matt Wolfe
+9. **Dual payment setup revenue multiplication** (Section 3.6) — Stripe + PayPal = $5,000 per client
+10. **Competitor data architecture comparison** (Section 16A.3A) — Sell The Trend, AutoDS, Jungle Scout, Helium 10, FastMoss, Kalodata refresh rates
+11. **Comprehensive affiliate program database** (Appendix K) — 60+ programs across 3 tiers with commission, cookie, recurring details
+12. **API availability & pricing matrix** (Section 18.5A) — 10 data sources with API status, pricing, YOUSELL use case
+13. **BullMQ vs n8n detailed performance rationale** (Section 15.3) — Network hops, batch processing, cost at scale
+14. **n8n as future premium feature** (Section 15.3) — Post-100 client milestone for client-facing automation
+15. **Meta in-app checkout sunset impact** (Section 18.6) — Route all digital product sales through external platforms
+16. **Shopify REST API deprecation risk** (Section 53) — Must use GraphQL from day one
+17. **Gooten POD platform** added to economics table + POD affiliate programs table
+18. **POD 6-step strategy** — Discovery → Validation → Creation → Distribution → Fulfillment → Margins
+19. **Notebooks/Planners** added to POD sub-category demand table
+
+### Files Modified
+- `docs/YouSell_Platform_Technical_Specification_v8.md` — Updated (3,902 → 4,115 lines, +213 lines)
+- `system/development_log.md` — This entry
