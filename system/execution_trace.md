@@ -77,4 +77,16 @@ Key Observations:
 - **Files touched:** `src/lib/engines/types.ts`
 - **Result:** SUCCESS — clean tsc compile
 - **Next step:** Batch 0.3 — Build the Event Bus
+- **Commit:** e321a39
+
+------------------------------------------------------------
+
+### [2026-03-17 01:15] DONE — Batch 0.3: Build the Event Bus
+
+- **Task:** Create central pub/sub for inter-engine communication
+- **Batch:** 0.3
+- **Action:** Created `src/lib/engines/event-bus.ts` — singleton EventBus with typed emit/subscribe, wildcard patterns, 100-event history buffer, error isolation
+- **Files touched:** `src/lib/engines/event-bus.ts`
+- **Result:** SUCCESS — clean compile with project tsconfig
+- **Next step:** Batch 0.4 — Build the Engine Registry
 - **Commit:** pending
