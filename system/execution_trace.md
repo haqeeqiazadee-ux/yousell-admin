@@ -113,4 +113,23 @@ Key Observations:
 - **Files touched:** `src/lib/engines/index.ts`
 - **Result:** SUCCESS — clean compile
 - **Next step:** Batch 0.6 — Audit TikTok Discovery Engine for refactor
+- **Commit:** 8484050
+
+------------------------------------------------------------
+
+### [2026-03-17 01:30] DONE — Batch 0.6: Audit TikTok Discovery for refactor
+
+- **Task:** Map existing TikTok Discovery code to new Engine interface
+- **Batch:** 0.6
+- **Action:** Read src/lib/engines/tiktok-discovery.ts (355 lines). Two exports: discoverTikTokVideos() and analyzeHashtagSignals(). Internal: mapApifyItem(), TikTokVideo/ApifyItem interfaces. Uses createAdminClient(), Apify API. No circular deps.
+- **Files touched:** system/execution_trace.md (audit log only)
+- **Result:** SUCCESS
+- **Next step:** Batch 0.7 — Refactor TikTok Discovery Engine to engine pattern
 - **Commit:** pending
+
+Refactor plan:
+1. Wrap existing logic in TikTokDiscoveryEngine class implementing Engine
+2. Config: name='tiktok-discovery', publishes TIKTOK_VIDEOS_FOUND + TIKTOK_HASHTAGS_ANALYZED
+3. handleEvent: listen for discovery.scan_complete to auto-discover
+4. Keep backward-compatible function exports that delegate to the class
+5. Preserve ALL existing functionality — zero behavior change
