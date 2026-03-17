@@ -1,9 +1,18 @@
 /**
  * TikTok Discovery Engine — Discovers TikTok videos, stores them,
- * and generates hashtag signal analysis. Runs directly in Next.js.
+ * and generates hashtag signal analysis.
+ *
+ * Implements the Engine interface for the YOUSELL engine system.
+ * Backward-compatible: discoverTikTokVideos and analyzeHashtagSignals
+ * are still exported as standalone functions.
  */
 
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getEventBus } from './event-bus';
+import type { Engine, EngineConfig, EngineEvent, EngineStatus } from './types';
+import { ENGINE_EVENTS } from './types';
+
+// ─── Internal Types ─────────────────────────────────────────
 
 interface TikTokVideo {
   video_id: string;
@@ -55,6 +64,8 @@ interface ApifyItem {
   createTime?: number | string;
   [key: string]: unknown;
 }
+
+// ─── Internal Helpers ───────────────────────────────────────
 
 /**
  * Map an Apify TikTok scraper item to our internal video schema
@@ -137,6 +148,8 @@ function mapApifyItem(item: ApifyItem, query: string): TikTokVideo {
     create_time: createTime,
   };
 }
+
+// ─── Core Logic (unchanged from original) ───────────────────
 
 /**
  * Discover TikTok videos via Apify and store in tiktok_videos table
@@ -224,6 +237,14 @@ export async function discoverTikTokVideos(
   } catch (err) {
     errors.push(`Hashtag analysis error: ${err instanceof Error ? err.message : String(err)}`);
   }
+
+  // Step 5: Emit event via EventBus
+  const bus = getEventBus();
+  await bus.emit(
+    ENGINE_EVENTS.TIKTOK_VIDEOS_FOUND,
+    { query, videosFound: videos.length, videosStored: storedCount, hashtagsAnalyzed },
+    'tiktok-discovery',
+  );
 
   return {
     videosFound: videos.length,
@@ -350,5 +371,74 @@ export async function analyzeHashtagSignals(discoveryQuery?: string): Promise<nu
     console.error('Hashtag signals insert error:', insertErr.message);
   }
 
+  // Emit hashtag analysis event
+  const bus = getEventBus();
+  await bus.emit(
+    ENGINE_EVENTS.TIKTOK_HASHTAGS_ANALYZED,
+    { hashtagsAnalyzed: signals.length, query: discoveryQuery },
+    'tiktok-discovery',
+  );
+
   return signals.length;
+}
+
+// ─── Engine Class Implementation ────────────────────────────
+
+export class TikTokDiscoveryEngine implements Engine {
+  private _status: EngineStatus = 'idle';
+
+  readonly config: EngineConfig = {
+    name: 'tiktok-discovery',
+    version: '1.0.0',
+    dependencies: [],
+    queues: ['tiktok-discovery'],
+    publishes: [
+      ENGINE_EVENTS.TIKTOK_VIDEOS_FOUND,
+      ENGINE_EVENTS.TIKTOK_HASHTAGS_ANALYZED,
+    ],
+    subscribes: [
+      ENGINE_EVENTS.SCAN_COMPLETE,
+    ],
+  };
+
+  status(): EngineStatus {
+    return this._status;
+  }
+
+  async init(): Promise<void> {
+    this._status = 'idle';
+  }
+
+  async start(): Promise<void> {
+    this._status = 'running';
+  }
+
+  async stop(): Promise<void> {
+    this._status = 'stopped';
+  }
+
+  async handleEvent(event: EngineEvent): Promise<void> {
+    if (event.type === ENGINE_EVENTS.SCAN_COMPLETE) {
+      // Could auto-trigger TikTok discovery on scan complete
+      // For now, log and skip — manual-first per G10
+      console.log(`[TikTokDiscovery] Received scan_complete from ${event.source}`);
+    }
+  }
+
+  async healthCheck(): Promise<boolean> {
+    return !!process.env.APIFY_API_TOKEN;
+  }
+
+  /**
+   * Run discovery via the engine interface.
+   * Delegates to the standalone function for backward compatibility.
+   */
+  async discover(query: string, limit?: number) {
+    this._status = 'running';
+    try {
+      return await discoverTikTokVideos(query, limit);
+    } finally {
+      this._status = 'idle';
+    }
+  }
 }

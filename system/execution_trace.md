@@ -133,3 +133,15 @@ Refactor plan:
 3. handleEvent: listen for discovery.scan_complete to auto-discover
 4. Keep backward-compatible function exports that delegate to the class
 5. Preserve ALL existing functionality — zero behavior change
+
+------------------------------------------------------------
+
+### [2026-03-17 01:35] DONE — Batch 0.7: Refactor TikTok Discovery Engine
+
+- **Task:** Wrap TikTok Discovery in Engine interface
+- **Batch:** 0.7
+- **Action:** Added TikTokDiscoveryEngine class implementing Engine, added EventBus emit calls to discoverTikTokVideos() and analyzeHashtagSignals(), preserved all backward-compatible exports
+- **Files touched:** `src/lib/engines/tiktok-discovery.ts`
+- **Result:** SUCCESS — no new tsc errors (process.env errors are pre-existing project-wide: 149 total)
+- **Next step:** Batch 0.8 — Audit Product Extraction Engine for refactor
+- **Commit:** pending
