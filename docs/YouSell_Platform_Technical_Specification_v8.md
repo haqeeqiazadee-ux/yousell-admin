@@ -203,6 +203,61 @@ Pricing is structured as **per-platform subscriptions** with **modular engine to
   7. AI Affiliate Revenue Engine
   8. Analytics & Profit Tracking Engine
 
+**Approved Pricing Tiers (Option C):**
+
+| Tier | Monthly | Annual | Channels | Key Features | Content Credits |
+|---|---|---|---|---|---|
+| **Starter** | $29 | $19/mo | 1 channel | Product Finder, basic scores | 50 credits |
+| **Growth** | $59 | $39/mo | 2 channels | + Shop Connect, Creative Studio | 200 credits |
+| **Professional** | $99 | $69/mo | 3 channels | + Creator Connect, Supplier Finder, Smart Publisher | 500 credits |
+| **Enterprise** | $149 | $99/mo | All channels | All engines, API access, team seats | Unlimited credits |
+
+Multi-channel discount: 20% off second channel, 30% off third+.
+
+**Free Tier:**
+- See all products + scores (read-only)
+- 1 platform
+- No automation, no store integration
+- Limited to 5 products/week
+- Email digest of HOT products
+
+**Add-On Revenue Streams:**
+- Extra Sonnet insights ($2/each)
+- Additional scan credits
+- Content generation credits above monthly limit
+- Priority support
+- White-label reports
+
+**Content Credits Allocation:**
+
+| Plan Tier | Monthly Credits | Equivalent To |
+|---|---|---|
+| Starter | 50 credits | ~25 text posts + 5 videos + 10 images |
+| Growth | 200 credits | ~80 text posts + 20 videos + 40 images |
+| Professional | 500 credits | ~200 text posts + 50 videos + 100 images |
+| Enterprise | Unlimited | Fair-use policy applies |
+
+**Credit Costs per Content Type:**
+
+| Content Type | Credits |
+|---|---|
+| Social caption (text only) | 1 |
+| Ad copy | 1 |
+| Blog article | 3 |
+| Product image (Bannerbear) | 2 |
+| Carousel (5 slides) | 5 |
+| Short video (15-30s) | 5 |
+| Long video (30-60s) | 8 |
+| Email sequence (5 emails) | 3 |
+
+**Competitor Pricing Reference:**
+- Sell The Trend: $39.97–$99.97
+- AutoDS: $26.90–$66.90
+- Jungle Scout: $29–$199
+- Helium 10: $29–$229
+- Minea: $49–$399
+- Kalodata: $16–$99
+
 ### 3.3 AI Affiliate Engine — Correct Business Model
 
 **CRITICAL CLARIFICATION:** AI affiliate programs pay commissions on conversions (signups), NOT on marketing activity. Three monetization models were evaluated:
@@ -291,6 +346,69 @@ When YOUSELL provisions tools for clients (Shopify stores, Klaviyo accounts, Pri
 5. **Printful** — 10% of sales for 12 months per referral. Natural POD integration.
 6. **Klaviyo** — 10–20% recurring. Recommend to every client for email marketing.
 7. **Canva** — $36 per Pro signup. Every client needs design tools.
+
+---
+
+## Section 3A — Terminology Standards & Client-Facing Language (NEW v8)
+
+All client-facing UIs, documentation, and communications MUST use the client-facing terms. Internal/technical terms are for admin interfaces, logs, and developer documentation only.
+
+### 3A.1 Client-Facing Language Rules
+
+| NEVER Use (Internal Only) | ALWAYS Use (Client-Facing) |
+|---|---|
+| Scrape / Scraper | Discover / Market Intelligence |
+| Scan / Scanner | Product Finder / Trend Analysis |
+| Crawl / Crawler | Research / Market Research |
+| Scrap data | Market data / Intelligence data |
+| Run a scan | Run product discovery / Analyse market |
+| Scan results | Discovery results / Market insights |
+| Scraping job | Research task / Intelligence task |
+| Raw listings | Source data |
+| Data collection | Market intelligence gathering |
+| Spider | Research engine |
+
+### 3A.2 Engine Naming (Internal → Client-Facing)
+
+| Internal Name | Client-Facing Name | Description |
+|---|---|---|
+| Content Creation Engine | **Creative Studio** | AI-powered marketing content generator |
+| Content Publishing Engine | **Smart Publisher** | Automated multi-channel content distribution |
+| Store Integration Engine | **Shop Connect** | One-click store setup and product sync |
+| Product Discovery Engine | **Product Finder** | AI-powered trending product intelligence |
+| Influencer Outreach Engine | **Creator Connect** | Influencer matching and outreach automation |
+| Supplier Discovery Engine | **Supplier Finder** | Verified supplier matching |
+| Analytics Engine | **Performance Hub** | Real-time analytics and profit tracking |
+| Marketing Engine | **Ad Studio** | Ad creative and campaign automation |
+
+### 3A.3 Implementation
+
+Create `src/lib/terminology.ts` as a shared mapping file. All client-facing pages must import and use this mapping. Feature #52 (P0, Immediate).
+
+---
+
+## Section 3B — Features 37-52 Registry (NEW v8)
+
+These features were identified in Session 2 improvement planning and are required for full platform completion.
+
+| # | Feature | Category | Priority | Phase |
+|---|---|---|---|---|
+| 37 | Shotstack video generation integration | Content Engine | P1 | 3B |
+| 38 | Bannerbear image generation integration | Content Engine | P1 | 3B |
+| 39 | Ayrshare multi-platform publishing | Publishing Engine | P1 | 3C |
+| 40 | Shopify GraphQL product push (Shop Connect) | Shop Integration | P0 | 2A |
+| 41 | TikTok Shop Partner API integration | Shop Integration | P0 | 2B |
+| 42 | Amazon SP-API product feed upload | Shop Integration | P1 | 4 |
+| 43 | Meta Business Extension commerce integration | Shop Integration | P1 | 4 |
+| 44 | 3-level automation control system | Automation | P1 | 3D |
+| 45 | Auto-pilot guardrails (hard + soft limits) | Automation | P1 | 3D |
+| 46 | Content credits system | Billing | P1 | 3A |
+| 47 | Brand voice configuration per client | Content Engine | P2 | 3A |
+| 48 | Content calendar UI | Dashboard | P2 | 3C |
+| 49 | "Download for TikTok" fallback (pre-audit) | Content Engine | P1 | 3C |
+| 50 | Social account connection hub | Dashboard | P1 | 3C |
+| 51 | Shop product sync tracking (shop_products table) | Shop Integration | P0 | 2A |
+| 52 | Client-facing terminology mapping (terminology.ts) | UX | P0 | Immediate |
 
 ---
 
@@ -387,6 +505,57 @@ These MUST be fixed before production:
 | Affiliate Commission Engine (dual revenue tracking) | ❌ Not built | Phase L |
 | Mobile app (React Native + Expo) | ❌ Not built | Phase H |
 | One-click influencer invite buttons | ❌ Not built | Phase G |
+| 3-level automation control system | ❌ Not built | Phase 3D |
+| Content credits billing system | ❌ Not built | Phase 3A |
+| Brand voice configuration | ❌ Not built | Phase 3A |
+| Terminology mapping (terminology.ts) | ❌ Not built | Immediate |
+
+---
+
+## Section 6A — Automation Levels & Guardrails (NEW v8)
+
+### 6A.1 Three Automation Levels
+
+Every automatable feature supports three levels. Default is Level 1 (Manual) for all clients.
+
+| Level | Name | What It Does | Client Action | Risk |
+|---|---|---|---|---|
+| **Level 1** | Manual | System generates recommendations. Client initiates every action. | Client clicks each button | Zero risk — full control |
+| **Level 2** | Assisted | System prepares content/products, presents for approval. Client reviews and clicks "Approve" or "Edit". | Review + one-click approve | Low risk — client sees everything before it goes live |
+| **Level 3** | Auto-Pilot | System acts autonomously within client-defined rules. Client receives a digest of actions taken. Can pause/override anytime. | Set rules once, review digest | Medium risk — requires trust + guardrails |
+
+### 6A.2 Per-Feature Automation Settings
+
+| Feature | Level 1 (Manual) | Level 2 (Assisted) | Level 3 (Auto-Pilot) |
+|---|---|---|---|
+| **Product Upload to Shop** | Client selects product → clicks "Push to Store" | System suggests products → client approves batch | System auto-pushes HOT products matching client criteria |
+| **Content Creation** | Client clicks "Create Content" per product | System generates content brief weekly → client approves | System creates content for all new allocated products |
+| **Content Publishing** | Client downloads or clicks "Publish" per post | System schedules posts → client approves calendar | System publishes on optimised schedule automatically |
+| **Influencer Outreach** | Client clicks "Send Invite" per influencer | System drafts outreach batch → client approves | System sends outreach to matching creators automatically |
+| **Product Discovery** | Admin allocates manually | System suggests allocations → client accepts/rejects | System auto-allocates based on client preferences |
+
+### 6A.3 Auto-Pilot Guardrails (Feature #45)
+
+**Hard Limits (Cannot Be Overridden):**
+1. Daily spend cap — Maximum API/credit spend per day (set by client, enforced by system)
+2. Content volume cap — Maximum posts published per day per platform (prevents spam)
+3. Product upload cap — Maximum products pushed to store per day
+4. Outreach cap — Maximum influencer emails per day (reputation protection)
+5. Pause on error — If any action fails 3x consecutively, auto-pilot pauses and alerts client
+
+**Soft Limits (Client-Configurable):**
+1. Content approval window — Content sits in queue for N hours before auto-publishing (default: 4 hours)
+2. Product categories — Only auto-push products in pre-approved categories
+3. Price range — Only auto-push products within price range
+4. Minimum score — Only act on products above a score threshold
+5. Quiet hours — No publishing during specified hours
+6. Weekly digest — Summary of all auto-pilot actions sent every Monday
+
+**Emergency Controls:**
+- **Big Red Button** — "Pause All Automation" button always visible in dashboard header
+- **Per-feature pause** — Can pause any individual feature's automation
+- **Undo window** — Scheduled posts can be cancelled until 5 minutes before publish time
+- **Activity log** — Complete audit trail of every automated action
 
 ---
 
@@ -1163,6 +1332,110 @@ All jobs are manual until the admin enables automation. In early stage with 1–
 | Growth (5–20 clients) | $35–80 | Daily auto scans, 2–3 channels |
 | Scale (20+ clients) | $80–200 | All channels automated daily |
 
+### 16.6 Per-Client Content Cost Projections (Growth Plan)
+
+| Activity | Monthly Volume | Cost Per Unit | Monthly Cost |
+|---|---|---|---|
+| Text content (Claude Haiku) | 80 posts | $0.001 | $0.08 |
+| Ad copy (Claude Sonnet) | 10 pieces | $0.01 | $0.10 |
+| Video generation (Shotstack) | 20 videos | $0.40 | $8.00 |
+| Image generation (Bannerbear) | 40 images | $0.10 | $4.00 |
+| Social publishing (Ayrshare) | 100 posts | ~$0.05 | $5.00 |
+| **Total per client** | | | **~$17.18/mo** |
+
+**Platform Costs at Scale:**
+
+| Clients | Content Cost | Publishing Cost | Shop API Cost | Total Variable |
+|---|---|---|---|---|
+| 10 | $172/mo | $50/mo | ~$0 | ~$222/mo |
+| 50 | $859/mo | $250/mo | ~$0 | ~$1,109/mo |
+| 100 | $1,718/mo | $500/mo | ~$0 | ~$2,218/mo |
+| 500 | $8,590/mo | $2,500/mo | ~$0 | ~$11,090/mo |
+
+**Fixed Content Infrastructure Costs:**
+
+| Service | Monthly Cost | Notes |
+|---|---|---|
+| Ayrshare Business Plan | $99–$499/mo | Scales with profiles/posts |
+| Shotstack | $49–$199/mo | Base plan + per-render credits |
+| Bannerbear | $49–$149/mo | Base plan + per-render credits |
+| Railway (additional worker) | ~$10/mo | Content + publishing workers |
+| **Total fixed** | **~$207–857/mo** | Scales with tier |
+
+---
+
+## Section 16A — Multi-Source Data Fusion Engine (NEW v8)
+
+### 16A.1 Source Reliability Weights
+
+Data from multiple sources is fused using reliability weights. Higher-reliability sources take precedence in conflict resolution.
+
+| Source | Reliability Weight |
+|---|---|
+| Keepa API | 0.95 |
+| Admin import (CSV/manual) | 0.85 |
+| Apify scraping | 0.70–0.75 |
+| Google Trends (pytrends) | 0.60 |
+| Estimates / Projections | 0.50 |
+
+### 16A.2 Freshness Decay
+
+Data freshness affects its scoring weight:
+
+| Age | Freshness Multiplier |
+|---|---|
+| < 1 hour | 1.00 |
+| < 6 hours | 0.95 |
+| < 24 hours | 0.85 |
+| < 72 hours | 0.70 |
+| < 7 days | 0.50 |
+| < 30 days | 0.30 |
+
+### 16A.3 Data Refresh Tiers
+
+**Tier 1: Nightly Batch (Core Intelligence)** — 2 AM UTC daily
+- Rescore all active products (free, compute only)
+- Update trend stages and lifecycle
+- Generate recommendation caches per client
+- Compute dashboard widgets ("Today's Hot", "Rising Stars")
+- Cost: $5–20/run
+
+**Tier 2: Periodic Scrape (Fresh Data)** — Every 6–48 hours
+- HOT products: Refresh every 6 hours
+- WARM products: Refresh every 24 hours
+- WATCH products: Refresh every 48 hours
+- COLD products: Refresh weekly
+- Cost: $10–50/run
+
+**Tier 3: Weekly Deep Scan (Discovery)** — Sunday 3 AM
+- Full product discovery across all 8 platforms
+- New influencer/supplier discovery
+- Cross-platform validation
+- Cost: $30–100/run
+
+**Tier 4: On-Demand (User-Triggered)** — Button click
+- Live scrape for specific query
+- Shows "Updating..." with progress
+- Serves stale data immediately, refreshes in background
+- Cost: $0.50–5/request
+
+**Tier 5: Admin Manual Import** — CSV upload
+- Parse + map + merge + score
+- Free (data already purchased externally)
+
+### 16A.4 Dashboard Recommendation Widgets
+
+Pre-computed by Tier 1 nightly batch job:
+
+| Widget | Description | Refresh |
+|---|---|---|
+| **"Today's Hot Products"** | Top 10 by final_score | Daily |
+| **"Rising Stars"** | Score increase >10% in 7 days | Daily |
+| **"Best for You"** | Personalized by client's platforms + niche | Daily |
+| **"New Opportunities"** | Discovered in last 48h, score >60 | Daily |
+| **"Seasonal Picks"** | Pre-computed seasonal trends | Weekly |
+| **"Category Leaders"** | Top product per category | Daily |
+
 ---
 
 ## Section 17 — Data Ingestion Strategy
@@ -1224,6 +1497,10 @@ return fetchFromApifyAndScrapeCreators() // always available fallback
 | Supabase | Existing | DB, auth, realtime |
 | Resend | Existing | Email |
 | Expo Push | Free | Mobile notifications |
+| Keepa API | $19–149/mo (token-based) | Amazon price history, BSR trends, deals |
+| Shotstack API | $49–199/mo | Video generation (15-60s MP4) |
+| Bannerbear API | $49–149/mo | Image generation (branded lifestyle) |
+| Ayrshare Business | $99–499/mo | Multi-platform social publishing (13+ platforms) |
 | Printful API | Free (per-order cost) | POD product creation, mockups, orders |
 | Printify API | Free (per-order cost) | POD catalog, multi-provider comparison |
 | Gelato API | Free (per-order cost) | Global POD fulfillment |
@@ -1252,6 +1529,36 @@ return fetchFromApifyAndScrapeCreators() // always available fallback
 | Kalodata CSV | $49/mo | Alternative for TikTok creator earnings |
 | Helium 10 API | $39/mo | When Amazon fallback insufficient |
 | Keepa API | $19/mo | For 90+ day BSR history |
+
+### 18.5 Keepa API Integration Details (NEW v8)
+
+- **Endpoints:** `/product`, `/search`, `/bestsellers`, `/deals`, `/category`
+- **Token system:** 50 tokens/min regeneration
+- **Key data:** Historical prices, BSR, Buy Box, offers, deals, review trends
+- **Best for:** Enriching Amazon products with historical signals
+
+### 18.6 Shop Platform API Research (NEW v8)
+
+| Platform API | Key Details | Status |
+|---|---|---|
+| **Shopify GraphQL Admin API** | REST is LEGACY (Oct 2024). Must use GraphQL from April 2025. Key mutations: `productSet`, `productCreate`, `productCreateMedia`. Scopes: `write_products`, `read_products`, `write_inventory`. | Not built |
+| **TikTok Shop Partner API** | OAuth 2.0 + HMAC-SHA256 signing. Product save requires ALL fields. Rate: 50 req/sec per store. US Portal separate from Global. | Not built |
+| **Meta Commerce** | In-app checkout ended Sept 2025. Now drives traffic to merchant's external site. Batch API: `POST /{catalog_id}/items_batch`. Instagram Basic Display ended Dec 2024. | Not built |
+| **Amazon SP-API** | Replaces MWS. Feed-based product listing. Complex request signing. | Not built |
+
+### 18.7 TikTok Content API — Critical Limitation (NEW v8)
+
+**Unaudited third-party apps can only post to TikTok in PRIVATE mode.** Manual audit required for public posting (no guaranteed timeline).
+
+**Phase 1 (Pre-audit):** Content generated → saved to Content Library → client downloads and uploads manually. "Download for TikTok" button with optimised format.
+
+**Phase 2 (Post-audit):** Once TikTok Developer App passes audit, enable direct publishing through Ayrshare.
+
+**Mandatory disclosure:** All TikTok content posted via API automatically labelled "Branded Organic Content / Promotional content" (TikTok policy effective September 2025). Inform clients during onboarding.
+
+| Risk | Impact | Mitigation |
+|---|---|---|
+| TikTok Content API audit rejected/delayed | Cannot auto-publish to TikTok | "Download for TikTok" manual fallback; apply for audit early |
 
 ---
 
@@ -1585,6 +1892,108 @@ CREATE TABLE pod_designs (
     estimated_margin DECIMAL(5,2),
     created_at TIMESTAMPTZ DEFAULT now()
 );
+```
+
+### 21.4 Content & Publishing Tables (NEW v8)
+
+```sql
+CREATE TABLE content_items (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+    product_id UUID REFERENCES products(id),
+    channel_type TEXT NOT NULL, -- tiktok, instagram, facebook, pinterest, youtube, linkedin, twitter
+    content_type TEXT NOT NULL, -- social_post, ad_copy, video, image, carousel, email, blog
+    template_used TEXT,
+    status TEXT DEFAULT 'draft', -- draft, pending_review, approved, generating, ready, scheduled, published, archived, rejected, failed
+    title TEXT,
+    body TEXT,
+    media_urls TEXT[],
+    media_metadata JSONB DEFAULT '{}',
+    hashtags TEXT[],
+    platform_metadata JSONB DEFAULT '{}', -- platform-specific fields (sound_id for TikTok, etc.)
+    scheduled_for TIMESTAMPTZ,
+    published_at TIMESTAMPTZ,
+    external_post_id TEXT,
+    engagement_data JSONB DEFAULT '{}', -- views, likes, comments, shares
+    credits_used INTEGER DEFAULT 0,
+    generation_cost DECIMAL(10,4) DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE shop_products (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+    product_id UUID REFERENCES products(id),
+    channel_id UUID REFERENCES client_channels(id),
+    platform TEXT NOT NULL, -- shopify, tiktok_shop, amazon, meta
+    external_product_id TEXT NOT NULL,
+    external_product_url TEXT,
+    sync_status TEXT DEFAULT 'synced', -- synced, pending, error, delisted
+    last_synced_at TIMESTAMPTZ DEFAULT now(),
+    price_on_platform DECIMAL(10,2),
+    inventory_count INTEGER,
+    listing_status TEXT DEFAULT 'active', -- active, inactive, under_review, rejected
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(client_id, product_id, platform)
+);
+
+CREATE TABLE content_credits (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+    period_start TIMESTAMPTZ NOT NULL,
+    period_end TIMESTAMPTZ NOT NULL,
+    total_credits INTEGER NOT NULL,
+    used_credits INTEGER DEFAULT 0,
+    bonus_credits INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(client_id, period_start)
+);
+
+CREATE TABLE client_social_profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+    ayrshare_profile_key TEXT NOT NULL UNIQUE,
+    connected_platforms TEXT[] DEFAULT '{}', -- ['tiktok', 'instagram', 'facebook']
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE publish_log (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    content_item_id UUID REFERENCES content_items(id) ON DELETE CASCADE,
+    client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+    channel_type TEXT NOT NULL,
+    ayrshare_post_id TEXT,
+    platform_post_id TEXT,
+    platform_post_url TEXT,
+    status TEXT DEFAULT 'pending', -- pending, published, failed, deleted
+    error_message TEXT,
+    published_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE client_automation_config (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+    feature TEXT NOT NULL, -- product_upload, content_creation, content_publishing, influencer_outreach, product_discovery
+    automation_level INTEGER DEFAULT 1, -- 1=manual, 2=assisted, 3=autopilot
+    rules JSONB DEFAULT '{}', -- feature-specific rules (caps, categories, price range, etc.)
+    is_paused BOOLEAN DEFAULT false,
+    paused_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(client_id, feature)
+);
+```
+
+**Content States Workflow:**
+```
+draft → pending_review → approved → generating → ready → scheduled → published → archived
+                 │                      │
+                 └── rejected           └── failed (retry or discard)
 ```
 
 ---
@@ -3135,30 +3544,106 @@ Architect the codebase so these can be added without refactoring. Do NOT build n
 
 ---
 
-## Appendix J — Content Publishing Strategy Summary (NEW v8)
+## Appendix J — Content Publishing Strategy (NEW v8)
 
-This appendix summarises the content creation and publishing strategy documented in full at `docs/content_publishing_shop_integration_strategy.md`.
+Full strategy documented at `docs/content_publishing_shop_integration_strategy.md`.
 
-### Content Engine Architecture
+### J.1 Content Engine Architecture
 
 | Component | Purpose | Technology |
 |---|---|---|
 | Content Generator | AI-generated marketing content | Claude Haiku (bulk), Sonnet (premium) |
+| Video Generator | Short-form product videos | Shotstack API (~$0.40/video) |
+| Image Generator | Branded lifestyle images | Bannerbear API (~$0.10/image) |
 | Content Scheduler | Queue and schedule posts | BullMQ content-queue + distribution-queue |
-| Channel Connector | OAuth connections to social platforms | Direct OAuth or Ayrshare |
-| Performance Tracker | Track engagement, clicks, conversions | Supabase tables + analytics |
+| Channel Connector | Multi-platform social publishing | Ayrshare (13+ platforms, single API) |
+| Performance Tracker | Track engagement, clicks, conversions | Supabase tables + Ayrshare analytics |
 
-### POD Content Templates
+### J.2 Content Types & Tools Matrix
 
-| Template | Format | Platform |
+| Content Type | AI Tool | Input | Output | Est. Cost |
+|---|---|---|---|---|
+| Social captions | Claude Haiku | Product data + platform rules | Platform-optimised text | ~$0.001/post |
+| Ad copy | Claude Sonnet | Product data + audience targeting | Headlines, descriptions, CTAs | ~$0.01/post |
+| Video scripts | Claude Sonnet | Product data + hook structure | 15-60sec script with shot list | ~$0.01/script |
+| Short-form video | Shotstack API | Product images + script + music | 15-60sec MP4 | ~$0.40/video |
+| Product images | Bannerbear API | Product photo + template | Branded lifestyle images | ~$0.10/image |
+| Email sequences | Claude Haiku | Product data + sequence type | 3-5 email drip campaign | ~$0.005/sequence |
+| Blog/SEO content | Claude Sonnet | Product data + keywords | 500-1500 word article | ~$0.02/article |
+| Carousel posts | Bannerbear API | Product photos + copy | Multi-slide image set | ~$0.30/carousel |
+
+### J.3 Content Templates
+
+| Template | Platform | Structure | Best For |
+|---|---|---|---|
+| Problem → Solution | TikTok, Instagram Reels | Hook → Pain point → Product reveal → CTA | Impulse products |
+| Unboxing Reveal | TikTok, YouTube Shorts | Package arrival → Unboxing → First impression → Link | Physical products |
+| Before/After | Instagram, Pinterest | Side-by-side comparison → Transformation | Beauty, home, fitness |
+| Listicle | Pinterest, Blog | "5 reasons you need..." → Numbered points | SEO, evergreen |
+| Trend Hijack | TikTok | Current trend audio → Product tie-in | Viral moments |
+| Comparison | YouTube, Blog | "Product X vs Y" → Feature breakdown | High-consideration |
+| Testimonial Style | Facebook, Instagram | Customer quote → Product shot → CTA | Social proof |
+| Deal Alert | All platforms | Urgency → Discount → Countdown → Link | Promotions |
+
+### J.4 Platform-Specific Formatting Rules
+
+| Platform | Max Length | Hashtags | Media | Special Rules |
+|---|---|---|---|---|
+| TikTok | 2200 chars | 3-5 trending | Video required (9:16) | Sound/music selection, disclosure label |
+| Instagram Feed | 2200 chars | 20-30 | Image/carousel (1:1, 4:5) | First line is the hook |
+| Instagram Reels | 2200 chars | 3-5 | Video (9:16) | Similar to TikTok |
+| Facebook | 63,206 chars | 1-3 | Image/video/link | Longer form OK, link in post |
+| Pinterest | 500 chars (desc) | 2-5 keyword tags | Image (2:3) | SEO-heavy titles |
+| YouTube Shorts | 100 chars (title) | 3-5 | Video (9:16, <60s) | Strong title + first frame |
+| LinkedIn | 3000 chars | 3-5 | Image/video/document | Professional tone |
+| X/Twitter | 280 chars | 1-3 | Image/video | Concise, conversational |
+
+### J.5 Publishing Modes
+
+| Mode | Behaviour | Who Controls | Default |
+|---|---|---|---|
+| **Manual** | Content generated → sits in library → client clicks "Publish" per item | Client | YES (default) |
+| **Scheduled** | Content generated → client sets date/time per batch → auto-publishes | Client | Available |
+| **Smart Schedule** | System picks optimal posting times based on audience analytics → client approves | System suggests, client approves | Available |
+| **Auto-Pilot** | Content auto-generated weekly → auto-scheduled → auto-published. Client receives weekly digest. | System (client can pause/override) | OFF — requires explicit opt-in |
+
+### J.6 Ayrshare Integration Details
+
+- **Supported platforms (13+):** TikTok, Instagram, Facebook, YouTube, Pinterest, LinkedIn, X/Twitter, Reddit, Threads, Google Business Profile, Telegram, Snapchat, Bluesky
+- **Architecture:** Per-client Ayrshare profiles (multi-tenant SaaS plan)
+- **SDK:** Node.js SDK available
+- **Per-client setup:** YouSell creates an Ayrshare profile for each client
+- **Engagement tracking:** Daily engagement pull via Ayrshare analytics API
+- **Auto-formatting:** Platform-specific formatting applied automatically
+
+### J.7 Brand Voice Configuration (Feature #47)
+
+Stored in `clients.settings` JSONB column. Used as system prompt context for all Claude content generation calls.
+
+**Configuration fields:** Brand Name, Tone (Professional/Casual/Playful/Bold/Luxury/Educational), Target Audience, Emoji Style (None/Minimal/Moderate/Heavy), Key Phrases to Include, Phrases to Avoid, Sample Post.
+
+### J.8 POD Content Templates
+
+| Content Type | Template | AI Model | Output |
+|---|---|---|---|
+| Product Mockup Social Post | Lifestyle background + product overlay | Claude Haiku + Bannerbear | Instagram/Pinterest/TikTok ready images |
+| Design Trend Alert | "This design is trending: [trend]" | Claude Haiku | Social post + email |
+| POD Product Launch | Full product page copy + social announcement | Claude Sonnet | Multi-platform content package |
+| Custom Merch Creator Brief | Personalized pitch for influencer custom merch | Claude Sonnet | Email + social DM script |
+| Before/After Design | Design evolution showing customization options | Claude Haiku + Bannerbear | Carousel post |
+| Print Quality Showcase | Close-up product quality shots with lifestyle context | Bannerbear | Instagram/Pinterest |
+
+### J.9 POD Sub-Category Content Focus
+
+| Sub-Category | Primary Platforms | Content Focus |
 |---|---|---|
-| Product mockup on lifestyle background | Image + caption | All |
-| Niche trend roundup | Carousel/video | TikTok, Instagram |
-| Behind-the-design story | Video script | YouTube, TikTok |
-| Seasonal collection launch | Multi-image | All |
-| UGC-style review | Short video | TikTok, Instagram |
+| Apparel (T-shirts, hoodies) | TikTok, Instagram, Shopify | Try-on videos, streetwear styling, seasonal collections |
+| Home & Living (mugs, pillows) | Pinterest, Instagram, Shopify | Home decor inspiration, gift guides, seasonal themes |
+| Accessories (phone cases, bags) | TikTok, Instagram | Unboxing, daily carry, accessory matching |
+| Stationery (journals, stickers) | Pinterest, Etsy, Instagram | Journaling setup, planner spreads, sticker collections |
+| Wall Art & Posters | Pinterest, Etsy, Shopify | Room makeover, art collection curation, gallery wall guides |
 
-### Affiliate Content Factory
+### J.10 Affiliate Content Factory
 
 | Content Type | Frequency | AI Model |
 |---|---|---|
@@ -3167,6 +3652,20 @@ This appendix summarises the content creation and publishing strategy documented
 | Tutorial / walkthrough video script | 2x/week | Claude Haiku |
 | Seasonal promotion roundup | Monthly | Claude Haiku |
 | Case study / success story | Monthly | Claude Sonnet |
+
+### J.11 Affiliate Platform Content Queue
+
+| Platform | Priority | Content Focus | Commission Model |
+|---|---|---|---|
+| Shopify | P0 | Store setup guides, theme comparisons | 20% recurring lifetime |
+| Spocket | P0 | Dropshipping tutorials, US/EU supplier comparisons | 20-30% lifetime recurring |
+| Printful | P1 | POD startup guides, design tips | 10% for 12 months |
+| Klaviyo | P1 | Email marketing for e-commerce | 10-20% recurring |
+| Canva | P1 | Design tutorials, template showcases | 36% for 12 months |
+| Stripe | P1 | Payment integration guides (passive) | $2,500/merchant |
+| Omnisend | P2 | Email + SMS marketing comparisons | 20% for 24 months |
+| Gelato | P2 | Global POD guides, eco-friendly printing | Up to $500/referral |
+| ShipBob | P2 | 3PL transition guides for scaling sellers | 10% + $200 bonus |
 
 ---
 
@@ -3194,6 +3693,146 @@ This appendix summarises the market research documented in full at `docs/MARKET_
 3. **Stripe and PayPal offer $2,500 per merchant** — high-value one-time referrals
 4. **Content automation is the anti-churn hook** — data alone has no retention value
 5. **BullMQ is the right orchestration choice** — n8n adds cost without capability gain
+
+### Digital Products Platform Economics
+
+| Platform | Creator Gets | Best For |
+|---|---|---|
+| Gumroad | 90% | Everything digital |
+| Etsy | ~87% | Printables, templates, planners |
+| Amazon KDP | 35-70% | eBooks, guides |
+| Shopify | ~97% | Own brand, full control |
+| Whop | ~97% (0% platform fee) | Memberships, software, digital |
+| Creative Market | 40% | Design assets |
+
+### POD Market Data
+
+| Metric | Value |
+|---|---|
+| Global POD market (2025) | ~$7.5 billion |
+| Projected CAGR | 25%+ through 2030 |
+| Average margins | 30–60% depending on product type |
+| Startup cost | $0 (no inventory needed) |
+
+### POD Platform Economics
+
+| Platform | Product Range | Base Cost (T-shirt) | Selling Price | Margin |
+|---|---|---|---|---|
+| Printful | 340+ products | $8–15 | $25–35 | 55–65% |
+| Printify | 900+ products | $5–12 | $22–30 | 55–70% |
+| Gelato | 100+ products | $7–14 | $24–32 | 50–60% |
+
+### POD Sub-Category Demand
+
+| Sub-Category | Etsy Demand | Shopify Demand | TikTok Viral Potential | Best Margin |
+|---|---|---|---|---|
+| T-shirts & Hoodies | Very High | High | High | 40–60% |
+| Mugs | Very High | Medium | Medium | 45–65% |
+| Phone Cases | High | High | Very High | 35–55% |
+| Tote Bags | High | Medium | Medium | 40–55% |
+| Posters & Wall Art | Very High | High | High | 50–70% |
+| Stickers | Very High | Low | Very High | 60–80% |
+
+### Competitor Pricing Comparison
+
+| Platform | Tier 1 | Tier 2 | Tier 3 | Tier 4 |
+|---|---|---|---|---|
+| Sell The Trend | $19.97 | $32.97 | $66.64 | ~$199.98 |
+| AutoDS | $19.90-$49.90 | $29.90-$69.90 | $49.90-$119 | — |
+| Jungle Scout | $29 | $49 | $129 | Enterprise |
+| Helium 10 | Free | $99 | $279 | Enterprise |
+| Kalodata | Free | $38.30 | $83.20 | Enterprise |
+| Minea | $34 | $69 | $299 | — |
+
+---
+
+## Appendix L — Competitive Analysis Summary (NEW v8)
+
+Full analysis documented at `docs/competitive_analysis_tiers_7_8_niches.md`.
+
+### L.1 YOUSELL Competitive Advantages
+
+1. **Multi-platform intelligence** — No single tool covers TikTok + Amazon + Shopify + Pinterest + influencer matching
+2. **Three-pillar scoring** directly addresses "trending vs. profitable" gap
+3. **AI content generation bundled with intelligence** — Most tools are either discovery OR content
+4. **Supplier matching integrated with product discovery** — Currently separate workflows
+5. **POD as Channel #8** — Zero-inventory selling with 30-60% margins
+6. **Admin Command Center** — One-click product push to multiple platforms
+7. **Affiliate Commission Engine** — Multi-layer passive income from every client
+
+### L.2 Key Competitive Gaps to Address
+
+| Gap | Competitor Benchmark | YOUSELL Action |
+|---|---|---|
+| Real-time data refresh | Kalodata 15-minute | Target sub-30-minute |
+| Influencer ROI prediction | GRIN Predictive ROI | Add historical performance scoring |
+| Ad creative intelligence | BigSpy, Minea | Include ad creative analysis in scans |
+| Pinterest signals | Largely ignored | Add Pinterest trend/pin data to scoring |
+| Free tier | Most tools offer free | Launch meaningful free tier |
+| Own affiliate program | 30% recurring average | Launch 25-30% recurring program |
+
+### L.3 TikTok-Specific Competitors
+
+| Tool | Pricing | Data Refresh | Key Insight |
+|---|---|---|---|
+| **Kalodata** | $45.90-$109.99/mo | 15-minute cycle | Most widely used TikTok tool, gold standard for real-time |
+| **FastMoss** | ~$29-$109/mo | Daily | 3.2M+ users, 180M+ creator database, 6K influencer contacts/day export |
+
+### L.4 Influencer Marketing Landscape
+
+Market projected to reach **$24 billion in 2026**.
+
+| Platform | Focus | Key Differentiator |
+|---|---|---|
+| GRIN | DTC/Shopify | Predictive ROI Engine |
+| Aspire | Enterprise | 40% more efficient CPM |
+| Upfluence | E-commerce | Identify existing customers as influencers |
+| CreatorIQ | Enterprise global | 20M+ profiles, AI discovery |
+| Modash | Scale discovery | 400M+ profiles, AI fraud detection |
+
+### L.5 Pricing Positioning
+
+| Tier | Target | Price Range | Comparables |
+|---|---|---|---|
+| **Free** | Individual explorers | $0 | SellerCenter, Pinterest Trends |
+| **Starter** | Solo sellers | $29-$49/mo | SmartScout ($25), Helium 10 ($29) |
+| **Professional** | Growing businesses | $79-$129/mo | Kalodata Pro ($110), FastMoss Pro ($109) |
+| **Agency/Enterprise** | Agencies, multi-store | $249-$499/mo | CreatorIQ, GRIN |
+
+---
+
+## Appendix M — RTM Compliance Summary (NEW v8)
+
+Full traceability matrix documented at `docs/RTM_v7.md`.
+
+### M.1 Overall Compliance
+
+**v7 Compliance: 62% complete** (61 of 89 requirements fully done, 12 partial, 16 missing)
+
+### M.2 Top 10 Critical Gaps (Ordered by Severity)
+
+1. **CRITICAL:** Per-platform subscription enforcement + Stripe integration
+2. **CRITICAL:** Store integration OAuth (Shopify/TikTok/Amazon product push)
+3. **CRITICAL:** Client opportunity feed with locked platform teasers + upsell CTAs
+4. **HIGH:** Content creation + distribution worker pipeline
+5. **HIGH:** AI Affiliate dynamic discovery (currently 10 programs hardcoded)
+6. **HIGH:** Physical Affiliate live data sources (hardcoded 5 programs)
+7. **HIGH:** Pre-viral signals (only 2 of 6 functional)
+8. **HIGH:** Cross-platform intelligence automation
+9. **HIGH:** Marketing channel OAuth
+10. **HIGH:** Order tracking webhooks + email sequences
+
+### M.3 Data Source Module Status
+
+| Module | Status | Detail |
+|---|---|---|
+| TikTok | Partial | Apify ✅, ScrapeCreators ❌, Creative Center ⚠️, Research API ❌ |
+| Amazon | Partial | RapidAPI ✅, Apify BSR ✅, PA-API ❌ |
+| Shopify | Partial | Apify Scraper ✅ |
+| Pinterest | Partial | Apify ✅, Pinterest API ⚠️ (fallback only) |
+| Digital Products | 1 of 6 | Gumroad ✅; ClickBank, ShareASale, Udemy, AppSumo ❌ |
+| AI Affiliate | Seeded only | Hardcoded; no live discovery |
+| Physical Affiliate | Seeded only | Hardcoded; no live discovery |
 
 ---
 
