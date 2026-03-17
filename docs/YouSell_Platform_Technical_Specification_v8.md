@@ -3354,7 +3354,7 @@ Each client is a tenant. Isolation enforced at three levels:
 
 At 500 subscribers × average $49/mo = **$24,500 MRR** vs $200/mo operational cost = **99.2% gross margin**.
 
-Plus estimated **$124K/yr affiliate commission revenue** at 50 clients (scales linearly).
+Plus estimated **~$95K/yr affiliate commission revenue** at 50 clients (scales linearly). Additional internal content affiliate revenue of $36K–120K/yr at maturity (Year 2+).
 
 ### 51.3 One-Time Build Costs
 
