@@ -20,6 +20,11 @@
 10. [Database Schema Additions](#10-database-schema-additions)
 11. [Implementation Phases](#11-implementation-phases)
 12. [Cost Projections](#12-cost-projections)
+13. [POD (Print on Demand) Integration](#13-pod-print-on-demand-integration)
+14. [Affiliate Commission Engine Integration](#14-affiliate-commission-engine-integration)
+15. [Print-on-Demand (POD) Content Strategy](#15-print-on-demand-pod-content-strategy)
+16. [Affiliate Content Factory](#16-affiliate-content-factory)
+17. [Admin Command Center (Best-Selling Products Dashboard)](#17-admin-command-center-best-selling-products-dashboard)
 
 ---
 
@@ -104,7 +109,7 @@ Create a shared constants file at `src/lib/terminology.ts` that maps internal te
 
 ## 2.2 Design Principles
 
-1. **Shop integrations use native OAuth.** Shop APIs (Shopify, TikTok Shop, Amazon SP-API) require deep integration for product management, inventory sync, and order tracking. These cannot be abstracted through a third party.
+1. **Shop integrations use native OAuth.** Shop APIs (Shopify, TikTok Shop, Amazon SP-API) and POD fulfillment partners (Printful, Printify, Gelato) require deep integration for product management, inventory sync, order tracking, and fulfillment routing. These cannot be abstracted through a third party.
 
 2. **Content publishing uses Ayrshare.** Social media publishing across 13+ platforms through a single API eliminates the need to build and maintain separate OAuth flows, API contracts, rate limit handling, and platform approval processes for each social network. Massive engineering scope reduction.
 
@@ -124,6 +129,9 @@ Create a shared constants file at `src/lib/terminology.ts` that maps internal te
 | TikTok Shop | TikTok Shop Partner API v2 | OAuth 2.0 + Request Signing | Phase 2B |
 | Amazon | SP-API (Selling Partner API) | Login with Amazon (LWA) | Phase 3 |
 | Meta/Instagram | Graph API v25.0 + Product Catalog | Meta Business Extension (MBE) | Phase 3 |
+| Printful (POD) | REST API + Webhooks | OAuth 2.0 | Phase 3 |
+| Printify (POD) | REST API v1 | API Key | Phase 3 |
+| Gelato (POD) | REST API v3 | API Key | Phase 3 |
 
 ## 3.2 Shopify Integration (Phase 2A — First)
 
@@ -330,6 +338,7 @@ The content engine auto-formats output per platform requirements:
 
 **Rationale:**
 - Supports 13+ platforms through a single API (TikTok, Instagram, Facebook, YouTube, Pinterest, LinkedIn, X/Twitter, Reddit, Threads, Google Business Profile, Telegram, Snapchat, Bluesky)
+- Channel #8 — POD (Print on Demand): Printful, Printify, Gelato integrated as fulfillment channels for product creation, order routing, and mockup generation
 - Handles all platform-specific OAuth complexity — no per-platform developer app registration
 - SaaS/Business plan supports per-client profiles (perfect for multi-tenant)
 - Node.js SDK available
@@ -429,6 +438,7 @@ Clients connect platforms for two separate purposes. The UI must make this disti
 |---|---|---|---|
 | **Shop Connect** (sell products) | Upload products to storefront, sync inventory, track orders | Native OAuth (YouSell → Platform) | Shopify, TikTok Shop, Amazon, Meta Commerce |
 | **Social Connect** (publish content) | Post content, schedule, track engagement | Ayrshare (managed OAuth) | TikTok, Instagram, Facebook, YouTube, Pinterest, X, LinkedIn |
+| **POD Connect** (print on demand fulfillment) | Product creation, order routing, mockup generation, multi-provider fulfillment | Native API (YouSell → POD Partner) | Printful, Printify, Gelato |
 
 ## 6.2 Connection Hub UI
 
@@ -1057,6 +1067,46 @@ At $29-$149/client/month subscription pricing, this gives healthy margins even a
 
 ---
 
+# 13. POD (Print on Demand) Integration
+
+## 13.1 POD Fulfillment Partner Connections
+- Printful: REST API + Webhooks for product creation, order routing, mockup generation
+- Printify: REST API for multi-provider price comparison, catalog sync
+- Gelato: REST API for global fulfillment (32 countries)
+
+## 13.2 POD Product Lifecycle
+1. Trend discovery identifies hot design niches
+2. AI generates design concepts + mockups via Printful Mockup Generator API
+3. Product created in client's Shopify/TikTok store with POD fulfillment attached
+4. Customer orders → webhook → POD partner manufactures + ships direct
+5. Order tracking flows through existing order tracking engine
+
+## 13.3 POD Content Strategy
+- AI-generated lifestyle mockups using product images
+- Platform-specific content: TikTok (design process videos), Pinterest (aesthetic boards), Instagram (lifestyle shots)
+- Seasonal design trend content calendars
+
+---
+
+# 14. Affiliate Commission Engine Integration
+
+## 14.1 Internal Content Affiliate Revenue
+- Content engine produces promotional content for affiliate partner platforms
+- Admin dashboard tracks content performance → clicks → conversions → commissions
+- Non-stop content factory for all registered affiliate programs
+
+## 14.2 Client Service Affiliate Revenue
+- When clients adopt platforms provisioned through YOUSELL (Shopify, Klaviyo, Printful, Spocket, etc.), YOUSELL earns referral commissions
+- Tracked separately from internal content revenue
+- Admin dashboard shows per-client referral status and cumulative commission
+
+## 14.3 Affiliate Revenue Dashboard
+- Dual stats: Internal content revenue | Client service commissions
+- Per-platform breakdown with monthly rollup
+- Top-performing affiliate programs ranked by ROI
+
+---
+
 # APPENDIX A: API REFERENCE QUICK LINKS
 
 | Platform | API Documentation | Key Requirement |
@@ -1069,6 +1119,9 @@ At $29-$149/client/month subscription pricing, this gives healthy margins even a
 | Ayrshare | docs.ayrshare.com | Business plan for multi-profile |
 | Shotstack | shotstack.io/docs | API key |
 | Bannerbear | developers.bannerbear.com | API key |
+| Printful | developers.printful.com | OAuth 2.0 or API key |
+| Printify | developers.printify.com | API key |
+| Gelato | developers.gelato.com | API key |
 
 ---
 
@@ -1082,6 +1135,148 @@ At $29-$149/client/month subscription pricing, this gives healthy margins even a
 | Client posts inappropriate content via auto-pilot | Brand damage to client + YouSell reputation | Content moderation check (Claude Haiku) before all auto-published content |
 | Token expiry/revocation undetected | Silent feature failure | Daily health check job, immediate client notification, re-auth flow |
 | Content generation quality inconsistent | Client dissatisfaction | Brand voice calibration, template-based generation, quality scoring before delivery |
+
+---
+
+# 15. Print-on-Demand (POD) Content Strategy
+
+## 15.1 POD-Specific Content Generation
+
+POD products require unique content approaches compared to traditional physical products:
+
+| Content Type | Template | AI Model | Output |
+|-------------|----------|----------|--------|
+| Product Mockup Social Post | Lifestyle background + product overlay | Claude Haiku + Bannerbear | Instagram/Pinterest/TikTok ready images |
+| Design Trend Alert | "This design is trending: [trend]" | Claude Haiku | Social post + email |
+| POD Product Launch | Full product page copy + social announcement | Claude Sonnet | Multi-platform content package |
+| Custom Merch Creator Brief | Personalized pitch for influencer custom merch | Claude Sonnet | Email + social DM script |
+| Before/After Design | Design evolution showing customization options | Claude Haiku + Bannerbear | Carousel post |
+| Print Quality Showcase | Close-up product quality shots with lifestyle context | Bannerbear | Instagram/Pinterest |
+
+## 15.2 POD Fulfillment Integration Content Flow
+
+```
+Product Discovery → POD Supplier Match → Mockup Generation → Content Creation → Store Listing → Publishing
+     (Scoring)        (Printful/Printify)    (Bannerbear)       (Claude AI)      (Shop Connect)   (Ayrshare)
+```
+
+## 15.3 POD Sub-Category Content Templates
+
+| Sub-Category | Primary Platforms | Content Focus |
+|-------------|-------------------|---------------|
+| Apparel (T-shirts, hoodies) | TikTok, Instagram, Shopify | Try-on videos, streetwear styling, seasonal collections |
+| Home & Living (mugs, pillows) | Pinterest, Instagram, Shopify | Home decor inspiration, gift guides, seasonal themes |
+| Accessories (phone cases, bags) | TikTok, Instagram | Unboxing, daily carry, accessory matching |
+| Stationery (journals, stickers) | Pinterest, Etsy, Instagram | Journaling setup, planner spreads, sticker collections |
+| Wall Art & Posters | Pinterest, Etsy, Shopify | Room makeover, art collection curation, gallery wall guides |
+
+---
+
+# 16. Affiliate Content Factory
+
+## 16.1 Purpose
+
+A non-stop AI content generation system for all affiliate platforms, designed to drive sign-ups and earn commission from YOUSELL's own content channels. **Limited to admin dashboard only** — not client-facing.
+
+## 16.2 Content Types for Affiliate Marketing
+
+| Content Type | Target Platforms | AI Model | Frequency |
+|-------------|-----------------|----------|-----------|
+| Platform Review | Blog, YouTube, Medium | Claude Sonnet | 2/week per platform |
+| Comparison Post | Blog, Social Media | Claude Sonnet | 1/week |
+| Tutorial/How-To | YouTube, Blog, TikTok | Claude Sonnet + Shotstack | 1/week |
+| Sign-Up Guide | Blog, Email | Claude Haiku | 1/month per platform |
+| Feature Update Alert | Social Media, Email | Claude Haiku | As needed |
+| ROI Calculator Post | Blog, Landing Pages | Claude Sonnet | 1/month |
+
+## 16.3 Affiliate Platform Content Queue
+
+| Platform | Priority | Content Focus | Commission Model |
+|----------|----------|---------------|-----------------|
+| Shopify | P0 | Store setup guides, theme comparisons, app recommendations | 20% recurring lifetime |
+| Spocket | P0 | Dropshipping tutorials, US/EU supplier comparisons | 20-30% lifetime recurring |
+| Printful | P1 | POD startup guides, design tips, product comparisons | 10% for 12 months |
+| Klaviyo | P1 | Email marketing for e-commerce, automation workflows | 10-20% recurring |
+| Canva | P1 | Design tutorials, template showcases, brand kit guides | 36% for 12 months |
+| Stripe | P1 | Payment integration guides (passive — clients auto-use) | $2,500/merchant |
+| Omnisend | P2 | Email + SMS marketing comparisons | 20% for 24 months |
+| Gelato | P2 | Global POD guides, eco-friendly printing | Up to $500/referral |
+| ShipBob | P2 | 3PL transition guides for scaling sellers | 10% + $200 bonus |
+
+## 16.4 Two Revenue Stream Tracking
+
+The affiliate dashboard tracks two separate income streams:
+
+**Stream 1: Own Content Revenue**
+- Content published via YOUSELL's own social/blog channels
+- Affiliate links embedded in content
+- Revenue tracked per content piece and per platform
+
+**Stream 2: Client Service Commission**
+- Commission earned from platforms used in client services
+- Auto-tracked when clients are onboarded to partner platforms
+- Revenue tracked per client and per platform
+
+## 16.5 Implementation: BullMQ Queue
+
+```
+affiliate-content-generate queue:
+  Input: { platform, content_type, topic, affiliate_link }
+  Process: Claude AI generates platform-specific content
+  Output: content_item record with affiliate tracking links
+  Schedule: Automated weekly content calendar
+```
+
+---
+
+# 17. Admin Command Center (Best-Selling Products Dashboard)
+
+## 17.1 Purpose
+
+The Admin Command Center is YOUR intelligence platform for YOUR shops. It transforms every discovered product into a one-click deployable opportunity across any connected channel.
+
+## 17.2 Dashboard Layout
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  ADMIN INTELLIGENCE DASHBOARD                            │
+│  "Our Own Shops Command Center"                          │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│  TOP SCORING PRODUCTS (Best Sellers Pool)                │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │ Product: LED Sunset Lamp  │ Score: 92 (HOT)      │   │
+│  │ ─────────────────────────────────────────────     │   │
+│  │ [Push to TikTok Shop]  [Push to Amazon]           │   │
+│  │ [Push to Shopify]      [Push to All]              │   │
+│  │ ─────────────────────────────────────────────     │   │
+│  │ [Launch Marketing]    [Influencer Outreach]       │   │
+│  │ [Generate Content]    [Financial Model]           │   │
+│  └──────────────────────────────────────────────────┘   │
+│                                                          │
+│  Per-Platform Pipeline View:                             │
+│  ┌──────────┬──────────┬──────────┐                     │
+│  │ TikTok   │ Amazon   │ Shopify  │                     │
+│  │ 12 live  │ 8 live   │ 15 live  │                     │
+│  │ $4.2K/wk │ $6.1K/wk │ $3.8K/wk │                     │
+│  └──────────┴──────────┴──────────┘                     │
+└─────────────────────────────────────────────────────────┘
+```
+
+## 17.3 Button Actions (BullMQ)
+
+| Button | BullMQ Queue | Action |
+|--------|-------------|--------|
+| Push to [Platform] | push-to-{platform} | OAuth-authenticated product listing creation via platform API |
+| Push to All | push-to-all | Parallel listing across all connected stores |
+| Launch Marketing | launch-marketing | Generates ad copy + campaign blueprint, queues for ad platform |
+| Influencer Outreach | influencer-outreach | Matches top creators, generates personalized emails, sends via Resend |
+| Generate Content | generate-content | AI creates social posts, product descriptions, video scripts |
+| Financial Model | financial-model | Full unit economics + ROI projection for this product |
+
+## 17.4 Key Distinction
+
+This is the ADMIN's profit-maximizing platform for YOUR OWN shops. Client-facing is secondary. The admin dashboard becomes the command center where every discovered product can be one-click deployed to any channel.
 
 ---
 

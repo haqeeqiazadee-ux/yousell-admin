@@ -285,13 +285,167 @@
 
 ---
 
+## RESEARCH AREA 6: Print on Demand (POD) Market Analysis
+
+### Sources Researched:
+- Printful API documentation + partner program
+- Printify API documentation + print provider network
+- Gelato API documentation + global fulfillment network
+- Gooten API documentation
+- Etsy POD best sellers and trending searches
+- Redbubble trending designs and niches
+- Merch by Amazon best seller rankings
+- TikTok POD creator communities (#printondemand, #podlife, #etsyseller)
+- Pinterest POD design trend boards
+- POD revenue case studies and margin analysis
+
+### Key Findings:
+
+#### POD Market Size & Opportunity:
+| Metric | Value |
+|--------|-------|
+| Global POD market (2025) | ~$7.5 billion |
+| Projected CAGR | 25%+ through 2030 |
+| Average margins | 30–60% depending on product type |
+| Startup cost | $0 (no inventory needed) |
+| Time to market | Days (design → list → sell) |
+
+#### POD Platform Economics:
+| Platform | Product Range | Base Cost (T-shirt) | Selling Price | Margin |
+|----------|--------------|---------------------|---------------|--------|
+| Printful | 340+ products | $8–15 | $25–35 | 55–65% |
+| Printify | 900+ products | $5–12 | $22–30 | 55–70% |
+| Gelato | 100+ products | $7–14 | $24–32 | 50–60% |
+| Gooten | 150+ products | $6–13 | $23–30 | 55–65% |
+
+#### POD Affiliate Programs:
+| Partner | Commission | Duration | Type |
+|---------|-----------|----------|------|
+| Printful | 10% of order value | 12 months per referral | Recurring |
+| Printify | 5% of order value | 12 months per referral | Recurring |
+| Gelato | Varies by region | Per-order | Per-order |
+| Gooten | Custom partnership | Negotiable | Custom |
+
+#### POD Sub-Category Demand (by platform):
+| Sub-Category | Etsy Demand | Shopify Demand | TikTok Viral Potential | Best Margin |
+|-------------|-------------|----------------|----------------------|-------------|
+| T-shirts & Hoodies | Very High | High | High | 40–60% |
+| Mugs | Very High | Medium | Medium | 45–65% |
+| Phone Cases | High | High | Very High | 35–55% |
+| Tote Bags | High | Medium | Medium | 40–55% |
+| Posters & Wall Art | Very High | High | High | 50–70% |
+| Stickers | Very High | Low | Very High | 60–80% |
+| Notebooks/Planners | High | Medium | Medium | 40–65% |
+
+#### YOUSELL POD Strategy:
+- **Discovery:** Use Etsy/Redbubble/Amazon trending to find winning design niches
+- **Validation:** Cross-reference with TikTok/Pinterest trends for viral potential
+- **Creation:** AI-generated design concepts + Printful Mockup Generator API
+- **Distribution:** Push to client stores (Shopify/TikTok/Etsy) with POD fulfillment attached
+- **Fulfillment:** Zero inventory — POD partner handles manufacturing + shipping
+- **Margins:** 30–60% typical, higher than most dropship products
+
+---
+
+## RESEARCH AREA 7: Comprehensive Affiliate Commission Platform Analysis
+
+### Sources Researched:
+- 60+ affiliate program pages across e-commerce, marketing, design, AI, dropshipping, payment, and analytics categories
+- PartnerStack, Impact.com, ShareASale affiliate network directories
+- Affiliate marketing revenue case studies
+- Multi-platform referral stacking strategies
+
+### Key Findings:
+
+#### A. E-Commerce Store Platforms (Highest Value):
+| Platform | Commission | Type | Cookie | YOUSELL Relevance |
+|----------|-----------|------|--------|-------------------|
+| Shopify Partner | 20% recurring | Recurring | 30 days | Every client needs a store — compounding income |
+| BigCommerce | 200% first payment | Bounty | 90 days | Alternative for enterprise clients |
+| Wix | $100 per sale | Bounty | 30 days | Budget clients |
+| Squarespace | Per referral | Bounty | 45 days | Design-focused clients |
+
+#### B. Print-on-Demand Platforms (New with POD Channel):
+| Platform | Commission | Type | Duration |
+|----------|-----------|------|----------|
+| Printful | 10% of order value | Recurring | 12 months/referral |
+| Printify | 5% of order value | Recurring | 12 months/referral |
+| Gelato | Varies | Per-order | Ongoing |
+| Gooten | Custom | Negotiable | Negotiable |
+
+#### C. Marketing & Email Tools:
+| Platform | Commission | Type | Cookie |
+|----------|-----------|------|--------|
+| Klaviyo | 10–20% recurring | Recurring | 30 days |
+| Omnisend | 20% recurring | Recurring | 90 days |
+| Mailchimp | Variable | Per-account | 30 days |
+| ActiveCampaign | 20–30% recurring | Recurring | 90 days |
+| ConvertKit | 30% recurring | Recurring | 90 days |
+
+#### D. Payment & Infrastructure:
+| Platform | Commission | Type |
+|----------|-----------|------|
+| Stripe | Per-referral bonus | Bounty |
+| PayPal | Varies by region | Per-account |
+| Square | Per referral | Bounty |
+
+#### E. Dropshipping & Fulfillment:
+| Platform | Commission | Type | Cookie | Standout Feature |
+|----------|-----------|------|--------|-----------------|
+| Spocket | 20–30% lifetime | Recurring | Lifetime | **Best deal — lifetime recurring at 20-30%** |
+| Zendrop | 20% recurring | Recurring | 30 days | Good for TikTok Shop dropshippers |
+| DSers | 20% recurring | Recurring | 30 days | AliExpress integration |
+| CJ Dropshipping | 3% of order value | Per-order | — | Large catalog |
+
+#### F. Analytics & Research Tools:
+| Platform | Commission | Type | Cookie |
+|----------|-----------|------|--------|
+| Semrush | $200/sub + $10/trial | Bounty | 120 days |
+| Ahrefs | Per referral | Bounty | 60 days |
+| SpyFu | 40% recurring | Recurring | — |
+
+#### G. Design Tools:
+| Platform | Commission | Type | Cookie |
+|----------|-----------|------|--------|
+| Canva | $36 per Pro signup | Bounty | 30 days |
+| Visme | 25% recurring | Recurring | 60 days |
+| Crello/VistaCreate | Varies | Per-signup | 30 days |
+
+#### Revenue Stacking Model:
+**Key insight:** A single client store can generate affiliate commissions from 4+ platforms simultaneously:
+- Shopify (20% recurring) + Klaviyo/Omnisend (20% recurring) + Stripe (bonus) + Spocket/Printful (20-30% recurring)
+- **That's compounding passive income on top of YOUSELL subscriptions**
+
+#### Revenue Multiplier Estimate (50 clients Year 1):
+| Platform | Revenue Per Client/Year | Total (50 clients) |
+|----------|------------------------|---------------------|
+| Shopify Partner (20% on ~$39/mo) | ~$94 | $4,680 |
+| Printful (10% of ~$200/mo sales, 12mo) | ~$240 | $12,000 |
+| Klaviyo (15% on ~$45/mo) | ~$81 | $4,050 |
+| Spocket (25% on ~$40/mo) | ~$120 | $6,000 |
+| Canva ($36/signup) | $36 | $1,800 |
+| **Total estimated Year 1** | | **~$28,530** |
+
+*This is secondary revenue ON TOP of YOUSELL subscription income. Scales linearly with client count.*
+
+#### Standout Discovery:
+- **Spocket's lifetime recurring at 20-30%** is significantly more valuable than most programs and directly relevant to dropshipping clients
+- **Multi-layered model is clear:** a single client can generate commissions from 4+ platforms simultaneously
+- **No existing player** combines an intelligence SaaS platform with affiliate revenue stacking — YOUSELL would be unique
+
+---
+
 ## RESEARCH SUMMARY
 
-### Total Sources Consulted: 80+
+### Total Sources Consulted: 120+
 ### Key Strategic Decisions Validated:
 
-1. **Fulfillment Intelligence Engine**: Auto-recommend dropship/wholesale/affiliate per product based on category, price, platform, and supplier availability
+1. **Fulfillment Intelligence Engine**: Auto-recommend dropship/wholesale/affiliate/POD per product based on category, price, platform, and supplier availability
 2. **Digital Products as First-Class Citizens**: Full discovery + affiliate/direct-sell recommendation pipeline
 3. **AI Affiliate as Internal Revenue**: Admin-only, hidden from clients, uses YOUSELL's own content/influencer/publishing engines
 4. **Pre-Computed Intelligence**: Nightly batch + tiered refresh + on-demand fallback = instant client experience
 5. **Multi-Source Data Fusion**: Keepa API + admin CSV imports + Apify + Google Trends = reliability-weighted scoring
+6. **POD as Channel #8**: Zero inventory, 30-60% margins, design-once-sell-everywhere model with Printful/Printify/Gelato fulfillment
+7. **Admin Command Center**: YOUSELL's own stores as primary profit center, one-click product deployment across all platforms
+8. **Dual-Stream Affiliate Revenue**: Internal content factory + client service referrals = compounding passive income ($28K+ Year 1 at 50 clients)
+9. **Revenue Stacking**: Single client generates 4+ affiliate streams simultaneously — Shopify + email tool + fulfillment + design tool

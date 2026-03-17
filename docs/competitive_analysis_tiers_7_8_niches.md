@@ -670,6 +670,9 @@ FastMoss (formerly FastData) is an enterprise-grade TikTok Shop analytics platfo
 2. **Three-pillar scoring model** (trend + viral + profit) directly addresses the gap between "what's trending" and "what's profitable" that competitors like FastMoss acknowledge.
 3. **AI content generation bundled with intelligence** — Most tools are either discovery OR content creation, not both.
 4. **Supplier matching integrated with product discovery** — Currently separate workflows across different platforms.
+5. **POD as Channel #8** — Zero-inventory selling with 30-60% margins, integrated with trending design discovery
+6. **Admin Command Center** — One-click product push to multiple platforms, integrated marketing launch
+7. **Affiliate Commission Engine** — Multi-layer passive income from every client referral across 12+ platforms
 
 ### Gaps to Address
 
@@ -681,6 +684,8 @@ FastMoss (formerly FastData) is an enterprise-grade TikTok Shop analytics platfo
 | **Pinterest signals** | Largely ignored by competitors | Add Pinterest trend/pin data to scoring model |
 | **Free tier** | Most tools offer free plans | Launch a meaningful free tier to drive adoption |
 | **Affiliate program** | AI tools average 30% recurring commissions | Launch 25-30% recurring affiliate program |
+| **POD integration** | Not yet offered by intelligence tools | Integrate Printful/Printify/Gelato APIs, add POD-specific scoring |
+| **Affiliate revenue tracking** | Not offered by competitors | Build affiliate dashboard with two revenue streams |
 
 ### Pricing Positioning
 
@@ -707,3 +712,92 @@ Based on competitive analysis:
 - Build a **Shopify app** early to access the merchant ecosystem
 - Launch an **affiliate program via PartnerStack** with 30% recurring commissions
 - Position YOUSELL as the **"intelligence layer"** that feeds into existing tools (Shopify, BigCommerce, Klaviyo) rather than replacing them
+
+---
+
+## Tier 9 — Print-on-Demand (POD) Platforms
+
+### 24. Printful
+
+**URL:** [https://www.printful.com](https://www.printful.com)
+
+| Dimension | Detail |
+|-----------|--------|
+| **Pricing** | Free to use, pay per order (markup-based pricing) |
+| **Products** | 300+ products: apparel, accessories, home & living, stationery |
+| **Fulfillment** | US, EU, MX, AU facilities. Average 2-5 day production. |
+| **API** | Full REST API for product creation, order management, mockup generation |
+| **Integrations** | Shopify, Etsy, Amazon, WooCommerce, eBay, Squarespace, BigCommerce |
+| **Affiliate** | 10% of sales for 12 months + $25 per Growth subscription |
+| **Strengths** | Best quality reputation, mockup generator, embroidery support |
+| **Weaknesses** | Higher base prices than Printify, limited product range vs competitors |
+
+### 25. Printify
+
+**URL:** [https://www.printify.com](https://www.printify.com)
+
+| Dimension | Detail |
+|-----------|--------|
+| **Pricing** | Free plan (5 stores), Premium $29.99/mo (10 stores), Enterprise custom |
+| **Products** | 800+ products across 100+ print providers worldwide |
+| **Fulfillment** | Multiple providers per product = price competition |
+| **API** | REST API for product/order management |
+| **Integrations** | Shopify, Etsy, WooCommerce, eBay, PrestaShop |
+| **Affiliate** | 5% of every order for 12 months |
+| **Strengths** | Widest supplier network, lower prices, more product options |
+| **Weaknesses** | Quality varies by provider, less consistent than Printful |
+
+### 26. Gelato
+
+**URL:** [https://www.gelato.com](https://www.gelato.com)
+
+| Dimension | Detail |
+|-----------|--------|
+| **Pricing** | Free plan, Gelato+ $14.99/mo (Premium tools + discounts) |
+| **Products** | Apparel, wall art, mugs, phone cases, photo books |
+| **Fulfillment** | 130+ print partners in 32 countries — local production |
+| **API** | REST API available |
+| **Integrations** | Shopify, Etsy, WooCommerce, custom API |
+| **Affiliate** | Up to $500 per referral, up to 15% for 12 months |
+| **Strengths** | Local production = faster shipping + lower carbon footprint, global reach |
+| **Weaknesses** | Smaller product catalog than Printify |
+
+### What YOUSELL Can Learn from POD Platforms
+
+- **POD is a natural 8th channel** for YOUSELL. It sits between physical and digital products — design once, manufacture on-demand, zero inventory risk, 30-60% margins.
+- **API-first integration** is key. All three platforms offer REST APIs that enable auto-product creation and fulfillment sync.
+- **Mockup generation APIs** (especially Printful) can feed into YOUSELL's Content Engine for automated product visuals.
+- **Multi-supplier comparison** (Printify model) adds value — YOUSELL can recommend the best supplier per product per client region.
+- **Affiliate commissions are significant**: Printful 10% for 12 months, Printify 5%, Gelato up to $500. Every POD client = recurring affiliate income.
+
+---
+
+## Tier 10 — Affiliate Commission Platforms (New Discovery)
+
+### Revenue-Generating Affiliate Programs for YOUSELL
+
+| Platform | Category | Commission | Duration | Cookie | Standout Feature |
+|----------|----------|-----------|----------|--------|-----------------|
+| Shopify | E-Commerce | 20% recurring | Lifetime | Lifetime (partner) | Already in stack. Every client = compounding income |
+| Spocket | Dropshipping | 20-30% recurring | LIFETIME | 30 days | **Highest-value program found** — permanent income |
+| Stripe | Payment | $2,500/merchant | One-time | N/A | Already in stack — free money per store |
+| PayPal | Payment | $2,500/merchant | One-time | N/A | Dual payment = $5,000 per client |
+| Printful | POD | 10% of sales | 12 months | 30 days | POD fulfillment partner |
+| Canva | Design | 36% recurring | 12 months | 30 days | Every client needs design tools |
+| Klaviyo | Email | 10-20% recurring | Variable | 90 days | #1 e-commerce email platform |
+| Omnisend | Email | 20% recurring | 24 months | 30 days | Longer commission window |
+| Ecwid | E-Commerce | 20% recurring | Lifetime | 30 days | For clients with existing sites |
+| ShipBob | Fulfillment | 10% + $200 bonus | 6 months | 30 days | 3PL graduation path |
+| Wix | E-Commerce | $100/sale | One-time | 30 days | Simpler store alternative |
+| Squarespace | E-Commerce | $100-200/sale | One-time | 45 days | Premium visual stores |
+
+### Multi-Layer Revenue Model
+
+A single client store can generate affiliate commissions from 4+ platforms simultaneously:
+- Store platform (Shopify 20% recurring)
+- Email marketing (Klaviyo/Omnisend 10-20%)
+- Payment processing (Stripe $2,500)
+- Fulfillment/Suppliers (Spocket 20-30% lifetime OR Printful 10%)
+- Design tools (Canva 36%)
+
+**Result:** Compounding passive income on TOP of YOUSELL subscription revenue.

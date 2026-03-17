@@ -16,7 +16,7 @@ These are table-stakes features that competitors have and YOUSELL needs before c
 |-------|--------|
 | **Feature** | Full Stripe integration: Checkout, webhooks, subscription management, Customer Portal |
 | **Inspired by** | ALL competitors charge via subscriptions. AutoDS ($26.90-$66.90), Sell The Trend ($39.97-$99.97), Jungle Scout ($29-$199) |
-| **Channels** | All 7 |
+| **Channels** | All 8 |
 | **Complexity** | L |
 | **Revenue Impact** | CRITICAL — blocks ALL revenue |
 | **Priority** | P0 |
@@ -29,7 +29,7 @@ These are table-stakes features that competitors have and YOUSELL needs before c
 |-------|--------|
 | **Feature** | Per-platform access control with locked platform teasers showing aggregate stats, blurred cards, and upgrade CTAs |
 | **Inspired by** | Sell The Trend (1-store vs 3-store gating), Helium 10 (feature gating per tier), Minea ($49/platform) |
-| **Channels** | All 7 |
+| **Channels** | All 8 |
 | **Complexity** | L |
 | **Revenue Impact** | HIGH — drives upgrades |
 | **Priority** | P0 |
@@ -64,15 +64,15 @@ These are table-stakes features that competitors have and YOUSELL needs before c
 
 ## Category B — Competitive Differentiation (YOUSELL's Unfair Advantage)
 
-Features that set YOUSELL apart. Multi-channel (7 channels), model-agnostic, AI-first.
+Features that set YOUSELL apart. Multi-channel (8 channels), model-agnostic, AI-first.
 
-### B.1 — 7-Channel Intelligence Dashboard (P1)
+### B.1 — 8-Channel Intelligence Dashboard (P1)
 
 | Field | Detail |
 |-------|--------|
-| **Feature** | Unified view showing opportunities across all 7 channels simultaneously with cross-platform detection |
-| **Inspired by** | NO competitor covers all 7 channels. Sell The Trend = 2, Jungle Scout = 1, Kalodata = 1 |
-| **Channels** | All 7 |
+| **Feature** | Unified view showing opportunities across all 8 channels simultaneously with cross-platform detection |
+| **Inspired by** | NO competitor covers all 8 channels. Sell The Trend = 2, Jungle Scout = 1, Kalodata = 1 |
+| **Channels** | All 8 |
 | **Complexity** | M |
 | **Revenue Impact** | HIGH — key differentiator |
 | **Priority** | P1 |
@@ -84,7 +84,7 @@ Features that set YOUSELL apart. Multi-channel (7 channels), model-agnostic, AI-
 |-------|--------|
 | **Feature** | When a product is detected on one platform, automatically check for presence on all others. Show multi-platform opportunity map. |
 | **Inspired by** | RTM Gap #61. No competitor does this. Jungle Scout is Amazon-only, Kalodata is TikTok-only. |
-| **Channels** | All 7 |
+| **Channels** | All 8 |
 | **Complexity** | L |
 | **Revenue Impact** | HIGH — unique feature |
 | **Priority** | P1 |
@@ -96,7 +96,7 @@ Features that set YOUSELL apart. Multi-channel (7 channels), model-agnostic, AI-
 |-------|--------|
 | **Feature** | Enhance existing blueprints with channel-specific launch strategies, competitor analysis, and financial projections |
 | **Inspired by** | Copy.ai GTM Playbooks, Sell The Trend store builder. No competitor generates full launch plans. |
-| **Channels** | All 7 |
+| **Channels** | All 8 |
 | **Complexity** | M |
 | **Revenue Impact** | HIGH — premium feature |
 | **Priority** | P1 |
@@ -139,7 +139,7 @@ Based on research of Jasper, Copy.ai, Predis.ai, Buffer, Canva.
 |-------|--------|
 | **Feature** | AI content generation with 10+ templates: social post, ad copy, email, video script, product description, blog post, influencer brief, launch announcement, seasonal promo, comparison post |
 | **Inspired by** | Jasper (50+ templates), Copy.ai (workflows), Predis.ai (visual + text) |
-| **Channels** | All 7 (each channel gets platform-specific content formats) |
+| **Channels** | All 8 (each channel gets platform-specific content formats) |
 | **Complexity** | L |
 | **Revenue Impact** | HIGH — anti-churn feature |
 | **Priority** | P1 |
@@ -152,7 +152,7 @@ Based on research of Jasper, Copy.ai, Predis.ai, Buffer, Canva.
 |-------|--------|
 | **Feature** | Auto-post generated content to connected social channels. Schedule, publish, track engagement. |
 | **Inspired by** | Predis.ai (auto-posting), Buffer/Hootsuite (scheduling), Sell The Trend (no content tools = opportunity) |
-| **Channels** | All 7 (distribution to TikTok, Instagram, Facebook, Pinterest, YouTube, Twitter, LinkedIn) |
+| **Channels** | All 8 (distribution to TikTok, Instagram, Facebook, Pinterest, YouTube, Twitter, LinkedIn) |
 | **Complexity** | XL |
 | **Revenue Impact** | HIGH — anti-churn, automation paywall |
 | **Priority** | P1 |
@@ -165,7 +165,7 @@ Based on research of Jasper, Copy.ai, Predis.ai, Buffer, Canva.
 |-------|--------|
 | **Feature** | Per-client brand voice settings (tone, style, audience persona) applied to all generated content |
 | **Inspired by** | Jasper Brand Voice, Copy.ai Infobase |
-| **Channels** | All 7 |
+| **Channels** | All 8 |
 | **Complexity** | S |
 | **Revenue Impact** | MEDIUM — premium feature |
 | **Priority** | P2 |
@@ -177,7 +177,7 @@ Based on research of Jasper, Copy.ai, Predis.ai, Buffer, Canva.
 |-------|--------|
 | **Feature** | Visual calendar showing scheduled content across all channels |
 | **Inspired by** | Predis.ai content calendar, Buffer scheduling view |
-| **Channels** | All 7 |
+| **Channels** | All 8 |
 | **Complexity** | M |
 | **Revenue Impact** | MEDIUM — UX improvement |
 | **Priority** | P2 |
@@ -446,6 +446,206 @@ Based on research of Jasper, Copy.ai, Predis.ai, Buffer, Canva.
 
 ---
 
+## New Category I — Print-on-Demand (POD) Channel #8
+
+### I.1 — POD Product Discovery (P1)
+| Field | Detail |
+|-------|--------|
+| **Feature** | Trending designs, niches, aesthetics discovery across Etsy, Redbubble, Merch by Amazon, TikTok for POD products |
+| **Inspired by** | Printful marketplace trends, Etsy trending, Merch by Amazon niche research |
+| **Channels** | POD (Channel #8) |
+| **Complexity** | L |
+| **Revenue Impact** | HIGH — new product category |
+| **Priority** | P1 |
+| **Sub-Categories** | Apparel (T-shirts, hoodies, streetwear), Home & Living (mugs, pillows, wall art), Accessories (phone cases, tote bags, hats), Stationery (journals, notebooks, stickers), Wall Art & Posters (canvas prints, framed prints) |
+
+### I.2 — POD Supplier Integration (P1)
+| Field | Detail |
+|-------|--------|
+| **Feature** | Direct API connections to POD fulfillment partners: Printful, Printify, Gelato |
+| **Inspired by** | Printful API, Printify API, Gelato API |
+| **Channels** | POD (Channel #8) |
+| **Complexity** | L |
+| **Revenue Impact** | HIGH — enables zero-inventory selling |
+| **Priority** | P1 |
+| **New Tables** | pod_suppliers, pod_products, pod_designs |
+
+### I.3 — POD Store Provisioning (P1)
+| Field | Detail |
+|-------|--------|
+| **Feature** | Auto-create products in client Shopify/TikTok stores with POD fulfillment attached |
+| **Inspired by** | Printful Shopify integration, Printify store sync |
+| **Channels** | POD (Channel #8) |
+| **Complexity** | M |
+| **Revenue Impact** | HIGH — one-click store setup |
+| **Priority** | P1 |
+
+### I.4 — POD Content Engine (P2)
+| Field | Detail |
+|-------|--------|
+| **Feature** | AI-generated mockups, social posts featuring products on lifestyle backgrounds |
+| **Inspired by** | Printful mockup generator, Placeit by Envato |
+| **Channels** | POD (Channel #8) |
+| **Complexity** | M |
+| **Revenue Impact** | MEDIUM — content differentiation |
+| **Priority** | P2 |
+
+### I.5 — POD Influencer Matching (P2)
+| Field | Detail |
+|-------|--------|
+| **Feature** | Niche-specific creators for custom merch, fan merchandise, lifestyle products |
+| **Inspired by** | Creator merch platforms (Spring, Teespring), custom merch trends on TikTok |
+| **Channels** | POD (Channel #8) |
+| **Complexity** | M |
+| **Revenue Impact** | MEDIUM — creator economy integration |
+| **Priority** | P2 |
+
+---
+
+## New Category J — Admin Intelligence Dashboard (Command Center)
+
+### J.1 — Best-Selling Products Dashboard (P0)
+| Field | Detail |
+|-------|--------|
+| **Feature** | Admin command center showing top-scoring products with one-click platform publishing buttons |
+| **Inspired by** | BigCommerce Channel Manager, AutoDS product import. This is YOUR intelligence platform for YOUR shops. |
+| **Channels** | All 8 |
+| **Complexity** | L |
+| **Revenue Impact** | CRITICAL — profit-maximizing command center |
+| **Priority** | P0 |
+| **UI Elements** | Per-product action buttons: Push to TikTok Shop, Push to Amazon, Push to Shopify, Push to All. Per-product automation: Launch Marketing, Influencer Outreach, Generate Content, Financial Model |
+
+### J.2 — Per-Platform Pipeline View (P1)
+| Field | Detail |
+|-------|--------|
+| **Feature** | Pipeline view showing live products per platform with weekly revenue: TikTok (12 live, $4.2K/wk), Amazon (8 live, $6.1K/wk), Shopify (15 live, $3.8K/wk) |
+| **Inspired by** | Shopify admin, BigCommerce multi-channel dashboard |
+| **Channels** | All 8 |
+| **Complexity** | M |
+| **Revenue Impact** | HIGH — operational visibility |
+| **Priority** | P1 |
+
+### J.3 — One-Click Product Push (P0)
+| Field | Detail |
+|-------|--------|
+| **Feature** | OAuth-authenticated product listing creation via platform API. Push to [Platform] triggers BullMQ job for product creation. Push to All triggers parallel listing across all connected stores. |
+| **Inspired by** | AutoDS 1-click import, Sell The Trend store push |
+| **Channels** | Shopify, TikTok Shop, Amazon |
+| **Complexity** | L |
+| **Revenue Impact** | CRITICAL — core automation |
+| **Priority** | P0 |
+| **BullMQ Actions** | push-to-shopify, push-to-tiktok, push-to-amazon, push-to-all |
+
+### J.4 — One-Click Marketing Launch (P1)
+| Field | Detail |
+|-------|--------|
+| **Feature** | Per-product buttons: Launch Marketing (generates ad copy + campaign blueprint), Influencer Outreach (matches top creators, generates personalized emails via Resend), Generate Content (AI creates social posts, product descriptions, video scripts), Financial Model (full unit economics + ROI projection) |
+| **Inspired by** | No competitor has this — unique to YOUSELL |
+| **Channels** | All 8 |
+| **Complexity** | L |
+| **Revenue Impact** | HIGH — end-to-end automation |
+| **Priority** | P1 |
+
+---
+
+## New Category K — Affiliate Commission Engine
+
+### K.1 — Affiliate Revenue Tracker (P1)
+| Field | Detail |
+|-------|--------|
+| **Feature** | Track all affiliate referrals showing which clients were referred to which platforms and cumulative commission earned. Two stat sets: (1) Affiliate revenue from own content generation system, (2) Affiliate commission from every platform used in client service |
+| **Inspired by** | PartnerStack dashboard, Impact.com reporting |
+| **Channels** | All 8 |
+| **Complexity** | L |
+| **Revenue Impact** | HIGH — passive income tracking |
+| **Priority** | P1 |
+| **New Tables** | affiliate_referrals, affiliate_commissions, affiliate_content_links |
+
+### K.2 — E-Commerce Platform Affiliates (P0)
+| Field | Detail |
+|-------|--------|
+| **Feature** | Shopify Partner Program (20% recurring lifetime), Wix ($100/sale), Squarespace ($100-200/sale), Ecwid (20% lifetime recurring) |
+| **Inspired by** | Shopify Partner Program, every client store = recurring income |
+| **Channels** | Shopify DTC, all store platforms |
+| **Complexity** | S |
+| **Revenue Impact** | CRITICAL — compounding passive income |
+| **Priority** | P0 |
+
+### K.3 — POD Platform Affiliates (P1)
+| Field | Detail |
+|-------|--------|
+| **Feature** | Printful (10% for 12 months + $25 per Growth subscription), Printify (5% for 12 months), Gelato (up to $500/referral), Gooten (custom terms) |
+| **Inspired by** | Printful affiliate program, Printify partner program |
+| **Channels** | POD (Channel #8) |
+| **Complexity** | S |
+| **Revenue Impact** | HIGH — scales with POD clients |
+| **Priority** | P1 |
+
+### K.4 — Marketing Tool Affiliates (P1)
+| Field | Detail |
+|-------|--------|
+| **Feature** | Klaviyo (10-20% recurring, 90d cookie), Omnisend (20% recurring 24 months), Canva (36% recurring 12 months), Mailchimp (varies) |
+| **Inspired by** | Klaviyo partner program, Canva affiliate program |
+| **Channels** | All 8 |
+| **Complexity** | S |
+| **Revenue Impact** | HIGH — recommend to every client |
+| **Priority** | P1 |
+
+### K.5 — Payment & Infrastructure Affiliates (P1)
+| Field | Detail |
+|-------|--------|
+| **Feature** | Stripe ($2,500/merchant one-time), PayPal ($2,500/merchant one-time) — already in stack, free money per store provisioned |
+| **Inspired by** | Stripe Partner Ecosystem, PayPal referral program |
+| **Channels** | All 8 |
+| **Complexity** | S |
+| **Revenue Impact** | HIGH — $2,500 per client |
+| **Priority** | P1 |
+
+### K.6 — Dropshipping & Fulfillment Affiliates (P1)
+| Field | Detail |
+|-------|--------|
+| **Feature** | Spocket (20-30% LIFETIME recurring — best deal found), Zendrop (20-30% recurring), DSers ($1.50/conversion), ShipBob (10% for 6 months + $200 bonus) |
+| **Inspired by** | Spocket lifetime recurring program |
+| **Channels** | All 8 |
+| **Complexity** | S |
+| **Revenue Impact** | HIGH — Spocket lifetime recurring is the standout |
+| **Priority** | P1 |
+
+### K.7 — Analytics Tool Affiliates (P2)
+| Field | Detail |
+|-------|--------|
+| **Feature** | Jungle Scout (up to $150/sale), Helium 10 (25% recurring or $250 one-time), SEMrush ($10/trial) |
+| **Inspired by** | Jungle Scout affiliate program |
+| **Channels** | All 8 |
+| **Complexity** | S |
+| **Revenue Impact** | MEDIUM |
+| **Priority** | P2 |
+
+### K.8 — Affiliate Content Factory (P1)
+| Field | Detail |
+|-------|--------|
+| **Feature** | Non-stop AI content generation for all affiliate platforms — reviews, comparisons, tutorials, sign-up guides. Limited to admin dashboard only. Content published via admin's own channels to drive affiliate sign-ups. |
+| **Inspired by** | AI content marketing automation, passive income content strategies |
+| **Channels** | All 8 |
+| **Complexity** | M |
+| **Revenue Impact** | HIGH — automated passive income generation |
+| **Priority** | P1 |
+
+### Revenue Multiplier Estimate (50 clients Year 1)
+| Revenue Stream | Calculation | Annual Income |
+|---------------|-------------|---------------|
+| Shopify Partner (20% recurring) | 50 clients × $39/mo avg × 20% | $4,680/yr |
+| Printful referrals (10% × 12mo) | 20 POD clients × $500 avg monthly orders × 10% | $12,000/yr |
+| Klaviyo partner | 30 clients × $30/mo avg × 15% | $1,620/yr |
+| Canva referrals | 40 clients × $13/mo × 36% | $2,246/yr |
+| Jungle Scout referrals | 15 referrals × $150 | $2,250/yr |
+| Spocket LIFETIME recurring | 10 clients × $49/mo × 25% | $1,470/yr |
+| Stripe merchant referrals | 20 merchants × $2,500 | $50,000/yr |
+| PayPal merchant referrals | 20 merchants × $2,500 | $50,000/yr |
+| **Total passive affiliate income** | | **~$124,266/yr** |
+
+---
+
 ## Implementation Priority Summary
 
 ### P0 — Must Ship (Blocks Revenue)
@@ -455,42 +655,56 @@ Based on research of Jasper, Copy.ai, Predis.ai, Buffer, Canva.
 4. A.4 — Client Dashboard Middleware
 5. D.1 — Competitive Pricing Structure
 6. G.1 — Store Integration OAuth
+7. J.1 — Best-Selling Products Dashboard (Command Center)
+8. J.3 — One-Click Product Push
+9. K.2 — E-Commerce Platform Affiliates
 
 ### P1 — Ship Within 4 Weeks (Core Value)
-7. B.1 — 7-Channel Intelligence Dashboard
-8. B.2 — Cross-Platform Product Intelligence
-9. B.5 — Complete Pre-Viral Detection (6 Signals)
-10. C.1 — Content Generation Engine
-11. C.2 — Content Distribution Pipeline
-12. D.3 — Free Tier / Freemium
-13. E.4 — Unit Test Coverage
-14. E.5 — Trend Lifecycle Fix
-15. E.6 — AI Affiliate Database Update
-16. F.1 — Onboarding Flow
-17. G.2 — Order Tracking + Email Sequences
+10. B.1 — 8-Channel Intelligence Dashboard
+11. B.2 — Cross-Platform Product Intelligence
+12. B.5 — Complete Pre-Viral Detection (6 Signals)
+13. C.1 — Content Generation Engine
+14. C.2 — Content Distribution Pipeline
+15. D.3 — Free Tier / Freemium
+16. E.4 — Unit Test Coverage
+17. E.5 — Trend Lifecycle Fix
+18. E.6 — AI Affiliate Database Update
+19. F.1 — Onboarding Flow
+20. G.2 — Order Tracking + Email Sequences
+21. I.1 — POD Product Discovery
+22. I.2 — POD Supplier Integration
+23. I.3 — POD Store Provisioning
+24. J.2 — Per-Platform Pipeline View
+25. J.4 — One-Click Marketing Launch
+26. K.1 — Affiliate Revenue Tracker
+27. K.3-K.6 — All affiliate platform integrations
+28. K.8 — Affiliate Content Factory
 
 ### P2 — Ship Within 8 Weeks (Differentiation)
-18. B.3 — Enhanced Launch Blueprints
-19. B.4 — Pinterest → Google Trends Prediction
-20. C.3 — Brand Voice Configuration
-21. C.4 — Content Calendar View
-22. D.2 — Add-On Revenue Streams
-23. E.1 — CSRF Protection
-24. E.2 — Input Validation
-25. E.3 — Dead Letter Queue
-26. F.2 — Weekly Email Digest
-27. F.4 — Referral Program
-28. G.3 — Price/Stock Monitoring
-29. G.4 — Domestic Supplier Priority
-30. H.1-H.7 Channel-specific improvements (P2 items)
+29. B.3 — Enhanced Launch Blueprints
+30. B.4 — Pinterest → Google Trends Prediction
+31. C.3 — Brand Voice Configuration
+32. C.4 — Content Calendar View
+33. D.2 — Add-On Revenue Streams
+34. E.1 — CSRF Protection
+35. E.2 — Input Validation
+36. E.3 — Dead Letter Queue
+37. F.2 — Weekly Email Digest
+38. F.4 — Referral Program
+39. G.3 — Price/Stock Monitoring
+40. G.4 — Domestic Supplier Priority
+41. H.1-H.7 Channel-specific improvements (P2 items)
+42. I.4 — POD Content Engine
+43. I.5 — POD Influencer Matching
+44. K.7 — Analytics Tool Affiliates
 
 ### P3 — Ship Within 12 Weeks (Growth)
-31. F.3 — API Access
-32. H.1.4 — Live TikTok Analytics
-33. H.3.4 — Shopify App
-34. H.4.4 — Visual Product Matching
-35. H.5.5 — Creative Market / Envato
-36. Mobile App (Phase H from v7 spec)
+45. F.3 — API Access
+46. H.1.4 — Live TikTok Analytics
+47. H.3.4 — Shopify App
+48. H.4.4 — Visual Product Matching
+49. H.5.5 — Creative Market / Envato
+50. Mobile App (Phase H from v7 spec)
 
 ---
 
@@ -498,7 +712,7 @@ Based on research of Jasper, Copy.ai, Predis.ai, Buffer, Canva.
 
 | Capability | YOUSELL | Sell The Trend | AutoDS | Jungle Scout | Kalodata | Minea |
 |-----------|---------|----------------|--------|--------------|----------|-------|
-| Channels covered | 7 | 2 | 3 | 1 | 1 | 5 (ads only) |
+| Channels covered | 8 | 2 | 3 | 1 | 1 | 5 (ads only) |
 | AI scoring | ✅ 3-pillar | Basic | ❌ | ✅ Amazon-only | ❌ | ❌ |
 | Pre-viral detection | ⚠️ 2/6 | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Content creation | ✅ Strategy complete | ❌ | Basic | ❌ | ❌ | ❌ |
@@ -508,9 +722,12 @@ Based on research of Jasper, Copy.ai, Predis.ai, Buffer, Canva.
 | Supplier matching | ✅ | ✅ NEXUS | ✅ 100+ | ✅ Amazon | ❌ | ❌ |
 | Financial modeling | ✅ | ❌ | ❌ | ✅ Basic | ❌ | ❌ |
 | Launch blueprints | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| POD | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Admin Command Center | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Affiliate Commission Engine | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Price range | $29-$149 | $30-$300 | $20-$120 | $29-$149 | $46-$110 | $49-$399 |
 
-**YOUSELL's moat:** No single competitor covers intelligence + content + automation across 7 channels. The combination is genuinely unique. The critical path is shipping Stripe + Store Integration + Content Engine to activate this advantage.
+**YOUSELL's moat:** No single competitor covers intelligence + content + automation across 8 channels. The combination is genuinely unique. The critical path is shipping Stripe + Store Integration + Content Engine to activate this advantage.
 
 ---
 
@@ -582,4 +799,4 @@ Multi-channel discount: 20% off second channel, 30% off third+.
 37. **NEW** #47 — Brand voice configuration
 38. **NEW** #48 — Content calendar UI
 
-### Updated Feature Count: 52 prioritized features (was 36)
+### Updated Feature Count: 72 prioritized features (was 52)

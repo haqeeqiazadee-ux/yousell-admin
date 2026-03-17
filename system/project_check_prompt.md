@@ -51,11 +51,11 @@ Do NOT summarize from memory. Read each file. You are building a complete mental
 
 ## PLATFORM OVERVIEW (Sections 1–7 of v7 Spec)
 
-YOUSELL is an AI-powered commerce intelligence SaaS that automates the entire e-commerce product lifecycle. It is NOT a dropshipping-only platform. It is model-agnostic — clients can dropship OR buy in bulk. The platform covers discovery + content + marketing automation + AI-powered insights across SEVEN opportunity channels.
+YOUSELL is an AI-powered commerce intelligence SaaS that automates the entire e-commerce product lifecycle. It is NOT a dropshipping-only platform. It is model-agnostic — clients can dropship OR buy in bulk. The platform covers discovery + content + marketing automation + AI-powered insights across EIGHT opportunity channels.
 
-### The Seven Opportunity Channels (Section 2.2)
+### The Eight Opportunity Channels (Section 2.2)
 
-Every audit must verify coverage across ALL seven channels:
+Every audit must verify coverage across ALL eight channels:
 
 | # | Channel | Type | Product Scope | Core Strategy |
 |---|---------|------|---------------|---------------|
@@ -66,6 +66,7 @@ Every audit must verify coverage across ALL seven channels:
 | 5 | Digital Products | Digital | Templates, courses, AI prompts, tools | Content + Affiliates + SEO |
 | 6 | AI Affiliate Programs | Commission | AI SaaS + subscription tools | Affiliate promotion + influencer |
 | 7 | Physical Affiliate | Commission | TikTok Shop + Amazon affiliate products | Influencer + content |
+| 8 | Print on Demand (POD) | Hybrid (Design + Fulfillment) | Custom apparel, accessories, home goods, stationery | Niche design trends + Influencer merch + TikTok/Etsy |
 
 ### Additional Intelligence Layers (Section 2.3)
 
@@ -82,6 +83,8 @@ Verify each of these intelligence layers exists and functions:
 9. **Content Creation Engine** — AI-generated marketing content for social channels
 10. **Store Integration Engine** — Push products to Shopify, TikTok Shop, Amazon stores
 11. **Order Tracking Engine** — Post-purchase email sequences via Resend
+12. **Admin Command Center** — Best-selling products dashboard with one-click platform publishing to YOUSELL's own stores
+13. **Affiliate Commission Engine** — Dual-stream revenue tracking (internal content + client service commissions)
 
 ### Dual-Platform Architecture (Section 4)
 
@@ -161,9 +164,9 @@ For each engine, document:
 | **Gaps** | Missing features, incomplete logic, stub implementations, hardcoded mock data |
 | **Severity** | CRITICAL / HIGH / MEDIUM / LOW for each gap |
 
-### Section B — Data Source Module Audit (Sections 8.1–8.7)
+### Section B — Data Source Module Audit (Sections 8.1–8.8)
 
-Audit ALL SEVEN data source modules — not just TikTok:
+Audit ALL EIGHT data source modules — not just TikTok:
 
 **B.1 — TikTok Products Module (Section 8.1)**
 - Data sources: TikTok Creative Center, Apify TikTok Shop Trending Scraper, ScrapeCreators TikTok Shop API, TikTok Research API (pending), CSV/Excel import
@@ -199,6 +202,12 @@ Audit ALL SEVEN data source modules — not just TikTok:
 - Data sources: TikTok Shop Affiliate Centre, Amazon Associates, Apify TikTok Shop Affiliate scraper
 - Goal: commission without inventory
 - Verify: provider files, affiliate link handling
+
+**B.8 — Print on Demand (POD) Module (Section 8.8)**
+- Data sources: Etsy Trending (Apify), Redbubble Trending (Apify), Merch by Amazon (Apify), TikTok Creative Center, Pinterest, Google Trends
+- Fulfillment partners: Printful API, Printify API, Gelato API
+- Data collected: Design niche, trending keywords, product type, monthly searches, competition, seasonal relevance, margin estimates
+- Verify: provider files, fulfillment API integrations, POD-specific scoring adjustments
 
 For each module, document: spec reference, what providers exist, what data they actually return, whether mock data is used, what's real vs stub, completeness vs v7 requirements.
 
@@ -534,14 +543,14 @@ Go through the RTM and answer:
 - Did I miss any files that contribute to an engine?
 - Are my gap severities accurate? Would a paying customer hit these gaps?
 - Is there dead code or unused infrastructure I should flag?
-- Are ALL SEVEN channels covered or did I miss any?
-- Are all 11 intelligence layers accounted for?
+- Are ALL EIGHT channels covered or did I miss any?
+- Are all 13 intelligence layers accounted for?
 
 ### Step 2: Market Research
 
 > **IMPORTANT — YOUSELL Positioning:**
 > YOUSELL is NOT a dropshipping-only platform. Our customers can dropship OR buy in bulk — we are model-agnostic.
-> We discover winning products across SEVEN channels (TikTok, Amazon, Shopify, Pinterest, Digital Products, AI Affiliate, Physical Affiliate).
+> We discover winning products across EIGHT channels (TikTok, Amazon, Shopify, Pinterest, Digital Products, AI Affiliate, Physical Affiliate, Print on Demand).
 > We score viability, match creators/suppliers, and automate marketing.
 > Competitors below focus heavily on dropshipping or single-platform. YOUSELL goes wider: multi-platform e-commerce intelligence + content creation + marketing automation + AI-powered insights.
 > This is our key differentiator — keep it central to all research and recommendations.
@@ -691,7 +700,7 @@ At the end of the research log, include:
 - [ ] Pricing models compared across all competitors
 - [ ] UX patterns documented
 - [ ] Customer complaint patterns identified
-- [ ] Feature gap analysis complete for ALL 7 channels
+- [ ] Feature gap analysis complete for ALL 8 channels
 
 ### Step 3: Produce Improvement Recommendations
 
@@ -705,10 +714,10 @@ Structure:
 Features that paying customers expect but are missing or broken. Table-stakes features across ALL channels.
 
 #### Category B — Competitive Differentiation (YOUSELL's unfair advantage)
-Features that set YOUSELL apart. Remember: multi-channel (7 channels), model-agnostic (dropship + bulk), AI-first intelligence + content creation + marketing automation. Double down on what competitors can't copy.
+Features that set YOUSELL apart. Remember: multi-channel (8 channels), model-agnostic (dropship + bulk), AI-first intelligence + content creation + marketing automation. Double down on what competitors can't copy.
 
 #### Category C — Content Creation & Marketing Engine
-Specific features for content and marketing engines based on research of Jasper, Copy.ai, Predis.ai, Buffer, etc. Detail what Content Creation Engine and Marketing & Ads Engine should do for EACH of the 7 channels.
+Specific features for content and marketing engines based on research of Jasper, Copy.ai, Predis.ai, Buffer, etc. Detail what Content Creation Engine and Marketing & Ads Engine should do for EACH of the 8 channels.
 
 #### Category D — Revenue Optimization
 Pricing model improvements. Include competitor pricing analysis, YOUSELL positioning, upsell opportunities, per-platform pricing, engine add-ons.
@@ -723,7 +732,7 @@ Onboarding flows, referral programs, API access, white-label, marketplace/app ec
 Based on research, detail supplier → order → fulfillment pipeline for EACH relevant channel (TikTok Shop, Amazon FBA, Shopify DTC).
 
 #### Category H — Channel-Specific Improvements
-For EACH of the 7 channels, detail specific improvements needed:
+For EACH of the 8 channels, detail specific improvements needed:
 1. TikTok Shop improvements
 2. Amazon FBA improvements
 3. Shopify DTC improvements
@@ -735,7 +744,7 @@ For EACH of the 7 channels, detail specific improvements needed:
 For each recommendation:
 - Feature name and one-line description
 - Which competitor(s) inspired it (with specific URL/feature reference from research log)
-- Which of the 7 channels it applies to
+- Which of the 8 channels it applies to
 - Implementation complexity (S/M/L/XL)
 - Revenue impact (HIGH/MEDIUM/LOW)
 - Priority rank (P0 through P3)
@@ -833,7 +842,7 @@ For each selected workflow, produce a **Build vs Adopt decision** using this eva
 | **n8n URL** | Direct link |
 | **Views** | Popularity indicator |
 | **Nodes Used** | Key integrations |
-| **YOUSELL Engine Mapping** | Which engine/feature AND which of the 7 channels this enhances |
+| **YOUSELL Engine Mapping** | Which engine/feature AND which of the 8 channels this enhances |
 | **Integration Strategy** | How to adapt for YOUSELL (n8n embed, port to BullMQ, API integration, inspiration-only) |
 | **Implementation Effort** | S/M/L |
 | **Value Add** | What capability this gives us that we don't have today |
@@ -896,10 +905,10 @@ Add a new session entry documenting:
 - Recommended next implementation priorities
 
 ### system/ai_logic.md
-Update if any engine logic descriptions are outdated or missing based on what the code actually does now. Ensure all 7 channels are described.
+Update if any engine logic descriptions are outdated or missing based on what the code actually does now. Ensure all 8 channels are described.
 
 ### system/yousell_master_qa_prompt_v7.md
-Add new test cases for any untested requirements discovered in the RTM. Ensure test cases cover ALL 7 channels.
+Add new test cases for any untested requirements discovered in the RTM. Ensure test cases cover ALL 8 channels.
 
 ### system/e2e_testing_strategy.md
 Update with new test scenarios for gaps identified in the RTM.
@@ -916,18 +925,18 @@ Outline test cases that should be added (don't implement yet — document the te
 3. Be brutally honest in the RTM. Mock data pretending to be real functionality = ❌ MISSING, not ✅ DONE.
 4. If a provider falls back to mock data when no API key is configured, mark as ⚠️ PARTIAL with note.
 5. Cite exact file paths and line numbers for every claim in the RTM.
-6. Do not skip any engine, channel, or requirement — exhaustive coverage across ALL 7 channels is the goal.
+6. Do not skip any engine, channel, or requirement — exhaustive coverage across ALL 8 channels is the goal.
 7. Commit after each Phase completion with a descriptive message.
 8. Update system/development_log.md after each Phase.
 9. Total output target: RTM 600+ lines, Improvement Plan 400+ lines, Research Log 500+ lines, n8n Analysis 400+ lines.
 10. Quality bar: A senior engineer unfamiliar with the project should understand exactly what works, what doesn't, and what's next — for EVERY channel and engine.
 11. **Research thoroughness**: Use WebSearch and WebFetch for EVERY competitor platform. Do not skip any. Multiple search queries per niche.
 12. **Research log is mandatory**: docs/RESEARCH_LOG.md must be created during Phase 2.
-13. **YOUSELL positioning**: Always frame through the lens that YOUSELL is model-agnostic, multi-channel (7 channels), AI-first, and covers discovery + content + marketing.
+13. **YOUSELL positioning**: Always frame through the lens that YOUSELL is model-agnostic, multi-channel (8 channels), AI-first, and covers discovery + content + marketing.
 14. **Niche coverage**: All 5 niches must be researched with 5+ entries each. The AI affiliate and digital products niches are just as important as TikTok and Amazon.
 15. **Four deliverables minimum from Phase 2 + 2.5**: docs/RESEARCH_LOG.md, docs/IMPROVEMENT_PLAN.md, docs/N8N_WORKFLOW_ANALYSIS.md, and self-review annotations on docs/RTM_v7.md.
 16. **n8n analysis must be data-driven**: Read the actual spreadsheet. Filter programmatically.
-17. **Channel coverage**: EVERY audit section must explicitly address all 7 channels. If a channel is missing implementation, flag it as ❌ MISSING.
+17. **Channel coverage**: EVERY audit section must explicitly address all 8 channels. If a channel is missing implementation, flag it as ❌ MISSING.
 
 ---
 
@@ -993,13 +1002,84 @@ When auditing the content and publishing system, verify:
 - `client_channels` table has: connection_type, platform_account_name, platform_account_id, follower_count, last_health_check, health_status
 - 5-step onboarding flow: Choose Platforms → Connect Shops → Connect Social → Brand Voice → Ready
 
+### Section N — Admin Command Center Audit
+
+**N.1 — Best-Selling Products Dashboard**
+- Admin command center page at `/admin/command-center`
+- Top-scoring products displayed with one-click action buttons
+- Action buttons: Push to TikTok Shop, Push to Amazon, Push to Shopify, Push to All
+- Automation buttons: Launch Marketing, Influencer Outreach, Generate Content, Financial Model
+- Each button triggers BullMQ job (NOT inline execution)
+- BullMQ queues: `push-to-shopify`, `push-to-tiktok`, `push-to-amazon`, `push-to-all`
+
+**N.2 — Per-Platform Pipeline View**
+- Pipeline view showing live products per platform
+- Weekly revenue tracking per platform
+- Conversion rates per platform
+- `admin_store_connections`, `admin_product_listings`, `admin_revenue_tracking` tables
+
+### Section O — Affiliate Commission Engine Audit
+
+**O.1 — Dual Revenue Stream Dashboard**
+- Admin page at `/admin/affiliate-engine`
+- Stream 1: Internal content revenue (own content factory → affiliate sign-ups)
+- Stream 2: Client service commissions (platforms used in client onboarding)
+- Separate stats panels for each revenue stream
+
+**O.2 — Affiliate Platform Integrations**
+- E-Commerce: Shopify Partner (20% recurring), Wix ($100), Squarespace ($100-200), Ecwid (20% lifetime)
+- POD: Printful (10% 12mo), Printify (5% 12mo), Gelato (up to $500)
+- Marketing: Klaviyo (10-20% recurring), Omnisend (20% 24mo), Canva (36% 12mo)
+- Payment: Stripe ($2,500/merchant), PayPal ($2,500/merchant)
+- Dropshipping: Spocket (20-30% LIFETIME), Zendrop (20-30%), ShipBob (10% + $200)
+- Analytics: Jungle Scout ($150), Helium 10 (25% or $250)
+
+**O.3 — Affiliate Content Factory**
+- AI content generation for affiliate platforms (reviews, comparisons, tutorials)
+- Admin-only — zero client visibility
+- BullMQ queue: `affiliate-content-generate`
+- Content published via YOUSELL's own channels
+- `affiliate_referrals`, `affiliate_commissions`, `affiliate_content_links` tables
+
+**O.4 — Revenue Tracking**
+- `affiliate-commission-track` BullMQ queue for reconciliation
+- Per-platform commission tracking
+- Per-client referral tracking
+- Revenue multiplier estimate: ~$124,266/yr at 50 clients
+
+### Section P — POD Channel #8 Audit
+
+**P.1 — POD Discovery Engine**
+- Provider files for Etsy POD, Redbubble, Merch by Amazon, TikTok POD trends
+- Apify actors for POD marketplace scraping
+- POD-specific scoring adjustments (design uniqueness, niche saturation, fulfillment cost)
+- Minimum 30% margin requirement enforced
+
+**P.2 — POD Supplier Integration**
+- Printful REST API integration (product catalog, mockup generation, order fulfillment)
+- Printify REST API integration (multi-provider network)
+- Gelato REST API integration (global local production)
+- `pod_suppliers`, `pod_products`, `pod_designs` tables
+
+**P.3 — POD Store Provisioning**
+- Auto-create POD products in client Shopify/TikTok/Etsy stores
+- POD fulfillment metadata attached to product listings
+- BullMQ queues: `pod-discovery`, `pod-provision`, `pod-fulfillment-sync`
+
+**P.4 — POD Content**
+- AI-generated mockups via Printful Mockup Generator API + Bannerbear
+- Lifestyle background product overlays
+- POD-specific content templates (design showcase, custom merch brief)
+
+---
+
 ## OUTPUT FILES SUMMARY
 
 At the end of all 3 phases, the following files must exist:
 
 | File | Phase | Min Lines | Purpose |
 |------|-------|-----------|---------|
-| `docs/RTM_v7.md` | Phase 1 | 600+ | Requirements Traceability Matrix (all 7 channels, all engines) |
+| `docs/RTM_v7.md` | Phase 1 | 600+ | Requirements Traceability Matrix (all 8 channels, all engines) |
 | `docs/RESEARCH_LOG.md` | Phase 2 | 500+ | Full audit trail of all market research |
 | `docs/IMPROVEMENT_PLAN.md` | Phase 2 | 400+ | Categorized improvement recommendations (per-channel) |
 | `docs/N8N_WORKFLOW_ANALYSIS.md` | Phase 2.5 | 400+ | n8n evaluation with Build vs Adopt verdicts |

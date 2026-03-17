@@ -23,11 +23,15 @@ REPOSITORY STRUCTURE
     │   └─ yousell_master_qa_prompt_v7.md — QA execution prompt
     │
     ├─ docs/
-    │   └─ YouSell_Platform_Technical_Specification_v7.md — Master architecture
+    │   ├─ YouSell_Platform_Technical_Specification_v7.md — Master architecture
+    │   ├─ content_publishing_shop_integration_strategy.md — Content & shop integration
+    │   ├─ USE_CASE_DIAGRAM.md                            — Use case diagrams & data flows
+    │   └─ MARKET_RESEARCH_LOG_SESSION3.md                — Market research (80+ sources)
     │
     ├─ tasks/
     │   ├─ todo.md                        — Task planning and progress tracking
-    │   └─ lessons.md                     — Patterns and lessons from corrections
+    │   ├─ lessons.md                     — Patterns and lessons from corrections
+    │   └─ execution_plan.md              — Step-by-step implementation plan
     │
     ├─ archive/                           — Old/deprecated files (reference only)
     │
@@ -83,7 +87,8 @@ Claude must never restart the project from scratch.
 PROJECT PURPOSE
 ------------------------------------------------
 
-YOUSELL is an AI-powered commerce intelligence SaaS platform.
+YOUSELL is an AI-powered commerce intelligence SaaS platform
+with eight opportunity channels.
 
 The system discovers trending e-commerce products across multiple marketplaces,
 scores product viability, matches influencers and suppliers, generates launch
@@ -128,6 +133,9 @@ HOT   >= 80
 WARM  >= 60
 WATCH >= 40
 COLD  < 40
+
+POD (Print-on-Demand) products use the same three-pillar scoring model
+with POD-specific modifiers applied during evaluation.
 
 
 ------------------------------------------------
@@ -229,6 +237,10 @@ PROJECT MEMORY SYSTEM
 | system/yousell_master_qa_prompt_v7.md | QA execution prompt |
 | tasks/todo.md | Task planning and progress tracking |
 | tasks/lessons.md | Patterns and lessons from corrections |
+| tasks/execution_plan.md | Step-by-step implementation execution plan |
+| docs/content_publishing_shop_integration_strategy.md | Content creation & shop integration strategy |
+| docs/USE_CASE_DIAGRAM.md | Platform use case diagrams and data flows |
+| docs/MARKET_RESEARCH_LOG_SESSION3.md | Market research findings (80+ sources) |
 | archive/ | Old/deprecated files (reference only) |
 
 

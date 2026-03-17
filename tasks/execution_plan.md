@@ -3,7 +3,7 @@
 ## Version 1.0 — March 2026
 
 **Purpose:** Automated execution plan for implementing the Content Creation, Publishing & Shop Integration strategy.
-**Estimated Timeline:** 16 weeks (Phases 2A through 4)
+**Estimated Timeline:** 28 weeks (Phases 2A through 7)
 
 ---
 
@@ -247,6 +247,100 @@
 
 ---
 
+## PHASE 5: PRINT ON DEMAND (POD) INTEGRATION (Weeks 17-20)
+
+### Weeks 17-18: POD Fulfillment Partner APIs
+
+| # | Task | Files to Create/Modify | Automated? |
+|---|------|----------------------|-----------|
+| 5.1 | Create Printful API client (products, orders, mockups) | `src/lib/integrations/printful/client.ts` | Yes |
+| 5.2 | Create Printify API client (catalog, products, orders) | `src/lib/integrations/printify/client.ts` | Yes |
+| 5.3 | Create Gelato API client (products, orders, pricing) | `src/lib/integrations/gelato/client.ts` | Yes |
+| 5.4 | Create POD provider abstraction layer | `src/lib/providers/pod/index.ts` | Yes |
+| 5.5 | Create Supabase migration: `pod_products`, `pod_orders`, `pod_providers` | `supabase/migrations/xxx_pod_tables.sql` | Yes |
+| 5.6 | Create POD product discovery worker (Etsy, Redbubble, Merch by Amazon) | `backend/src/jobs/pod-discovery.ts` | Yes |
+| 5.7 | Create POD mockup generation service (Printful API) | `src/lib/integrations/printful/mockups.ts` | Yes |
+| 5.8 | Create POD scoring adjustments (design trend velocity, margin checks) | `src/lib/scoring/pod-adjustments.ts` | Yes |
+
+### Weeks 19-20: POD Admin UI & Store Integration
+
+| # | Task | Files to Create/Modify | Automated? |
+|---|------|----------------------|-----------|
+| 5.9 | Create admin POD intelligence page | `src/app/admin/pod/page.tsx` | Yes |
+| 5.10 | Create POD product push to Shopify (with Printful fulfillment) | `src/lib/integrations/printful/shopify-sync.ts` | Yes |
+| 5.11 | Create POD product push to TikTok Shop | `src/lib/integrations/printful/tiktok-sync.ts` | Yes |
+| 5.12 | Create POD order webhook handlers | `src/app/api/webhooks/printful/route.ts` | Yes |
+| 5.13 | Create POD API routes (CRUD + discovery trigger) | `src/app/api/admin/pod/route.ts` | Yes |
+| 5.14 | Update admin sidebar with POD navigation item | `src/components/admin-sidebar.tsx` | Yes |
+| 5.15 | Write integration tests for POD flow | `tests/integration/pod.test.ts` | Yes |
+| 5.16 | Deploy and test end-to-end | — | Manual verification |
+
+**Validation Checkpoint:** Can an admin discover trending POD niches, generate mockups, push a product to a Shopify store with Printful fulfillment attached, and see an order flow through?
+
+---
+
+## PHASE 6: ADMIN COMMAND CENTER (Weeks 21-24)
+
+### Weeks 21-22: Best-Selling Products Dashboard & Product Push
+
+| # | Task | Files to Create/Modify | Automated? |
+|---|------|----------------------|-----------|
+| 6.1 | Create admin store connections manager (own stores OAuth) | `src/lib/admin/store-connections.ts` | Yes |
+| 6.2 | Create Supabase migration: `admin_store_connections`, `admin_product_listings`, `admin_revenue_tracking` | `supabase/migrations/xxx_admin_command_center.sql` | Yes |
+| 6.3 | Create admin product push worker (fan-out to Shopify/TikTok/Amazon) | `backend/src/jobs/admin-product-push.ts` | Yes |
+| 6.4 | Create admin product push API routes | `src/app/api/admin/command-center/push/route.ts` | Yes |
+| 6.5 | Create Best Sellers Pool component | `src/components/admin/best-sellers-pool.tsx` | Yes |
+| 6.6 | Create per-product action buttons (push, marketing, content, financial) | `src/components/admin/product-actions.tsx` | Yes |
+
+### Weeks 23-24: Revenue Dashboard & Platform Pipeline
+
+| # | Task | Files to Create/Modify | Automated? |
+|---|------|----------------------|-----------|
+| 6.7 | Create per-platform pipeline view component | `src/components/admin/platform-pipeline.tsx` | Yes |
+| 6.8 | Create revenue dashboard component | `src/components/admin/revenue-dashboard.tsx` | Yes |
+| 6.9 | Create admin command center page (unified dashboard) | `src/app/admin/command-center/page.tsx` | Yes |
+| 6.10 | Create revenue tracking API routes | `src/app/api/admin/command-center/revenue/route.ts` | Yes |
+| 6.11 | Create store connection UI (connect YOUSELL's own stores) | `src/components/admin/store-connect.tsx` | Yes |
+| 6.12 | Update admin sidebar with Command Center navigation | `src/components/admin-sidebar.tsx` | Yes |
+| 6.13 | Write tests for command center flows | `tests/integration/command-center.test.ts` | Yes |
+| 6.14 | Deploy and test end-to-end | — | Manual verification |
+
+**Validation Checkpoint:** Can an admin see top-scoring products, one-click push to Shopify/TikTok/Amazon, see live revenue per platform, and track product pipeline status?
+
+---
+
+## PHASE 7: AFFILIATE COMMISSION ENGINE (Weeks 25-28)
+
+### Weeks 25-26: Affiliate Database & Tracking Infrastructure
+
+| # | Task | Files to Create/Modify | Automated? |
+|---|------|----------------------|-----------|
+| 7.1 | Create Supabase migration: `affiliate_programs`, `affiliate_referrals`, `affiliate_commissions`, `affiliate_content_log` | `supabase/migrations/xxx_affiliate_engine.sql` | Yes |
+| 7.2 | Seed affiliate_programs with all known programs (40+) | `supabase/migrations/xxx_seed_affiliate_programs.sql` | Yes |
+| 7.3 | Create affiliate program management service | `src/lib/affiliate/programs.ts` | Yes |
+| 7.4 | Create affiliate referral tracker | `src/lib/affiliate/referrals.ts` | Yes |
+| 7.5 | Create affiliate commission logger | `src/lib/affiliate/commissions.ts` | Yes |
+| 7.6 | Create affiliate content generator (BullMQ job) | `backend/src/jobs/affiliate-content.ts` | Yes |
+| 7.7 | Create affiliate content publishing scheduler | `backend/src/jobs/affiliate-publish.ts` | Yes |
+
+### Weeks 27-28: Affiliate Admin Dashboard & Dual Stats
+
+| # | Task | Files to Create/Modify | Automated? |
+|---|------|----------------------|-----------|
+| 7.8 | Create affiliate programs management page | `src/app/admin/affiliate-engine/page.tsx` | Yes |
+| 7.9 | Create affiliate revenue tracker component (dual stats) | `src/components/admin/affiliate-revenue-tracker.tsx` | Yes |
+| 7.10 | Create internal content stream dashboard | `src/components/admin/affiliate-internal-stream.tsx` | Yes |
+| 7.11 | Create client service stream dashboard | `src/components/admin/affiliate-client-stream.tsx` | Yes |
+| 7.12 | Create affiliate API routes (CRUD + stats) | `src/app/api/admin/affiliate-engine/route.ts` | Yes |
+| 7.13 | Create auto-referral tracking (detect when client provisions platform) | `src/lib/affiliate/auto-track.ts` | Yes |
+| 7.14 | Update admin sidebar with Affiliate Engine navigation | `src/components/admin-sidebar.tsx` | Yes |
+| 7.15 | Write tests for affiliate tracking | `tests/integration/affiliate-engine.test.ts` | Yes |
+| 7.16 | Deploy and test end-to-end | — | Manual verification |
+
+**Validation Checkpoint:** Can an admin view all affiliate programs, see dual-stream revenue stats (internal content vs client service), track which clients generated referral commissions, and see the content factory producing affiliate content?
+
+---
+
 ## AUTOMATION INSTRUCTIONS FOR CLAUDE
 
 When executing this plan, follow these rules:
@@ -296,6 +390,11 @@ AMAZON_SP_CLIENT_SECRET=
 AMAZON_REFRESH_TOKEN=
 META_APP_ID=
 META_APP_SECRET=
+
+# Phase 5 (POD)
+PRINTFUL_API_KEY=
+PRINTIFY_API_KEY=
+GELATO_API_KEY=
 
 # Security
 ENCRYPTION_KEY=              # AES-256-GCM key for token encryption
