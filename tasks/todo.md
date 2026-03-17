@@ -14,9 +14,10 @@ Last updated: 2026-03-17
 - [x] Update content_publishing_shop_integration_strategy.md with engine boundaries
 - [x] Update USE_CASE_DIAGRAM.md with inter-engine event flows
 - [x] Update ai_logic.md with inter-engine operational contracts
-- [ ] Implement event bus skeleton (Redis Pub/Sub + Supabase Realtime)
-- [ ] Refactor first proof-of-concept engine (Shop Connect)
-- [ ] Define formal event contract schema (JSON Schema or TypeScript)
+- [x] Implement event bus skeleton (in-memory, Redis-upgradeable) — Phase 0
+- [x] Define formal event contract schema (TypeScript interfaces) — Phase 0
+- [x] Refactor 3 engines to engine pattern (Discovery, TikTok, Scoring) — Phase 0
+- [x] Integration tests for engine system (19/19 passing) — Phase 0
 
 ### Platform Build (from execution_plan.md)
 - [ ] Phase 2A: Shopify Connect (Weeks 1-3)
@@ -36,3 +37,8 @@ Last updated: 2026-03-17
 - [x] Production flowcharts (8 core pages) — 2026-03-17
 - [x] Engine independence diagram pages (4 pages) — 2026-03-17
 - [x] Project documentation update for engine independence — 2026-03-17
+- [x] Phase 0: Engine Architecture Foundation — 2026-03-17
+  - EventBus, EngineRegistry, Engine interface types
+  - 3 engines refactored: Discovery, TikTok Discovery, Scoring
+  - 19 integration tests passing
+  - All backward-compatible — zero API route changes

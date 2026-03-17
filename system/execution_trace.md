@@ -198,4 +198,34 @@ Refactor plan:
 - **Files touched:** `tests/engine-system.test.ts`, `tests/setup.ts`
 - **Result:** SUCCESS — 19/19 tests passing
 - **Next step:** Batch 0.13 — Update architecture docs
+- **Commit:** 7f1d75f
+
+------------------------------------------------------------
+
+### [2026-03-17 02:00] DONE — Batch 0.13: Update architecture docs — PHASE 0 COMPLETE
+
+- **Task:** Update development_log.md and todo.md to reflect Phase 0 completion
+- **Batch:** 0.13
+- **Action:** Added Phase 0 completion entry to development_log.md, updated todo.md with completed items
+- **Files touched:** `system/development_log.md`, `tasks/todo.md`
+- **Result:** SUCCESS
+- **Next step:** Phase B — Refactor remaining API routes to engine namespaces
 - **Commit:** pending
+
+------------------------------------------------------------
+
+### PHASE 0 SUMMARY — ENGINE ARCHITECTURE FOUNDATION
+
+**Status: COMPLETE**
+
+Files created: 6 new, 4 modified
+Tests: 19/19 passing
+Commits: 13 micro-batch commits
+Breaking changes: ZERO
+
+Core deliverables:
+1. EventBus — in-memory pub/sub with wildcard patterns and error isolation
+2. EngineRegistry — dependency-ordered lifecycle management
+3. Engine interface — config, init, start, stop, handleEvent, healthCheck
+4. 3 engines refactored — Discovery, TikTok Discovery, Scoring
+5. Full integration test suite
