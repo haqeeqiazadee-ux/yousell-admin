@@ -1902,3 +1902,223 @@ Conducted comprehensive gap analysis comparing v7 spec against actual codebase.
 
 ### Action Required
 - Run `supabase/migrations/021_platform_config.sql` in Supabase SQL Editor to create platform_config table
+
+------------------------------------------------------------
+
+## Session: 2026-03-16 — Master Audit & Improvement (RTM v7)
+
+### Phase 1: Requirements Traceability Matrix
+
+Executed comprehensive audit of all 50 sections of the v7 Technical Specification against actual codebase implementation.
+
+**Results:**
+- 868-line RTM document created at `docs/RTM_v7.md`
+- 80 requirements tracked across all components
+- **Overall v7 Compliance: 58%** (46 done, 17 partial, 17 missing)
+
+**Completion by Component:**
+| Component | Done | Partial | Missing |
+|-----------|------|---------|---------|
+| Engines (7) | 5 | 2 | 0 |
+| Data Source Modules (7 channels) | 4 | 3 | 0 |
+| Supporting Systems (10) | 4 | 3 | 3 |
+| Engine Gating (8) | 1 | 2 | 5 |
+| Scoring Components | 7 | 0 | 0 |
+| Admin Pages (22) | 22 | 0 | 0 |
+| Client Pages | 7 | 0 | 0 |
+| Admin API Routes (22) | 22 | 0 | 0 |
+| New API Routes (16) | 0 | 4 | 12 |
+| Worker Jobs (18) | 15 | 0 | 3 |
+
+**Top 10 Gaps by Severity:**
+1. CRITICAL: Per-platform subscription enforcement (Stripe + gating)
+2. CRITICAL: Store integration OAuth (Shopify/TikTok/Amazon push)
+3. CRITICAL: Client opportunity feed with upsell
+4. HIGH: Content creation + distribution worker pipeline
+5. HIGH: AI Affiliate dynamic discovery (hardcoded)
+6. HIGH: Physical Affiliate live data sources
+7. HIGH: Pre-viral signals (only 2 of 6 functional)
+8. HIGH: Cross-platform intelligence
+9. HIGH: Marketing channel OAuth
+10. HIGH: Order tracking webhooks + email sequences
+
+**Key Positive Findings:**
+- All 7 engines exist and contain real logic (not stubs)
+- 3-pillar scoring model correctly implemented (0.40/0.35/0.25)
+- Legacy 60/40 weighting (BUG-035) fully resolved
+- All 8 auto-rejection rules implemented
+- 15 BullMQ job queues operational
+- Backend RBAC, CORS, error sanitization all fixed
+- 22 admin pages + 7 client pages fully functional
+
+### Phase 2: Market Research
+
+Conducted competitive analysis across 23 platforms in 8 tiers + 7 niche deep-dives.
+
+**Key Competitive Insights:**
+- NO competitor covers all 7 channels YOUSELL targets
+- Closest: Sell The Trend (2 channels), AutoDS (3 channels), Minea (5 platforms for ads only)
+- Price range validated: $29-$199/mo aligns with market ($16-$399 range across competitors)
+- Content creation + distribution is the biggest gap (Predis.ai model is the benchmark)
+- Store integration (AutoDS model) is table-stakes for paid customers
+- AI affiliate is an underserved niche (only 9 n8n workflows, few competitors)
+
+**Files Created:**
+- `docs/RTM_v7.md` — Requirements Traceability Matrix (868 lines)
+- `docs/RESEARCH_LOG.md` — Market Research Log (30 entries, 23 platforms, 7 niches)
+- `docs/IMPROVEMENT_PLAN.md` — Improvement Recommendations (7 categories, 36 features)
+- `docs/N8N_WORKFLOW_ANALYSIS.md` — n8n Analysis (preliminary — zip file not in repo)
+
+**Recommended Implementation Priority:**
+1. P0: Stripe billing + Platform gating + Security fixes + Store OAuth
+2. P1: Content engine + Pre-viral signals + Free tier + Onboarding
+3. P2: Channel-specific enhancements + Technical debt
+4. P3: API access + Mobile app + Advanced features
+
+### Phase 2.5: n8n Analysis
+
+**Status:** INCOMPLETE — `n8n_templates.zip` not found in repository.
+Preliminary recommendation: Option 3 (use n8n for prototyping content distribution only, build everything else native in BullMQ).
+
+### Phase 3: Documentation Updates
+
+- Updated `system/development_log.md` with RTM findings (this entry)
+- `system/project_check_prompt.md` rewritten to cover all 50 v7 spec sections (533 lines → comprehensive v2)
+
+### RTM Corrections (2026-03-16)
+
+After deeper codebase analysis via subagents:
+
+**Database Tables:** All 9 new v7 tables confirmed present (previously marked ❌):
+- `subscriptions` (migration 009), `platform_access` (009), `engine_toggles` (009)
+- `usage_tracking` (009), `client_addons` + `addons` (009), `connected_channels` (009)
+- `content_queue` (009), `orders` (009), `platform_config` (021, seeded with 7 platforms)
+- Total: 44 tables, 22 migrations, 30+ indexes, comprehensive RLS
+
+**API Routes:** 11 of 16 new routes confirmed built (previously marked ❌):
+- Dashboard: subscription, subscription/portal, engines, channels, channels/connect,
+  channels/disconnect, content, content/generate, orders, products, requests
+- Webhooks: shopify, tiktok (both exist alongside stripe and amazon)
+- Total: 57 routes (40 admin + 11 dashboard + 3 auth + 4 webhooks) — not 22 as initially tracked
+
+**Overall Compliance:** Updated from ~58% → ~68% (61/80 requirements done, 12 partial, 7 missing)
+
+---
+
+## Session — 2026-03-17: Pricing Strategy, Content/Publishing/Shop Integration Architecture
+
+### Context
+Continuation of strategic planning phase. Previous session established competitive research (23 competitors, 7 niches). This session focused on pricing model selection, content creation/publishing engine architecture, shop integration strategy, and automation control framework.
+
+### Decisions Made
+
+#### 1. Pricing Model: Option C (Hybrid) — APPROVED
+Three pricing options were evaluated:
+- **Option A** (Fixed Feature Tiers): Simple but inflexible
+- **Option B** (Per-Channel Pricing): Flexible but complex
+- **Option C** (Hybrid: Channel-Gated Tiers + Channel Selection): Best of both — CHOSEN
+
+Final pricing tiers:
+| Tier | Monthly | Annual | Channels |
+|------|---------|--------|----------|
+| Starter | $29 | $19/mo | 1 channel |
+| Growth | $59 | $39/mo | 2 channels |
+| Professional | $99 | $69/mo | 3 channels |
+| Enterprise | $149 | $99/mo | All channels |
+
+Multi-channel discount: 20% off second, 30% off third+.
+
+Validated by competitor pricing research (8 competitors with 2026 data). Key validation: Minea uses exact same channel-gated model. AutoDS uses per-marketplace pricing. Helium 10 raised prices in 2026 (Platinum now $129, Diamond $359) — we significantly undercut.
+
+#### 2. Customer-Facing Terminology Standards
+All client-facing UI must use professional terminology:
+- Scrape/Scan → Product Finder / Market Intelligence
+- Content Creation Engine → Creative Studio
+- Content Publishing Engine → Smart Publisher
+- Store Integration Engine → Shop Connect
+- Product Discovery Engine → Product Finder
+- Influencer Outreach Engine → Creator Connect
+- Implementation: `src/lib/terminology.ts` constants file
+
+#### 3. Content Creation Engine (Creative Studio)
+Multi-tool pipeline architecture:
+- **Claude Haiku** — text content (captions, emails, scripts) ~$0.001/post
+- **Claude Sonnet** — premium content (ad copy, blog articles) ~$0.01/post
+- **Shotstack API** — video generation (15-60s MP4) ~$0.40/video
+- **Bannerbear API** — image generation (branded product images) ~$0.10/image
+
+8 content templates defined, per-platform formatting rules, brand voice configuration per client, content credits system (50/200/500/unlimited per tier).
+
+#### 4. Content Publishing Engine (Smart Publisher)
+**Decision: Ayrshare** for multi-platform social publishing (13+ platforms, single API).
+
+Rationale: Eliminates 6-12 months of per-platform OAuth and publishing integration work. Handles TikTok, Instagram, Facebook, YouTube, Pinterest, LinkedIn, X/Twitter, etc. through one API. SaaS plan supports per-client profiles (multi-tenant).
+
+Trade-off: third-party dependency. Fallback: native OAuth infrastructure from Shop Connect can be extended.
+
+TikTok limitation: unaudited apps post privately only. Phase 1 fallback: "Download for TikTok" button.
+
+#### 5. Shop Integration Engine (Shop Connect)
+**Decision: Native OAuth** per platform (not through Ayrshare).
+
+Implementation order:
+- Phase 2A: Shopify (GraphQL Admin API, standard OAuth, `productSet` mutation)
+- Phase 2B: TikTok Shop (Partner API v2, OAuth + HMAC-SHA256 signing)
+- Phase 3: Amazon (SP-API, Feeds API) + Meta (Graph API v25.0 + MBE)
+
+Key findings from API research:
+- Shopify REST API is LEGACY — must use GraphQL from April 2025
+- TikTok Shop requires product review before listing goes live
+- Meta in-app checkout ended Sept 2025 — now catalog visibility only
+- Amazon requires UPC/EAN barcodes for listing
+
+#### 6. Automation–Control Spectrum
+Three levels, per-feature configurable:
+- **Level 1 (Manual)** — Default. Client initiates every action.
+- **Level 2 (Assisted)** — System prepares, client approves.
+- **Level 3 (Auto-Pilot)** — System acts within rules. Client receives digest. Requires explicit opt-in.
+
+Guardrails:
+- Hard limits: daily spend cap, content volume cap, product upload cap, outreach cap, pause-on-error (3 failures)
+- Soft limits: approval window (4h default), category restrictions, price range, minimum score, quiet hours
+- Emergency: "Pause All Automation" button, per-feature pause, undo window, activity audit trail
+
+### New Database Tables Designed
+- `content_items` — generated content library
+- `publish_log` — publishing tracking
+- `shop_products` — YouSell ↔ platform product mapping
+- `client_automation_config` — per-feature automation settings
+- `content_credits` — per-period credit tracking
+- `client_social_profiles` — Ayrshare profile mapping
+- Updated `client_channels` with connection_type, health_status columns
+
+### Files Created/Updated
+- **Created:** `docs/content_publishing_shop_integration_strategy.md` — comprehensive strategy document
+- **Updated:** `docs/RTM_v7.md` — added Sections K (content/publishing/shop audit) and L (pricing decision)
+- **Updated:** `docs/RESEARCH_LOG.md` — added entries #31-45 (competitor pricing, API research, tool evaluations)
+- **Updated:** `docs/IMPROVEMENT_PLAN.md` — added 16 new features (#37-52), updated competitive position, pricing decision
+- **Updated:** `docs/N8N_WORKFLOW_ANALYSIS.md` — updated recommendation to Option 4 (skip n8n, use Ayrshare + native OAuth)
+- **Updated:** `system/project_check_prompt.md` — added Sections K-M (content, pricing, social platform audit areas)
+- **Updated:** `system/development_log.md` — this entry
+
+### Implementation Phases Defined
+- Phase 2A: Shopify Shop Connect (Week 1-2)
+- Phase 2B: TikTok Shop Connect (Week 3-4)
+- Phase 3A: Creative Studio — Text Content (Week 5-6)
+- Phase 3B: Creative Studio — Rich Media (Week 7-8)
+- Phase 3C: Smart Publisher (Week 9-10)
+- Phase 3D: Automation & Intelligence (Week 11-12)
+- Phase 4: Amazon + Meta Integration (Week 13-16)
+
+### Cost Projections
+- Per-client content/publishing cost: ~$17.18/mo at Growth tier volume
+- Fixed costs (Ayrshare + Shotstack + Bannerbear + Railway): $207-857/mo depending on scale
+- At $29-$149/client subscription, healthy margins at all scale points
+
+### Next Steps
+1. Execute Phase 2A (Shopify Shop Connect)
+2. Create `src/lib/terminology.ts` terminology mapping
+3. Set up Shopify Partner account and app registration
+4. Apply for TikTok Shop Partner Center access (US portal)
+5. Register for Ayrshare Business plan
+6. Register for Shotstack and Bannerbear API keys
