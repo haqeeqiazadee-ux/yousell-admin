@@ -101,4 +101,16 @@ Key Observations:
 - **Files touched:** `src/lib/engines/registry.ts`
 - **Result:** SUCCESS — clean compile
 - **Next step:** Batch 0.5 — Create engine barrel export
+- **Commit:** 08183db
+
+------------------------------------------------------------
+
+### [2026-03-17 01:25] DONE — Batch 0.5: Create engine barrel export
+
+- **Task:** Clean public API for the engine system
+- **Batch:** 0.5
+- **Action:** Created `src/lib/engines/index.ts` — exports EventBus, EngineRegistry, all types, ENGINE_EVENTS
+- **Files touched:** `src/lib/engines/index.ts`
+- **Result:** SUCCESS — clean compile
+- **Next step:** Batch 0.6 — Audit TikTok Discovery Engine for refactor
 - **Commit:** pending
