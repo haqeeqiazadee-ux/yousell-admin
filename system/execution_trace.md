@@ -89,4 +89,16 @@ Key Observations:
 - **Files touched:** `src/lib/engines/event-bus.ts`
 - **Result:** SUCCESS — clean compile with project tsconfig
 - **Next step:** Batch 0.4 — Build the Engine Registry
+- **Commit:** ff88dd4
+
+------------------------------------------------------------
+
+### [2026-03-17 01:20] DONE — Batch 0.4: Build the Engine Registry
+
+- **Task:** Create central registry for engine management
+- **Batch:** 0.4
+- **Action:** Created `src/lib/engines/registry.ts` — singleton registry with register/unregister, dependency validation, topological start/stop ordering, health checks
+- **Files touched:** `src/lib/engines/registry.ts`
+- **Result:** SUCCESS — clean compile
+- **Next step:** Batch 0.5 — Create engine barrel export
 - **Commit:** pending
