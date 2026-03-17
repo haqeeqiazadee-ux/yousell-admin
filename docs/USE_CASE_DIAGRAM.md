@@ -1,7 +1,7 @@
 # YOUSELL Platform — Comprehensive Use Case Diagram
 
-## Version 2.0 — 2026-03-17
-## Based on: v7 Spec + Session 3 Business Requirements + POD Channel #8 + Admin Command Center + Affiliate Commission Engine
+## Version 2.1 — 2026-03-17
+## Based on: v8 Spec + Session 3 Business Requirements + POD Channel #8 + Admin Command Center + Affiliate Commission Engine + Engine Independence Architecture
 
 ---
 
@@ -1107,4 +1107,119 @@
 
 ---
 
-*This use case diagram (v2.0) covers ALL user inputs and outputs across the 3 system interfaces (main website, admin dashboard, client dashboard) incorporating 8 business requirements: Session 3 original 5 points + POD Channel #8 + Admin Command Center + Affiliate Commission Engine. Total: 12 use cases, 14 new database tables, 10 new columns on existing tables.*
+---
+
+## INTER-ENGINE EVENT FLOWS (NEW — Engine Independence Architecture)
+
+**Reference:** Technical Specification v8, Section 9A
+
+Each of the 21 platform engines operates as an independent bounded context. The diagram below shows how use cases map to engines and how engines communicate via the event bus.
+
+### Engine-to-Use-Case Mapping
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│                    ENGINE → USE CASE MAPPING                        │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  DISCOVERY LAYER                                                    │
+│  ├─ Product Discovery Engine ──→ UC-1 (Product Discovery)          │
+│  └─ Trend Scout Engine ────────→ UC-1 (Trend Detection signals)    │
+│                                                                     │
+│  SCORING LAYER                                                      │
+│  ├─ Data Fusion Engine ────────→ UC-1 (Multi-source merging)       │
+│  ├─ Composite Scoring Engine ──→ UC-2 (Product Scoring)            │
+│  ├─ POD Scoring Engine ────────→ UC-8 (POD Scoring)                │
+│  └─ Profitability Engine ──────→ UC-2 (Margin calculation)         │
+│                                                                     │
+│  ENRICHMENT LAYER                                                   │
+│  ├─ Financial Modelling Engine ─→ UC-2 (Financial models)          │
+│  ├─ Influencer Intelligence ───→ UC-6 (Influencer Matching)        │
+│  ├─ Supplier Discovery Engine ──→ UC-3 (Supplier Matching)         │
+│  ├─ Competitor Intelligence ───→ UC-7 (Store Intelligence)         │
+│  ├─ Ad Intelligence Engine ────→ UC-7 (Ad campaign data)           │
+│  └─ Launch Blueprint Engine ───→ UC-2 (Launch strategy)            │
+│                                                                     │
+│  CLIENT-FACING LAYER                                                │
+│  ├─ Client Allocation Engine ──→ UC-4 (Product Allocation)         │
+│  ├─ Creative Studio Engine ────→ UC-5 (Content Creation)           │
+│  ├─ Smart Publisher Engine ────→ UC-5 (Content Publishing)         │
+│  ├─ Shop Connect Engine ───────→ UC-9 (Store Integration)          │
+│  └─ Order Tracking Engine ─────→ UC-10 (Order Management)          │
+│                                                                     │
+│  OPERATIONS LAYER                                                   │
+│  ├─ Command Center Engine ─────→ UC-11 (Best-Seller Deployment)    │
+│  ├─ Affiliate Commission ──────→ UC-12 (Affiliate Revenue)         │
+│  ├─ POD Intelligence Engine ───→ UC-8 (POD Pipeline)               │
+│  └─ Automation Orchestrator ───→ All UCs (Automation control)      │
+│                                                                     │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+### Inter-Engine Event Flow Diagram
+
+```
+                         ┌─────────────────────────────────────┐
+                         │          EVENT BUS                    │
+                         │  Redis Pub/Sub + Supabase Realtime   │
+                         └──────────────┬──────────────────────┘
+                                        │
+    ┌───────────────────────────────────┼───────────────────────────┐
+    │                                   │                           │
+    ▼                                   ▼                           ▼
+┌──────────┐   product.discovered   ┌──────────┐               ┌──────────┐
+│ Product  │ ─────────────────────→ │  Trend   │               │  Data    │
+│Discovery │                        │  Scout   │               │  Fusion  │
+└──────────┘                        └──────────┘               └────┬─────┘
+                                                                    │
+                                                          product.fused
+                                                                    │
+                                                                    ▼
+                                                            ┌──────────────┐
+                                                            │  Composite   │
+                                                            │  Scoring     │
+                                                            └──────┬───────┘
+                                                                   │
+                                                          product.scored
+                                            ┌──────────┬──────────┼──────────┐
+                                            ▼          ▼          ▼          ▼
+                                     ┌──────────┐ ┌────────┐ ┌────────┐ ┌────────┐
+                                     │Influencer│ │Supplier│ │ Client │ │Command │
+                                     │  Intel   │ │  Disc  │ │ Alloc  │ │Center  │
+                                     └──────────┘ └────────┘ └───┬────┘ └────────┘
+                                                                  │
+                                                      product.allocated
+                                                      ┌───────────┼──────────┐
+                                                      ▼                      ▼
+                                              ┌──────────────┐      ┌──────────────┐
+                                              │  Creative    │      │  Shop        │
+                                              │  Studio      │      │  Connect     │
+                                              └──────┬───────┘      └──────┬───────┘
+                                                     │                     │
+                                          content.generated      product.pushed
+                                                     │                     │
+                                                     ▼                     ▼
+                                              ┌──────────────┐      ┌──────────────┐
+                                              │  Smart       │      │  Order       │
+                                              │  Publisher   │      │  Tracking    │
+                                              └──────┬───────┘      └──────┬───────┘
+                                                     │                     │
+                                          content.published       order.fulfilled
+                                                     │                     │
+                                                     └──────────┬──────────┘
+                                                                ▼
+                                                         ┌──────────────┐
+                                                         │  Affiliate   │
+                                                         │  Commission  │
+                                                         └──────────────┘
+```
+
+### Data Isolation Guarantee
+
+Each engine owns its tables and communicates only through events. No engine directly reads another engine's tables. This enables any engine to be extracted as a standalone SaaS product following the 5-step process in v8 Spec Section 9A.7.
+
+**Visual diagrams:** See `docs/YOUSELL_Use_Case_Diagram.drawio` (pages 7-8) and `docs/YOUSELL_Flowcharts.drawio` (pages 9-10) for detailed draw.io versions of these flows.
+
+---
+
+*This use case diagram (v2.1) covers ALL user inputs and outputs across the 3 system interfaces (main website, admin dashboard, client dashboard) incorporating 8 business requirements + engine independence architecture. Total: 12 use cases, 21 independent engines, 14 new database tables, 10 new columns on existing tables.*
