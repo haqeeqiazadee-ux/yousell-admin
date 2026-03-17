@@ -52,10 +52,10 @@ CANONICAL ARCHITECTURE DOCUMENT
 
 The single source of truth for the platform architecture is:
 
-    docs/YouSell_Platform_Technical_Specification_v7.md
+    docs/YouSell_Platform_Technical_Specification_v8.md
 
 This document supersedes all prior build briefs.
-If any file conflicts with the v7 specification, v7 takes precedence.
+If any file conflicts with the v8 specification, v8 takes precedence.
 
 
 ------------------------------------------------
@@ -68,7 +68,7 @@ Claude must immediately run the following protocol.
 1. Read these files in order:
 
    CLAUDE.md
-   docs/YouSell_Platform_Technical_Specification_v7.md
+   docs/YouSell_Platform_Technical_Specification_v8.md
    system/development_log.md
    system/ai_logic.md
 
@@ -158,7 +158,7 @@ Claude must follow these rules:
 12. Use Claude Haiku for bulk operations, Sonnet only for premium insights.
 13. Store OAuth tokens encrypted; never handle client passwords.
 14. Update system/development_log.md after each meaningful implementation.
-15. Treat docs/YouSell_Platform_Technical_Specification_v7.md as the primary
+15. Treat docs/YouSell_Platform_Technical_Specification_v8.md as the primary
     architecture reference unless a newer canonical file explicitly replaces it.
 
 
@@ -231,7 +231,7 @@ PROJECT MEMORY SYSTEM
 | File | Purpose |
 |------|---------|
 | CLAUDE.md | Project rules and guardrails (this file) |
-| docs/YouSell_Platform_Technical_Specification_v7.md | Master architecture |
+| docs/YouSell_Platform_Technical_Specification_v8.md | Master architecture |
 | system/development_log.md | Change history and session log |
 | system/ai_logic.md | Platform operational logic reference |
 | system/yousell_master_qa_prompt_v7.md | QA execution prompt |
@@ -255,4 +255,4 @@ After completing each task:
 2. commit changes
 
 If architecture changes:
-update docs/YouSell_Platform_Technical_Specification_v7.md
+update docs/YouSell_Platform_Technical_Specification_v8.md

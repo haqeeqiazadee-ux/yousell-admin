@@ -2230,3 +2230,141 @@ Comprehensive update of ALL remaining project documents that were missed in the 
 
 ### Verification
 All 10 docs files, all system files, and all task files have been read and verified to contain POD Channel #8, Admin Command Center, and Affiliate Commission Engine content.
+
+---
+
+## Session: 2026-03-17 (Part 3) — v8 Technical Specification Created
+
+### What Was Done
+Created `docs/YouSell_Platform_Technical_Specification_v8.md` — a comprehensive 3,202-line master specification that merges v7 (2,683 lines) with all new content from 9 satellite documents.
+
+### Key v7 → v8 Changes
+1. **POD Channel #8 fully integrated** — throughout all sections (discovery, scoring, queues, API routes, database, frontend, phases)
+2. **Admin Command Center** — dashboard layout (ASCII), BullMQ push-to-store jobs, revenue tracking, new API routes
+3. **Affiliate Commission Engine** — dual-stream tracking, 24+ affiliate programs, content factory, commission database
+4. **8 new BullMQ queues** — 23 total (pod-discovery, pod-provision, pod-fulfillment-sync, push-to-shopify, push-to-tiktok, push-to-amazon, affiliate-content-generate, affiliate-commission-track)
+5. **7 new database tables** — admin_store_connections, admin_product_listings, admin_revenue_tracking, affiliate_referrals, affiliate_commissions, affiliate_content_log, pod_designs
+6. **15 new API routes** — POD, Command Center, Affiliate Engine endpoints
+7. **Revenue multiplier expanded** — $124K/yr estimate with 17 affiliate programs detailed
+8. **Competitive landscape** — Tier 9 (POD platforms), Tier 10 (Affiliate programs)
+9. **Development phases updated** — Phase J (POD weeks 15-16), Phase K (Command Center weeks 17-18), Phase L (Affiliate Engine weeks 19-20)
+10. **New appendices** — Appendix J (Content Publishing Strategy), Appendix K (Market Research Summary)
+
+### Files Modified
+- `docs/YouSell_Platform_Technical_Specification_v8.md` — CREATED (3,202 lines)
+- `CLAUDE.md` — Updated all v7 references to v8
+- `system/development_log.md` — This entry
+
+### Canonical Document Hierarchy
+v8 is now the single authoritative architecture reference. v7 is superseded.
+
+------------------------------------------------------------
+
+## Session: 2026-03-17 (Part 4) — v8 Completeness Audit & Gap Fill
+
+### What Was Done
+Ran 6 parallel audit agents comparing v8 against all 10 source documents. Identified ~25 significant content gaps. Added 639 lines of missing content to v8 (3,202 → 3,841 lines).
+
+### Content Added to v8
+1. **Detailed pricing tiers** — Starter $29, Growth $59, Professional $99, Enterprise $149 with features, annual pricing, content credits per tier
+2. **Free tier specification** — read-only access, 5 products/week, email digests
+3. **Add-on revenue streams** — extra insights, scan credits, content credits, priority support
+4. **Content credits system** — per-type credit costs (1-8 credits), monthly allocation per tier
+5. **Terminology standards** (Section 3A) — client-facing language mapping table + engine naming
+6. **Features 37-52 registry** (Section 3B) — full feature list with category, priority, phase
+7. **Automation levels 1-3** (Section 6A) — per-feature automation settings + auto-pilot guardrails
+8. **Data fusion engine** (Section 16A) — source reliability weights, freshness decay, refresh tiers 1-5
+9. **Dashboard recommendation widgets** — 6 pre-computed widgets (Today's Hot, Rising Stars, etc.)
+10. **Per-client content cost projections** — $17.18/mo per Growth client, scale costs to 500 clients
+11. **Fixed infrastructure costs** — Ayrshare, Shotstack, Bannerbear monthly costs
+12. **6 new database tables** — content_items, shop_products, content_credits, client_social_profiles, publish_log, client_automation_config
+13. **Content states workflow** — draft → published pipeline with rejection/failure paths
+14. **Keepa API details** — endpoints, token system, data points
+15. **Shop platform API research** — Shopify GraphQL, TikTok Shop Partner API, Meta Commerce, Amazon SP-API
+16. **TikTok Content API limitation** — private-only for unaudited apps, "Download for TikTok" fallback
+17. **Expanded Appendix J** — 11 subsections: content types matrix, templates, platform formatting rules, publishing modes, Ayrshare details, brand voice config, POD content, affiliate content queue
+18. **Expanded Appendix K** — digital products economics, POD market data, sub-category demand, competitor pricing
+19. **New Appendix L** — Competitive analysis summary (advantages, gaps, TikTok competitors, influencer landscape, pricing positioning)
+20. **New Appendix M** — RTM compliance summary (62% complete, top 10 gaps, data source status)
+
+### Files Modified
+- `docs/YouSell_Platform_Technical_Specification_v8.md` — Updated (3,202 → 3,841 lines, +639 lines)
+- `system/development_log.md` — This entry
+
+## Session: 2026-03-17 (Part 5) — v8 Deep Gap Fill from N8N & Market Research Audits
+
+### What Was Done
+Processed findings from 2 additional audit agents (N8N_WORKFLOW_ANALYSIS.md and MARKET_RESEARCH_LOG_SESSION3.md vs v8). Added 213 lines of high-value operational tables and strategy details.
+
+### Content Added to v8
+1. **Platform-specific fulfillment rules table** (Section 2.4) — TikTok 2-3 day shipping, Amazon seller-of-record, Etsy production partner rules
+2. **Economic comparison table** (Section 2.4) — Dropship vs Wholesale vs Private Label vs POD vs Affiliate vs Digital (upfront cost, margin, risk, time-to-market)
+3. **Digital product platform economics** (Section 8.5) — Gumroad 90%, Etsy 87%, Whop 97%, etc.
+4. **Affiliate commission by product type** (Section 8.5) — AI Tools, SaaS, Courses, eBooks, Templates with avg commissions
+5. **Content marketing strategy by channel** (Section 8.5) — TikTok/Pinterest/YouTube/Blog/Email with conversion rates
+6. **Shopify as affiliate hub strategy** (Section 8.5) — Curated marketplace model
+7. **Internal affiliate revenue projections** (Section 3.6) — Month 1-3 through Year 2+ revenue ramp
+8. **Competitive landscape for affiliate content** (Section 3.6) — Futurepedia, There's An AI For That, Matt Wolfe
+9. **Dual payment setup revenue multiplication** (Section 3.6) — Stripe + PayPal = $5,000 per client
+10. **Competitor data architecture comparison** (Section 16A.3A) — Sell The Trend, AutoDS, Jungle Scout, Helium 10, FastMoss, Kalodata refresh rates
+11. **Comprehensive affiliate program database** (Appendix K) — 60+ programs across 3 tiers with commission, cookie, recurring details
+12. **API availability & pricing matrix** (Section 18.5A) — 10 data sources with API status, pricing, YOUSELL use case
+13. **BullMQ vs n8n detailed performance rationale** (Section 15.3) — Network hops, batch processing, cost at scale
+14. **n8n as future premium feature** (Section 15.3) — Post-100 client milestone for client-facing automation
+15. **Meta in-app checkout sunset impact** (Section 18.6) — Route all digital product sales through external platforms
+16. **Shopify REST API deprecation risk** (Section 53) — Must use GraphQL from day one
+17. **Gooten POD platform** added to economics table + POD affiliate programs table
+18. **POD 6-step strategy** — Discovery → Validation → Creation → Distribution → Fulfillment → Margins
+19. **Notebooks/Planners** added to POD sub-category demand table
+
+### Files Modified
+- `docs/YouSell_Platform_Technical_Specification_v8.md` — Updated (3,902 → 4,115 lines, +213 lines)
+- `system/development_log.md` — This entry
+
+## Session: 2026-03-17 (Part 6) — Deep Research Verification & Number Corrections
+
+### What Was Done
+Ran 4 parallel research agents to verify all numbers, rates, and estimates added in Part 5 against live 2026 data. Applied corrections across the entire v8 spec.
+
+### Corrections Applied
+
+**Affiliate Programs (9 major corrections):**
+1. **Jasper AI** — Program ended Jan 2025. Marked as ❌ (agency-only "Solutions Partner" now)
+2. **Shopify Partner** — Changed from 20% recurring → ~$150 one-time bounty
+3. **Canva** — Now invite-only "Canvassador" program; no longer open signup
+4. **Spocket** — Changed from "LIFETIME" → 15 months (unverified as lifetime)
+5. **GetResponse** — Relaunched Mar 2025: now 40–60% tiered for 12 months, cookie 90d (was 33% + 120d)
+6. **ManyChat** — Base rate 30% (was 35%), tiered to 50%, 12-month limit, cookie 120d
+7. **ElevenLabs** — 22% for 12mo (was 25% unlimited)
+8. **Stripe/PayPal** — $500–2,500 range based on merchant volume (was flat $2,500)
+9. **Revenue multiplier total** — Reduced from ~$124K to ~$95K due to corrections
+
+**POD Market Data (11 corrections):**
+10. POD market size 2025: $10.8–13B (was $7.5B)
+11. Printful: 600+ products (was 340+), margins 30–50% (was 55–65%)
+12. Printify: 1,300+ products (was 900+), margins 40–50% (was 55–70%)
+13. Gelato: 250+ products (was 100+), base up to $17, margins 30–50%
+14. Gooten: 500+ products (was 150+), margins 30–50%
+15. Gumroad creator take: ~85–87% (was 90%)
+16. Whop: ~94% with 3% platform fee (was ~97% with 0% fee)
+17. Creative Market: 50% split (was 40%)
+
+**API/Platform Dates (7 corrections):**
+18. Keepa API: €19 base + €49–€4,499/mo tiers (was $19–149/mo — massively understated)
+19. Ayrshare: $49–499/mo with Starter tier (was $99–499)
+20. Shotstack: Now credit-based from $49/mo (was fixed $49–199/mo tiers)
+21. Bannerbear: $49–299/mo with 3 tiers (was $49–149)
+22. Shopify REST: Phased deprecation timeline added (Oct 2024 → Feb 2025 → Apr 2025)
+23. Influencer market 2026: $28–33B (was $24B, which is the 2024 figure)
+24. Apify rental Actors sunsetting note added (Apr/Oct 2026)
+
+**Competitor Data (5 corrections):**
+25. Kalodata: $49.99/$109.99 monthly (was $38.30/$83.20)
+26. FastMoss: $59–399/mo (was $29–109), creator DB 220–250M+ (was 180M+)
+27. Modash: 350–380M+ profiles (was 400M+)
+28. AutoDS low-end: ~$26.90 (was $19.90)
+29. All competitor prices annotated as annual billing with monthly column added
+
+### Files Modified
+- `docs/YouSell_Platform_Technical_Specification_v8.md` — 107 insertions, 99 deletions (net +8 lines)
+- `system/development_log.md` — This entry
