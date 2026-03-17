@@ -319,6 +319,8 @@ YOUSELL uses its own content engine, influencer network, and publishing pipeline
 
 When YOUSELL provisions tools for clients (Shopify stores, Klaviyo accounts, Printful connections, Spocket subscriptions), each provisioning generates affiliate commission for YOUSELL.
 
+**Multi-Layer Revenue Stacking:** A single client store setup triggers 4-5 simultaneous affiliate commissions: Store (Shopify 20%) + Email (Klaviyo 10-20%) + Payment (Stripe $2,500) + Fulfillment (Spocket 20-30% lifetime OR Printful 10%) + Design (Canva 36%). This is compounding passive income stacked on top of subscription revenue.
+
 **Revenue Multiplier Estimate (50 clients in Year 1):**
 
 | Platform | Revenue Per Client/Year | Total (50 clients) |
