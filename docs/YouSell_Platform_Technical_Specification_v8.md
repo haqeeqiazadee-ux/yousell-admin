@@ -3277,6 +3277,11 @@ Plus estimated **$124K/yr affiliate commission revenue** at 50 clients (scales l
 | Session memory loss (Claude) | Development inconsistency | Persistent repo files, mandatory context recovery protocol |
 | POD partner API changes | Fulfillment disrupted | Multiple partners (Printful + Printify + Gelato) provide redundancy |
 | Affiliate program terms change | Commission reduction | Diversify across 24+ programs, prioritize lifetime recurring deals |
+| TikTok Content API audit rejected/delayed | Cannot auto-publish to TikTok | "Download for TikTok" manual fallback; apply for audit early |
+| Ayrshare pricing increases | Publishing costs rise | Native OAuth fallback architecture maintained for key platforms |
+| Inappropriate auto-published content | Brand damage, platform ban | Content moderation check (Claude Haiku) before all auto-publishing |
+| OAuth token expiry undetected | Integration silently breaks | Daily health check job + immediate notification to client |
+| Content generation quality inconsistent | Client dissatisfaction | Brand voice calibration, quality scoring, human review option |
 
 ---
 
