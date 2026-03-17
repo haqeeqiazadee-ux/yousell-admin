@@ -1012,7 +1012,7 @@ Implementation: `src/lib/terminology.ts` maps internal→client terms.
 
 ---
 
-## Section K — Content Creation & Publishing Engine Audit (March 2026 Strategy Update)
+## Section Q — Content Creation & Publishing Engine Detailed Audit (March 2026 Strategy Update)
 
 ### K.1 — Content Creation Engine (Creative Studio)
 
@@ -1090,7 +1090,7 @@ Implementation: `src/lib/terminology.ts` maps internal→client terms.
 
 ---
 
-## Section L — Pricing Model Decision (March 2026)
+## Section R — Pricing Model Decision (March 2026)
 
 ### L.1 — Pricing Architecture: Option C (Hybrid) — APPROVED
 
