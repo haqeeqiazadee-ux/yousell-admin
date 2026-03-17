@@ -22,7 +22,7 @@
 | **API Routes** | `POST /api/admin/scan`, `GET /api/admin/products`, platform-specific GET routes |
 | **UI Pages** | `/admin/products`, `/admin/tiktok`, `/admin/amazon`, `/admin/pinterest`, `/admin/shopify`, `/admin/digital`, `/admin/affiliates` |
 | **Worker Jobs** | `product-scan` (BullMQ), `quick-scan`, `full-scan`, `client-scan` |
-| **v7 Compliance** | Spec requires discovery across ALL 7 channels. Engine currently processes 4 platforms (TikTok, Amazon, Shopify, Pinterest). Digital and Affiliate discovery uses separate provider path. |
+| **v7 Compliance** | Spec requires discovery across ALL 8 channels. Engine currently processes 4 platforms (TikTok, Amazon, Shopify, Pinterest). Digital and Affiliate discovery uses separate provider path. |
 | **Gaps** | 1. Digital products discovery not integrated into main discovery engine pipeline — uses separate Gumroad Apify actor only 2. AI Affiliate programs are hardcoded/seeded, not dynamically discovered 3. Physical Affiliate module lacks live data source integration 4. No ClickBank, ShareASale, Udemy, AppSumo integration for digital products 5. No Product Hunt API, PartnerStack, Twitter/X integration for AI affiliate discovery |
 | **Severity** | Gap 1: MEDIUM, Gap 2: HIGH, Gap 3: HIGH, Gap 4: MEDIUM, Gap 5: MEDIUM |
 
@@ -148,6 +148,62 @@
 
 ---
 
+### A.8 — POD Discovery Engine
+
+| Field | Detail |
+|-------|--------|
+| **v7 Spec Reference** | Section 8.8 (new) |
+| **Source Files** | Not yet built |
+| **Input Data** | Trending designs, niches, aesthetics from Etsy, Redbubble, Merch by Amazon, TikTok |
+| **Processing Logic** | 1. Discovers trending POD designs/niches across platforms 2. Scores POD viability using 3-pillar model with POD-specific modifiers 3. Matches to POD fulfillment partners (Printful, Printify, Gelato) 4. Auto-provisions products in client stores |
+| **Scoring/Algorithm** | Same 3-pillar model (trend × 0.40 + viral × 0.35 + profit × 0.25) with POD modifiers: design uniqueness bonus, niche saturation penalty, fulfillment cost impact on profit score |
+| **Output** | POD products table, POD supplier matches, store listings |
+| **Database Tables** | New: `pod_products`, `pod_suppliers`, `pod_designs` |
+| **API Routes** | New: `POST /api/admin/pod/discover`, `GET /api/admin/pod/products`, `POST /api/admin/pod/provision` |
+| **UI Pages** | New: `/admin/pod` (POD products, designs, suppliers) |
+| **Worker Jobs** | New: `pod-discovery`, `pod-provision`, `pod-fulfillment-sync` |
+| **v7 Compliance** | ❌ Not yet in spec — to be added as Section 8.8 |
+| **Status** | ❌ Not built — Architecture defined March 2026 |
+| **Sub-Categories** | Apparel (T-shirts, hoodies, streetwear), Home & Living (mugs, pillows, wall art), Accessories (phone cases, tote bags, hats), Stationery (journals, notebooks, stickers), Wall Art & Posters (canvas prints, framed prints) |
+
+---
+
+### A.9 — Admin Command Center (Best-Selling Products Dashboard)
+
+| Field | Detail |
+|-------|--------|
+| **v7 Spec Reference** | New section (to be added) |
+| **Source Files** | Not yet built |
+| **Purpose** | Admin intelligence dashboard for YOUR OWN shops — profit-maximizing command center |
+| **Features** | Top-scoring products with one-click action buttons: Push to TikTok Shop, Push to Amazon, Push to Shopify, Push to All, Launch Marketing, Influencer Outreach, Generate Content, Financial Model |
+| **Per-Platform Pipeline** | Live products per platform with weekly revenue tracking |
+| **BullMQ Actions** | push-to-shopify, push-to-tiktok, push-to-amazon, push-to-all, launch-marketing, influencer-outreach, generate-content |
+| **Database Tables** | Uses existing: `products`, `shop_products`, `creator_product_matches`. New: `command_center_actions` |
+| **API Routes** | New: `POST /api/admin/command-center/push`, `GET /api/admin/command-center/pipeline`, `POST /api/admin/command-center/action` |
+| **UI Pages** | New: `/admin/command-center` |
+| **Status** | ❌ Not built — Architecture defined March 2026 |
+
+---
+
+### A.10 — Affiliate Commission Engine
+
+| Field | Detail |
+|-------|--------|
+| **v7 Spec Reference** | New section (to be added) |
+| **Source Files** | Not yet built |
+| **Purpose** | Track and maximize affiliate commission income from all platform referrals |
+| **Two Revenue Streams** | (1) Affiliate revenue from own content generation system (admin content factory) (2) Affiliate commission from every platform used in client services |
+| **Platform Categories** | E-Commerce (Shopify 20% recurring, Wix $100, Squarespace $100-200, Ecwid 20% lifetime), POD (Printful 10% 12mo, Printify 5% 12mo, Gelato $500), Marketing (Klaviyo 10-20%, Omnisend 20% 24mo, Canva 36% 12mo), Payment (Stripe $2,500, PayPal $2,500), Dropshipping (Spocket 20-30% LIFETIME, Zendrop 20-30%, ShipBob 10%), Analytics (Jungle Scout $150, Helium 10 25%) |
+| **Content Factory** | Non-stop AI content generation for affiliate platforms — reviews, comparisons, tutorials. Admin dashboard only. |
+| **Database Tables** | New: `affiliate_referrals`, `affiliate_commissions`, `affiliate_content_links`, `affiliate_platforms` |
+| **API Routes** | New: `GET /api/admin/affiliate-engine/dashboard`, `GET /api/admin/affiliate-engine/commissions`, `POST /api/admin/affiliate-engine/generate-content` |
+| **UI Pages** | New: `/admin/affiliate-engine` (two stat panels: own content revenue + client service commission) |
+| **Worker Jobs** | New: `affiliate-content-generate`, `affiliate-commission-track` |
+| **Revenue Estimate** | ~$124,266/yr at 50 clients (Stripe/PayPal referrals: $100K, recurring commissions: $24K) |
+| **Status** | ❌ Not built — Architecture defined March 2026 |
+
+---
+
 ## Section B — Data Source Module Audit
 
 ### B.1 — TikTok Products Module
@@ -238,6 +294,21 @@
 | **Data Source: Apify TikTok Shop Affiliate scraper** | ❌ Not implemented |
 | **Data Type** | Mock/Seeded (no live API calls) |
 
+### B.8 — POD Products Module
+
+| Field | Status |
+|-------|--------|
+| **Provider File** | Not yet created |
+| **Data Source: Etsy POD products (Apify)** | ❌ Not implemented |
+| **Data Source: Redbubble trending** | ❌ Not implemented |
+| **Data Source: Merch by Amazon** | ❌ Not implemented |
+| **Data Source: TikTok POD trends** | ❌ Not implemented |
+| **Data Source: Printful API** | ❌ Not implemented |
+| **Data Source: Printify API** | ❌ Not implemented |
+| **Data Source: Gelato API** | ❌ Not implemented |
+| **Real Data** | None (not built) |
+| **Coverage** | 0 of 7 data sources implemented |
+
 ---
 
 ## Section C — Supporting Systems Audit
@@ -277,6 +348,14 @@
 | `content-queue` | ❌ Not built | Spec Section 15.2 |
 | `distribution-queue` | ❌ Not built | Spec Section 15.2 |
 | `order-tracking-queue` | ❌ Not built | Spec Section 15.2 |
+| `pod-discovery` | ❌ Not built | POD Channel #8 |
+| `pod-provision` | ❌ Not built | POD store provisioning |
+| `pod-fulfillment-sync` | ❌ Not built | POD fulfillment tracking |
+| `push-to-shopify` | ❌ Not built | Command Center |
+| `push-to-tiktok` | ❌ Not built | Command Center |
+| `push-to-amazon` | ❌ Not built | Command Center |
+| `affiliate-content-generate` | ❌ Not built | Affiliate Engine |
+| `affiliate-commission-track` | ❌ Not built | Affiliate Engine |
 | Graceful shutdown | ✅ Fixed | SIGTERM/SIGINT handling implemented |
 | Dead letter queue | ❌ Missing | BUG-052 unresolved |
 
@@ -803,6 +882,15 @@
 | 78 | Blurred product cards (upsell) | 36.1 | ❌ MISSING | — | No |
 | 79 | Data freshness policy enforcement | 19.3 | ⚠️ PARTIAL | 24hr cache exists, not all types enforced | No |
 | 80 | Apify actor batching | 19.1 | ✅ DONE | Batch per category/keyword group | No |
+| 81 | POD product discovery | 8.8 (new) | ❌ MISSING | — | No |
+| 82 | POD supplier integration (Printful/Printify/Gelato) | 8.8 (new) | ❌ MISSING | — | No |
+| 83 | POD store provisioning | 8.8 (new) | ❌ MISSING | — | No |
+| 84 | Admin Command Center dashboard | New | ❌ MISSING | — | No |
+| 85 | One-click product push to platforms | New | ❌ MISSING | — | No |
+| 86 | Per-platform pipeline view | New | ❌ MISSING | — | No |
+| 87 | Affiliate Commission Engine | New | ❌ MISSING | — | No |
+| 88 | Affiliate content factory | New | ❌ MISSING | — | No |
+| 89 | Affiliate revenue tracker (two streams) | New | ❌ MISSING | — | No |
 
 ---
 
@@ -835,8 +923,8 @@
 
 | Category | Done | Partial | Missing | Total |
 |----------|------|---------|---------|-------|
-| Engines (7) | 5 | 2 | 0 | 7 |
-| Data Source Modules (7) | 4 | 3 | 0 | 7 |
+| Engines (10) | 5 | 2 | 3 | 10 |
+| Data Source Modules (8) | 4 | 3 | 1 | 8 |
 | Supporting Systems (10) | 4 | 3 | 3 | 10 |
 | Engine Gating (8) | 1 | 2 | 5 | 8 |
 | Scoring Components | 7 | 0 | 0 | 7 |
@@ -844,11 +932,11 @@
 | Client Pages | 7 | 0 | 0 | 7 |
 | Admin API Routes (22) | 22 | 0 | 0 | 22 |
 | New API Routes (16) | 11 | 3 | 2 | 16 |
-| Worker Jobs (18) | 15 | 0 | 3 | 18 |
+| Worker Jobs (26) | 15 | 0 | 11 | 26 |
 | Database Tables (31) | 31 | 0 | 0 | 31 |
 | Security Items (11) | 6 | 2 | 3 | 11 |
 
-**Overall v7 Compliance: ~68% complete (61/80 requirements fully done, 12 partial, 7 missing)**
+**Overall v7 Compliance: ~62% complete (61/89 requirements fully done, 12 partial, 16 missing — includes 9 new POD/Command Center/Affiliate requirements)**
 
 > **Updated 2026-03-16:** Database tables corrected from 22→31 done (all 9 new v7 tables confirmed present in migrations). API routes corrected from 0→11 done (dashboard subscription, engines, channels, content, orders, webhooks all built).
 

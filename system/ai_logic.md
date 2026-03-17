@@ -259,6 +259,104 @@ Clients must not access internal discovery systems.
 
 ---
 
+## PRINT ON DEMAND (POD) LOGIC
+
+POD products are Channel #8 in the platform's eight opportunity channels.
+
+POD products use the same 3-pillar scoring model (trend × 0.40 + viral × 0.35 + profit × 0.25) with POD-specific modifiers:
+- design trend velocity (trending aesthetics score higher)
+- seasonal relevance (holiday/event designs get temporal bonus)
+- niche saturation (oversaturated design categories are penalized)
+- fulfillment cost impact (POD base costs affect profit score)
+- minimum 30% margin requirement (POD products below 30% margin are auto-rejected)
+
+POD fulfillment is zero-inventory: the POD partner (Printful, Printify, Gelato) manufactures and ships on order receipt.
+
+POD sub-categories: Apparel, Home & Living, Accessories, Stationery, Wall Art & Posters.
+
+---
+
+## ADMIN COMMAND CENTER LOGIC
+
+The Admin Command Center is the profit-maximizing dashboard for YOUSELL's OWN shops.
+
+Key principles:
+- Top-scoring products are surfaced with one-click deployment buttons
+- Each action (Push to Platform, Launch Marketing, Generate Content) triggers a BullMQ job
+- No action runs inline — all are queued for background execution
+- Per-platform pipeline view shows live products and weekly revenue
+- This is the ADMIN's platform for YOUSELL's own stores, not client-facing
+
+Action buttons:
+- Push to [Platform] → OAuth-authenticated product listing creation
+- Push to All → parallel listing across all connected stores
+- Launch Marketing → ad copy + campaign blueprint generation
+- Influencer Outreach → match top creators + generate outreach emails
+- Generate Content → AI creates social posts, descriptions, video scripts
+- Financial Model → unit economics + ROI projection
+
+---
+
+## AFFILIATE COMMISSION ENGINE LOGIC
+
+The Affiliate Commission Engine tracks two separate revenue streams:
+
+**Stream 1 — Internal Content Revenue:**
+- YOUSELL's own content engine generates affiliate marketing content
+- Reviews, comparisons, tutorials, sign-up guides for affiliate platforms
+- Content published via YOUSELL's own social/blog channels
+- Revenue tracked per content piece and per platform
+- Admin dashboard only — zero client visibility
+
+**Stream 2 — Client Service Revenue:**
+- Commissions earned when clients adopt platforms provisioned through YOUSELL
+- Auto-tracked when clients are onboarded to partner platforms
+- Revenue tracked per client and per platform
+
+Priority affiliate programs:
+- Shopify Partner (20% recurring lifetime)
+- Spocket (20-30% LIFETIME recurring — highest value)
+- Printful (10% for 12 months)
+- Klaviyo (10-20% recurring)
+- Canva (36% for 12 months)
+- Stripe ($2,500 per merchant)
+- PayPal ($2,500 per merchant)
+
+A single client can generate affiliate commissions from 4+ platforms simultaneously.
+This is compounding passive income ON TOP of YOUSELL subscription revenue.
+
+---
+
+## FULFILLMENT RECOMMENDATION LOGIC
+
+The system auto-recommends fulfillment model per product:
+
+- Physical product < $30 + fast-ship supplier → DROPSHIP
+- Physical product $30-100 + high demand → WHOLESALE (Faire/Alibaba + FBA)
+- Physical product > $100 → WHOLESALE/PRIVATE LABEL only
+- Design/aesthetic product → POD (Printful/Printify/Gelato)
+- Digital product → DIGITAL DELIVERY (Gumroad/Etsy/Shopify)
+- AI/Software tool → AFFILIATE (link + promote via content)
+
+---
+
+## EIGHT OPPORTUNITY CHANNELS
+
+The platform operates across eight channels:
+
+1. TikTok Shop
+2. Amazon FBA
+3. Shopify DTC
+4. Pinterest Commerce
+5. Digital Products
+6. AI Affiliate Programs
+7. Physical Affiliate Products
+8. Print on Demand (POD)
+
+All scoring, discovery, and enrichment logic applies across all eight channels.
+
+---
+
 ## FINAL PRINCIPLE
 
 The goal of the YouSell platform is to convert **complex market signals into actionable ecommerce opportunities**.

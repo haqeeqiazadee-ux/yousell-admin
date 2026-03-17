@@ -34,6 +34,17 @@
 | 22 | Kalodata | Tier 8 | TikTok Intelligence |
 | 23 | FastMoss | Tier 8 | TikTok Intelligence |
 | 24-30 | Niche Searches | — | Multi-niche |
+| 46 | Printful | POD | POD Supplier + Affiliate |
+| 47 | Printify | POD | POD Supplier + Affiliate |
+| 48 | Gelato | POD | POD Supplier + Affiliate |
+| 49 | Spocket | Affiliate | Dropshipping + Affiliate |
+| 50 | Stripe Partner Ecosystem | Affiliate | Payment Infrastructure + Affiliate |
+| 51 | PayPal Merchant Referral | Affiliate | Payment Infrastructure + Affiliate |
+| 52 | Klaviyo Partner Program | Affiliate | Marketing Tool + Affiliate |
+| 53 | Omnisend Partner Program | Affiliate | Marketing Tool + Affiliate |
+| 54 | Canva Affiliate Program | Affiliate | Design Tool + Affiliate |
+| 55 | Ecwid Partner Program | Affiliate | E-Commerce Platform + Affiliate |
+| 56 | ShipBob Partner Program | Affiliate | Fulfillment + Affiliate |
 
 ---
 
@@ -558,6 +569,129 @@
 
 ---
 
+## Session 3 — March 2026: POD Platforms, Affiliate Commission Programs & Admin Command Center
+
+### Entry #46: Printful (printful.com)
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Platform** | Printful |
+| **Category** | POD Supplier + Affiliate |
+| **Key Findings** | Leading POD fulfillment platform. API integration with Shopify, Etsy, Amazon, WooCommerce. Product catalog: 300+ products (apparel, home decor, accessories). Mockup generator API. Fulfillment from US, EU, MX facilities. Affiliate program: 10% of every sale for 12 months + $25 per Growth subscription referral. 30-day cookie. |
+| **Relevance to YOUSELL** | Primary POD supplier integration. API enables auto-product creation + fulfillment. Affiliate commission adds passive revenue per POD client. |
+| **Action Items** | 1. Integrate Printful API for product catalog sync 2. Enable affiliate tracking per client referral 3. Use mockup generator API in Content Engine |
+
+### Entry #47: Printify (printify.com)
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Platform** | Printify |
+| **Category** | POD Supplier + Affiliate |
+| **Key Findings** | POD platform with widest supplier network. 800+ products across 100+ print providers. Lower pricing than Printful (multiple supplier options per product). API integration with Shopify, Etsy, WooCommerce. Affiliate program: 5% of every order for 12 months. 30-day cookie. |
+| **Relevance to YOUSELL** | Alternative POD supplier — wider network means better price competition for clients. |
+| **Action Items** | 1. Integrate Printify API as alternative/complementary to Printful 2. Price comparison feature between Printful and Printify suppliers |
+
+### Entry #48: Gelato (gelato.com)
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Platform** | Gelato |
+| **Category** | POD Supplier + Affiliate |
+| **Key Findings** | Global POD network with 130+ print partners worldwide. Local production = faster shipping, lower carbon footprint. API available. Affiliate program: up to $500 per referral (tiered). Up to 15% for 12 months. 30-day cookie. |
+| **Relevance to YOUSELL** | Best for international clients needing fast local fulfillment. 130+ partners = global reach. |
+| **Action Items** | 1. Integrate Gelato API for international POD orders 2. Use local production as selling point for eco-conscious clients |
+
+### Entry #49: Spocket (spocket.co) — Lifetime Affiliate Discovery
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Platform** | Spocket |
+| **Category** | Dropshipping + Affiliate |
+| **Key Findings** | US/EU supplier focus. 20-30% LIFETIME recurring commission — most lucrative affiliate program discovered. Integrates with Shopify, WooCommerce, BigCommerce. Curated supplier marketplace. Fast shipping from domestic warehouses. |
+| **Relevance to YOUSELL** | Highest-value affiliate program found. Lifetime recurring at 20-30% means every dropshipping client referral generates permanent passive income. |
+| **Action Items** | 1. Add Spocket as priority supplier integration 2. Track lifetime commission per client referral 3. Prioritize Spocket recommendations for dropshipping clients |
+
+### Entry #50: Stripe Partner Ecosystem
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Platform** | Stripe |
+| **Category** | Payment Infrastructure + Affiliate |
+| **Key Findings** | Stripe Partner referral: $2,500 per merchant (one-time) for verified partners. Already in YOUSELL stack. Every client store provisioned with Stripe = $2,500 referral fee. Requires Verified Partner status application. |
+| **Relevance to YOUSELL** | Already in stack — free money per store provisioned. At 50 clients = $125,000. |
+| **Action Items** | 1. Apply for Stripe Verified Partner status 2. Ensure all client stores use YOUSELL's Stripe partner link 3. Track merchant referral bonuses in affiliate dashboard |
+
+### Entry #51: PayPal Merchant Referral
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Platform** | PayPal |
+| **Category** | Payment Infrastructure + Affiliate |
+| **Key Findings** | PayPal merchant referral program: $2,500 per merchant (one-time), varies by volume. Alternative payment option for client stores. |
+| **Relevance to YOUSELL** | Same model as Stripe — $2,500 per client store. Dual payment setup = $5,000 per client. |
+| **Action Items** | 1. Apply for PayPal partner program 2. Recommend dual payment setup (Stripe + PayPal) to all clients |
+
+### Entry #52: Klaviyo Partner Program
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Platform** | Klaviyo |
+| **Category** | Marketing Tool + Affiliate |
+| **Key Findings** | 10-20% recurring commission (partner program). 90-day cookie. #1 e-commerce email platform. Every client needs email marketing. Shopify-native integration. |
+| **Relevance to YOUSELL** | Recommend to every client. 10-20% recurring on email marketing spend = compounding income. |
+| **Action Items** | 1. Join Klaviyo partner program 2. Recommend Klaviyo in every client onboarding 3. Track referral commissions in affiliate dashboard |
+
+### Entry #53: Omnisend Partner Program
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Platform** | Omnisend |
+| **Category** | Marketing Tool + Affiliate |
+| **Key Findings** | 20% recurring for 24 months — longer commission window than Klaviyo. Free plan available. Email + SMS + push. Good for budget-conscious clients. |
+| **Relevance to YOUSELL** | Alternative to Klaviyo with longer commission window (24 months vs variable). |
+| **Action Items** | 1. Join Omnisend partner program 2. Offer as alternative to Klaviyo for budget clients |
+
+### Entry #54: Canva Affiliate Program
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Platform** | Canva |
+| **Category** | Design Tool + Affiliate |
+| **Key Findings** | 36% recurring commission for 12 months. 30-day cookie. Every client needs design tools. 900M+ users. |
+| **Relevance to YOUSELL** | Every client needs design tools. 36% recurring for 12 months is generous. |
+| **Action Items** | 1. Join Canva affiliate program 2. Recommend Canva Pro in client onboarding |
+
+### Entry #55: Ecwid Partner Program
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Platform** | Ecwid |
+| **Category** | E-Commerce Platform + Affiliate |
+| **Key Findings** | 20% lifetime recurring commission. For clients adding commerce to existing sites (WordPress, Wix, etc.). Alternative to full Shopify for simpler use cases. |
+| **Relevance to YOUSELL** | Good for clients who already have websites and want to add commerce. Lifetime recurring. |
+
+### Entry #56: ShipBob Partner Program
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Platform** | ShipBob |
+| **Category** | Fulfillment + Affiliate |
+| **Key Findings** | 10% for 6 months + $200 bonus per referral. For clients graduating from dropshipping to 3PL. US warehousing. |
+| **Relevance to YOUSELL** | Relevant for scaling clients moving beyond dropshipping to own-inventory 3PL. |
+
+---
+
 ## Updated Coverage Checklist
 
 - [x] All 23 competitor platforms researched (Entries #1-23)
@@ -578,7 +712,13 @@
 - [x] **NEW** Meta in-app checkout ending confirmed (#43)
 - [x] **NEW** Content creation tools evaluated (Shotstack, Bannerbear) (#44)
 - [x] **NEW** Social publishing architecture decided (Ayrshare) (#45)
+- [x] **NEW** POD platform research: Printful, Printify, Gelato (#46-48)
+- [x] **NEW** Affiliate commission programs: 11 platforms documented (#49-56)
+- [x] **NEW** Spocket lifetime recurring discovery — highest-value affiliate found (#49)
+- [x] **NEW** Payment infrastructure referrals: Stripe $2,500, PayPal $2,500 (#50-51)
+- [x] **NEW** Marketing tool partner programs: Klaviyo, Omnisend, Canva (#52-54)
+- [x] **NEW** Admin Command Center architecture defined
 
-**Total Research Entries: 45**
-**Unique Platforms Researched: 23 + 5 API/tool providers = 28**
+**Total Research Entries: 56**
+**Unique Platforms Researched: 23 + 5 API/tool providers + 11 affiliate platforms = 39**
 **Niche Searches Conducted: 7 + 4 = 11**

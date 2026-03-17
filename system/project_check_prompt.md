@@ -1002,6 +1002,77 @@ When auditing the content and publishing system, verify:
 - `client_channels` table has: connection_type, platform_account_name, platform_account_id, follower_count, last_health_check, health_status
 - 5-step onboarding flow: Choose Platforms → Connect Shops → Connect Social → Brand Voice → Ready
 
+### Section N — Admin Command Center Audit
+
+**N.1 — Best-Selling Products Dashboard**
+- Admin command center page at `/admin/command-center`
+- Top-scoring products displayed with one-click action buttons
+- Action buttons: Push to TikTok Shop, Push to Amazon, Push to Shopify, Push to All
+- Automation buttons: Launch Marketing, Influencer Outreach, Generate Content, Financial Model
+- Each button triggers BullMQ job (NOT inline execution)
+- BullMQ queues: `push-to-shopify`, `push-to-tiktok`, `push-to-amazon`, `push-to-all`
+
+**N.2 — Per-Platform Pipeline View**
+- Pipeline view showing live products per platform
+- Weekly revenue tracking per platform
+- Conversion rates per platform
+- `admin_store_connections`, `admin_product_listings`, `admin_revenue_tracking` tables
+
+### Section O — Affiliate Commission Engine Audit
+
+**O.1 — Dual Revenue Stream Dashboard**
+- Admin page at `/admin/affiliate-engine`
+- Stream 1: Internal content revenue (own content factory → affiliate sign-ups)
+- Stream 2: Client service commissions (platforms used in client onboarding)
+- Separate stats panels for each revenue stream
+
+**O.2 — Affiliate Platform Integrations**
+- E-Commerce: Shopify Partner (20% recurring), Wix ($100), Squarespace ($100-200), Ecwid (20% lifetime)
+- POD: Printful (10% 12mo), Printify (5% 12mo), Gelato (up to $500)
+- Marketing: Klaviyo (10-20% recurring), Omnisend (20% 24mo), Canva (36% 12mo)
+- Payment: Stripe ($2,500/merchant), PayPal ($2,500/merchant)
+- Dropshipping: Spocket (20-30% LIFETIME), Zendrop (20-30%), ShipBob (10% + $200)
+- Analytics: Jungle Scout ($150), Helium 10 (25% or $250)
+
+**O.3 — Affiliate Content Factory**
+- AI content generation for affiliate platforms (reviews, comparisons, tutorials)
+- Admin-only — zero client visibility
+- BullMQ queue: `affiliate-content-generate`
+- Content published via YOUSELL's own channels
+- `affiliate_referrals`, `affiliate_commissions`, `affiliate_content_links` tables
+
+**O.4 — Revenue Tracking**
+- `affiliate-commission-track` BullMQ queue for reconciliation
+- Per-platform commission tracking
+- Per-client referral tracking
+- Revenue multiplier estimate: ~$124,266/yr at 50 clients
+
+### Section P — POD Channel #8 Audit
+
+**P.1 — POD Discovery Engine**
+- Provider files for Etsy POD, Redbubble, Merch by Amazon, TikTok POD trends
+- Apify actors for POD marketplace scraping
+- POD-specific scoring adjustments (design uniqueness, niche saturation, fulfillment cost)
+- Minimum 30% margin requirement enforced
+
+**P.2 — POD Supplier Integration**
+- Printful REST API integration (product catalog, mockup generation, order fulfillment)
+- Printify REST API integration (multi-provider network)
+- Gelato REST API integration (global local production)
+- `pod_suppliers`, `pod_products`, `pod_designs` tables
+
+**P.3 — POD Store Provisioning**
+- Auto-create POD products in client Shopify/TikTok/Etsy stores
+- POD fulfillment metadata attached to product listings
+- BullMQ queues: `pod-discovery`, `pod-provision`, `pod-fulfillment-sync`
+
+**P.4 — POD Content**
+- AI-generated mockups via Printful Mockup Generator API + Bannerbear
+- Lifestyle background product overlays
+- POD-specific content templates (design showcase, custom merch brief)
+
+---
+
 ## OUTPUT FILES SUMMARY
 
 At the end of all 3 phases, the following files must exist:

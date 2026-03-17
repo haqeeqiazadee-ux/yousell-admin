@@ -124,3 +124,35 @@ The prompt provides these keyword hit counts across 8,806 workflows:
 - Shopify (114 hits) — Store integration patterns
 
 **Estimated n8n Evaluation Scope:** ~50-75 workflows across all buckets would merit full Build vs Adopt analysis.
+
+---
+
+## POD & Affiliate Engine — Workflow Considerations (March 2026 Update)
+
+### New BullMQ Queues Required
+
+With the addition of POD Channel #8, Admin Command Center, and Affiliate Commission Engine, the following new queues are needed:
+
+| Queue | Purpose | Recommendation |
+|-------|---------|----------------|
+| `pod-discovery` | Discover trending POD designs/niches | Native BullMQ (batch processing) |
+| `pod-provision` | Auto-create POD products in client stores | Native BullMQ (API integration) |
+| `pod-fulfillment-sync` | Sync fulfillment status with POD suppliers | Native BullMQ (webhook-driven) |
+| `push-to-shopify` | Push products to Shopify stores (Command Center) | Native BullMQ (Shopify GraphQL) |
+| `push-to-tiktok` | Push products to TikTok Shop (Command Center) | Native BullMQ (TikTok Partner API) |
+| `push-to-amazon` | Push products to Amazon (Command Center) | Native BullMQ (SP-API Feeds) |
+| `affiliate-content-generate` | Generate affiliate marketing content | Native BullMQ (Claude AI) |
+| `affiliate-commission-track` | Track and reconcile affiliate commissions | Native BullMQ (scheduled job) |
+
+**Total BullMQ queues after additions: 23** (15 existing + 8 new)
+
+### n8n Relevance Update
+
+The addition of POD fulfillment APIs (Printful, Printify, Gelato) does NOT change the n8n recommendation. These integrations require:
+- Custom request signing (Printful API tokens)
+- Webhook handling for order status updates
+- Tight coupling with product database for inventory sync
+
+All of these are better handled natively in BullMQ than through n8n's generic HTTP nodes.
+
+**Verdict remains: Skip n8n. Build native in BullMQ.**
