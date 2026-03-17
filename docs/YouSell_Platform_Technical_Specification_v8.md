@@ -202,7 +202,7 @@ The platform automatically recommends the optimal fulfillment method for each pr
 | **Dropship** | $0 | 10–30% | Low | Days | Physical products <$30, testing demand |
 | **Wholesale/Bulk** | $500–5,000 | 30–50% | Medium | Weeks | Proven demand, $30–100 products |
 | **Private Label** | $2,000–10,000+ | 40–70% | High | Months | $100+ products, brand-building |
-| **Print-on-Demand** | $0 | 15–35% (up to 60% on stickers/posters) | Low | Days | Custom designs, apparel, accessories |
+| **Print-on-Demand** | $0 | 30–50% (up to 60–80% on stickers/posters) | Low | Days | Custom designs, apparel, accessories |
 | **Affiliate** | $0 | 1–45% commission | Zero | Immediate | SaaS, AI tools, digital products |
 | **Digital Products** | $0 | 80–97% (platform fees only) | Low | Days | Templates, courses, eBooks, tools |
 
@@ -362,44 +362,46 @@ YOUSELL uses its own content engine, influencer network, and publishing pipeline
 
 When YOUSELL provisions tools for clients (Shopify stores, Klaviyo accounts, Printful connections, Spocket subscriptions), each provisioning generates affiliate commission for YOUSELL.
 
-**Multi-Layer Revenue Stacking:** A single client store setup triggers 4-5 simultaneous affiliate commissions: Store (Shopify 20%) + Email (Klaviyo 10-20%) + Payment (Stripe $2,500) + Fulfillment (Spocket 20-30% lifetime OR Printful 10%) + Design (Canva 36%). This is compounding passive income stacked on top of subscription revenue.
+**Multi-Layer Revenue Stacking:** A single client store setup triggers 4-5 simultaneous affiliate commissions: Store (Shopify ~$150 bounty) + Email (Klaviyo 10-20%) + Payment (Stripe/PayPal $500–2,500) + Fulfillment (Spocket 20-30% for 15mo OR Printful 10%) + Design (Canva invite-only). This generates significant passive income stacked on top of subscription revenue.
 
 **Revenue Multiplier Estimate (50 clients in Year 1):**
 
-| Platform | Revenue Per Client/Year | Total (50 clients) |
-|---|---|---|
-| Shopify Partner (20% recurring on ~$39/mo) | ~$94 | $4,680 |
-| Printful (10% of ~$200/mo sales for 12mo) | ~$240 | $12,000 |
-| Klaviyo (15% recurring on ~$45/mo) | ~$81 | $4,050 |
-| Spocket (25% recurring on ~$40/mo) | ~$120 | $6,000 |
-| Canva ($36 per signup) | $36 | $1,800 |
-| Omnisend (20% recurring on ~$16/mo) | ~$38 | $1,920 |
-| Jasper AI (25% recurring on ~$49/mo) | ~$147 | $7,350 |
-| Copy.ai (45% first year on ~$49/mo) | ~$265 | $13,230 |
-| Writesonic (30% lifetime on ~$20/mo) | ~$72 | $3,600 |
-| Semrush ($200/sub + $10/trial) | ~$200 | $10,000 |
-| HubSpot (30% recurring 1yr on ~$50/mo) | ~$180 | $9,000 |
-| ManyChat (35% recurring on ~$15/mo) | ~$63 | $3,150 |
-| GetResponse (33% recurring on ~$19/mo) | ~$75 | $3,780 |
-| Spocket LIFETIME (20-30% recurring on ~$40/mo) | ~$120 | $6,000 |
-| Stripe ($2,500 per merchant referral) | — | $5,000 (est. 2) |
-| PayPal ($2,500 per merchant referral) | — | $5,000 (est. 2) |
-| ShipBob ($250 referral bonus) | — | $2,500 (est. 10) |
-| **Estimated Total Year 1** | | **~$124,266** |
+*⚠️ Rates verified March 2026. Affiliate programs change terms frequently — re-verify before implementation.*
+
+| Platform | Revenue Per Client/Year | Total (50 clients) | Notes |
+|---|---|---|---|
+| Shopify Partner (~$150 one-time bounty) | ~$150 | $7,500 | ⚠️ Changed from 20% recurring to one-time bounty |
+| Printful (10% of ~$200/mo sales for 12mo) | ~$240 | $12,000 | Confirmed |
+| Klaviyo (up to 20% recurring, partner program) | ~$81 | $4,050 | Partner program, not simple affiliate |
+| Spocket (25% recurring on ~$40/mo for 15mo) | ~$125 | $6,250 | ⚠️ 15 months, not lifetime as previously claimed |
+| Canva (invite-only "Canvassador") | Variable | Variable | ⚠️ No longer open signup |
+| Omnisend (20% recurring on ~$16/mo) | ~$38 | $1,920 | Unverified for 2026 |
+| ~~Jasper AI~~ | ~~$147~~ | ~~$7,350~~ | ❌ Program ended Jan 2025 |
+| Copy.ai (45% first year on ~$49/mo) | ~$265 | $13,230 | Unverified for 2026 |
+| Writesonic (30% lifetime on ~$20/mo) | ~$72 | $3,600 | Unverified for 2026 |
+| Semrush ($200–450/sale + $10/trial) | ~$200 | $10,000 | Tiered up to $450/sale |
+| HubSpot (30% recurring 1yr on ~$50/mo) | ~$180 | $9,000 | Confirmed |
+| ManyChat (30–50% tiered, 12mo on ~$15/mo) | ~$54 | $2,700 | ⚠️ Base rate 30% (was 35%), 12mo limit |
+| GetResponse (40–60% tiered, 12mo on ~$19/mo) | ~$91 | $4,560 | ⚠️ Relaunched Mar 2025; rate UP, but 12mo cap |
+| ElevenLabs (22% for 12mo on ~$22/mo) | ~$58 | $2,900 | New addition |
+| Stripe ($500–2,500 per merchant) | — | $5,000 (est. 2) | ⚠️ Range depends on merchant volume, not flat $2,500 |
+| PayPal ($500–2,500 per merchant) | — | $5,000 (est. 2) | ⚠️ Range based on 60-day annualized volume |
+| ShipBob ($250 referral bonus) | — | $2,500 (est. 10) | Confirmed |
+| **Estimated Total Year 1** | | **~$95,210** | Reduced from $124K due to Jasper removal + rate corrections |
 
 *On top of YOUSELL subscription revenue. Scales linearly with client count. Conservative estimates — actual depends on conversion rates and client adoption.*
 
-**Dual Payment Setup Revenue Multiplication:** Every client setting up both Stripe ($2,500 referral) and PayPal ($2,500 referral) generates $5,000 in one-time bounties per client. At 50 clients with dual setup, that's $250,000 in payment referral revenue alone.
+**Dual Payment Setup Revenue Multiplication:** Every client setting up both Stripe ($500–2,500 referral) and PayPal ($500–2,500 referral) generates $1,000–5,000 in one-time bounties per client depending on merchant transaction volume.
 
 **Highest-Priority Affiliate Integrations:**
 
-1. **Spocket** — 20–30% LIFETIME recurring. Best deal in the entire affiliate ecosystem.
-2. **Shopify Partner Program** — 20% recurring. Every client store = compounding income.
-3. **Stripe** — $2,500 per merchant referred. High-value one-time bounty.
-4. **PayPal** — $2,500 per merchant referred. Same high-value bounty.
-5. **Printful** — 10% of sales for 12 months per referral. Natural POD integration.
-6. **Klaviyo** — 10–20% recurring. Recommend to every client for email marketing.
-7. **Canva** — $36 per Pro signup. Every client needs design tools.
+1. **Spocket** — 20–30% recurring for 15 months. Best deal in the ecosystem (⚠️ previously claimed "lifetime" — verify terms before promoting).
+2. **Shopify Partner Program** — ~$150 one-time bounty per referral (⚠️ changed from 20% recurring model).
+3. **Stripe** — $500–2,500 per merchant referred. Volume-dependent bounty, US/Canada.
+4. **PayPal** — $500–2,500 per merchant referred. Same volume-dependent model.
+5. **Printful** — 10% of sales for 12 months per referral + $25 Growth plan bonus. Confirmed.
+6. **Klaviyo** — Up to 20% recurring via partner program. Recommend to every client for email marketing.
+7. **Canva** — ⚠️ Now invite-only "Canvassador" program. Apply early; no longer open signup.
 
 ---
 
@@ -714,12 +716,12 @@ Currently NOT connected. The required integration:
 
 | Platform | Creator Gets | Best For | Notes |
 |---|---|---|---|
-| Gumroad | 90% | Everything digital | Simplest setup, instant payout |
-| Etsy | ~87% | Printables, templates, planners | Built-in marketplace traffic |
+| Gumroad | ~85–87% | Everything digital | 10% + $0.50/tx platform fee + ~2.9% processing |
+| Etsy | ~87% | Printables, templates, planners | 6.5% tx + 3% + $0.25 processing; offsite ads 12–15% extra if >$10K/yr |
 | Amazon KDP | 35–70% | eBooks, guides | 35% for <$2.99 or >$9.99; 70% for $2.99–$9.99 |
-| Shopify | ~97% | Own brand, full control | Highest margin but no marketplace traffic |
-| Whop | ~97% (0% platform fee) | Memberships, software, digital | Emerging platform, strong for recurring |
-| Creative Market | 40% | Design assets | Curated marketplace, design-focused |
+| Shopify | ~96–97% | Own brand, full control | Highest margin but no marketplace traffic |
+| Whop | ~94% (3% platform fee) | Memberships, software, digital | 3% platform + 2.7% + $0.30 processing; ~8%+ international |
+| Creative Market | 50% | Design assets | Curated marketplace, design-focused; 50/50 split |
 
 **Affiliate Commission by Digital Product Type:**
 
@@ -751,16 +753,17 @@ Currently NOT connected. The required integration:
 
 | Platform | Commission | Cookie | Recurring | Network |
 |---|---|---|---|---|
-| Jasper AI | 25–30% | 30 days | Yes | PartnerStack |
+| ~~Jasper AI~~ | ~~25–30%~~ | — | — | ⚠️ Program ended Jan 2025. Agency-only "Solutions Partner" now (up to 50% first $10K) |
 | Pictory AI | 20–50% | 30 days | Yes | Direct |
 | Synthesia | 25% | 30 days | No | Direct |
-| Writesonic | 30% | 90 days | Yes | Direct |
-| GetResponse | 40–60% | 120 days | Yes | Direct |
-| HubSpot | 30% (1yr) | 90 days | Yes | Impact |
-| ManyChat | 20% | 30 days | Yes | PartnerStack |
+| Writesonic | 30% lifetime | 90 days | Yes | PartnerStack |
+| GetResponse | 40–60% tiered (12mo) | 90 days | Yes (12mo) | Relaunched March 2025; was 33% lifetime |
+| HubSpot | 30% (1yr) | 180 days | Yes (1yr) | Impact |
+| ManyChat | 30–50% tiered (12mo) | 120 days | Yes (12mo) | Gold 30%, Sapphire 40%, top tier 100% |
 | Creatify AI | 25% + bonus | 30 days | Yes | Rewardful |
-| Canva | Up to 36% | 30 days | No | Impact |
-| Semrush | 200% first month | 120 days | No | Impact |
+| Canva | Invite-only "Canvassador" | 30 days | Variable | ⚠️ No longer open signup; 80% first 2mo (monthly), 25% (annual) |
+| Semrush | $200–450/sale + $10/trial | 120 days | No | Impact; tiered by quarterly volume up to $450 |
+| ElevenLabs | 22% (12mo) | 90 days | Yes (12mo) | PartnerStack; 11% for Business plans |
 
 **Ongoing Discovery:** Product Hunt API, PartnerStack marketplace, AppSumo, Twitter/X API.
 
@@ -1638,14 +1641,14 @@ return fetchFromApifyAndScrapeCreators() // always available fallback
 | TikTok Creative Center | Free, no auth | Trending hashtags, top ads |
 | Meta Ads Library API | Free, no auth | Competitor ad monitoring |
 | pytrends (via Apify) | Free | Google Trends |
-| Apify (existing) | $5 free/mo | All Apify actors |
+| Apify (existing) | $5 free/mo | All Apify actors (⚠️ rental Actors sunsetting: new Apr 2026, full Oct 2026) |
 | Supabase | Existing | DB, auth, realtime |
 | Resend | Existing | Email |
 | Expo Push | Free | Mobile notifications |
-| Keepa API | $19–149/mo (token-based) | Amazon price history, BSR trends, deals |
-| Shotstack API | $49–199/mo | Video generation (15-60s MP4) |
-| Bannerbear API | $49–149/mo | Image generation (branded lifestyle) |
-| Ayrshare Business | $99–499/mo | Multi-platform social publishing (13+ platforms) |
+| Keepa API | ~€19 base + API tiers from €49–€4,499/mo (EUR, token-based) | Amazon price history, BSR trends, deals |
+| Shotstack API | Credit-based from $49/mo (was fixed tiers) | Video generation (15-60s MP4); ~$0.20–0.40/min |
+| Bannerbear API | $49–299/mo (Automate $49, Scale $149, Enterprise $299) | Image generation (branded lifestyle) |
+| Ayrshare | $49–499/mo (Starter $49, Premium $149, Business $499) | Multi-platform social publishing (13+ platforms) |
 | Printful API | Free (per-order cost) | POD product creation, mockups, orders |
 | Printify API | Free (per-order cost) | POD catalog, multi-provider comparison |
 | Gelato API | Free (per-order cost) | Global POD fulfillment |
@@ -1673,12 +1676,12 @@ return fetchFromApifyAndScrapeCreators() // always available fallback
 | FastMoss CSV | $49–99/mo | When Apify TikTok GMV insufficient |
 | Kalodata CSV | $49/mo | Alternative for TikTok creator earnings |
 | Helium 10 API | $39/mo | When Amazon fallback insufficient |
-| Keepa API | $19/mo | For 90+ day BSR history |
+| Keepa API | ~€49/mo (entry API tier) | For 90+ day BSR history |
 
 ### 18.5 Keepa API Integration Details (NEW v8)
 
 - **Endpoints:** `/product`, `/search`, `/bestsellers`, `/deals`, `/category`
-- **Token system:** 50 tokens/min regeneration
+- **Token system:** Base 1 token/min; API tiers from 20 tokens/min (€49/mo) to 2,500+ tokens/min (€4,499/mo). Pricing is in EUR.
 - **Key data:** Historical prices, BSR, Buy Box, offers, deals, review trends
 - **Best for:** Enriching Amazon products with historical signals
 
@@ -1688,7 +1691,7 @@ Comprehensive view of all data source APIs evaluated for the platform:
 
 | Source | Public API? | Data Export? | Pricing | Best Data | YOUSELL Use |
 |---|---|---|---|---|---|
-| **Keepa** | Yes (token-based) | Yes (CSV) | $19–149/mo | Amazon price history, BSR, deals | Tier 2 enrichment |
+| **Keepa** | Yes (token-based) | Yes (CSV) | ~€19 base + API from €49–€4,499/mo (EUR) | Amazon price history, BSR, deals | Tier 2 enrichment |
 | **FastMoss** | No (Enterprise only) | Yes (CSV export) | $29–109/mo | TikTok product/creator analytics | CSV import fallback |
 | **Kalodata** | No (Enterprise only) | Yes (CSV export) | $45–110/mo | TikTok sales, 15-min refresh | CSV import fallback |
 | **Google Trends** | Unofficial (pytrends) | N/A | Free | Search trends, seasonal patterns | Tier 1 scoring input |
@@ -1705,7 +1708,7 @@ Comprehensive view of all data source APIs evaluated for the platform:
 
 | Platform API | Key Details | Status |
 |---|---|---|
-| **Shopify GraphQL Admin API** | REST is LEGACY (Oct 2024). Must use GraphQL from April 2025. Key mutations: `productSet`, `productCreate`, `productCreateMedia`. Scopes: `write_products`, `read_products`, `write_inventory`. | Not built |
+| **Shopify GraphQL Admin API** | REST LEGACY since Oct 2024; critical REST endpoints dead Feb 2025; new apps GraphQL-only since Apr 2025; full REST shutdown date TBD. Key mutations: `productSet`, `productCreate`, `productCreateMedia`. Scopes: `write_products`, `read_products`, `write_inventory`. | Not built |
 | **TikTok Shop Partner API** | OAuth 2.0 + HMAC-SHA256 signing. Product save requires ALL fields. Rate: 50 req/sec per store. US Portal separate from Global. | Not built |
 | **Meta Commerce** | In-app checkout ended Sept 2025. Now drives traffic to merchant's external site. Batch API: `POST /{catalog_id}/items_batch`. Instagram Basic Display ended Dec 2024. | Not built |
 
@@ -3405,7 +3408,7 @@ Plus estimated **$124K/yr affiliate commission revenue** at 50 clients (scales l
 | OAuth token expiry undetected | Integration silently breaks | Daily health check job + immediate notification to client |
 | Content generation quality inconsistent | Client dissatisfaction | Brand voice calibration, quality scoring, human review option |
 | Meta in-app checkout sunset (Sept 2025) | No native Meta checkout for digital products | Route all sales through Shopify/Gumroad; Meta is traffic driver only |
-| Shopify REST API deprecation (April 2025) | REST endpoints will stop working | Must use GraphQL Admin API from day one; no REST fallback |
+| Shopify REST API deprecation (phased 2024–2025) | REST legacy since Oct 2024; critical endpoints dead Feb 2025; new apps GraphQL-only Apr 2025; full shutdown TBD | Must use GraphQL Admin API from day one; no REST fallback |
 
 ---
 
@@ -3865,7 +3868,7 @@ This appendix summarises the market research documented in full at `docs/MARKET_
 | Competitor SaaS tools | 15+ platforms | YouSell uniquely combines discovery + automation + store integration |
 | TikTok Shop ecosystem | 10+ sources | Fastest-growing e-commerce channel, GMV data accessible via Apify |
 | Amazon FBA landscape | 8+ sources | BSR data available via multiple free/paid APIs |
-| POD market | 11 sources (Printful, Printify, Gelato, Etsy, Redbubble, etc.) | $39.4B market by 2030, 30-60% margins, zero inventory risk |
+| POD market | 11 sources (Printful, Printify, Gelato, Etsy, Redbubble, etc.) | ~$37.9B market by 2030, 30–50% margins, zero inventory risk |
 | Affiliate programs | 24+ programs researched | Spocket best deal (20-30% LIFETIME), Stripe/PayPal highest bounties ($2,500) |
 | Influencer platforms | 8+ sources | Multiple free-tier platforms available (Ainfluencer, Modash, Influencers.club) |
 | Content distribution | 5+ sources | Ayrshare or direct OAuth for multi-channel publishing |
@@ -3873,8 +3876,8 @@ This appendix summarises the market research documented in full at `docs/MARKET_
 
 ### Key Strategic Insights
 
-1. **POD is a $39.4B market** growing at 26.1% CAGR — YOUSELL's intelligence layer provides unique differentiation
-2. **Spocket offers 20-30% LIFETIME recurring** — the single best affiliate deal in the ecosystem
+1. **POD is a ~$37.9B market by 2030** (currently ~$10.8–13B) growing at 23.6–26% CAGR — YOUSELL's intelligence layer provides unique differentiation
+2. **Spocket offers 20-30% recurring for 15 months** — among the best affiliate deals in the ecosystem (⚠️ "lifetime" claim unverified; primary sources say 15 months)
 3. **Stripe and PayPal offer $2,500 per merchant** — high-value one-time referrals
 4. **Content automation is the anti-churn hook** — data alone has no retention value
 5. **BullMQ is the right orchestration choice** — n8n adds cost without capability gain
@@ -3883,30 +3886,31 @@ This appendix summarises the market research documented in full at `docs/MARKET_
 
 | Platform | Creator Gets | Best For |
 |---|---|---|
-| Gumroad | 90% | Everything digital |
-| Etsy | ~87% | Printables, templates, planners |
-| Amazon KDP | 35-70% | eBooks, guides |
-| Shopify | ~97% | Own brand, full control |
-| Whop | ~97% (0% platform fee) | Memberships, software, digital |
-| Creative Market | 40% | Design assets |
+| Gumroad | ~85–87% | Everything digital (10% + $0.50 platform fee + processing) |
+| Etsy | ~87% | Printables, templates, planners (lower on cheap items; offsite ads extra) |
+| Amazon KDP | 35–70% | eBooks, guides (70% only for $2.99–$9.99) |
+| Shopify | ~96–97% | Own brand, full control |
+| Whop | ~94% (3% platform fee) | Memberships, software, digital |
+| Creative Market | 50% | Design assets (50/50 split) |
 
 ### POD Market Data
 
 | Metric | Value |
 |---|---|
-| Global POD market (2025) | ~$7.5 billion |
-| Projected CAGR | 25%+ through 2030 |
-| Average margins | 30–60% depending on product type |
+| Global POD market (2025) | ~$10.8–13 billion (sources: Grand View Research, Precedence Research) |
+| Projected market (2030) | ~$37.9B (Mordor Intelligence); ~$57.5B by 2033 (Grand View) |
+| Projected CAGR | 23.6–26% through 2030 |
+| Average margins | 30–50% depending on product type (⚠️ was 30–60%, corrected) |
 | Startup cost | $0 (no inventory needed) |
 
 ### POD Platform Economics
 
 | Platform | Product Range | Base Cost (T-shirt) | Selling Price | Margin |
 |---|---|---|---|---|
-| Printful | 340+ products | $8–15 | $25–35 | 55–65% |
-| Printify | 900+ products | $5–12 | $22–30 | 55–70% |
-| Gelato | 100+ products | $7–14 | $24–32 | 50–60% |
-| Gooten | 150+ products | $6–13 | $23–30 | 55–65% |
+| Printful | 600+ products | $7–14 | $25–35 | 30–50% |
+| Printify | 1,300+ products | $6–15 | $22–40 | 40–50% |
+| Gelato | 250+ products | $7–17 | $24–32 | 30–50% (Gelato+ gives up to 35% off base) |
+| Gooten | 500+ products (200+ exclusive) | $6–13 | $23–30 | 30–50% |
 
 **POD Affiliate Programs:**
 
@@ -3945,26 +3949,26 @@ Full database of researched affiliate programs across all categories relevant to
 
 | Program | Commission | Cookie | Recurring | Category |
 |---|---|---|---|---|
-| Copy.ai | 45% first year | 30 days | First year | AI Content |
-| Spocket | 20–30% LIFETIME | 30 days | **Lifetime** | Dropshipping |
-| ManyChat | 35% recurring | 90 days | Yes | Marketing Automation |
-| GetResponse | 33% recurring OR $100 bounty | 120 days | Yes | Email Marketing |
-| Canva | 36% per Pro signup | 30 days | No | Design |
+| Copy.ai | 45% first year | 30 days | First year | AI Content (⚠️ unverified 2026) |
+| Spocket | 20–30% for 15 months | 30 days | Yes (15mo) | Dropshipping (⚠️ was "lifetime") |
+| ManyChat | 30–50% tiered (12mo) | 120 days | Yes (12mo) | Marketing Automation |
+| GetResponse | 40–60% tiered (12mo) | 90 days | Yes (12mo) | Email Marketing (relaunched Mar 2025) |
+| Canva | Invite-only "Canvassador" | 30 days | Variable | Design (⚠️ no longer open signup) |
 | Taskade | 30% recurring | 30 days | Yes | AI Productivity |
-| Writesonic | 30% lifetime | 90 days | Yes | AI Content |
-| HubSpot | 30% recurring (1 year) | 180 days | Yes (1yr) | CRM/Marketing |
-| ConvertKit | 30% recurring | 90 days | Yes | Email Marketing |
+| Writesonic | 30% lifetime | 90 days | Yes | AI Content (⚠️ unverified 2026) |
+| HubSpot | 30% recurring (1 year) | 180 days | Yes (1yr) | CRM/Marketing ✅ |
+| ConvertKit/Kit | 30% recurring | 90 days | Yes | Email Marketing (rebranded to "Kit") |
 | SpyFu | 40% recurring | — | Yes | SEO/Research |
 
 **Tier 2 — Mid Commission (20–29%):**
 
 | Program | Commission | Cookie | Recurring | Category |
 |---|---|---|---|---|
-| Jasper AI | 25–30% | 30 days | Yes | AI Content |
+| ~~Jasper AI~~ | ~~25–30%~~ | — | ❌ Ended Jan 2025 | AI Content (agency-only "Solutions Partner" now) |
 | Pictory | 30% recurring | 90 days | Yes | AI Video |
 | Surfer SEO | 25% recurring | Cookieless | Yes | SEO |
-| Semrush | $200/sub + $10/trial | 120 days | No | SEO/Research |
-| ElevenLabs | 25% | 30 days | Yes | AI Voice |
+| Semrush | $200–450/sale + $10/trial | 120 days | No | SEO/Research (tiered by volume) |
+| ElevenLabs | 22% (12mo) | 90 days | Yes (12mo) | AI Voice (11% for Business plans) |
 | Frase.io | 25% recurring | 30 days | Yes | AI SEO |
 | Zapier | 25% | 30 days | Yes | Automation |
 | Otter.ai | 25% | 30 days | Yes | AI Transcription |
@@ -3975,19 +3979,19 @@ Full database of researched affiliate programs across all categories relevant to
 | Synthesia | 25% | 30 days | No | AI Video |
 | Creatify AI | 25% + bonus | 30 days | Yes | AI Creative |
 | Omnisend | 20% recurring (24 months) | 90 days | Yes (24mo) | Email Marketing |
-| Shopify Partner | 20% recurring | — | Yes | E-Commerce |
+| Shopify Partner | ~$150 one-time bounty | 30 days | No (⚠️ was 20% recurring) | E-Commerce |
 | Zendrop | 20% recurring | 30 days | Yes | Dropshipping |
 | DSers | 20% recurring | 30 days | Yes | Dropshipping |
 | ActiveCampaign | 20–30% recurring | 90 days | Yes | Email Marketing |
 | BigCommerce | 200% first payment | 90 days | No | E-Commerce |
-| Ecwid | 20% lifetime recurring | 30 days | **Lifetime** | E-Commerce |
+| Ecwid/Lightspeed | 20% recurring | 30 days | Yes | E-Commerce (⚠️ Lightspeed acquisition; verify terms) |
 
 **Tier 3 — Lower Commission / High-Value Bounties:**
 
 | Program | Commission | Cookie | Type | Category |
 |---|---|---|---|---|
-| Stripe | $2,500 per merchant | — | One-time bounty | Payments |
-| PayPal | $2,500 per merchant | — | One-time bounty | Payments |
+| Stripe | $500–2,500 per merchant | — | One-time bounty (volume-dependent) | Payments (⚠️ not public; partner program only) |
+| PayPal | $500–2,500 per merchant | — | One-time bounty (volume-dependent) | Payments (US/CA; based on 60-day volume) |
 | Printful | 10% of sales (12 months) | 30 days | Recurring (12mo) | POD |
 | Printify | 5% of sales (12 months) | 30 days | Recurring (12mo) | POD |
 | Gelato | Up to $500 per referral | — | One-time bounty | POD |
@@ -4001,22 +4005,26 @@ Full database of researched affiliate programs across all categories relevant to
 | Ahrefs | Per referral | 60 days | Variable | SEO |
 | Crello/VistaCreate | Varies | 30 days | Variable | Design |
 
-**Priority Rankings:**
-1. **Lifetime recurring programs** (Spocket, Ecwid, Writesonic) — compound forever
-2. **High-value bounties** (Stripe $2,500, PayPal $2,500, Wix $100) — immediate revenue
-3. **Long cookie windows** (HubSpot 180d, GetResponse 120d, Semrush 120d) — higher conversion probability
-4. **Note on Omnisend:** 24-month cookie window is a significant advantage over Klaviyo's 30-day window for the same use case (email marketing)
+**Priority Rankings (Updated March 2026):**
+1. **Long-duration recurring programs** (Spocket 15mo, Writesonic lifetime, Omnisend 24mo) — best compounding value
+2. **High-value bounties** (Stripe/PayPal $500–2,500, Shopify ~$150, Wix $100) — immediate revenue
+3. **Long cookie windows** (HubSpot 180d, ManyChat 120d, Semrush 120d) — higher conversion probability
+4. **Note on Omnisend:** 24-month duration is a significant advantage over Klaviyo's partner-only model for the same use case (email marketing)
+5. **⚠️ Programs requiring re-verification:** Copy.ai, Writesonic, Omnisend, Ecwid/Lightspeed, ConvertKit/Kit, Pictory, BigCommerce — could not independently verify current 2026 terms
 
 ### Competitor Pricing Comparison
 
-| Platform | Tier 1 | Tier 2 | Tier 3 | Tier 4 |
-|---|---|---|---|---|
-| Sell The Trend | $19.97 | $32.97 | $66.64 | ~$199.98 |
-| AutoDS | $19.90-$49.90 | $29.90-$69.90 | $49.90-$119 | — |
-| Jungle Scout | $29 | $49 | $129 | Enterprise |
-| Helium 10 | Free | $99 | $279 | Enterprise |
-| Kalodata | Free | $38.30 | $83.20 | Enterprise |
-| Minea | $34 | $69 | $299 | — |
+*⚠️ All prices below are ANNUAL billing rates unless noted. Monthly prices are 30–50% higher. Verified March 2026.*
+
+| Platform | Tier 1 (annual) | Tier 2 (annual) | Tier 3 (annual) | Tier 4 | Monthly Tier 1 |
+|---|---|---|---|---|---|
+| Sell The Trend | $19.97 | $32.97 | $66.64 | ~$199.98 | $29.97/mo |
+| AutoDS | ~$26.90 | $29.90–$39.90 | $49.90–$119 | — | ~$26.90/mo |
+| Jungle Scout | $29 | $49 | $129 | Cobalt (custom) | $49/mo |
+| Helium 10 | Free | $99 | $279 | $1,499/mo | $129/mo |
+| Kalodata | Free trial (7d) | ~$41.58 | ~$91.58 | Enterprise | $49.99/mo |
+| Minea | $34 | $69 | $299 | — | $49/mo |
+| FastMoss | — | $59/mo | $109/mo | $399/mo (Team) | $59/mo |
 
 ---
 
@@ -4050,11 +4058,11 @@ Full analysis documented at `docs/competitive_analysis_tiers_7_8_niches.md`.
 | Tool | Pricing | Data Refresh | Key Insight |
 |---|---|---|---|
 | **Kalodata** | $45.90-$109.99/mo | 15-minute cycle | Most widely used TikTok tool, gold standard for real-time |
-| **FastMoss** | ~$29-$109/mo | Daily | 3.2M+ users, 180M+ creator database, 6K influencer contacts/day export |
+| **FastMoss** | $59–$109/mo (Team $399) | Daily | 3.2M+ users, 220–250M+ creator database (⚠️ was 180M+), 6K influencer contacts/day export |
 
 ### L.4 Influencer Marketing Landscape
 
-Market projected to reach **$24 billion in 2026**.
+Market projected to reach **$28–33 billion in 2026** (⚠️ was $24B, which is the 2024 estimate).
 
 | Platform | Focus | Key Differentiator |
 |---|---|---|
@@ -4062,7 +4070,7 @@ Market projected to reach **$24 billion in 2026**.
 | Aspire | Enterprise | 40% more efficient CPM |
 | Upfluence | E-commerce | Identify existing customers as influencers |
 | CreatorIQ | Enterprise global | 20M+ profiles, AI discovery |
-| Modash | Scale discovery | 400M+ profiles, AI fraud detection |
+| Modash | Scale discovery | 350–380M+ profiles (⚠️ was 400M+), AI fraud detection |
 
 ### L.5 Pricing Positioning
 

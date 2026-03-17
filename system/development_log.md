@@ -2320,3 +2320,51 @@ Processed findings from 2 additional audit agents (N8N_WORKFLOW_ANALYSIS.md and 
 ### Files Modified
 - `docs/YouSell_Platform_Technical_Specification_v8.md` — Updated (3,902 → 4,115 lines, +213 lines)
 - `system/development_log.md` — This entry
+
+## Session: 2026-03-17 (Part 6) — Deep Research Verification & Number Corrections
+
+### What Was Done
+Ran 4 parallel research agents to verify all numbers, rates, and estimates added in Part 5 against live 2026 data. Applied corrections across the entire v8 spec.
+
+### Corrections Applied
+
+**Affiliate Programs (9 major corrections):**
+1. **Jasper AI** — Program ended Jan 2025. Marked as ❌ (agency-only "Solutions Partner" now)
+2. **Shopify Partner** — Changed from 20% recurring → ~$150 one-time bounty
+3. **Canva** — Now invite-only "Canvassador" program; no longer open signup
+4. **Spocket** — Changed from "LIFETIME" → 15 months (unverified as lifetime)
+5. **GetResponse** — Relaunched Mar 2025: now 40–60% tiered for 12 months, cookie 90d (was 33% + 120d)
+6. **ManyChat** — Base rate 30% (was 35%), tiered to 50%, 12-month limit, cookie 120d
+7. **ElevenLabs** — 22% for 12mo (was 25% unlimited)
+8. **Stripe/PayPal** — $500–2,500 range based on merchant volume (was flat $2,500)
+9. **Revenue multiplier total** — Reduced from ~$124K to ~$95K due to corrections
+
+**POD Market Data (11 corrections):**
+10. POD market size 2025: $10.8–13B (was $7.5B)
+11. Printful: 600+ products (was 340+), margins 30–50% (was 55–65%)
+12. Printify: 1,300+ products (was 900+), margins 40–50% (was 55–70%)
+13. Gelato: 250+ products (was 100+), base up to $17, margins 30–50%
+14. Gooten: 500+ products (was 150+), margins 30–50%
+15. Gumroad creator take: ~85–87% (was 90%)
+16. Whop: ~94% with 3% platform fee (was ~97% with 0% fee)
+17. Creative Market: 50% split (was 40%)
+
+**API/Platform Dates (7 corrections):**
+18. Keepa API: €19 base + €49–€4,499/mo tiers (was $19–149/mo — massively understated)
+19. Ayrshare: $49–499/mo with Starter tier (was $99–499)
+20. Shotstack: Now credit-based from $49/mo (was fixed $49–199/mo tiers)
+21. Bannerbear: $49–299/mo with 3 tiers (was $49–149)
+22. Shopify REST: Phased deprecation timeline added (Oct 2024 → Feb 2025 → Apr 2025)
+23. Influencer market 2026: $28–33B (was $24B, which is the 2024 figure)
+24. Apify rental Actors sunsetting note added (Apr/Oct 2026)
+
+**Competitor Data (5 corrections):**
+25. Kalodata: $49.99/$109.99 monthly (was $38.30/$83.20)
+26. FastMoss: $59–399/mo (was $29–109), creator DB 220–250M+ (was 180M+)
+27. Modash: 350–380M+ profiles (was 400M+)
+28. AutoDS low-end: ~$26.90 (was $19.90)
+29. All competitor prices annotated as annual billing with monthly column added
+
+### Files Modified
+- `docs/YouSell_Platform_Technical_Specification_v8.md` — 107 insertions, 99 deletions (net +8 lines)
+- `system/development_log.md` — This entry
