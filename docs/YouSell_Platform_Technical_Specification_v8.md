@@ -1398,6 +1398,13 @@ Data freshness affects its scoring weight:
 | < 7 days | 0.50 |
 | < 30 days | 0.30 |
 
+**Fusion Rules (Conflict Resolution):**
+- Price → use latest timestamp
+- Sales volume → use max credible source
+- BSR → Keepa only (most reliable)
+- Trends → weighted average across sources
+- Scores → recalculate from fused data
+
 ### 16A.3 Data Refresh Tiers
 
 **Tier 1: Nightly Batch (Core Intelligence)** — 2 AM UTC daily
@@ -1452,6 +1459,24 @@ Pre-computed by Tier 1 nightly batch job:
 | **"New Opportunities"** | Discovered in last 48h, score >60 | Daily |
 | **"Seasonal Picks"** | Pre-computed seasonal trends | Weekly |
 | **"Category Leaders"** | Top product per category | Daily |
+
+### 16A.5 Smart Filter System
+
+**Essential Filters:** Platform, Score Tier (HOT/WARM/WATCH/COLD), Price Range, Category, Trend Stage, Date Range, Sort By
+
+**Advanced Filters:** Fulfillment Model, Marketing Channel, Margin %, Competition Level, Supplier Available, Influencer Matches, Cross-Platform Presence
+
+**Saved Presets:** "Quick Wins" (HOT + low competition), "High Profit" (margin >50%), "Trending Now" (emerging/rising), "Low Risk" (established demand), "Affiliate Ready" (affiliate programs), "TikTok Viral" (TikTok + viral score >80)
+
+### 16A.6 Additional Data Management Tables (NEW v8)
+
+| Table | Purpose |
+|---|---|
+| `data_source_log` | Track enrichment sources per product (which APIs contributed data) |
+| `product_score_snapshots` | Historical scores for trend detection (daily snapshots) |
+| `column_mapping_templates` | Saved CSV column mappings per data source (Keepa, FastMoss, Kalodata) |
+| `client_preferences` | Preferred platforms, categories, price range per client |
+| `recommendation_cache` | Pre-computed recommendations per client (refreshed by Tier 1 nightly batch) |
 
 ---
 
