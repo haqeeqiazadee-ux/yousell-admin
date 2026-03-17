@@ -186,4 +186,16 @@ Refactor plan:
 - **Files touched:** `src/lib/engines/scoring-engine.ts`, `src/lib/engines/index.ts`
 - **Result:** SUCCESS — clean tsc compile
 - **Next step:** Batch 0.12 — Integration verification
+- **Commit:** 551109d
+
+------------------------------------------------------------
+
+### [2026-03-17 01:55] DONE — Batch 0.12: Integration verification
+
+- **Task:** Verify all engines register, communicate via event bus, existing functionality works
+- **Batch:** 0.12
+- **Action:** Created tests/engine-system.test.ts (19 tests). Fixed tests/setup.ts to not crash without Supabase env. All tests pass: EventBus (7 tests), EngineRegistry (9 tests), Integration flow (3 tests).
+- **Files touched:** `tests/engine-system.test.ts`, `tests/setup.ts`
+- **Result:** SUCCESS — 19/19 tests passing
+- **Next step:** Batch 0.13 — Update architecture docs
 - **Commit:** pending
