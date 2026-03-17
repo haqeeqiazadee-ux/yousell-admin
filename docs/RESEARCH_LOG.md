@@ -407,3 +407,178 @@
 **Total Research Entries: 30**
 **Unique Platforms Researched: 23**
 **Niche Searches Conducted: 7**
+
+---
+
+## Session 2 — March 2026: Detailed Competitor Pricing & API Research
+
+### Entry #31: Sell The Trend — Updated Pricing (2026)
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Platform** | Sell The Trend |
+| **Key Findings** | Updated 2026 pricing: Lite $29.97/mo ($19.97 annual), Essential $49.97/mo ($32.97 annual), Pro $99.97/mo ($66.64 annual), Pro+ ~$299.97/mo (~$199.98 annual). TikTok ad explorer locked to Pro tier. Facebook Audience Builder at Essential+. 14-day free trial. ~33% annual savings. |
+| **Sources** | sellthetrend.com/pricing, RevenueGeeks, DoDropshipping |
+
+### Entry #32: AutoDS — Per-Marketplace Pricing Model (2026)
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Platform** | AutoDS |
+| **Key Findings** | Per-marketplace pricing (notable model). Shopify/eBay/Wix/WooCommerce/Etsy/TikTok/Facebook: Import $19.90, Starter $29.90-$39.90, Advanced $49.90-$69.90. Amazon sellers pay ~2-2.5x MORE: Import $49.90, Starter $69.90-$89.90, Advanced $89.90-$119. Monthly billing 20-25% higher. $1 trial for 14 days. |
+| **Key Insight** | Per-marketplace pricing is a viable model — higher-value platforms (Amazon) command premium pricing. |
+| **Sources** | autods.com/pricing, RevenueGeeks, CLOSO, Avada |
+
+### Entry #33: Jungle Scout — 2026 Pricing
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Platform** | Jungle Scout |
+| **Key Findings** | Starter: $49/mo ($29 annual), Growth Accelerator: $79/mo ($49 annual), Brand Owner + CI: $149/mo (~$129 annual), Cobalt: Custom enterprise. Extra seats $49/mo. 7-day money-back guarantee. Amazon-focused only. |
+| **Sources** | junglescout.com/pricing, RevenueGeeks, DemandSage |
+
+### Entry #34: Helium 10 — 2026 Price Increase
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Platform** | Helium 10 |
+| **Key Findings** | PRICES INCREASED IN 2026. Free tier available. Starter retired Jan 2026 ($49/$39). Platinum: $129/mo ($99 annual). Diamond: $359/mo ($279 annual). Enterprise: Custom. Add-ons: Keyword Tracker from $19/mo, Market Tracker 360 from $500/mo (Diamond only), Elite Sellers Group from $99/mo. Amazon + Walmart only. |
+| **Key Insight** | Helium 10 raised prices significantly — our $29-$149 range now undercuts them even more. |
+| **Sources** | helium10.com/pricing, RevenueGeeks, Atom11, GoFBAHub |
+
+### Entry #35: Kalodata — TikTok Intelligence Pricing (2026)
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Platform** | Kalodata |
+| **Key Findings** | Free tier available. Starter: $45.90/mo ($38.30 annual, ~$499/yr). Professional: $99.90-$109.99/mo ($83.20 annual, ~$999/yr). Enterprise: Custom. TikTok Shop exclusively. Professional saw ~10% price increase recently. 7-day free trial. |
+| **Key Insight** | $45.90-$109.99 for TikTok-ONLY intelligence — our Starter at $29 with equivalent TikTok intelligence is very competitive while covering 7 channels. |
+| **Sources** | Simptok, TipsOnBlogging, Toolsurf |
+
+### Entry #36: Minea — Channel-Gated Tiering Model (2026)
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Platform** | Minea |
+| **Key Findings** | Free: 200 credits. Starter: $49/mo ($34 annual) — Facebook/Meta ads ONLY. Premium: $99/mo ($69 annual) — Facebook + TikTok + Pinterest + Shopify Trending Shops. Business: $399/mo ($299 annual) — All channels + Success Radar (top 100 trending products refreshed every 8h). ~30% annual savings. 20% coupon codes stackable. |
+| **Key Insight** | Minea uses the EXACT channel-gated tiering model we chose (Option C). Lower tiers get fewer platforms. This validates our pricing architecture. |
+| **Sources** | minea.com/pricing, MineaHub, AffMaven, TrendTrack |
+
+### Entry #37: Ecomhunt — Budget Tier Pricing (2026)
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Platform** | Ecomhunt |
+| **Key Findings** | Free tier (3-day data delay). Basic: $29/mo ($23 annual, $279/yr). Pro: $49/mo ($39 annual, $468/yr). Suite: $89/mo ($49 annual, $588/yr). AliExpress + Shopify trending products. Not marketplace-specific. Pro adds 1-on-1 expert + masterclass. 30-day money-back guarantee. |
+| **Sources** | ecomhunt.com/pricing, Torchbankz, AffMaven |
+
+### Entry #38: Niche Scraper — Inconsistent Pricing (2026)
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Platform** | Niche Scraper |
+| **Key Findings** | Free tier. Pro: $29-$49.95/mo (~$16.58 annual, ~$199/yr). Pricing inconsistent across sources (likely ongoing promotions). AliExpress, Shopify, Amazon research. TikTok + Facebook AdSpy in Pro. Video ad creator. 7-day money-back guarantee. |
+| **Sources** | RevenueGeeks, Thunderbit, AMZ.Ninja |
+
+### Entry #39: SaaS Pricing Model Trends (2026)
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Query** | "SaaS pricing models trends 2026" |
+| **Key Findings** | 67% of SaaS uses tiered models (pure per-seat declining). 38% now use usage-based (up from 27% in 2023). IDC: 70% will move away from pure per-seat by 2028. 79 companies in PricingSaaS 500 offer credit-based models (126% YoY increase). Gartner: 40% of enterprise SaaS will include outcome-based components by end of 2026. Emerging: Clay (credit-based), Intercom Fin ($0.99/resolution), Microsoft Copilot ($30/user + usage credits). |
+| **Key Insight** | Our hybrid model (channel-gated tiers + content credits) aligns perfectly with 2026 trends. |
+| **Sources** | ChartMogul, NxCode, Cobloom, Chargebee, Thales |
+
+### Entry #40: TikTok Shop API Research
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Query** | "TikTok Shop Partner API product listing OAuth" |
+| **Key Findings** | Standard OAuth 2.0 + mandatory HMAC-SHA256 request signing. Partner Center registration required (US portal separate from Global). Product save endpoint requires ALL fields (no partial updates). Product review required before listing goes live. Rate: 50 req/sec per store, 20 QPS for queries. Approval: instant for in-house developers, 2-3 days for others. |
+| **Sources** | TikTok Shop Partner Center documentation |
+
+### Entry #41: TikTok Content Posting API Research
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Query** | "TikTok Content Posting API third-party publishing" |
+| **Key Findings** | CRITICAL: Unaudited apps can only post in PRIVATE mode. Manual audit required for public posting (no SLA on timeline). Mandatory branded content disclosure (Sept 2025): all third-party API content auto-labelled "Branded Organic Content / Promotional content". AI-generated content must be labelled. Two upload methods: PULL_FROM_URL and FILE_UPLOAD (chunked). |
+| **Key Insight** | This is the single biggest gating factor for TikTok automation. Must apply for audit EARLY. Phase 1 fallback: "Download for TikTok" button. |
+| **Sources** | TikTok Developer documentation |
+
+### Entry #42: Shopify GraphQL Admin API (2026)
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Query** | "Shopify Admin API product management OAuth 2026" |
+| **Key Findings** | REST Admin API is LEGACY as of Oct 2024. All new public apps MUST use GraphQL from April 2025. Key mutations: productSet (upsert), productCreate, productCreateMedia, productVariantsBulkCreate. OAuth: standard, permanent offline access token, HMAC validation on callback. Scopes: write_products, read_products, write_inventory, read_inventory. |
+| **Sources** | Shopify Developer documentation |
+
+### Entry #43: Meta/Instagram Shopping API (2026)
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Query** | "Meta Facebook Instagram Shopping API product catalog" |
+| **Key Findings** | CRITICAL CHANGE: In-app checkout ended Sept 2025. All Facebook/Instagram Shopping now drives traffic to merchant's external website. Three integration paths: Data Feed Upload (simplest), Graph API (programmatic), Meta Business Extension (popup OAuth). Batch API: POST /{catalog_id}/items_batch. Instagram Basic Display API ended Dec 2024 — Business/Creator accounts only. |
+| **Key Insight** | Meta integration value is now about catalog VISIBILITY, not direct sales processing. |
+| **Sources** | Meta Developer documentation |
+
+### Entry #44: Content Creation API Tools (2026)
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Query** | "video image content creation APIs Shotstack Creatomate Bannerbear" |
+| **Key Findings** | Shotstack: JSON-based timeline API, generative AI built in, white-label SDK, ~$0.40/min. Creatomate: template editor + REST API, limited AI, marketing-focused. Bannerbear: template-based image/video/PDF, ~$1.10/min for video, best for e-commerce. Recommended: Shotstack for video (best for engineering teams + AI), Bannerbear for images (established e-commerce ecosystem). |
+| **Decision** | Shotstack for video generation, Bannerbear for image generation, Claude AI for all text content. |
+| **Sources** | Shotstack docs, Creatomate docs, Bannerbear docs |
+
+### Entry #45: Social Media Publishing APIs — Ayrshare Decision
+
+| Field | Detail |
+|-------|--------|
+| **Timestamp** | 2026-03-17 |
+| **Query** | "social media publishing API multi-platform Buffer Ayrshare" |
+| **Key Findings** | Ayrshare: 13 platforms, single API, OAuth abstraction, SaaS/Business plan with per-client profiles, Node.js SDK. Eliminates per-platform OAuth + approval overhead. Buffer: 13+ platforms, REST API, $6/channel/mo. Hootsuite: 100+ integrations, $99/mo+. Later: limited API. |
+| **Decision** | Ayrshare chosen for content publishing. Rationale: handles all platform OAuth, supports per-client profiles (multi-tenant), Node.js SDK available. Trade-off: third-party dependency for publishing (mitigated by native OAuth for shop integrations). |
+| **Sources** | Ayrshare docs, Buffer docs |
+
+---
+
+## Updated Coverage Checklist
+
+- [x] All 23 competitor platforms researched (Entries #1-23)
+- [x] All 7 opportunity channels compared to competitors
+- [x] E-commerce product research niche explored (#24-25)
+- [x] AI content creation niche explored (#26)
+- [x] Marketing automation niche explored (#27)
+- [x] Supplier & fulfillment niche explored (#28)
+- [x] AI affiliate & digital products niche explored (#29-30)
+- [x] Emerging tools identified (Thieve.co, ProfitBusters, Stan Store)
+- [x] Pricing models compared across all competitors
+- [x] UX patterns documented
+- [x] **NEW** Detailed 2026 pricing data for 8 key competitors (#31-38)
+- [x] **NEW** SaaS pricing model trends 2026 (#39)
+- [x] **NEW** TikTok Shop API capabilities and limitations (#40)
+- [x] **NEW** TikTok Content Posting API audit gate discovered (#41)
+- [x] **NEW** Shopify GraphQL migration requirement confirmed (#42)
+- [x] **NEW** Meta in-app checkout ending confirmed (#43)
+- [x] **NEW** Content creation tools evaluated (Shotstack, Bannerbear) (#44)
+- [x] **NEW** Social publishing architecture decided (Ayrshare) (#45)
+
+**Total Research Entries: 45**
+**Unique Platforms Researched: 23 + 5 API/tool providers = 28**
+**Niche Searches Conducted: 7 + 4 = 11**

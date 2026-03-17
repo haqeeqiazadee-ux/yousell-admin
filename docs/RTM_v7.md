@@ -877,3 +877,247 @@
 8. Fix: AI/Physical Affiliate dynamic discovery
 9. Fix: Pre-viral signal completion (4 signals missing)
 10. Fix: Cross-platform intelligence automation
+
+---
+
+## Section K — Content Creation Engine (Creative Studio) — Architecture Decision
+
+| Component | Decision | Status |
+|-----------|----------|--------|
+| Text content generation | Claude Haiku (bulk), Claude Sonnet (premium) | Architecture defined |
+| Video generation | Shotstack API (JSON timeline, generative AI) | Architecture defined |
+| Image generation | Bannerbear API (template-based) | Architecture defined |
+| Content templates | 8 core templates (Problem→Solution, Unboxing, Before/After, Listicle, Trend Hijack, Comparison, Testimonial, Deal Alert) | Architecture defined |
+| Brand voice config | Per-client JSONB in client_settings (tone, audience, emoji style, phrases) | Architecture defined |
+| Content credits | Per-plan allocation: Starter 50, Growth 200, Professional 500, Enterprise unlimited | Architecture defined |
+| Platform formatting | Auto-format per platform (TikTok 9:16 video, Instagram 1:1/4:5, Pinterest 2:3, etc.) | Architecture defined |
+| Content planner | Claude Haiku analyses product + brand voice → outputs content brief | Architecture defined |
+| Content library | Client reviews/edits/approves content before publishing | Architecture defined |
+| **New Tables** | content_items, content_credits | Schema defined |
+| **New Queues** | content-queue (BullMQ) | Architecture defined |
+| **Reference Doc** | docs/content_publishing_shop_integration_strategy.md Section 4 | — |
+
+---
+
+## Section L — Content Publishing Engine (Smart Publisher) — Architecture Decision
+
+| Component | Decision | Status |
+|-----------|----------|--------|
+| Publishing layer | Ayrshare API (13+ platforms, single API) | Architecture defined |
+| Per-client profiles | Ayrshare SaaS/Business plan with per-client profiles | Architecture defined |
+| Social OAuth | Managed via Ayrshare embedded OAuth (not native) | Architecture defined |
+| Fallback plan | Native OAuth infrastructure from Shop Connect can be extended | Risk mitigated |
+| Publishing modes | Manual (default) → Scheduled → Smart Schedule → Auto-Pilot (opt-in) | Architecture defined |
+| Content calendar | Week/month view with platform rows, status badges | UI designed |
+| TikTok limitation | Unaudited apps post privately only; manual audit required for public posts | Risk identified |
+| TikTok Phase 1 | "Download for TikTok" button until audit passes | Workaround defined |
+| TikTok disclosure | All API-posted TikTok content auto-labelled "Branded Organic" (Sept 2025 policy) | Compliance noted |
+| **New Tables** | publish_log, client_social_profiles | Schema defined |
+| **New Queues** | publish-queue (BullMQ) | Architecture defined |
+| **Reference Doc** | docs/content_publishing_shop_integration_strategy.md Section 5 | — |
+
+---
+
+## Section M — Shop Integration Engine (Shop Connect) — Architecture Decision
+
+| Component | Decision | Status |
+|-----------|----------|--------|
+| Shopify | GraphQL Admin API (2026-01), standard OAuth 2.0, permanent offline tokens | Phase 2A |
+| TikTok Shop | TikTok Shop Partner API v2, OAuth + HMAC-SHA256 request signing | Phase 2B |
+| Amazon | SP-API, Login with Amazon (LWA), Feeds API for product upload | Phase 3 |
+| Meta Commerce | Graph API v25.0, Meta Business Extension (MBE), Product Catalog batch API | Phase 3 |
+| Product sync | Two-way: push products + receive order webhooks | Architecture defined |
+| Inventory sync | Real-time via platform webhooks | Architecture defined |
+| Meta limitation | In-app checkout ended Sept 2025; catalog visibility only, not direct sales | Compliance noted |
+| Shopify limitation | REST API is legacy; GraphQL-only for new apps from April 2025 | Compliance noted |
+| **New Tables** | shop_products (cross-platform product tracking) | Schema defined |
+| **New Queues** | shop-sync-queue (BullMQ) | Architecture defined |
+| **Reference Doc** | docs/content_publishing_shop_integration_strategy.md Section 3 | — |
+
+---
+
+## Section N — Automation–Control Spectrum — Architecture Decision
+
+| Component | Decision | Status |
+|-----------|----------|--------|
+| Default mode | Level 1 (Manual) — "Suggest everything, do nothing without permission" | Philosophy defined |
+| Level 1 (Manual) | Client initiates every action | Default for all features |
+| Level 2 (Assisted) | System prepares, client reviews + one-click approves | Available for all features |
+| Level 3 (Auto-Pilot) | System acts within client-defined rules; weekly digest | Requires explicit opt-in |
+| Per-feature config | Each feature has independent automation level | Architecture defined |
+| Hard guardrails | Daily spend cap, content volume cap, product upload cap, outreach cap, pause on 3x error | Architecture defined |
+| Soft guardrails | Approval window (default 4hr), category filters, price range, min score, quiet hours | Architecture defined |
+| Emergency controls | "Pause All Automation" button, per-feature pause, undo window, audit trail | UI designed |
+| **New Tables** | client_automation_config | Schema defined |
+| **Reference Doc** | docs/content_publishing_shop_integration_strategy.md Section 7 | — |
+
+---
+
+## Section O — Pricing Model — Session Decision (Option C Hybrid)
+
+| Component | Decision |
+|-----------|----------|
+| Model | Option C: Channel-gated tiering + channel selection |
+| Tiers | Starter $29, Growth $59, Professional $99, Enterprise $149 |
+| Channel pricing | Base price includes 1 platform; additional platforms at discounted rates |
+| Channel discount | ~20% off second platform, ~30% off third+ |
+| Validation | Competitive vs 8 analysed competitors (Sell The Trend, AutoDS, Jungle Scout, Helium 10, Kalodata, Minea, Ecomhunt, Niche Scraper) |
+| 2026 competitor prices | Sell The Trend $29.97-$99.97, AutoDS $19.90-$69.90, Jungle Scout $29-$149, Helium 10 $129-$359, Kalodata $45.90-$109.99, Minea $34-$299, Ecomhunt $23-$49, Niche Scraper $29-$49.95 |
+| **Reference Doc** | docs/content_publishing_shop_integration_strategy.md, competitor research session |
+
+---
+
+## Section P — Customer-Facing Terminology — Session Decision
+
+All client-facing pages must use professional, market-oriented language:
+
+| NEVER Use (Internal Only) | ALWAYS Use (Client-Facing) |
+|---|---|
+| Scrape / Scraper | Discover / Market Intelligence |
+| Scan / Scanner | Product Finder / Trend Analysis |
+| Crawl / Crawler | Research / Market Research |
+| Run a scan | Run product discovery / Analyse market |
+| Scan results | Discovery results / Market insights |
+
+Engine names for client-facing UI:
+| Internal | Client-Facing |
+|---|---|
+| Content Creation Engine | Creative Studio |
+| Content Publishing Engine | Smart Publisher |
+| Store Integration Engine | Shop Connect |
+| Product Discovery Engine | Product Finder |
+| Influencer Outreach Engine | Creator Connect |
+| Supplier Discovery Engine | Supplier Finder |
+| Analytics Engine | Performance Hub |
+| Marketing Engine | Ad Studio |
+
+Implementation: `src/lib/terminology.ts` maps internal→client terms.
+
+---
+
+## Compliance Summary Update (Session 2026-03-17)
+
+| Area | Previous Status | Updated Status |
+|------|-----------------|----------------|
+| Content Creation Engine | ❌ Not built | Architecture fully defined (Creative Studio) |
+| Content Publishing Engine | ❌ Not built | Architecture fully defined (Smart Publisher via Ayrshare) |
+| Store Integration Engine | ❌ Not built | Architecture fully defined (Shop Connect - native OAuth) |
+| Marketing Channel OAuth | ❌ Not built | Architecture fully defined (Ayrshare manages social OAuth) |
+| Automation Controls | ❌ Not designed | 3-level automation spectrum defined with guardrails |
+| Pricing Model | ⚠️ Preliminary | Option C Hybrid confirmed with competitive validation |
+| Customer Terminology | ❌ Not addressed | Full terminology mapping defined |
+| New DB Tables | 0 defined | 6 new tables defined (content_items, publish_log, shop_products, client_automation_config, content_credits, client_social_profiles) |
+| New BullMQ Queues | 0 defined | 3 new queues (content-queue, publish-queue, shop-sync-queue) |
+| Implementation Phases | Generic | 7 specific phases (2A, 2B, 3A, 3B, 3C, 3D, 4) with week estimates |
+
+---
+
+## Section K — Content Creation & Publishing Engine Audit (March 2026 Strategy Update)
+
+### K.1 — Content Creation Engine (Creative Studio)
+
+| Field | Detail |
+|-------|--------|
+| **v7 Spec Reference** | Section 2.3 item 9, Section 6.2, Section 15.2 |
+| **Strategy Document** | `docs/content_publishing_shop_integration_strategy.md` — Section 4 |
+| **Architecture Decision** | Multi-tool pipeline: Claude AI (text content) + Shotstack API (video generation) + Bannerbear API (image generation) |
+| **Status** | ❌ Not built — Full strategy defined March 2026 |
+| **Content Types Planned** | Social captions (Claude Haiku), ad copy (Claude Sonnet), video scripts (Claude Sonnet), short-form video (Shotstack), product images (Bannerbear), email sequences (Claude Haiku), blog/SEO (Claude Sonnet), carousel posts (Bannerbear) |
+| **Brand Voice System** | Per-client brand voice configuration stored in `clients.settings` JSONB — tone, target audience, emoji style, key phrases, phrases to avoid |
+| **Content Templates** | 8 core templates: Problem→Solution, Unboxing Reveal, Before/After, Listicle, Trend Hijack, Comparison, Testimonial Style, Deal Alert |
+| **Platform Formatting** | Auto-format per platform (TikTok 9:16 video, Instagram 1:1/4:5, Pinterest 2:3, Facebook link posts, YouTube Shorts <60s) |
+| **Content Credits** | Per-plan allocation: Starter 50, Growth 200, Professional 500, Enterprise unlimited |
+| **New Database Tables** | `content_items`, `content_credits` |
+| **New BullMQ Queues** | `content-queue` (generation), `publish-queue` (distribution) |
+| **Implementation Phase** | Phase 3A (text), Phase 3B (rich media) |
+| **Gaps from v7 Spec** | Content queue table exists in spec (Section 21.2) but worker job not built. UI exists at `/dashboard/content` with EngineGate but no backend generation logic. |
+
+### K.2 — Content Publishing Engine (Smart Publisher)
+
+| Field | Detail |
+|-------|--------|
+| **v7 Spec Reference** | Section 6.2, Section 9.3 steps 6-7, Section 15.2 |
+| **Strategy Document** | `docs/content_publishing_shop_integration_strategy.md` — Section 5 |
+| **Architecture Decision** | Ayrshare API for multi-platform publishing (13+ platforms via single API). Eliminates per-platform OAuth for social publishing. |
+| **Status** | ❌ Not built — Full strategy defined March 2026 |
+| **Supported Platforms** | TikTok, Instagram, Facebook, YouTube, Pinterest, LinkedIn, X/Twitter, Reddit, Threads, Google Business, Telegram, Snapchat, Bluesky |
+| **Publishing Modes** | 4 modes: Manual (default), Scheduled, Smart Schedule (AI-optimised times), Auto-Pilot (requires explicit opt-in) |
+| **TikTok Limitation** | Unaudited apps post privately only. Phase 1: "Download for TikTok" fallback. Phase 2: Direct publish after TikTok audit approval. |
+| **Content Calendar** | Weekly view with per-platform rows, status badges (Approved/Pending/Scheduled/Draft) |
+| **New Database Tables** | `publish_log`, `client_social_profiles` |
+| **Ayrshare Dependency** | Trade-off accepted: third-party dependency for publishing. Fallback: extend `client_channels` OAuth to add native publishing for top 3-4 platforms. |
+| **Implementation Phase** | Phase 3C |
+
+### K.3 — Shop Integration Engine (Shop Connect)
+
+| Field | Detail |
+|-------|--------|
+| **v7 Spec Reference** | Section 6.2, Section 7.2, Section 9.3 steps 5 and 8, Section 10.2 |
+| **Strategy Document** | `docs/content_publishing_shop_integration_strategy.md` — Section 3 |
+| **Architecture Decision** | Native OAuth per platform (NOT through Ayrshare). Shop APIs require deep integration for product management, inventory sync, and order tracking. |
+| **Status** | ❌ Not built — UI shell exists at `/dashboard/integrations`. Full strategy defined March 2026 |
+| **Shopify (Phase 2A)** | GraphQL Admin API (2026-01), standard OAuth 2.0, permanent offline access token, `productSet` mutation for upsert, webhook subscription for orders |
+| **TikTok Shop (Phase 2B)** | TikTok Shop Partner API v2, OAuth 2.0 + HMAC-SHA256 request signing, 50 req/sec, product review required before listing goes live |
+| **Amazon (Phase 3)** | SP-API via Login with Amazon (LWA), Feeds API for product listing (async XML/JSON), UPC/EAN required |
+| **Meta Commerce (Phase 3)** | Graph API v25.0 + Meta Business Extension (MBE), batch product catalog API. Note: in-app checkout ended Sept 2025 — now drives traffic to merchant site only. |
+| **Product Sync** | Bidirectional: push products to platform, receive order webhooks back. `shop_products` table tracks YouSell product ↔ platform product ID mapping. |
+| **New Database Tables** | `shop_products`, `client_automation_config` |
+| **Implementation Phases** | Phase 2A (Shopify), 2B (TikTok Shop), 3 (Amazon + Meta) |
+
+### K.4 — Automation Control System
+
+| Field | Detail |
+|-------|--------|
+| **Strategy Document** | `docs/content_publishing_shop_integration_strategy.md` — Section 7 |
+| **Architecture Decision** | Three-level automation spectrum: Level 1 (Manual — default), Level 2 (Assisted — suggest + approve), Level 3 (Auto-Pilot — act within rules, client receives digest) |
+| **Per-Feature Control** | Each feature (product upload, content creation, content publishing, influencer outreach, product discovery) has independent automation level |
+| **Hard Limits** | Daily spend cap, content volume cap (max posts/day/platform), product upload cap, outreach cap, pause-on-error (3 consecutive failures) |
+| **Soft Limits** | Content approval window (default 4h), category restrictions, price range, minimum score threshold, quiet hours, weekly digest |
+| **Emergency Controls** | "Pause All Automation" button, per-feature pause, undo window (5min before publish), complete activity audit trail |
+| **New Database Table** | `client_automation_config` (client_id, feature, automation_level, rules JSONB, is_paused) |
+| **Implementation Phase** | Phase 3D |
+
+### K.5 — Social Media Platform Linking
+
+| Field | Detail |
+|-------|--------|
+| **Strategy Document** | `docs/content_publishing_shop_integration_strategy.md` — Section 6 |
+| **Two Connection Types** | Shop Connect (native OAuth for selling) vs Social Connect (Ayrshare managed OAuth for publishing) |
+| **Connection Hub UI** | Two sections: "Your Shops" (Shopify, TikTok Shop, Amazon, Meta Commerce) and "Your Social Accounts" (TikTok, Instagram, Facebook, YouTube, Pinterest, LinkedIn) |
+| **Security Requirements** | AES-256-GCM encryption for all tokens, refresh token rotation, scope minimisation, token revocation on disconnect, daily health check job |
+| **Onboarding Flow** | 5-step guided setup: Choose Platforms → Connect Shops → Connect Social → Brand Voice → Ready |
+| **Updated `client_channels` Table** | Added columns: connection_type, platform_account_name, platform_account_id, follower_count, last_health_check, health_status |
+
+---
+
+## Section L — Pricing Model Decision (March 2026)
+
+### L.1 — Pricing Architecture: Option C (Hybrid) — APPROVED
+
+| Field | Detail |
+|-------|--------|
+| **Decision Date** | 2026-03-17 |
+| **Model Chosen** | Option C — Channel-gated tiering with channel selection |
+| **Competitor Research** | 8 competitors analysed with 2026 pricing data (Sell The Trend, AutoDS, Jungle Scout, Helium 10, Kalodata, Minea, Ecomhunt, Niche Scraper) |
+| **Pricing Tiers** | Starter $29, Growth $59, Professional $99, Enterprise $149 |
+| **Per-Channel Add-On** | Additional channels at discounted rates |
+| **Key Insight** | 67% of SaaS still uses tiered models (2026). Minea uses channel-gated tiering. AutoDS uses per-marketplace pricing (Amazon 2.5x more than Shopify). |
+| **Market Position** | Undercuts Helium 10 (Platinum $129), competitive with Jungle Scout ($29-$49), better value than Sell The Trend ($29.97-$99.97) |
+
+### L.2 — Customer-Facing Terminology Standards
+
+| Internal Term | Client-Facing Term |
+|---|---|
+| Scrape/Scraper | Discover / Market Intelligence |
+| Scan/Scanner | Product Finder / Trend Analysis |
+| Crawl/Crawler | Research / Market Research |
+| Content Creation Engine | Creative Studio |
+| Content Publishing Engine | Smart Publisher |
+| Store Integration Engine | Shop Connect |
+| Product Discovery Engine | Product Finder |
+| Influencer Outreach Engine | Creator Connect |
+| Supplier Discovery Engine | Supplier Finder |
+| Analytics Engine | Performance Hub |
+| Marketing Engine | Ad Studio |
+
+**Rule:** All client-facing UI, emails, and marketing materials MUST use mapped terms. Create `src/lib/terminology.ts` constants file.

@@ -62,6 +62,24 @@ Based on YOUSELL's current architecture and the prompt's analysis framework, her
 
 3. **Client-facing automation:** Consider offering n8n-based automation templates as a premium feature in later phases (post-launch).
 
+### Updated Recommendation (March 2026)
+
+Based on the Content Publishing & Shop Integration Strategy (March 2026), the n8n recommendation is refined:
+
+**Content Distribution → Ayrshare (NOT n8n)**
+The decision to use Ayrshare for social media publishing eliminates the primary use case for n8n. Ayrshare handles all per-platform OAuth complexity and provides a single API for 13+ platforms. This is more reliable than n8n's individual social media nodes.
+
+**Shop Integration → Native OAuth (NOT n8n)**
+Shop APIs (Shopify GraphQL, TikTok Shop Partner API, Amazon SP-API) require deep integration with request signing, webhook handling, and inventory sync. n8n's Shopify/TikTok nodes don't provide the depth needed.
+
+**Updated Verdict: Option 4 — Skip n8n entirely for now**
+- BullMQ handles all job orchestration (proven, 15+ queues)
+- Ayrshare handles social publishing (13+ platforms, single API)
+- Native OAuth handles shop integrations (Shopify, TikTok Shop, Amazon, Meta)
+- n8n adds complexity without clear benefit at current scale
+
+**Revisit when:** Client volume exceeds 100+ and clients request custom automation workflows. At that point, n8n could power a "custom automation builder" premium feature.
+
 ---
 
 ## Action Required

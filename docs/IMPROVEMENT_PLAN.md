@@ -501,13 +501,85 @@ Based on research of Jasper, Copy.ai, Predis.ai, Buffer, Canva.
 | Channels covered | 7 | 2 | 3 | 1 | 1 | 5 (ads only) |
 | AI scoring | ✅ 3-pillar | Basic | ❌ | ✅ Amazon-only | ❌ | ❌ |
 | Pre-viral detection | ⚠️ 2/6 | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Content creation | ⚠️ Planned | ❌ | Basic | ❌ | ❌ | ❌ |
-| Auto-posting | ❌ Planned | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Store integration | ❌ Planned | ✅ Shopify | ✅ 5+ stores | ❌ | ❌ | ❌ |
+| Content creation | ✅ Strategy complete | ❌ | Basic | ❌ | ❌ | ❌ |
+| Auto-posting | ✅ Strategy complete (Ayrshare) | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Store integration | ✅ Strategy complete | ✅ Shopify | ✅ 5+ stores | ❌ | ❌ | ❌ |
 | Influencer intelligence | ✅ | ❌ | ❌ | ❌ | ✅ TikTok | ❌ |
 | Supplier matching | ✅ | ✅ NEXUS | ✅ 100+ | ✅ Amazon | ❌ | ❌ |
 | Financial modeling | ✅ | ❌ | ❌ | ✅ Basic | ❌ | ❌ |
 | Launch blueprints | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Price range | $29-$199 | $40-$100 | $27-$67 | $29-$199 | $16-$199 | $49-$399 |
+| Price range | $29-$149 | $30-$300 | $20-$120 | $29-$149 | $46-$110 | $49-$399 |
 
 **YOUSELL's moat:** No single competitor covers intelligence + content + automation across 7 channels. The combination is genuinely unique. The critical path is shipping Stripe + Store Integration + Content Engine to activate this advantage.
+
+---
+
+## Session 2 Updates — March 2026
+
+### Pricing Model Decision: Option C (Hybrid) — APPROVED
+
+**Decision:** Channel-gated tiering with channel selection (inspired by Minea model, validated by AutoDS per-marketplace approach).
+
+| Tier | Monthly | Annual | Channels | Key Features |
+|------|---------|--------|----------|-------------|
+| Starter | $29 | $19/mo | 1 channel | Product Finder, basic scores, 50 content credits |
+| Growth | $59 | $39/mo | 2 channels | + Shop Connect, Creative Studio, 200 credits |
+| Professional | $99 | $69/mo | 3 channels | + Creator Connect, Supplier Finder, Smart Publisher, 500 credits |
+| Enterprise | $149 | $99/mo | All channels | All engines, API access, team seats, unlimited credits |
+
+Multi-channel discount: 20% off second channel, 30% off third+.
+
+### New Features from Content/Publishing/Shop Strategy
+
+| # | Feature | Category | Priority | Phase |
+|---|---------|----------|----------|-------|
+| 37 | Shotstack video generation integration | Content Engine | P1 | 3B |
+| 38 | Bannerbear image generation integration | Content Engine | P1 | 3B |
+| 39 | Ayrshare multi-platform publishing | Publishing Engine | P1 | 3C |
+| 40 | Shopify GraphQL product push (Shop Connect) | Shop Integration | P0 | 2A |
+| 41 | TikTok Shop Partner API integration | Shop Integration | P0 | 2B |
+| 42 | Amazon SP-API product feed upload | Shop Integration | P1 | 4 |
+| 43 | Meta Business Extension commerce integration | Shop Integration | P1 | 4 |
+| 44 | 3-level automation control system | Automation | P1 | 3D |
+| 45 | Auto-pilot guardrails (hard + soft limits) | Automation | P1 | 3D |
+| 46 | Content credits system | Billing | P1 | 3A |
+| 47 | Brand voice configuration per client | Content Engine | P2 | 3A |
+| 48 | Content calendar UI | Dashboard | P2 | 3C |
+| 49 | "Download for TikTok" fallback (pre-audit) | Content Engine | P1 | 3C |
+| 50 | Social account connection hub | Dashboard | P1 | 3C |
+| 51 | Shop product sync tracking (shop_products table) | Shop Integration | P0 | 2A |
+| 52 | Client-facing terminology mapping (terminology.ts) | UX | P0 | Immediate |
+
+### Updated Priority Summary
+
+#### P0 — Must Ship (Updated)
+1. A.1 — Stripe Subscription Billing
+2. A.2 — Platform Gating + Upsell UI
+3. A.3 — Admin Layout Role Check
+4. A.4 — Client Dashboard Middleware
+5. D.1 — Competitive Pricing Structure (Option C confirmed)
+6. G.1 — Store Integration OAuth (Shopify first — Phase 2A)
+7. **NEW** #40 — Shopify GraphQL product push
+8. **NEW** #41 — TikTok Shop Partner API
+9. **NEW** #51 — Shop product sync tracking
+10. **NEW** #52 — Client-facing terminology mapping
+
+#### P1 — Ship Within 4 Weeks (Updated)
+11-17. (Previous P1 items remain)
+18. **NEW** #37 — Shotstack video generation
+19. **NEW** #38 — Bannerbear image generation
+20. **NEW** #39 — Ayrshare publishing
+21. **NEW** #42 — Amazon SP-API
+22. **NEW** #43 — Meta Business Extension
+23. **NEW** #44 — Automation control system
+24. **NEW** #45 — Auto-pilot guardrails
+25. **NEW** #46 — Content credits
+26. **NEW** #49 — TikTok download fallback
+27. **NEW** #50 — Social connection hub
+
+#### P2 — Ship Within 8 Weeks (Updated)
+28-36. (Previous P2 items remain)
+37. **NEW** #47 — Brand voice configuration
+38. **NEW** #48 — Content calendar UI
+
+### Updated Feature Count: 52 prioritized features (was 36)

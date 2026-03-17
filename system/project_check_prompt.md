@@ -929,6 +929,70 @@ Outline test cases that should be added (don't implement yet — document the te
 16. **n8n analysis must be data-driven**: Read the actual spreadsheet. Filter programmatically.
 17. **Channel coverage**: EVERY audit section must explicitly address all 7 channels. If a channel is missing implementation, flag it as ❌ MISSING.
 
+---
+
+## NEW AUDIT AREAS (Added March 2026)
+
+### Section K — Content Creation & Publishing Engine Audit
+
+When auditing the content and publishing system, verify:
+
+**K.1 — Creative Studio (Content Creation)**
+- Content generation pipeline: Claude Haiku (text) → Shotstack (video) → Bannerbear (images)
+- Brand voice configuration per client (stored in `clients.settings` JSONB)
+- 8 content templates implemented (Problem→Solution, Unboxing, Before/After, Listicle, Trend Hijack, Comparison, Testimonial, Deal Alert)
+- Platform-specific formatting (TikTok 9:16, Instagram 1:1, Pinterest 2:3, etc.)
+- Content credits system (Starter: 50, Growth: 200, Professional: 500, Enterprise: unlimited)
+- `content_items` table with correct states: draft → pending_review → approved → generating → ready → scheduled → published → archived
+- `content_credits` table tracking per-period allocation and usage
+
+**K.2 — Smart Publisher (Content Publishing)**
+- Ayrshare SDK integration for multi-platform publishing
+- Per-client Ayrshare profile management (`client_social_profiles` table)
+- 4 publishing modes: Manual (default), Scheduled, Smart Schedule, Auto-Pilot
+- Content calendar UI with per-platform rows
+- `publish_log` table tracking platform post IDs and engagement data
+- TikTok limitation: verify "Download for TikTok" fallback exists (pre-audit phase)
+
+**K.3 — Shop Connect (Store Integration)**
+- Shopify: GraphQL Admin API (NOT REST), `productSet` mutation, permanent offline access token
+- TikTok Shop: Partner API v2 with HMAC-SHA256 request signing
+- Amazon: SP-API via LWA, Feeds API for async product listing
+- Meta: Graph API v25.0 + MBE popup OAuth (in-app checkout ended Sept 2025)
+- `shop_products` table tracking YouSell product ↔ platform product ID mapping
+- All OAuth tokens encrypted at rest (AES-256-GCM)
+- Webhook receivers for order events from all connected platforms
+
+**K.4 — Automation Control System**
+- 3 automation levels per feature: Manual (1), Assisted (2), Auto-Pilot (3)
+- `client_automation_config` table (client_id, feature, automation_level, rules JSONB, is_paused)
+- Hard limits enforced: daily spend cap, content volume cap, product upload cap, outreach cap, pause-on-error
+- Soft limits configurable: approval window, category restrictions, price range, minimum score, quiet hours
+- Emergency controls: "Pause All Automation" button, per-feature pause, undo window, activity log
+
+### Section L — Pricing & Terminology Audit
+
+**L.1 — Pricing Architecture (Option C)**
+- 4 tiers implemented: Starter ($29), Growth ($59), Professional ($99), Enterprise ($149)
+- Per-channel add-on pricing with multi-channel discounts
+- Content credits system integrated with Stripe billing
+- Engine gating enforced per subscription tier
+
+**L.2 — Terminology Compliance**
+- Verify `src/lib/terminology.ts` exists and maps all internal→client terms
+- NO client-facing page uses words: scrape, scan, crawl, spider, raw listings
+- All client-facing pages use mapped terms: Product Finder, Market Intelligence, Creative Studio, Smart Publisher, Shop Connect, Creator Connect, Supplier Finder, Performance Hub, Ad Studio
+- Admin pages MAY use internal terms
+
+### Section M — Social Platform Connection Audit
+
+- Two connection types distinguished: Shop Connect (native OAuth) vs Social Connect (Ayrshare)
+- Connection Hub UI shows both sections clearly
+- OAuth security: AES-256-GCM encryption, refresh rotation, scope minimisation, revocation on disconnect
+- Daily health check job for token validity
+- `client_channels` table has: connection_type, platform_account_name, platform_account_id, follower_count, last_health_check, health_status
+- 5-step onboarding flow: Choose Platforms → Connect Shops → Connect Social → Brand Voice → Ready
+
 ## OUTPUT FILES SUMMARY
 
 At the end of all 3 phases, the following files must exist:

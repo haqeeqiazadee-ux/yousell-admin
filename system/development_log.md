@@ -2002,3 +2002,123 @@ After deeper codebase analysis via subagents:
 - Total: 57 routes (40 admin + 11 dashboard + 3 auth + 4 webhooks) — not 22 as initially tracked
 
 **Overall Compliance:** Updated from ~58% → ~68% (61/80 requirements done, 12 partial, 7 missing)
+
+---
+
+## Session — 2026-03-17: Pricing Strategy, Content/Publishing/Shop Integration Architecture
+
+### Context
+Continuation of strategic planning phase. Previous session established competitive research (23 competitors, 7 niches). This session focused on pricing model selection, content creation/publishing engine architecture, shop integration strategy, and automation control framework.
+
+### Decisions Made
+
+#### 1. Pricing Model: Option C (Hybrid) — APPROVED
+Three pricing options were evaluated:
+- **Option A** (Fixed Feature Tiers): Simple but inflexible
+- **Option B** (Per-Channel Pricing): Flexible but complex
+- **Option C** (Hybrid: Channel-Gated Tiers + Channel Selection): Best of both — CHOSEN
+
+Final pricing tiers:
+| Tier | Monthly | Annual | Channels |
+|------|---------|--------|----------|
+| Starter | $29 | $19/mo | 1 channel |
+| Growth | $59 | $39/mo | 2 channels |
+| Professional | $99 | $69/mo | 3 channels |
+| Enterprise | $149 | $99/mo | All channels |
+
+Multi-channel discount: 20% off second, 30% off third+.
+
+Validated by competitor pricing research (8 competitors with 2026 data). Key validation: Minea uses exact same channel-gated model. AutoDS uses per-marketplace pricing. Helium 10 raised prices in 2026 (Platinum now $129, Diamond $359) — we significantly undercut.
+
+#### 2. Customer-Facing Terminology Standards
+All client-facing UI must use professional terminology:
+- Scrape/Scan → Product Finder / Market Intelligence
+- Content Creation Engine → Creative Studio
+- Content Publishing Engine → Smart Publisher
+- Store Integration Engine → Shop Connect
+- Product Discovery Engine → Product Finder
+- Influencer Outreach Engine → Creator Connect
+- Implementation: `src/lib/terminology.ts` constants file
+
+#### 3. Content Creation Engine (Creative Studio)
+Multi-tool pipeline architecture:
+- **Claude Haiku** — text content (captions, emails, scripts) ~$0.001/post
+- **Claude Sonnet** — premium content (ad copy, blog articles) ~$0.01/post
+- **Shotstack API** — video generation (15-60s MP4) ~$0.40/video
+- **Bannerbear API** — image generation (branded product images) ~$0.10/image
+
+8 content templates defined, per-platform formatting rules, brand voice configuration per client, content credits system (50/200/500/unlimited per tier).
+
+#### 4. Content Publishing Engine (Smart Publisher)
+**Decision: Ayrshare** for multi-platform social publishing (13+ platforms, single API).
+
+Rationale: Eliminates 6-12 months of per-platform OAuth and publishing integration work. Handles TikTok, Instagram, Facebook, YouTube, Pinterest, LinkedIn, X/Twitter, etc. through one API. SaaS plan supports per-client profiles (multi-tenant).
+
+Trade-off: third-party dependency. Fallback: native OAuth infrastructure from Shop Connect can be extended.
+
+TikTok limitation: unaudited apps post privately only. Phase 1 fallback: "Download for TikTok" button.
+
+#### 5. Shop Integration Engine (Shop Connect)
+**Decision: Native OAuth** per platform (not through Ayrshare).
+
+Implementation order:
+- Phase 2A: Shopify (GraphQL Admin API, standard OAuth, `productSet` mutation)
+- Phase 2B: TikTok Shop (Partner API v2, OAuth + HMAC-SHA256 signing)
+- Phase 3: Amazon (SP-API, Feeds API) + Meta (Graph API v25.0 + MBE)
+
+Key findings from API research:
+- Shopify REST API is LEGACY — must use GraphQL from April 2025
+- TikTok Shop requires product review before listing goes live
+- Meta in-app checkout ended Sept 2025 — now catalog visibility only
+- Amazon requires UPC/EAN barcodes for listing
+
+#### 6. Automation–Control Spectrum
+Three levels, per-feature configurable:
+- **Level 1 (Manual)** — Default. Client initiates every action.
+- **Level 2 (Assisted)** — System prepares, client approves.
+- **Level 3 (Auto-Pilot)** — System acts within rules. Client receives digest. Requires explicit opt-in.
+
+Guardrails:
+- Hard limits: daily spend cap, content volume cap, product upload cap, outreach cap, pause-on-error (3 failures)
+- Soft limits: approval window (4h default), category restrictions, price range, minimum score, quiet hours
+- Emergency: "Pause All Automation" button, per-feature pause, undo window, activity audit trail
+
+### New Database Tables Designed
+- `content_items` — generated content library
+- `publish_log` — publishing tracking
+- `shop_products` — YouSell ↔ platform product mapping
+- `client_automation_config` — per-feature automation settings
+- `content_credits` — per-period credit tracking
+- `client_social_profiles` — Ayrshare profile mapping
+- Updated `client_channels` with connection_type, health_status columns
+
+### Files Created/Updated
+- **Created:** `docs/content_publishing_shop_integration_strategy.md` — comprehensive strategy document
+- **Updated:** `docs/RTM_v7.md` — added Sections K (content/publishing/shop audit) and L (pricing decision)
+- **Updated:** `docs/RESEARCH_LOG.md` — added entries #31-45 (competitor pricing, API research, tool evaluations)
+- **Updated:** `docs/IMPROVEMENT_PLAN.md` — added 16 new features (#37-52), updated competitive position, pricing decision
+- **Updated:** `docs/N8N_WORKFLOW_ANALYSIS.md` — updated recommendation to Option 4 (skip n8n, use Ayrshare + native OAuth)
+- **Updated:** `system/project_check_prompt.md` — added Sections K-M (content, pricing, social platform audit areas)
+- **Updated:** `system/development_log.md` — this entry
+
+### Implementation Phases Defined
+- Phase 2A: Shopify Shop Connect (Week 1-2)
+- Phase 2B: TikTok Shop Connect (Week 3-4)
+- Phase 3A: Creative Studio — Text Content (Week 5-6)
+- Phase 3B: Creative Studio — Rich Media (Week 7-8)
+- Phase 3C: Smart Publisher (Week 9-10)
+- Phase 3D: Automation & Intelligence (Week 11-12)
+- Phase 4: Amazon + Meta Integration (Week 13-16)
+
+### Cost Projections
+- Per-client content/publishing cost: ~$17.18/mo at Growth tier volume
+- Fixed costs (Ayrshare + Shotstack + Bannerbear + Railway): $207-857/mo depending on scale
+- At $29-$149/client subscription, healthy margins at all scale points
+
+### Next Steps
+1. Execute Phase 2A (Shopify Shop Connect)
+2. Create `src/lib/terminology.ts` terminology mapping
+3. Set up Shopify Partner account and app registration
+4. Apply for TikTok Shop Partner Center access (US portal)
+5. Register for Ayrshare Business plan
+6. Register for Shotstack and Bannerbear API keys
