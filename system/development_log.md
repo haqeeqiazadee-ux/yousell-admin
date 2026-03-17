@@ -2122,3 +2122,76 @@ Guardrails:
 4. Apply for TikTok Shop Partner Center access (US portal)
 5. Register for Ayrshare Business plan
 6. Register for Shotstack and Bannerbear API keys
+
+------------------------------------------------------------
+
+## Session: 2026-03-17 — POD Channel #8 + Admin Command Center + Affiliate Commission Engine
+
+### What Was Done
+
+Major architectural expansion adding three new platform capabilities based on comprehensive business requirements analysis.
+
+### 1. Print on Demand (POD) — Channel #8
+
+**Status:** POD added as the 8th opportunity channel across all platform documentation.
+
+**What was added:**
+- POD defined as Channel #8 in v7 Technical Specification (Section 2.2, 8.8)
+- Six POD sub-categories: Apparel, Accessories, Home & Living, Stationery, All-Over Print, Pet Products
+- Fulfillment partner integrations: Printful (REST API + Webhooks), Printify (REST API), Gelato (REST API), Gooten (REST API)
+- POD data sources: Etsy Trending (Apify), Redbubble Trending (Apify), Merch by Amazon (Apify), TikTok Creative Center, Pinterest, Google Trends
+- POD-specific scoring adjustments (design trend velocity, seasonal relevance, niche saturation, aesthetic appeal, UGC potential, 30% minimum margin)
+- POD pipeline: trend discovery → AI design concepts → mockup generation (Printful API) → scoring → admin review → store push → POD fulfillment → order tracking
+- POD scan cost estimate: ~$2–8 per weekly scan
+- Phase 5 added to execution plan (Weeks 17-20)
+
+### 2. Admin Command Center — Best-Selling Products Dashboard
+
+**Status:** Fully documented in v7 spec (Section 8.9), execution plan (Phase 6).
+
+**What was added:**
+- Best Sellers Pool — top-scoring products with one-click platform publishing
+- Per-product action buttons: Push to TikTok Shop / Amazon / Shopify / All, Launch Marketing, Influencer Outreach, Generate Content, Financial Model
+- Each button triggers BullMQ job (not inline execution)
+- Per-platform pipeline view: products live, weekly revenue, conversion rates
+- Revenue dashboard: real-time aggregation across all owned stores
+- Database: `admin_store_connections`, `admin_product_listings`, `admin_revenue_tracking`
+- Phase 6 added to execution plan (Weeks 21-24)
+
+### 3. Affiliate Commission Engine — Dual Revenue Tracking
+
+**Status:** Fully documented in v7 spec (Section 8.10), execution plan (Phase 7).
+
+**What was added:**
+- **Stream 1 — Internal Content Affiliate Revenue:** YOUSELL's own content engine promotes affiliate platforms, earns commissions. Non-stop content factory. Admin-only visibility.
+- **Stream 2 — Client Service Affiliate Revenue:** Commissions earned when clients adopt platforms provisioned through YOUSELL (Shopify, Klaviyo, Printful, Spocket, etc.)
+- 24+ affiliate programs documented across 6 categories: E-Commerce, POD, Marketing, Design, AI Tools, Dropship, Payment, Analytics
+- Highest-priority: Shopify Partner (20% recurring), Printful (10% 12mo), Klaviyo (10-20% recurring), Spocket (20-30% lifetime), Canva ($36/signup)
+- Revenue multiplier: ~$28,530/year estimated at 50 clients (on top of subscriptions)
+- Dual stats dashboard: Internal content revenue | Client service commissions
+- Database: `affiliate_programs`, `affiliate_referrals`, `affiliate_commissions`, `affiliate_content_log`
+- Phase 7 added to execution plan (Weeks 25-28)
+
+### Files Modified
+- `docs/YouSell_Platform_Technical_Specification_v7.md` — Added Sections 2.2.1, 8.8, 8.9, 8.10; updated all "seven" → "eight" channel references; added POD scan schedule
+- `docs/USE_CASE_DIAGRAM.md` — Complete rewrite with POD, Admin Command Center, and Affiliate Engine use cases
+- `docs/content_publishing_shop_integration_strategy.md` — Added Sections 13 (POD Integration) and 14 (Affiliate Commission Engine Integration)
+- `docs/MARKET_RESEARCH_LOG_SESSION3.md` — Added Research Area 6 (POD market analysis) and Research Area 7 (Affiliate commission platforms deep dive)
+- `system/project_check_prompt.md` — Updated to Eight Opportunity Channels, added B.8 (POD module audit), added intelligence layers 12-13
+- `system/development_log.md` — This entry
+- `tasks/execution_plan.md` — Added Phases 5 (POD), 6 (Admin Command Center), 7 (Affiliate Engine); timeline extended to 28 weeks
+- `CLAUDE.md` — Updated repository structure, project memory system, channel count references
+
+### Architecture Impact
+- Eight Opportunity Channels (was seven)
+- Three new database table groups (POD, Admin Command Center, Affiliate Engine)
+- Three new execution phases (Phases 5-7, Weeks 17-28)
+- Three new BullMQ worker categories planned (POD discovery, admin product push, affiliate content)
+- New admin pages planned: `/admin/pod`, `/admin/command-center`, `/admin/affiliate-engine`
+
+### Next Steps
+1. Execute Phase 2A (Shopify Shop Connect) — highest priority for revenue
+2. Phase 5 (POD) can begin in parallel with Phase 3 if Printful API key obtained
+3. Phase 6 (Admin Command Center) depends on Phase 2A completion (store OAuth)
+4. Phase 7 (Affiliate Engine) can begin as soon as affiliate program accounts are set up
+5. Register for Printful, Printify, Gelato API access

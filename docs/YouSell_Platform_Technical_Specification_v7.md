@@ -33,7 +33,7 @@ These two platforms share a Supabase database and can operate as one unified Saa
 
 ### 1.1 What This Platform Does
 
-YouSell detects emerging product trends 2–3 weeks before mainstream adoption across seven opportunity channels. It discovers profitable products, identifies influencers driving those trends, locates suppliers, generates complete financial models and launch blueprints, provisions client stores, automates content creation and distribution, manages influencer outreach, and tracks orders through fulfilment. All major processes are triggered manually by the admin via a control dashboard — automation can be enabled channel-by-channel as client volume grows.
+YouSell detects emerging product trends 2–3 weeks before mainstream adoption across eight opportunity channels. It discovers profitable products, identifies influencers driving those trends, locates suppliers, generates complete financial models and launch blueprints, provisions client stores, automates content creation and distribution, manages influencer outreach, and tracks orders through fulfilment. All major processes are triggered manually by the admin via a control dashboard — automation can be enabled channel-by-channel as client volume grows.
 
 ### 1.2 Competitive Position
 
@@ -70,7 +70,7 @@ These are non-negotiable architectural rules that govern all development:
 
 YouSell transforms a solo operator or small team into a commerce intelligence agency. One person can discover, validate, source, price, market, and launch trending products across five platforms — work that would otherwise require a team of 10+ and $10K+/month in tools and services.
 
-### 2.2 The Seven Opportunity Channels
+### 2.2 The Eight Opportunity Channels
 
 | # | Channel | Type | Product Scope | Core Strategy |
 |---|---|---|---|---|
@@ -81,6 +81,57 @@ YouSell transforms a solo operator or small team into a commerce intelligence ag
 | 5 | Digital Products | Digital | Templates, courses, AI prompts, tools | Content + Affiliates + SEO |
 | 6 | AI Affiliate Programs | Commission | AI SaaS + subscription tools | Affiliate promotion + influencer |
 | 7 | Physical Affiliate | Commission | TikTok Shop + Amazon affiliate products | Influencer + content |
+| 8 | Print on Demand (POD) | Hybrid (Design + Fulfillment) | Custom-designed apparel, accessories, home goods, stationery | Niche design trends + Influencer merch + TikTok/Etsy organic |
+
+### 2.2.1 Channel 8 — Print on Demand (POD) Detail
+
+**Why POD fits YOUSELL:** POD is a natural extension of the platform's intelligence capabilities. It sits between physical products and digital products — you design once, manufacture on-demand, and ship directly to customers with zero inventory risk. Typical margins are 30–60%, and the trend discovery engine can identify winning designs and niches the same way it discovers physical products.
+
+**What POD Adds to the Platform:**
+
+| Capability | Description |
+|---|---|
+| Product Discovery | Trending designs, niches, and aesthetics across Etsy, Redbubble, Merch by Amazon, TikTok |
+| Supplier Integration | Direct API connections to POD fulfillment partners (Printful, Printify, Gelato) |
+| Store Provisioning | Auto-create products in client Shopify/TikTok stores with POD fulfillment attached |
+| Content Engine | AI-generated mockups, social posts featuring products on lifestyle backgrounds |
+| Influencer Matching | Niche-specific creators for custom merch, fan merchandise, etc. |
+
+**POD Sub-Categories:**
+
+| Sub-Category | Examples | Avg Margin | Best Platform |
+|---|---|---|---|
+| Apparel | T-shirts, hoodies, tank tops | 40–60% | Shopify, Etsy, Amazon Merch |
+| Accessories | Phone cases, tote bags, hats | 35–55% | Shopify, Etsy |
+| Home & Living | Mugs, pillows, blankets, posters | 30–50% | Etsy, Shopify |
+| Stationery | Notebooks, stickers, planners | 40–65% | Etsy, Amazon KDP |
+| All-Over Print | Leggings, dresses, swimwear | 35–50% | Shopify (niche stores) |
+| Pet Products | Pet beds, bandanas, bowls | 35–55% | Etsy, Shopify |
+
+**POD Fulfillment Partners:**
+
+| Partner | Products | API | Base Cost | YOUSELL Integration |
+|---|---|---|---|---|
+| Printful | 340+ | REST API + Webhooks | Varies | Full catalog sync, auto-order routing |
+| Printify | 900+ (via print providers) | REST API | Varies | Multi-provider price comparison |
+| Gelato | 100+ (global network) | REST API | Varies | 32-country local production |
+| Gooten | 150+ | REST API | Varies | Budget-friendly alternative |
+
+**POD Data Sources:**
+
+- Etsy trending searches + best sellers (Apify scraper)
+- Redbubble trending designs (Apify scraper)
+- Merch by Amazon best sellers (Apify)
+- TikTok Creative Center — design/aesthetic trends
+- Pinterest — design trend boards, seasonal aesthetics
+- Google Trends — niche keyword validation (pytrends)
+
+**POD Scoring Adjustments:**
+
+The standard 3-pillar scoring applies with POD-specific modifiers:
+- **Trend Score:** Design trend velocity + seasonal relevance + niche saturation
+- **Viral Score:** Social media aesthetic appeal + influencer adoption of niche + UGC potential
+- **Profit Score:** Base cost vs selling price (margin must exceed 30%) + fulfillment partner comparison
 
 ### 2.3 Additional Intelligence Layers
 
@@ -269,7 +320,7 @@ These MUST be fixed before production:
 
 The admin engine is the core intelligence system. It:
 
-- Runs product discovery scans across all seven channels
+- Runs product discovery scans across all eight channels
 - Scores and ranks products using the 3-pillar composite model
 - Identifies matching influencers, suppliers, and competitors
 - Generates financial models and launch blueprints
@@ -383,6 +434,174 @@ Currently NOT connected. The required integration:
 **Goal:** Physical products via TikTok Shop affiliate and Amazon affiliate — commission without holding inventory.
 
 **Data Sources:** TikTok Shop Affiliate Centre, Amazon Associates product search, Apify TikTok Shop Affiliate scraper.
+
+### 8.8 Print on Demand (POD) Module
+
+**Goal:** Discover trending design niches, identify high-margin POD product opportunities, connect to fulfillment partners, and auto-provision products in client stores with zero inventory risk.
+
+**Data Sources:**
+- Etsy Trending Searches + Best Sellers — Apify scraper (batched, weekly)
+- Redbubble Trending Designs — Apify scraper (weekly)
+- Merch by Amazon Best Sellers — Apify scraper (weekly)
+- TikTok Creative Center — Design/aesthetic trend hashtags (free, daily)
+- Pinterest Trending Boards — Design trend boards, seasonal aesthetics (free, daily)
+- Google Trends — Niche keyword validation via pytrends (free, batched)
+
+**Data Collected:** Design niche, trending keywords, product type (apparel/accessories/home/stationery), estimated monthly searches, competition level, seasonal relevance, top-selling designs (URLs), best-performing platforms, fulfillment partner pricing comparison, margin estimate per product type, creator/influencer adoption rate.
+
+**POD Fulfillment API Integrations:**
+
+| Partner | API Type | Key Endpoints | YOUSELL Use |
+|---|---|---|---|
+| Printful | REST + Webhooks | Products, Orders, Shipping Rates, Mockup Generator | Product creation, order routing, mockup generation |
+| Printify | REST | Catalog, Products, Orders, Print Providers | Multi-provider price comparison, catalog sync |
+| Gelato | REST | Products, Orders, Prices, Shipping | Global fulfillment (32 countries), price optimization |
+
+**POD-Specific Pipeline:**
+```
+1. Trend discovery identifies hot design niches (Etsy + Redbubble + TikTok)
+2. AI generates design concepts + mockups via Printful Mockup Generator API
+3. Products scored using POD-adjusted 3-pillar model
+4. HOT products (80+) auto-suggested to admin for review
+5. Admin approves → product pushed to client stores via Shopify/TikTok integration
+6. POD fulfillment partner attached to product (Printful/Printify/Gelato)
+7. Customer orders → webhook triggers → POD partner manufactures + ships direct
+8. Order tracking flows through existing order tracking engine
+```
+
+**POD Scan Cost Estimate:** ~$2–8 per weekly scan (Apify actors for Etsy/Redbubble/Amazon, pytrends free)
+
+### 8.9 Admin Command Center — Best-Selling Products Dashboard
+
+**Goal:** Provide a unified admin intelligence dashboard ("Our Own Shops Command Center") where every high-scoring product can be one-click deployed to any of YOUSELL's own sales channels, with live revenue tracking per platform.
+
+**Key Distinction:** This is YOUSELL's internal profit-maximizing command center for YOUSELL's OWN shops. Client-facing store integration (Phase D) is separate. The admin dashboard becomes the hub where every discovered product can be evaluated and deployed.
+
+**Dashboard Components:**
+
+1. **Top Scoring Products Panel (Best Sellers Pool)**
+   - Products ranked by final_score (HOT tier first)
+   - Per-product action buttons:
+     - Push to TikTok Shop
+     - Push to Amazon
+     - Push to Shopify
+     - Push to All Platforms
+     - Launch Marketing Campaign
+     - Influencer Outreach
+     - Generate Content
+     - Financial Model
+   - Each button triggers a BullMQ job (not inline execution)
+
+2. **Per-Platform Pipeline View**
+   - Live stats per platform: products live, weekly revenue, conversion rates
+   - Platform tabs: TikTok Shop | Amazon | Shopify | Etsy | POD
+   - Status tracking: Draft → Listed → Active → Performing → Archive
+
+3. **Revenue Dashboard**
+   - Real-time revenue aggregation across all owned stores
+   - Platform breakdown (revenue per platform per week/month)
+   - Top 10 performing products with trend graphs
+   - Profit margin tracker (cost vs revenue vs net)
+
+**BullMQ Jobs (triggered by dashboard buttons):**
+
+| Button | Queue | Worker Action |
+|---|---|---|
+| Push to Shopify | `admin-product-push` | Create product via Shopify GraphQL `productSet` mutation |
+| Push to TikTok Shop | `admin-product-push` | Create product via TikTok Shop `product.save` API |
+| Push to Amazon | `admin-product-push` | Create listing via Amazon SP-API Feeds |
+| Push to All | `admin-product-push` | Fan-out to all 3 platform workers |
+| Launch Marketing | `content-queue` | Generate + schedule content for product |
+| Influencer Outreach | `influencer-outreach` | Find matching creators + draft outreach emails |
+| Generate Content | `content-queue` | AI-generate captions, images, video scripts |
+| Financial Model | `financial-model` | Run full unit economics + ROI projection |
+
+**Database Requirements:**
+
+- `admin_store_connections` — YOUSELL's own store OAuth tokens (Shopify, TikTok, Amazon, Etsy)
+- `admin_product_listings` — Products listed on YOUSELL's own stores (product_id, platform, external_listing_id, status, revenue, orders)
+- `admin_revenue_tracking` — Daily revenue snapshots per platform per product
+
+### 8.10 Affiliate Commission Engine — Dual Revenue Tracking
+
+**Goal:** Track and maximize affiliate commission revenue from two separate streams:
+1. **Internal Content Affiliate Revenue** — YOUSELL's own content engine promotes affiliate platforms and earns commissions
+2. **Client Service Affiliate Revenue** — Commission earned when clients adopt platforms recommended/provisioned through YOUSELL services
+
+**Stream 1: Internal Content Affiliate Revenue (Admin-Only)**
+
+YOUSELL uses its own content engine, influencer network, and publishing pipeline to promote tools/platforms and earn affiliate commissions. This is a non-stop content factory for all affiliate platforms, visible only in the admin dashboard.
+
+**Affiliate Platforms (Internal Content Promotion):**
+
+| Category | Platform | Commission | Type | Cookie | Priority |
+|---|---|---|---|---|---|
+| **E-Commerce** | Shopify Partner | 20% recurring | Recurring | 30 days | HIGH |
+| **E-Commerce** | BigCommerce | 200% first payment | Bounty | 90 days | MEDIUM |
+| **E-Commerce** | Wix | $100 per sale | Bounty | 30 days | MEDIUM |
+| **POD** | Printful | 10% of sales (12 mo) | Recurring | — | HIGH |
+| **POD** | Printify | 5% of sales (12 mo) | Recurring | — | MEDIUM |
+| **POD** | Gelato | Varies | Per-order | — | MEDIUM |
+| **Marketing** | Klaviyo | 10–20% recurring | Recurring | 30 days | HIGH |
+| **Marketing** | Omnisend | 20% recurring | Recurring | 90 days | HIGH |
+| **Marketing** | Mailchimp | Variable | Per-account | 30 days | MEDIUM |
+| **Design** | Canva | $36 per Pro signup | Bounty | 30 days | HIGH |
+| **AI Tools** | Jasper | 25–30% recurring | Recurring | 30 days | HIGH |
+| **AI Tools** | Copy.ai | 45% first year | Recurring Y1 | 60 days | HIGH |
+| **AI Tools** | Writesonic | 30% lifetime | Recurring | 30 days | HIGH |
+| **AI Tools** | Pictory | 30% recurring | Recurring | 90 days | MEDIUM |
+| **AI Tools** | Semrush | $200/sub + $10/trial | Bounty | 120 days | MEDIUM |
+| **AI Tools** | HubSpot | 30% recurring (1 yr) | Recurring | 180 days | MEDIUM |
+| **AI Tools** | ManyChat | 35% recurring | Recurring | 90 days | MEDIUM |
+| **AI Tools** | GetResponse | 33% recurring | Recurring | 120 days | MEDIUM |
+| **Dropship** | Spocket | 20–30% lifetime | Recurring | Lifetime | HIGH |
+| **Dropship** | Zendrop | 20% recurring | Recurring | 30 days | MEDIUM |
+| **Dropship** | DSers | 20% recurring | Recurring | 30 days | MEDIUM |
+| **Payment** | Stripe | Per-referral bonus | Bounty | — | LOW |
+| **Analytics** | Semrush | $200/sub + $10/trial | Bounty | 120 days | MEDIUM |
+| **Analytics** | Ahrefs | Per referral | Bounty | 60 days | MEDIUM |
+
+**Stream 2: Client Service Affiliate Revenue**
+
+When YOUSELL provisions tools for clients (Shopify stores, Klaviyo accounts, Printful connections, Spocket subscriptions), each provisioning generates affiliate commission for YOUSELL. This is tracked separately.
+
+**Revenue Multiplier Estimate (50 clients in Year 1):**
+
+| Platform | Revenue Per Client/Year | Total (50 clients) |
+|---|---|---|
+| Shopify Partner (20% recurring on ~$39/mo) | ~$94 | $4,680 |
+| Printful (10% of ~$200/mo sales for 12mo) | ~$240 | $12,000 |
+| Klaviyo (15% recurring on ~$45/mo) | ~$81 | $4,050 |
+| Spocket (25% recurring on ~$40/mo) | ~$120 | $6,000 |
+| Canva ($36 per signup) | $36 | $1,800 |
+| **Total estimated Year 1** | | **~$28,530** |
+
+*On top of YOUSELL subscription revenue. Scales linearly with client count.*
+
+**Highest-Priority Affiliate Integrations:**
+
+1. **Shopify Partner Program** — Already in stack. 20% recurring is the best deal. Every client store = compounding income.
+2. **Printful** — Add with POD as Channel #8. 10% of sales for 12 months per referral.
+3. **Klaviyo** — Recommend to every client for email marketing. 10–20% recurring.
+4. **Spocket/Zendrop** — For dropshipping clients who don't want to hold inventory. 20–30% lifetime recurring (Spocket is the standout).
+5. **Canva** — Every client needs design tools. $36 per Pro signup.
+
+**Admin Dashboard — Affiliate Revenue Tracker:**
+
+| Component | Description |
+|---|---|
+| Affiliate Programs Database | All registered affiliate programs with links, commission rates, cookie windows |
+| Referral Tracker | Which clients were referred to which platforms + referral timestamps |
+| Commission Log | Cumulative commission earned per platform per stream |
+| Dual Stats View | **Stream 1:** Internal content affiliate revenue | **Stream 2:** Client service affiliate commissions |
+| Monthly Rollup | Total affiliate revenue aggregated by month with growth trend |
+
+**Database Requirements:**
+
+- `affiliate_programs` — Master list (name, url, commission_rate, commission_type, cookie_days, category, priority, affiliate_link, stream)
+- `affiliate_referrals` — Referral events (program_id, client_id nullable, stream enum('internal','client_service'), referred_at, status)
+- `affiliate_commissions` — Commission records (referral_id, amount, currency, period, paid_at)
+- `affiliate_content_log` — Content created for affiliate promotion (program_id, content_type, platform_published, published_at, clicks, conversions)
 
 ---
 
@@ -706,7 +925,7 @@ All jobs are manual until the admin enables automation. In early stage with 1–
 | Scan Mode | What It Runs | Duration | Cost |
 |---|---|---|---|
 | Quick Scan | TikTok Creative Center + pytrends + Reddit only. Haiku scoring. | 2–4 min | ~$0.05–0.20 |
-| Full Scan | All seven channels, viral signals, influencer matching, supplier search, Haiku + Sonnet top 5. | 15–30 min | ~$0.50–2.00 |
+| Full Scan | All eight channels (incl. POD), viral signals, influencer matching, supplier search, Haiku + Sonnet top 5. | 15–30 min | ~$0.50–2.50 |
 | Client Scan | Full pipeline scoped to client's niche. Generates client-ready report. | 10–20 min | ~$0.30–1.50 |
 
 ### 16.3 Automation Toggle Schedule (All DISABLED by Default)
@@ -721,6 +940,7 @@ All jobs are manual until the admin enables automation. In early stage with 1–
 | Reddit Demand Signals | OFF | Every 12 hours (free) | ~$0/mo |
 | Digital Product Scan | OFF | Daily | ~$1–3/mo |
 | AI Affiliate Refresh | OFF | Weekly | ~$0.50/mo |
+| POD Design Trend Scan | OFF | Weekly | ~$2–8/mo |
 | Shopify Competitor Scan | OFF | Weekly | ~$2–5/mo |
 | Influencer Metric Refresh | OFF | Weekly | ~$1–3/mo |
 | Supplier Data Refresh | OFF | Monthly | ~$0.50/mo |

@@ -20,6 +20,8 @@
 10. [Database Schema Additions](#10-database-schema-additions)
 11. [Implementation Phases](#11-implementation-phases)
 12. [Cost Projections](#12-cost-projections)
+13. [POD (Print on Demand) Integration](#13-pod-print-on-demand-integration)
+14. [Affiliate Commission Engine Integration](#14-affiliate-commission-engine-integration)
 
 ---
 
@@ -104,7 +106,7 @@ Create a shared constants file at `src/lib/terminology.ts` that maps internal te
 
 ## 2.2 Design Principles
 
-1. **Shop integrations use native OAuth.** Shop APIs (Shopify, TikTok Shop, Amazon SP-API) require deep integration for product management, inventory sync, and order tracking. These cannot be abstracted through a third party.
+1. **Shop integrations use native OAuth.** Shop APIs (Shopify, TikTok Shop, Amazon SP-API) and POD fulfillment partners (Printful, Printify, Gelato) require deep integration for product management, inventory sync, order tracking, and fulfillment routing. These cannot be abstracted through a third party.
 
 2. **Content publishing uses Ayrshare.** Social media publishing across 13+ platforms through a single API eliminates the need to build and maintain separate OAuth flows, API contracts, rate limit handling, and platform approval processes for each social network. Massive engineering scope reduction.
 
@@ -124,6 +126,9 @@ Create a shared constants file at `src/lib/terminology.ts` that maps internal te
 | TikTok Shop | TikTok Shop Partner API v2 | OAuth 2.0 + Request Signing | Phase 2B |
 | Amazon | SP-API (Selling Partner API) | Login with Amazon (LWA) | Phase 3 |
 | Meta/Instagram | Graph API v25.0 + Product Catalog | Meta Business Extension (MBE) | Phase 3 |
+| Printful (POD) | REST API + Webhooks | OAuth 2.0 | Phase 3 |
+| Printify (POD) | REST API v1 | API Key | Phase 3 |
+| Gelato (POD) | REST API v3 | API Key | Phase 3 |
 
 ## 3.2 Shopify Integration (Phase 2A — First)
 
@@ -330,6 +335,7 @@ The content engine auto-formats output per platform requirements:
 
 **Rationale:**
 - Supports 13+ platforms through a single API (TikTok, Instagram, Facebook, YouTube, Pinterest, LinkedIn, X/Twitter, Reddit, Threads, Google Business Profile, Telegram, Snapchat, Bluesky)
+- Channel #8 — POD (Print on Demand): Printful, Printify, Gelato integrated as fulfillment channels for product creation, order routing, and mockup generation
 - Handles all platform-specific OAuth complexity — no per-platform developer app registration
 - SaaS/Business plan supports per-client profiles (perfect for multi-tenant)
 - Node.js SDK available
@@ -429,6 +435,7 @@ Clients connect platforms for two separate purposes. The UI must make this disti
 |---|---|---|---|
 | **Shop Connect** (sell products) | Upload products to storefront, sync inventory, track orders | Native OAuth (YouSell → Platform) | Shopify, TikTok Shop, Amazon, Meta Commerce |
 | **Social Connect** (publish content) | Post content, schedule, track engagement | Ayrshare (managed OAuth) | TikTok, Instagram, Facebook, YouTube, Pinterest, X, LinkedIn |
+| **POD Connect** (print on demand fulfillment) | Product creation, order routing, mockup generation, multi-provider fulfillment | Native API (YouSell → POD Partner) | Printful, Printify, Gelato |
 
 ## 6.2 Connection Hub UI
 
@@ -1057,6 +1064,46 @@ At $29-$149/client/month subscription pricing, this gives healthy margins even a
 
 ---
 
+# 13. POD (Print on Demand) Integration
+
+## 13.1 POD Fulfillment Partner Connections
+- Printful: REST API + Webhooks for product creation, order routing, mockup generation
+- Printify: REST API for multi-provider price comparison, catalog sync
+- Gelato: REST API for global fulfillment (32 countries)
+
+## 13.2 POD Product Lifecycle
+1. Trend discovery identifies hot design niches
+2. AI generates design concepts + mockups via Printful Mockup Generator API
+3. Product created in client's Shopify/TikTok store with POD fulfillment attached
+4. Customer orders → webhook → POD partner manufactures + ships direct
+5. Order tracking flows through existing order tracking engine
+
+## 13.3 POD Content Strategy
+- AI-generated lifestyle mockups using product images
+- Platform-specific content: TikTok (design process videos), Pinterest (aesthetic boards), Instagram (lifestyle shots)
+- Seasonal design trend content calendars
+
+---
+
+# 14. Affiliate Commission Engine Integration
+
+## 14.1 Internal Content Affiliate Revenue
+- Content engine produces promotional content for affiliate partner platforms
+- Admin dashboard tracks content performance → clicks → conversions → commissions
+- Non-stop content factory for all registered affiliate programs
+
+## 14.2 Client Service Affiliate Revenue
+- When clients adopt platforms provisioned through YOUSELL (Shopify, Klaviyo, Printful, Spocket, etc.), YOUSELL earns referral commissions
+- Tracked separately from internal content revenue
+- Admin dashboard shows per-client referral status and cumulative commission
+
+## 14.3 Affiliate Revenue Dashboard
+- Dual stats: Internal content revenue | Client service commissions
+- Per-platform breakdown with monthly rollup
+- Top-performing affiliate programs ranked by ROI
+
+---
+
 # APPENDIX A: API REFERENCE QUICK LINKS
 
 | Platform | API Documentation | Key Requirement |
@@ -1069,6 +1116,9 @@ At $29-$149/client/month subscription pricing, this gives healthy margins even a
 | Ayrshare | docs.ayrshare.com | Business plan for multi-profile |
 | Shotstack | shotstack.io/docs | API key |
 | Bannerbear | developers.bannerbear.com | API key |
+| Printful | developers.printful.com | OAuth 2.0 or API key |
+| Printify | developers.printify.com | API key |
+| Gelato | developers.gelato.com | API key |
 
 ---
 
