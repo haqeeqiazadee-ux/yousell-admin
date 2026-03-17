@@ -2440,3 +2440,76 @@ Restructure use case diagrams and flowcharts to ensure each of the 21 engines op
 - `docs/YOUSELL_Use_Case_Diagram.drawio` — Added pages 7-8
 - `docs/YOUSELL_Flowcharts.drawio` — Added pages 9-10
 - `system/development_log.md` — This entry
+
+------------------------------------------------------------
+
+## Session: 2026-03-17 — Project Documentation Update for Engine Independence
+
+### Task
+Update all project documentation to reflect the engine independence architecture across every relevant file.
+
+### What Was Updated
+
+**1. `tasks/todo.md` (CREATED)**
+- Active initiatives tracker with engine independence tasks
+- Platform build phases from execution_plan.md
+- Completed items log
+
+**2. `tasks/lessons.md` (CREATED)**
+- Architecture decisions: AD-001 (Bounded Contexts), AD-002 (Event Bus), AD-003 (Manual-First)
+- Development patterns: DP-001 (Draw.io batches), DP-002 (Edit tool uniqueness)
+- Corrections log table
+
+**3. `docs/YouSell_Platform_Technical_Specification_v8.md`**
+- Added Section 9A: Engine Independence Architecture (187 lines)
+  - Core independence principles (5 rules)
+  - Event bus architecture with contract format
+  - Complete engine registry: 21 engines across 5 tiers with API namespaces, tables, queues, events
+  - Inter-engine event flow diagram
+  - Queue-to-engine ownership map (23 queues assigned to engines)
+  - SaaS spin-off portfolio (21 standalone product names)
+  - 5-step extraction process
+- Added Principle 9 to Section 1.3: "Engine independence by default"
+
+**4. `tasks/execution_plan.md`**
+- Added Phase 0: Engine Independence Foundation (Weeks -2 to 0)
+  - Week -2: Event bus skeleton, TypeScript contracts, publisher/subscriber utilities
+  - Week -1: Engine directory structure, migrate 3 existing engines, integration tests
+  - Validation checkpoint and exit criteria
+- Updated version to 1.1, timeline to 30 weeks
+
+**5. `docs/content_publishing_shop_integration_strategy.md`**
+- Added Section 18: Engine Independence — Bounded Context Contracts
+  - Engine ownership matrix (6 engines with tables, queues, API namespaces)
+  - Event contracts for Shop Connect, Creative Studio, Smart Publisher, Command Center, Affiliate Commission
+  - Data isolation rules (5 rules)
+  - SaaS extraction readiness table
+- Updated TOC and version reference (v7 → v8)
+
+**6. `docs/USE_CASE_DIAGRAM.md`**
+- Added Inter-Engine Event Flows section
+  - Engine-to-use-case mapping (21 engines → 12 use cases)
+  - ASCII art inter-engine event flow diagram
+  - Data isolation guarantee note
+- Updated version to 2.1
+
+**7. `system/ai_logic.md`**
+- Added Inter-Engine Operational Contracts section
+  - Scoring pipeline contract (4 engines, strict handoff rules)
+  - Enrichment trigger contract (score threshold → engine activation)
+  - Content pipeline contract (3 engines)
+  - POD pipeline contract (3 engines)
+  - Failure isolation contract (retry, dead-letter, fire-and-forget)
+- Added "engine independence" to Final Principle
+
+### Files Created
+- `tasks/todo.md`
+- `tasks/lessons.md`
+
+### Files Modified
+- `docs/YouSell_Platform_Technical_Specification_v8.md`
+- `tasks/execution_plan.md`
+- `docs/content_publishing_shop_integration_strategy.md`
+- `docs/USE_CASE_DIAGRAM.md`
+- `system/ai_logic.md`
+- `system/development_log.md` — This entry
