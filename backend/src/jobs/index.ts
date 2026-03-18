@@ -34,7 +34,7 @@ import { processAmazonIntelligence } from "./amazon-intelligence";
 import { processShopifyIntelligence } from "./shopify-intelligence";
 import { processAdIntelligence } from "./ad-intelligence";
 import {
-  processTransform, processScoring, processContentQueue, processDistribution,
+  processTransform, processScoring,
   processOrderTracking, processFinancialModel, processBlueprint, processNotification,
   processInfluencerOutreach, processInfluencerRefresh, processSupplierRefresh,
   processAffiliateRefresh, processAffiliateContentGenerate, processAffiliateCommissionTrack,
@@ -42,6 +42,8 @@ import {
   processPushToTiktok, processPushToAmazon,
 } from "./stub-workers";
 import { processPushToShopify } from "./push-to-shopify";
+import { processContentGeneration as processContentQueue } from "./content-generation";
+import { processDistribution } from "./distribution";
 
 function logEvents(worker: Worker, label: string) {
   worker.on("completed", (job) => {

@@ -18,8 +18,8 @@ function stubProcessor(queueName: string) {
 
 export const processTransform = stubProcessor("transform-queue");
 export const processScoring = stubProcessor("scoring-queue");
-export const processContentQueue = stubProcessor("content-queue");
-export const processDistribution = stubProcessor("distribution-queue");
+// processContentQueue — moved to content-generation.ts (real implementation)
+// processDistribution — moved to distribution.ts (real implementation)
 export const processOrderTracking = stubProcessor("order-tracking-queue");
 export const processFinancialModel = stubProcessor("financial-model");
 export const processBlueprint = stubProcessor("blueprint-queue");
