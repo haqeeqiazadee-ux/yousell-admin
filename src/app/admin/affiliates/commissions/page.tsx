@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { DollarSign, CheckCircle, XCircle, Clock } from "lucide-react"
+import { DollarSign, CheckCircle, Clock } from "lucide-react"
 
 interface Commission {
   id: string
