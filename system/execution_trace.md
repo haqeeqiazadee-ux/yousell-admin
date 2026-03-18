@@ -365,3 +365,24 @@ Core deliverables:
 - 10 admin pages wrapped with EnginePageLayout
 - 33/33 tests passing
 - ZERO breaking changes throughout
+
+------------------------------------------------------------
+
+### [2026-03-18] DONE — Fix all errors, add missing pages, env vars, OAuth, DB migration
+
+- **Task:** Fix every error to make the app 100% work — missing pages, env vars, social auth, DB gaps
+- **Action:**
+  1. Created `.env.local` with all 71 env vars documented and categorized
+  2. Created `/forgot-password` page with Supabase `resetPasswordForEmail` flow
+  3. Created `/reset-password` page with `PASSWORD_RECOVERY` event handling
+  4. Created `/privacy` page (linked from login/signup footer)
+  5. Created `/terms` page (linked from login/signup footer)
+  6. Verified Google + Facebook OAuth already wired via `SocialLoginButtons` component on both `/login` and `/signup`
+  7. Created migration `022_super_admin_and_rls_fixes.sql`:
+     - Adds `super_admin` to `user_role` enum
+     - Adds `clients` table self-read RLS policy (fixes BUG-035)
+     - Adds `clients` table self-update RLS policy
+     - Adds missing index on `product_allocations.visible_to_client`
+- **Files touched:** .env.local, src/app/forgot-password/page.tsx, src/app/reset-password/page.tsx, src/app/privacy/page.tsx, src/app/terms/page.tsx, supabase/migrations/022_super_admin_and_rls_fixes.sql
+- **Result:** SUCCESS — build passes, all pages render, 0 TypeScript errors
+- **Next step:** Configure Google/Facebook OAuth providers in Supabase dashboard, fill in real env var values
