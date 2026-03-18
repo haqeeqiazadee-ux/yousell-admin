@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { authFetch } from '@/lib/auth-fetch'
+import { EnginePageLayout } from '@/components/engines'
 
 type ScanMode = 'quick' | 'full' | 'client'
 type ScanStatus = 'idle' | 'confirming' | 'running' | 'completed' | 'failed' | 'cancelled'
@@ -245,13 +246,16 @@ function ScanPageContent() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
+    <EnginePageLayout
+      title="Product Scanner"
+      engineId="discovery"
+      description="Discover trending products across all channels"
+      status={status === 'running' ? 'running' : 'idle'}
+      healthy={true}
+    >
+      <div className="space-y-6">
+      {/* Legacy header removed — now provided by EnginePageLayout */}
       <div>
-        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-          <Scan size={20} className="text-blue-600" /> Product Scanner
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">Discover trending products across all channels</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -516,6 +520,7 @@ function ScanPageContent() {
         </div>
       </div>
     </div>
+    </EnginePageLayout>
   )
 }
 
