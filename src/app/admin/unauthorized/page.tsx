@@ -1,18 +1,16 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShieldX } from "lucide-react";
 
 export default function UnauthorizedPage() {
-  const router = useRouter();
-
   const handleSignOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/admin/login");
+    // Full page navigation to clear server-side auth cookies
+    window.location.href = "/admin/login";
   };
 
   return (

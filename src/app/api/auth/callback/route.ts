@@ -44,12 +44,17 @@ export async function GET(request: Request) {
           .eq('id', user.id)
           .single();
 
-        // Route based on role
-        if (profile?.role === 'admin' || profile?.role === 'super_admin') {
-          return NextResponse.redirect(`${origin}/admin`);
+        const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin';
+        const isAdminSubdomain = host.startsWith('admin.');
+
+        // On admin subdomain: admins go to /admin, clients go to /dashboard
+        // On client domain: always go to the requested next (default /dashboard), never /admin
+        if (isAdminSubdomain) {
+          return NextResponse.redirect(`${origin}${isAdmin ? '/admin' : next}`);
         }
-        // Client role or new user: go to dashboard (or requested next)
-        return NextResponse.redirect(`${origin}${next === '/admin' ? '/dashboard' : next}`);
+        // Client domain: respect the next param, block /admin redirect
+        const clientDest = next.startsWith('/admin') ? '/dashboard' : next;
+        return NextResponse.redirect(`${origin}${clientDest}`);
       }
 
       return NextResponse.redirect(`${origin}${next}`);

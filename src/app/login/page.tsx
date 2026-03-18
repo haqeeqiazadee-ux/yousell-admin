@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
 
@@ -19,6 +20,14 @@ export default function ClientLoginPage() {
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
+
+  // Show error from OAuth callback failures
+  useEffect(() => {
+    if (searchParams.get('error') === 'auth') {
+      setError('Sign-in failed. Please try again.');
+    }
+  }, [searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +56,13 @@ export default function ClientLoginPage() {
         .single();
 
       if (profile?.role === 'admin' || profile?.role === 'super_admin') {
-        window.location.href = '/admin';
+        // Redirect admin users to the admin subdomain, not relative /admin
+        const host = window.location.hostname;
+        if (host === 'yousell.online' || host === 'www.yousell.online') {
+          window.location.href = 'https://admin.yousell.online/admin';
+        } else {
+          window.location.href = '/admin';
+        }
         return;
       }
     }
