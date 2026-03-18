@@ -11,7 +11,7 @@ import type { EnginePageLayoutProps } from './types';
 
 export function EnginePageLayout({
   title,
-  engineId,
+  engineId: _engineId,
   description,
   status,
   healthy,

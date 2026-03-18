@@ -8,7 +8,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import type { ApiResult, ApiError, ApiErrorCode } from './types';
+import type { ApiResult, ApiErrorCode } from './types';
 
 // ─── Core Client ───────────────────────────────────────────
 

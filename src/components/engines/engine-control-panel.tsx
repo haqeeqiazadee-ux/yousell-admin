@@ -13,8 +13,8 @@ import { Play, Square, Zap } from 'lucide-react';
 import type { EngineControlPanelProps } from './types';
 
 export function EngineControlPanel({
-  name,
-  engineId,
+  name: _name,
+  engineId: _engineId,
   status,
   healthy,
   queues,

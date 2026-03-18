@@ -11,14 +11,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { EngineStatusCardProps } from './types';
 
-const STATUS_COLORS: Record<string, string> = {
-  idle: 'bg-gray-400',
-  running: 'bg-green-500',
-  paused: 'bg-yellow-500',
-  error: 'bg-red-500',
-  stopped: 'bg-gray-300',
-};
-
 const STATUS_LABELS: Record<string, string> = {
   idle: 'Idle',
   running: 'Running',
@@ -29,7 +21,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 export function EngineStatusCard({
   name,
-  engineId,
+  engineId: _engineId,
   status,
   healthy,
   queueCount,
@@ -37,8 +29,6 @@ export function EngineStatusCard({
   description,
   onClick,
 }: EngineStatusCardProps) {
-  const statusColor = STATUS_COLORS[status] || 'bg-gray-400';
-
   return (
     <Card
       className={`transition-shadow ${onClick ? 'cursor-pointer hover:shadow-md' : ''}`}

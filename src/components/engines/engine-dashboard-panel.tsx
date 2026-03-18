@@ -22,9 +22,9 @@ const STATUS_VARIANT: Record<string, 'default' | 'outline' | 'secondary' | 'dest
 
 export function EngineDashboardPanel({
   name,
-  engineId,
+  engineId: _engineId,
   status,
-  metrics,
+  metrics: _metrics,
   stats,
   recentActivity,
   actions,
