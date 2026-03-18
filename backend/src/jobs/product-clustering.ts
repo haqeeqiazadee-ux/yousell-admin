@@ -1,5 +1,7 @@
 /**
  * Product Clustering Worker
+ * @engine clustering
+ * @queue product-clustering
  *
  * Groups products into clusters based on keyword overlap in titles.
  * v7 spec Section 28: category similarity, keyword overlap.
