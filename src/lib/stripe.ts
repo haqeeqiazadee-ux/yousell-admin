@@ -33,7 +33,7 @@ export const PRICING_TIERS = {
     productsPerPlatform: 10,
     platforms: 2,
     contentCredits: 200,
-    engines: ['discovery', 'analytics', 'content', 'store_integration'],
+    engines: ['discovery', 'content', 'store_integration'],
   },
   professional: {
     name: 'Professional',

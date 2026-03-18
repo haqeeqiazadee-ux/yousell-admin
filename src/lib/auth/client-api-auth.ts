@@ -12,6 +12,7 @@ export interface ClientAuthResult {
     engines: readonly string[];
     productsPerPlatform: number;
     platforms: number;
+    contentCredits: number;
   } | null;
 }
 
@@ -67,6 +68,7 @@ export async function authenticateClient(req: NextRequest): Promise<ClientAuthRe
       engines: tier?.engines || [],
       productsPerPlatform: tier?.productsPerPlatform || 0,
       platforms: tier?.platforms || 0,
+      contentCredits: tier?.contentCredits || 0,
     };
   }
 
@@ -113,4 +115,17 @@ export async function authenticateClientLite(req: NextRequest): Promise<{ userId
   if (!client) throw new Error("Client not found");
 
   return { userId: user.id, email: user.email, clientId: client.id };
+}
+
+/**
+ * Checks if a client's subscription includes access to a specific engine.
+ * Throws if subscription is missing or engine is not included.
+ */
+export function requireEngine(auth: ClientAuthResult, engine: string): void {
+  if (!auth.subscription) {
+    throw new Error("No active subscription");
+  }
+  if (!auth.subscription.engines.includes(engine)) {
+    throw new Error(`Engine '${engine}' not included in ${auth.subscription.plan} plan`);
+  }
 }

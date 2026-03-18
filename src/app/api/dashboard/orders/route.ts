@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { authenticateClientLite } from '@/lib/auth/client-api-auth'
+import { authenticateClient, requireEngine } from '@/lib/auth/client-api-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function GET(req: NextRequest) {
   try {
-    const client = await authenticateClientLite(req)
+    const client = await authenticateClient(req)
+    requireEngine(client, 'store_integration')
     const admin = createAdminClient()
 
     const { data: orders } = await admin

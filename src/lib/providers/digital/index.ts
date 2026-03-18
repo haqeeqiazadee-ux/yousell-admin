@@ -3,7 +3,9 @@ import type { ProductResult, ProviderConfig } from "../types";
 export function getDigitalConfig(): ProviderConfig {
   return {
     name: "digital",
-    isConfigured: !!(process.env.PRODUCT_HUNT_API_KEY || process.env.APIFY_API_TOKEN),
+    isConfigured: !!(process.env.PRODUCT_HUNT_API_KEY || process.env.APIFY_API_TOKEN ||
+      process.env.CLICKBANK_API_KEY || process.env.SHAREASALE_API_KEY ||
+      process.env.UDEMY_AFFILIATE_API_KEY || process.env.APPSUMO_API_KEY),
   };
 }
 
@@ -14,9 +16,49 @@ export function getDigitalConfig(): ProviderConfig {
 export async function searchDigitalProducts(
   query: string
 ): Promise<ProductResult[]> {
+  // Aggregate results from all configured sources
+  const results: ProductResult[] = [];
+
   if (process.env.APIFY_API_TOKEN) {
-    return searchViaApify(query);
+    results.push(...await searchViaApify(query));
   }
+  if (process.env.CLICKBANK_API_KEY) {
+    results.push(...await searchViaClickBank(query));
+  }
+  if (process.env.SHAREASALE_API_KEY) {
+    results.push(...await searchViaShareASale(query));
+  }
+  if (process.env.UDEMY_AFFILIATE_API_KEY) {
+    results.push(...await searchViaUdemy(query));
+  }
+  if (process.env.APPSUMO_API_KEY) {
+    results.push(...await searchViaAppSumo(query));
+  }
+
+  return results.slice(0, 20);
+}
+
+// Stub: ClickBank marketplace integration (v8 spec — affiliate marketplace)
+async function searchViaClickBank(_query: string): Promise<ProductResult[]> {
+  console.log("[Digital] ClickBank provider not yet implemented");
+  return [];
+}
+
+// Stub: ShareASale network integration (v8 spec — affiliate network)
+async function searchViaShareASale(_query: string): Promise<ProductResult[]> {
+  console.log("[Digital] ShareASale provider not yet implemented");
+  return [];
+}
+
+// Stub: Udemy course marketplace integration (v8 spec)
+async function searchViaUdemy(_query: string): Promise<ProductResult[]> {
+  console.log("[Digital] Udemy provider not yet implemented");
+  return [];
+}
+
+// Stub: AppSumo SaaS deals integration (v8 spec)
+async function searchViaAppSumo(_query: string): Promise<ProductResult[]> {
+  console.log("[Digital] AppSumo provider not yet implemented");
   return [];
 }
 

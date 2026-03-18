@@ -81,6 +81,7 @@ function calculateTrendHeuristic(product: Product): number {
 }
 
 // --- 3-Pillar Composite Score: Final = Trend(0.40) + Viral(0.35) + Profit(0.25) ---
+// @sync-with src/lib/scoring/composite.ts — keep heuristic logic in sync
 
 export interface ScoringResult {
   trend_score: number;

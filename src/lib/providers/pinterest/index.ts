@@ -22,6 +22,15 @@ export async function searchPinterestProducts(
   if (PROVIDER === "apify" && process.env.APIFY_API_TOKEN) {
     return searchViaApify(query);
   }
+  if (PROVIDER === "pinterest_api" && process.env.PINTEREST_API_KEY) {
+    return searchViaPinterestAPI(query);
+  }
+  return [];
+}
+
+// Stub: Pinterest Business API integration (v8 spec — official API)
+async function searchViaPinterestAPI(_query: string): Promise<ProductResult[]> {
+  console.log("[Pinterest] Pinterest Business API provider not yet implemented — pending OAuth setup");
   return [];
 }
 

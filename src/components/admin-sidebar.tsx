@@ -27,8 +27,10 @@ import {
   Megaphone,
   BarChart2,
   Sparkles,
+  OctagonX,
   type LucideIcon,
 } from "lucide-react";
+import { useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -96,6 +98,23 @@ const managementNav: NavItem[] = [
 export function AdminSidebar() {
   const pathname = usePathname();
   const user = useUser();
+  const [killSwitchLoading, setKillSwitchLoading] = useState(false);
+
+  const handleKillSwitch = async () => {
+    if (!confirm("This will DISABLE ALL automation jobs. Continue?")) return;
+    setKillSwitchLoading(true);
+    try {
+      await fetch("/api/admin/automation", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ killSwitch: true }),
+      });
+    } catch (err) {
+      console.error("Kill switch failed:", err);
+    } finally {
+      setKillSwitchLoading(false);
+    }
+  };
 
   const handleSignOut = async () => {
     const supabase = createClient();
@@ -143,15 +162,25 @@ export function AdminSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-border px-4 py-4">
-        <Link href="/admin" className="flex items-center gap-2.5">
-          <span className="icon-circle-lg gradient-coral" style={{ width: "2.25rem", height: "2.25rem", borderRadius: "0.625rem" }}>
-            <Sparkles className="text-white" style={{ width: "1.125rem", height: "1.125rem" }} />
-          </span>
-          <span className="text-lg font-bold tracking-tight">
-            You<span className="text-rose-500">Sell</span>
-            <span className="text-muted-foreground text-xs font-normal ml-1">.admin</span>
-          </span>
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link href="/admin" className="flex items-center gap-2.5">
+            <span className="icon-circle-lg gradient-coral" style={{ width: "2.25rem", height: "2.25rem", borderRadius: "0.625rem" }}>
+              <Sparkles className="text-white" style={{ width: "1.125rem", height: "1.125rem" }} />
+            </span>
+            <span className="text-lg font-bold tracking-tight">
+              You<span className="text-rose-500">Sell</span>
+              <span className="text-muted-foreground text-xs font-normal ml-1">.admin</span>
+            </span>
+          </Link>
+          <button
+            onClick={handleKillSwitch}
+            disabled={killSwitchLoading}
+            title="Pause All Automation (Big Red Button)"
+            className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-colors disabled:opacity-50"
+          >
+            <OctagonX style={{ width: "1rem", height: "1rem" }} />
+          </button>
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

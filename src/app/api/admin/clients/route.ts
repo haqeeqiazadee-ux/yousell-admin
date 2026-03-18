@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { authenticateAdmin } from "@/lib/auth/admin-api-auth";
 
+const VALID_PLANS = ['starter', 'growth', 'professional', 'enterprise'] as const;
+const PLAN_LIMITS: Record<string, number> = {
+  starter: 3,
+  growth: 10,
+  professional: 25,
+  enterprise: 50,
+};
+
 export async function GET(request: NextRequest) {
   try { await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
   try {
@@ -31,9 +39,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Name and email are required" }, { status: 400 });
     }
 
+    const effectivePlan = plan || 'starter';
     const { data, error } = await supabase
       .from("clients")
-      .insert({ name, email, plan, niche, notes })
+      .insert({ name, email, plan: effectivePlan, niche, notes, default_product_limit: PLAN_LIMITS[effectivePlan] || 3 })
       .select()
       .single();
 
@@ -43,14 +52,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-
-const VALID_PLANS = ['starter', 'growth', 'professional', 'enterprise'] as const;
-const PLAN_LIMITS: Record<string, number> = {
-  starter: 3,
-  growth: 10,
-  professional: 25,
-  enterprise: 50,
-};
 
 export async function PUT(request: NextRequest) {
   try { await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
