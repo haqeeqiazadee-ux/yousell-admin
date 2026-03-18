@@ -21,6 +21,15 @@ export async function searchAmazonProducts(
   if (process.env.APIFY_API_TOKEN) {
     return searchViaApify(query);
   }
+  if (process.env.AMAZON_PA_API_KEY) {
+    return searchViaPAAPI(query);
+  }
+  return [];
+}
+
+// Stub: Amazon Product Advertising API (v8 spec — official API, pending approval)
+async function searchViaPAAPI(_query: string): Promise<ProductResult[]> {
+  console.log("[Amazon] PA-API provider not yet implemented — pending Amazon approval");
   return [];
 }
 

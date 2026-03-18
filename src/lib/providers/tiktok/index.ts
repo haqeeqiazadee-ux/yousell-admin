@@ -18,6 +18,33 @@ export async function searchTikTokProducts(
   if (PROVIDER === "apify" && process.env.APIFY_API_TOKEN) {
     return searchViaApify(query);
   }
+  if (PROVIDER === "scrape_creators" && process.env.SCRAPE_CREATORS_API_KEY) {
+    return searchViaScrapeCreators(query);
+  }
+  if (PROVIDER === "creative_center" && process.env.TIKTOK_CREATIVE_CENTER_KEY) {
+    return searchViaCreativeCenter(query);
+  }
+  if (PROVIDER === "research_api" && process.env.TIKTOK_RESEARCH_API_KEY) {
+    return searchViaResearchAPI(query);
+  }
+  return [];
+}
+
+// Stub: TikTok ScrapeCreators integration (v8 spec — secondary scraper)
+async function searchViaScrapeCreators(_query: string): Promise<ProductResult[]> {
+  console.log("[TikTok] ScrapeCreators provider not yet implemented — pending API access");
+  return [];
+}
+
+// Stub: TikTok Creative Center integration (v8 spec — trend data)
+async function searchViaCreativeCenter(_query: string): Promise<ProductResult[]> {
+  console.log("[TikTok] Creative Center provider not yet implemented — pending API access");
+  return [];
+}
+
+// Stub: TikTok Research API integration (v8 spec — official API)
+async function searchViaResearchAPI(_query: string): Promise<ProductResult[]> {
+  console.log("[TikTok] Research API provider not yet implemented — pending approval");
   return [];
 }
 
