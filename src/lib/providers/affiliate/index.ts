@@ -38,11 +38,33 @@ export async function getAIAffiliatePrograms(): Promise<AffiliateProgram[]> {
 }
 
 export async function getPhysicalAffiliateProducts(): Promise<AffiliateProgram[]> {
-  return [
+  // Combine seeded data with dynamic discovery when available
+  const seeded: AffiliateProgram[] = [
     { name: "Amazon Associates", platform: "amazon.com", commissionRate: 4, recurring: false, cookieDays: 1, network: "Direct", joinUrl: "https://affiliate-program.amazon.com", nicheTags: ["physical", "general"] },
     { name: "TikTok Shop Affiliate", platform: "tiktok.com", commissionRate: 15, recurring: false, cookieDays: 7, network: "Direct", joinUrl: "https://seller.tiktok.com/affiliate", nicheTags: ["physical", "viral", "tiktok"] },
     { name: "Walmart Affiliate", platform: "walmart.com", commissionRate: 4, recurring: false, cookieDays: 3, network: "Impact", joinUrl: "https://affiliates.walmart.com", nicheTags: ["physical", "general"] },
     { name: "Target Partners", platform: "target.com", commissionRate: 5, recurring: false, cookieDays: 7, network: "Impact", joinUrl: "https://partners.target.com", nicheTags: ["physical", "home", "fashion"] },
     { name: "eBay Partner Network", platform: "ebay.com", commissionRate: 3, recurring: false, cookieDays: 1, network: "Direct", joinUrl: "https://partnernetwork.ebay.com", nicheTags: ["physical", "general", "auction"] },
   ];
+
+  const dynamic = await discoverPhysicalAffiliatePrograms();
+  return [...seeded, ...dynamic];
+}
+
+/**
+ * Dynamic AI affiliate program discovery (v8 spec — live discovery).
+ * Stub: Will query affiliate networks for new high-commission AI programs.
+ */
+export async function discoverAIAffiliatePrograms(): Promise<AffiliateProgram[]> {
+  console.log("[Affiliate] Dynamic AI affiliate discovery not yet implemented");
+  return [];
+}
+
+/**
+ * Dynamic physical affiliate program discovery (v8 spec — live discovery).
+ * Stub: Will query affiliate networks for trending physical product programs.
+ */
+export async function discoverPhysicalAffiliatePrograms(): Promise<AffiliateProgram[]> {
+  console.log("[Affiliate] Dynamic physical affiliate discovery not yet implemented");
+  return [];
 }
