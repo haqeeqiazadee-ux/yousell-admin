@@ -52,7 +52,7 @@ async function engineRequest<T>(
         data: null,
         error: {
           code: httpStatusToErrorCode(response.status),
-          message: errorBody?.error || errorBody?.message || response.statusText,
+          message: typeof errorBody?.error === 'string' ? errorBody.error : typeof errorBody?.message === 'string' ? errorBody.message : response.statusText,
           details: errorBody,
         },
         status: response.status,
