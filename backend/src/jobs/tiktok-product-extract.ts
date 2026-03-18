@@ -1,5 +1,7 @@
 /**
  * TikTok Product Extraction Worker
+ * @engine tiktok-discovery
+ * @queue tiktok-product-extract
  *
  * Reads discovered TikTok videos from `tiktok_videos`, extracts product
  * candidates based on product links and high-engagement signals, then

@@ -19,56 +19,28 @@ Last updated: 2026-03-18
 - [x] Refactor 3 engines to engine pattern (Discovery, TikTok, Scoring) — Phase 0
 - [x] Integration tests for engine system (19/19 passing) — Phase 0
 
-### Phase B: Backend Alignment (15 batches)
-- [ ] B.1: Wrap clustering.ts in Engine interface
-- [ ] B.2: Wrap trend-detection.ts in Engine interface
-- [ ] B.3: Wrap creator-matching.ts in Engine interface
-- [ ] B.4: Wrap ad-intelligence.ts in Engine interface
-- [ ] B.5: Wrap opportunity-feed.ts in Engine interface + update barrel
-- [ ] B.6: Add ENGINE_QUEUE_MAP to backend/src/jobs/types.ts
-- [ ] B.7: Add engine owner headers to job processor files
-- [ ] B.8: Create /api/engine/discovery/* routes
-- [ ] B.9: Create /api/engine/discovery/products route
-- [ ] B.10: Create /api/engine/tiktok/* routes
-- [ ] B.11: Create /api/engine/scoring/* + /api/engine/intelligence/clusters/* routes
-- [ ] B.12: Create /api/engine/creators/* routes
-- [ ] B.13: Create /api/engine/suppliers/* + /api/engine/ads/* routes
-- [ ] B.14: Add tests for 5 new engine wrappers
-- [ ] B.15: Verify + document — Phase B COMPLETE
+### Phase B: Backend Alignment (COMPLETE — 2026-03-18)
+- [x] B.1-B.5: Wrap 5 remaining engines in Engine interface
+- [x] B.6: Add ENGINE_QUEUE_MAP to backend/src/jobs/types.ts
+- [x] B.7: Add @engine/@queue annotations to all 15 job processor files
+- [x] B.8-B.13: Create 10 engine-namespaced API routes under /api/engine/*
+- [x] B.14: Add 14 tests for Phase B engines — 33/33 total passing
+- [x] B.15: Verify + document — Phase B COMPLETE
 
-### Phase C: Frontend Design (10 batches)
-- [ ] C.1: Engine API client types — discovery, tiktok, scoring
-- [ ] C.2: Engine API client types — clustering, creators, intelligence
-- [ ] C.3: Shared API response types + error handling contract
-- [ ] C.4: EngineStatusCard component interface
-- [ ] C.5: EngineDashboardPanel component interface
-- [ ] C.6: EngineControlPanel component interface
-- [ ] C.7: DataTable component interface
-- [ ] C.8: Admin dashboard layout design
-- [ ] C.9: Engine detail page layout design
-- [ ] C.10: Sidebar navigation update review + document
+### Phase C: Frontend Design (COMPLETE — 2026-03-18)
+- [x] C.1-C.2: Engine API client types for all 8 engines + health API
+- [x] C.3: Shared API response types, error codes, pagination, type guards
+- [x] C.4-C.7: Component interfaces (EngineStatusCard, Panel, ControlPanel, DataTable)
+- [x] C.8-C.9: Page layout contracts (dashboard + engine detail)
+- [x] C.10: Sidebar navigation verified — matches engine groupings
 
-### Phase D: Frontend Build (20 batches)
-- [ ] D.1: Engine API client — fetch wrapper
-- [ ] D.2: useEngine hook
-- [ ] D.3: DataTable component
-- [ ] D.4: DataTable columns + barrel export
-- [ ] D.5: EngineStatusCard component
-- [ ] D.6: EngineDashboardPanel component
-- [ ] D.7: EngineControlPanel component
-- [ ] D.8: Engine components barrel + EnginePageLayout
-- [ ] D.9: Admin dashboard — engine status grid
-- [ ] D.10: Admin dashboard — KPIs + activity feed
-- [ ] D.11: Admin dashboard — health + system status
-- [ ] D.12: Refactor scan control page
-- [ ] D.13: Refactor products page
-- [ ] D.14: Refactor TikTok page
-- [ ] D.15: Refactor trends page
-- [ ] D.16: Refactor clusters page
-- [ ] D.17: Refactor creator-matches page
-- [ ] D.18: Refactor influencers + suppliers pages
-- [ ] D.19: Refactor ads + competitors pages
-- [ ] D.20: Final verification + docs update
+### Phase D: Frontend Build (COMPLETE — 2026-03-18)
+- [x] D.1-D.4: Engine API client, useEngine hook, DataTable component
+- [x] D.5-D.8: EngineStatusCard, EngineDashboardPanel, EngineControlPanel, EnginePageLayout
+- [x] D.9: Admin dashboard — engine status grid added
+- [x] D.10-D.11: Skipped — dashboard already has KPI cards and system status
+- [x] D.12-D.19: Wrapped 8 engine pages with EnginePageLayout
+- [x] D.20: Final verification — 33/33 tests passing
 
 ### Future Platform Build (from execution_plan.md)
 - [ ] Phase 2A: Shopify Connect
@@ -93,3 +65,22 @@ Last updated: 2026-03-18
   - 3 engines refactored: Discovery, TikTok Discovery, Scoring
   - 19 integration tests passing
   - All backward-compatible — zero API route changes
+- [x] Phase B: Backend Alignment — 2026-03-18
+  - 5 more engines wrapped (8 total): Clustering, TrendDetection, CreatorMatching, AdIntelligence, OpportunityFeed
+  - ENGINE_QUEUE_MAP: 15 queues mapped to owning engines
+  - 15 job processors annotated with @engine/@queue ownership
+  - 10 engine-namespaced API routes under /api/engine/*
+  - 33 tests passing (19 + 14 new)
+  - Zero breaking changes
+- [x] Phase C: Frontend Design — 2026-03-18
+  - Engine API client types for all 8 engines
+  - Shared API response/error/pagination types
+  - Component interfaces: EngineStatusCard, EngineDashboardPanel, EngineControlPanel, DataTable
+  - Page layout contracts: admin dashboard, engine detail page
+  - ENGINE_PAGE_MAP for all engines
+- [x] Phase D: Frontend Build — 2026-03-18
+  - Engine API client + useEngine hook + DataTable component
+  - 4 engine UI components (StatusCard, DashboardPanel, ControlPanel, PageLayout)
+  - Admin dashboard engine status grid
+  - 8 engine pages wrapped with EnginePageLayout
+  - 33/33 tests passing, zero breaking changes

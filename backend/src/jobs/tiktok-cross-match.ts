@@ -1,5 +1,7 @@
 /**
  * TikTok Cross-Platform Match Worker
+ * @engine tiktok-discovery
+ * @queue tiktok-cross-match
  *
  * Takes TikTok-sourced product candidates from the `products` table,
  * searches for matching products on Amazon and Shopify, and enriches

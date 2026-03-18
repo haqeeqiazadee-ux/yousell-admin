@@ -36,3 +36,8 @@ export { ENGINE_EVENTS } from './types';
 export { TikTokDiscoveryEngine } from './tiktok-discovery';
 export { DiscoveryEngine } from './discovery';
 export { ScoringEngine } from './scoring-engine';
+export { ClusteringEngine } from './clustering';
+export { TrendDetectionEngine } from './trend-detection';
+export { CreatorMatchingEngine } from './creator-matching';
+export { AdIntelligenceEngine } from './ad-intelligence';
+export { OpportunityFeedEngine } from './opportunity-feed';

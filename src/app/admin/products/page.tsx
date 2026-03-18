@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import type { Product } from "@/lib/types/product";
 import { authFetch } from "@/lib/auth-fetch";
+import { EnginePageLayout } from "@/components/engines";
 
 const platformColors: Record<string, string> = {
   tiktok: "text-pink-500 border-pink-500/30",
@@ -195,16 +196,16 @@ export default function ProductsPage() {
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
+    <EnginePageLayout
+      title="Products"
+      engineId="scoring"
+      description={`${total} product${total !== 1 ? "s" : ""} tracked`}
+      status="idle"
+      healthy={true}
+    >
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-outfit tracking-tight">
-            Products
-          </h1>
-          <p className="text-muted-foreground">
-            {total} product{total !== 1 ? "s" : ""} tracked
-          </p>
-        </div>
+        <div></div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger
             render={<Button><Plus className="h-4 w-4 mr-2" />Add Product</Button>}
@@ -494,5 +495,6 @@ export default function ProductsPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </EnginePageLayout>
   );
 }

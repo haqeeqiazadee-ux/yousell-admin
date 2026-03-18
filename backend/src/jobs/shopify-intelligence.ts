@@ -1,5 +1,7 @@
 /**
  * Shopify Intelligence Worker
+ * @engine shopify-intelligence
+ * @queue shopify-intelligence
  *
  * Discovers fast-growing Shopify stores and their top products
  * via Apify scraper. Identifies competitor stores and emerging brands.

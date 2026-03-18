@@ -1,5 +1,7 @@
 /**
  * Ad Intelligence Worker
+ * @engine ad-intelligence
+ * @queue ad-intelligence
  *
  * Discovers scaling ad campaigns on TikTok and Facebook/Meta.
  * Stores ad creative data and identifies products being heavily promoted.

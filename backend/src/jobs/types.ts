@@ -26,6 +26,26 @@ export const QUEUES = {
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
 
+// ── Engine → Queue ownership map ────────────────────────────
+// Maps each queue to the engine that owns it (v8 spec Section 9A)
+export const ENGINE_QUEUE_MAP: Record<string, string> = {
+  [QUEUES.PRODUCT_SCAN]: 'discovery',
+  [QUEUES.ENRICH_PRODUCT]: 'discovery',
+  [QUEUES.TREND_SCAN]: 'trend-detection',
+  [QUEUES.TIKTOK_DISCOVERY]: 'tiktok-discovery',
+  [QUEUES.TIKTOK_PRODUCT_EXTRACT]: 'tiktok-discovery',
+  [QUEUES.TIKTOK_ENGAGEMENT_ANALYSIS]: 'tiktok-discovery',
+  [QUEUES.TIKTOK_CROSS_MATCH]: 'tiktok-discovery',
+  [QUEUES.PRODUCT_CLUSTERING]: 'clustering',
+  [QUEUES.TREND_DETECTION]: 'trend-detection',
+  [QUEUES.CREATOR_MATCHING]: 'creator-matching',
+  [QUEUES.AMAZON_INTELLIGENCE]: 'amazon-intelligence',
+  [QUEUES.SHOPIFY_INTELLIGENCE]: 'shopify-intelligence',
+  [QUEUES.AD_INTELLIGENCE]: 'ad-intelligence',
+  [QUEUES.INFLUENCER_DISCOVERY]: 'influencer-discovery',
+  [QUEUES.SUPPLIER_DISCOVERY]: 'supplier-discovery',
+} as const;
+
 // ── Job data interfaces ──────────────────────────────────────
 
 export interface ProductScanJobData {

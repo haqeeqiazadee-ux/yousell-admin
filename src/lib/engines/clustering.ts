@@ -1,9 +1,15 @@
 /**
  * Product Clustering Engine — Groups similar products by keyword/tag overlap
  * and calculates cluster-level metrics. Runs directly in Next.js.
+ *
+ * Engine wrapper added in Phase B — provides lifecycle management and
+ * event bus integration. Original runProductClustering() export preserved.
  */
 
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getEventBus } from './event-bus';
+import type { Engine, EngineConfig, EngineEvent, EngineStatus, ClusterUpdatedPayload } from './types';
+import { ENGINE_EVENTS } from './types';
 
 interface ClusterCandidate {
   id: string;
@@ -211,4 +217,80 @@ function mode(arr: string[]): string {
     }
   }
   return result;
+}
+
+// ─── Engine Interface Wrapper ──────────────────────────────
+
+export class ClusteringEngine implements Engine {
+  private _status: EngineStatus = 'idle';
+
+  readonly config: EngineConfig = {
+    name: 'clustering',
+    version: '1.0.0',
+    dependencies: [],
+    queues: ['product-clustering'],
+    publishes: [
+      ENGINE_EVENTS.CLUSTER_UPDATED,
+      ENGINE_EVENTS.CLUSTERS_REBUILT,
+    ],
+    subscribes: [
+      ENGINE_EVENTS.PRODUCT_SCORED,
+    ],
+  };
+
+  status(): EngineStatus {
+    return this._status;
+  }
+
+  async init(): Promise<void> {
+    this._status = 'idle';
+  }
+
+  async start(): Promise<void> {
+    this._status = 'running';
+  }
+
+  async stop(): Promise<void> {
+    this._status = 'stopped';
+  }
+
+  async handleEvent(event: EngineEvent): Promise<void> {
+    if (event.type === ENGINE_EVENTS.PRODUCT_SCORED) {
+      // Could auto-recluster when scores change — manual-first per G10
+      console.log(`[ClusteringEngine] Product scored from ${event.source}, reclustering deferred to manual trigger`);
+    }
+  }
+
+  async healthCheck(): Promise<boolean> {
+    return true;
+  }
+
+  /**
+   * Run clustering and emit events for each cluster created/updated.
+   * Wraps runProductClustering with event bus integration.
+   */
+  async runClustering(
+    minScore: number = 30,
+    similarityThreshold: number = 0.3,
+  ): Promise<{ clustersCreated: number; productsAssigned: number; errors: string[] }> {
+    this._status = 'running';
+    try {
+      const result = await runProductClustering(minScore, similarityThreshold);
+
+      const bus = getEventBus();
+      await bus.emit(
+        ENGINE_EVENTS.CLUSTERS_REBUILT,
+        {
+          clustersCreated: result.clustersCreated,
+          productsAssigned: result.productsAssigned,
+          errors: result.errors,
+        },
+        'clustering',
+      );
+
+      return result;
+    } finally {
+      this._status = 'idle';
+    }
+  }
 }

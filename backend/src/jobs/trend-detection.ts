@@ -1,5 +1,7 @@
 /**
  * Trend Detection Worker
+ * @engine trend-detection
+ * @queue trend-detection
  *
  * Analyzes product clusters and individual products to detect
  * emerging trends. Updates trend_stage and triggers alerts for

@@ -1,5 +1,7 @@
 /**
  * Amazon Intelligence Worker
+ * @engine amazon-intelligence
+ * @queue amazon-intelligence
  *
  * Discovers trending Amazon products via Apify BSR scraper,
  * stores results, and identifies cross-platform opportunities.

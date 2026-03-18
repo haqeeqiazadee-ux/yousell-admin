@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { EnginePageLayout } from "@/components/engines";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -111,16 +112,16 @@ export default function SuppliersPage() {
   };
 
   return (
+    <EnginePageLayout
+      title="Suppliers"
+      engineId="supplier-discovery"
+      description={`${total} supplier${total !== 1 ? "s" : ""} tracked`}
+      status="idle"
+      healthy={true}
+    >
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-outfit tracking-tight">
-            Suppliers
-          </h1>
-          <p className="text-muted-foreground">
-            {total} supplier{total !== 1 ? "s" : ""} tracked
-          </p>
-        </div>
+        <div></div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger
             render={
@@ -330,5 +331,6 @@ export default function SuppliersPage() {
         </CardContent>
       </Card>
     </div>
+    </EnginePageLayout>
   );
 }
