@@ -2,6 +2,9 @@
  * Discovery Engine — Converts raw provider results into scored products
  * and stores them in Supabase. Works directly in Next.js (no Express needed).
  *
+ * Implements the Engine interface for the YOUSELL engine system.
+ * Backward-compatible: runLiveDiscoveryScan is still exported as standalone.
+ *
  * Flow: Provider API → ProductResult[] → Score → Upsert to products table
  */
 
@@ -12,6 +15,9 @@ import { searchShopifyProducts } from '@/lib/providers/shopify';
 import { searchPinterestProducts } from '@/lib/providers/pinterest';
 import { calculateFinalScore, getStageFromViralScore } from '@/lib/scoring/composite';
 import type { ProductResult } from '@/lib/providers/types';
+import { getEventBus } from './event-bus';
+import type { Engine, EngineConfig, EngineEvent, EngineStatus } from './types';
+import { ENGINE_EVENTS } from './types';
 
 type Platform = 'tiktok' | 'amazon' | 'shopify' | 'pinterest' | 'digital' | 'ai_affiliate' | 'physical_affiliate';
 
@@ -357,12 +363,100 @@ export async function runLiveDiscoveryScan(
       })
       .eq('id', scanId);
 
+    // Emit scan complete event
+    const bus = getEventBus();
+    await bus.emit(
+      ENGINE_EVENTS.SCAN_COMPLETE,
+      {
+        scanId,
+        mode,
+        productsFound: totalStored,
+        hotProducts,
+        platforms: platforms as string[],
+      },
+      'discovery',
+    );
+
     return { scanId, results, totalFound, totalStored, hotProducts };
   } catch (error) {
+    // Emit scan error event
+    const bus = getEventBus();
+    await bus.emit(
+      ENGINE_EVENTS.SCAN_ERROR,
+      {
+        scanId,
+        platform: 'multi',
+        error: error instanceof Error ? error.message : String(error),
+      },
+      'discovery',
+    );
+
     await admin
       .from('scan_history')
       .update({ status: 'failed', progress: 0 })
       .eq('id', scanId);
     throw error;
+  }
+}
+
+// ─── Engine Class Implementation ────────────────────────────
+
+export class DiscoveryEngine implements Engine {
+  private _status: EngineStatus = 'idle';
+
+  readonly config: EngineConfig = {
+    name: 'discovery',
+    version: '1.0.0',
+    dependencies: [],
+    queues: ['product-scan'],
+    publishes: [
+      ENGINE_EVENTS.PRODUCT_DISCOVERED,
+      ENGINE_EVENTS.SCAN_COMPLETE,
+      ENGINE_EVENTS.SCAN_ERROR,
+    ],
+    subscribes: [],
+  };
+
+  status(): EngineStatus {
+    return this._status;
+  }
+
+  async init(): Promise<void> {
+    this._status = 'idle';
+  }
+
+  async start(): Promise<void> {
+    this._status = 'running';
+  }
+
+  async stop(): Promise<void> {
+    this._status = 'stopped';
+  }
+
+  async handleEvent(_event: EngineEvent): Promise<void> {
+    // Discovery engine doesn't subscribe to events — it's triggered manually
+  }
+
+  async healthCheck(): Promise<boolean> {
+    try {
+      const admin = createAdminClient();
+      const { error } = await admin.from('products').select('id').limit(1);
+      return !error;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Run discovery via the engine interface.
+   * Delegates to the standalone function for backward compatibility.
+   */
+  async scan(mode: 'quick' | 'full' | 'client', userId: string, clientId?: string) {
+    this._status = 'running';
+    try {
+      return await runLiveDiscoveryScan(mode, userId, clientId);
+    } finally {
+      this._status = 'idle';
+    }
   }
 }
