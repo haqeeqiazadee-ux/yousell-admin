@@ -100,7 +100,7 @@ export function AdminSidebar() {
   const handleSignOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    window.location.href = "/admin/login";
+    window.location.href = "/";
   };
 
   const isActive = (href: string) =>
