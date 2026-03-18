@@ -1,5 +1,7 @@
 /**
  * Influencer Discovery Job
+ * @engine influencer-discovery
+ * @queue influencer-discovery
  *
  * Discovers influencers for a given product niche using configured providers
  * (Ainfluencer, Modash, Apify) and stores results in Supabase.

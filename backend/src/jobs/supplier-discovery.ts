@@ -1,5 +1,7 @@
 /**
  * Supplier Discovery Job
+ * @engine supplier-discovery
+ * @queue supplier-discovery
  *
  * Discovers suppliers for a product via Apify (Alibaba scraper) or
  * CJ Dropshipping, and stores results in Supabase.
