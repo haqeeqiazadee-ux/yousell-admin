@@ -1,9 +1,15 @@
 /**
  * Trend Detection Engine — Analyzes products and signals to detect
  * emerging trends. Updates trend_keywords table with scored trends.
+ *
+ * Engine wrapper added in Phase B — provides lifecycle management and
+ * event bus integration. Original detectTrends() export preserved.
  */
 
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getEventBus } from './event-bus';
+import type { Engine, EngineConfig, EngineEvent, EngineStatus } from './types';
+import { ENGINE_EVENTS } from './types';
 
 interface TrendSignal {
   keyword: string;
@@ -195,4 +201,77 @@ function calculateTrendScore(signal: TrendSignal): number {
   else if (signal.sources.length >= 2) score += 5;
 
   return Math.min(100, Math.max(0, score));
+}
+
+// ─── Engine Interface Wrapper ──────────────────────────────
+
+export class TrendDetectionEngine implements Engine {
+  private _status: EngineStatus = 'idle';
+
+  readonly config: EngineConfig = {
+    name: 'trend-detection',
+    version: '1.0.0',
+    dependencies: [],
+    queues: ['trend-detection', 'trend-scan'],
+    publishes: [
+      ENGINE_EVENTS.TREND_DETECTED,
+      ENGINE_EVENTS.TREND_DIRECTION_CHANGED,
+    ],
+    subscribes: [
+      ENGINE_EVENTS.SCAN_COMPLETE,
+    ],
+  };
+
+  status(): EngineStatus {
+    return this._status;
+  }
+
+  async init(): Promise<void> {
+    this._status = 'idle';
+  }
+
+  async start(): Promise<void> {
+    this._status = 'running';
+  }
+
+  async stop(): Promise<void> {
+    this._status = 'stopped';
+  }
+
+  async handleEvent(event: EngineEvent): Promise<void> {
+    if (event.type === ENGINE_EVENTS.SCAN_COMPLETE) {
+      // Could auto-detect trends after a scan — manual-first per G10
+      console.log(`[TrendDetectionEngine] Scan complete from ${event.source}, trend detection deferred to manual trigger`);
+    }
+  }
+
+  async healthCheck(): Promise<boolean> {
+    return true;
+  }
+
+  /**
+   * Run trend detection and emit events for detected trends.
+   * Wraps detectTrends with event bus integration.
+   */
+  async runDetection(): Promise<{ trendsDetected: number; trendsUpdated: number; errors: string[] }> {
+    this._status = 'running';
+    try {
+      const result = await detectTrends();
+
+      const bus = getEventBus();
+      await bus.emit(
+        ENGINE_EVENTS.TREND_DETECTED,
+        {
+          trendsDetected: result.trendsDetected,
+          trendsUpdated: result.trendsUpdated,
+          errors: result.errors,
+        },
+        'trend-detection',
+      );
+
+      return result;
+    } finally {
+      this._status = 'idle';
+    }
+  }
 }
