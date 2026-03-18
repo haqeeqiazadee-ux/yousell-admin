@@ -49,7 +49,7 @@ const directionIcons = {
 export default function TrendsPage() {
   const [trends, setTrends] = useState<TrendKeyword[]>([]);
   const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
+  const [, setTotal] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [keywords, setKeywords] = useState("");
   const [category, setCategory] = useState("");

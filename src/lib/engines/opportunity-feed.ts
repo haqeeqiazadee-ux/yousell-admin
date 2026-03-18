@@ -8,7 +8,6 @@
  */
 
 import { createAdminClient } from '@/lib/supabase/admin';
-import { getEventBus } from './event-bus';
 import type { Engine, EngineConfig, EngineEvent, EngineStatus } from './types';
 import { ENGINE_EVENTS } from './types';
 
