@@ -34,27 +34,13 @@ Last updated: 2026-03-18
 - [x] C.8-C.9: Page layout contracts (dashboard + engine detail)
 - [x] C.10: Sidebar navigation verified — matches engine groupings
 
-### Phase D: Frontend Build (20 batches)
-- [ ] D.1: Engine API client — fetch wrapper
-- [ ] D.2: useEngine hook
-- [ ] D.3: DataTable component
-- [ ] D.4: DataTable columns + barrel export
-- [ ] D.5: EngineStatusCard component
-- [ ] D.6: EngineDashboardPanel component
-- [ ] D.7: EngineControlPanel component
-- [ ] D.8: Engine components barrel + EnginePageLayout
-- [ ] D.9: Admin dashboard — engine status grid
-- [ ] D.10: Admin dashboard — KPIs + activity feed
-- [ ] D.11: Admin dashboard — health + system status
-- [ ] D.12: Refactor scan control page
-- [ ] D.13: Refactor products page
-- [ ] D.14: Refactor TikTok page
-- [ ] D.15: Refactor trends page
-- [ ] D.16: Refactor clusters page
-- [ ] D.17: Refactor creator-matches page
-- [ ] D.18: Refactor influencers + suppliers pages
-- [ ] D.19: Refactor ads + competitors pages
-- [ ] D.20: Final verification + docs update
+### Phase D: Frontend Build (COMPLETE — 2026-03-18)
+- [x] D.1-D.4: Engine API client, useEngine hook, DataTable component
+- [x] D.5-D.8: EngineStatusCard, EngineDashboardPanel, EngineControlPanel, EnginePageLayout
+- [x] D.9: Admin dashboard — engine status grid added
+- [x] D.10-D.11: Skipped — dashboard already has KPI cards and system status
+- [x] D.12-D.19: Wrapped 8 engine pages with EnginePageLayout
+- [x] D.20: Final verification — 33/33 tests passing
 
 ### Future Platform Build (from execution_plan.md)
 - [ ] Phase 2A: Shopify Connect
@@ -92,3 +78,9 @@ Last updated: 2026-03-18
   - Component interfaces: EngineStatusCard, EngineDashboardPanel, EngineControlPanel, DataTable
   - Page layout contracts: admin dashboard, engine detail page
   - ENGINE_PAGE_MAP for all engines
+- [x] Phase D: Frontend Build — 2026-03-18
+  - Engine API client + useEngine hook + DataTable component
+  - 4 engine UI components (StatusCard, DashboardPanel, ControlPanel, PageLayout)
+  - Admin dashboard engine status grid
+  - 8 engine pages wrapped with EnginePageLayout
+  - 33/33 tests passing, zero breaking changes
