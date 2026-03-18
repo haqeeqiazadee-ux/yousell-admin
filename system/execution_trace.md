@@ -241,3 +241,39 @@ Core deliverables:
 - **Result:** SUCCESS
 - **Next step:** Begin Phase B — Batch B.1: Wrap clustering.ts in Engine interface
 - **Commit:** 96297b1
+
+------------------------------------------------------------
+
+### [2026-03-18 01:00] DONE — Phase B: Backend Alignment COMPLETE
+
+- **Task:** Refactor remaining API routes to engine namespaces, add queue ownership annotations
+- **Batch:** B.1-B.15
+- **Action:**
+  - B.1-B.5: Wrapped 5 remaining engines in Engine interface (ClusteringEngine, TrendDetectionEngine, CreatorMatchingEngine, AdIntelligenceEngine, OpportunityFeedEngine)
+  - B.6: Added ENGINE_QUEUE_MAP to backend/src/jobs/types.ts (maps 15 queues → engines)
+  - B.7a-B.7e: Added @engine/@queue JSDoc annotations to all 15 job processor files
+  - B.8-B.13: Created 10 engine-namespaced API route proxies under /api/engine/*
+  - B.14: Added 14 new tests — 33/33 total passing
+  - B.15: Updated docs and trace log
+- **Files touched:**
+  - Modified: 5 engine files, 1 job types file, 15 job processors, 1 test file, 1 barrel export
+  - Created: 10 engine-namespaced route files, 1 execution prompt
+- **Result:** SUCCESS — 33/33 tests passing, zero breaking changes
+- **Next step:** Phase C — Frontend Design, Batch C.1: Engine API client types
+- **Commit:** pending (this entry)
+
+### PHASE B SUMMARY — BACKEND ALIGNMENT
+
+**Status: COMPLETE**
+
+Files modified: 23, Files created: 11
+Tests: 33/33 passing (19 original + 14 new)
+Commits: 15 micro-batch commits
+Breaking changes: ZERO
+
+Core deliverables:
+1. All 8 engines now wrapped in Engine interface (3 Phase 0 + 5 Phase B)
+2. ENGINE_QUEUE_MAP — maps all 15 BullMQ queues to owning engines
+3. All 15 job processors annotated with @engine/@queue ownership
+4. 10 engine-namespaced API routes under /api/engine/* (thin proxies)
+5. Full test coverage for all engine wrappers

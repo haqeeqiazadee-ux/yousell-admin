@@ -19,22 +19,13 @@ Last updated: 2026-03-18
 - [x] Refactor 3 engines to engine pattern (Discovery, TikTok, Scoring) — Phase 0
 - [x] Integration tests for engine system (19/19 passing) — Phase 0
 
-### Phase B: Backend Alignment (15 batches)
-- [ ] B.1: Wrap clustering.ts in Engine interface
-- [ ] B.2: Wrap trend-detection.ts in Engine interface
-- [ ] B.3: Wrap creator-matching.ts in Engine interface
-- [ ] B.4: Wrap ad-intelligence.ts in Engine interface
-- [ ] B.5: Wrap opportunity-feed.ts in Engine interface + update barrel
-- [ ] B.6: Add ENGINE_QUEUE_MAP to backend/src/jobs/types.ts
-- [ ] B.7: Add engine owner headers to job processor files
-- [ ] B.8: Create /api/engine/discovery/* routes
-- [ ] B.9: Create /api/engine/discovery/products route
-- [ ] B.10: Create /api/engine/tiktok/* routes
-- [ ] B.11: Create /api/engine/scoring/* + /api/engine/intelligence/clusters/* routes
-- [ ] B.12: Create /api/engine/creators/* routes
-- [ ] B.13: Create /api/engine/suppliers/* + /api/engine/ads/* routes
-- [ ] B.14: Add tests for 5 new engine wrappers
-- [ ] B.15: Verify + document — Phase B COMPLETE
+### Phase B: Backend Alignment (COMPLETE — 2026-03-18)
+- [x] B.1-B.5: Wrap 5 remaining engines in Engine interface
+- [x] B.6: Add ENGINE_QUEUE_MAP to backend/src/jobs/types.ts
+- [x] B.7: Add @engine/@queue annotations to all 15 job processor files
+- [x] B.8-B.13: Create 10 engine-namespaced API routes under /api/engine/*
+- [x] B.14: Add 14 tests for Phase B engines — 33/33 total passing
+- [x] B.15: Verify + document — Phase B COMPLETE
 
 ### Phase C: Frontend Design (10 batches)
 - [ ] C.1: Engine API client types — discovery, tiktok, scoring
@@ -93,3 +84,10 @@ Last updated: 2026-03-18
   - 3 engines refactored: Discovery, TikTok Discovery, Scoring
   - 19 integration tests passing
   - All backward-compatible — zero API route changes
+- [x] Phase B: Backend Alignment — 2026-03-18
+  - 5 more engines wrapped (8 total): Clustering, TrendDetection, CreatorMatching, AdIntelligence, OpportunityFeed
+  - ENGINE_QUEUE_MAP: 15 queues mapped to owning engines
+  - 15 job processors annotated with @engine/@queue ownership
+  - 10 engine-namespaced API routes under /api/engine/*
+  - 33 tests passing (19 + 14 new)
+  - Zero breaking changes
