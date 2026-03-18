@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
 
@@ -21,6 +22,19 @@ export default function SignUpPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const [referralCode, setReferralCode] = useState('');
+
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) {
+      setReferralCode(ref);
+      // Persist for social login flows
+      try { localStorage.setItem('yousell_ref', ref); } catch { /* noop */ }
+    } else {
+      try { setReferralCode(localStorage.getItem('yousell_ref') || ''); } catch { /* noop */ }
+    }
+  }, [searchParams]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +59,7 @@ export default function SignUpPage() {
       options: {
         data: {
           full_name: fullName,
+          ...(referralCode ? { referral_code: referralCode } : {}),
         },
       },
     });

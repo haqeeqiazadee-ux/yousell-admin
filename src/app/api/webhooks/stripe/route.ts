@@ -60,6 +60,73 @@ export async function POST(request: NextRequest) {
         }, { onConflict: 'client_id' })
 
         console.log(`[Stripe Webhook] Subscription created for client ${clientId}, plan: ${planId}`)
+
+        // Affiliate commission tracking
+        const referralCode = session.metadata?.referral_code
+        if (referralCode) {
+          try {
+            // Look up referrer by referral code
+            const { data: referrer } = await supabase
+              .from('clients')
+              .select('id')
+              .eq('referral_code', referralCode)
+              .single()
+
+            if (referrer) {
+              // Create or update referral record
+              const { data: existingRef } = await supabase
+                .from('affiliate_referrals')
+                .select('id')
+                .eq('referral_code', referralCode)
+                .eq('referred_user_id', clientId)
+                .single()
+
+              let referralId = existingRef?.id
+              if (!referralId) {
+                const { data: newRef } = await supabase
+                  .from('affiliate_referrals')
+                  .insert({
+                    referrer_client_id: referrer.id,
+                    referred_user_id: clientId,
+                    referral_code: referralCode,
+                    status: 'subscribed',
+                    subscribed_at: new Date().toISOString(),
+                  })
+                  .select('id')
+                  .single()
+                referralId = newRef?.id
+              } else {
+                await supabase
+                  .from('affiliate_referrals')
+                  .update({ status: 'subscribed', subscribed_at: new Date().toISOString() })
+                  .eq('id', referralId)
+              }
+
+              // Calculate commission (20% of monthly plan price)
+              const planPrices: Record<string, number> = { starter: 29, growth: 59, professional: 99, enterprise: 149 }
+              const planPrice = planPrices[planId] || 29
+              const commissionRate = 0.20
+              const commissionAmount = planPrice * commissionRate
+
+              if (referralId) {
+                await supabase.from('affiliate_commissions').insert({
+                  referral_id: referralId,
+                  referrer_client_id: referrer.id,
+                  commission_amount: commissionAmount,
+                  commission_rate: commissionRate,
+                  status: 'pending',
+                  period_start: new Date().toISOString(),
+                  period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                })
+                console.log(`[Stripe Webhook] Commission $${commissionAmount} created for referrer ${referrer.id}`)
+              }
+            }
+          } catch (refErr) {
+            console.error('[Stripe Webhook] Affiliate tracking error:', refErr)
+            // Don't fail the webhook for affiliate tracking errors
+          }
+        }
+
         break
       }
 

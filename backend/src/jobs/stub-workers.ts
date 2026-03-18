@@ -29,7 +29,7 @@ export const processInfluencerRefresh = stubProcessor("influencer-refresh");
 export const processSupplierRefresh = stubProcessor("supplier-refresh");
 export const processAffiliateRefresh = stubProcessor("affiliate-refresh");
 export const processAffiliateContentGenerate = stubProcessor("affiliate-content-generate");
-export const processAffiliateCommissionTrack = stubProcessor("affiliate-commission-track");
+// processAffiliateCommissionTrack — moved to affiliate-commission.ts (real implementation)
 export const processPodDiscovery = stubProcessor("pod-discovery");
 export const processPodProvision = stubProcessor("pod-provision");
 export const processPodFulfillmentSync = stubProcessor("pod-fulfillment-sync");

@@ -37,13 +37,14 @@ import {
   processTransform, processScoring,
   processOrderTracking, processFinancialModel, processBlueprint, processNotification,
   processInfluencerOutreach, processInfluencerRefresh, processSupplierRefresh,
-  processAffiliateRefresh, processAffiliateContentGenerate, processAffiliateCommissionTrack,
+  processAffiliateRefresh, processAffiliateContentGenerate,
   processPodDiscovery, processPodProvision, processPodFulfillmentSync,
   processPushToTiktok, processPushToAmazon,
 } from "./stub-workers";
 import { processPushToShopify } from "./push-to-shopify";
 import { processContentGeneration as processContentQueue } from "./content-generation";
 import { processDistribution } from "./distribution";
+import { processAffiliateCommission as processAffiliateCommissionTrack } from "./affiliate-commission";
 
 function logEvents(worker: Worker, label: string) {
   worker.on("completed", (job) => {
