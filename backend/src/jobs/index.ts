@@ -34,17 +34,19 @@ import { processAmazonIntelligence } from "./amazon-intelligence";
 import { processShopifyIntelligence } from "./shopify-intelligence";
 import { processAdIntelligence } from "./ad-intelligence";
 import {
-  processTransform, processScoring,
-  processOrderTracking, processFinancialModel, processBlueprint, processNotification,
+  processTransform, processScoring, processOrderTracking, processFinancialModel, processBlueprint,
   processInfluencerOutreach, processInfluencerRefresh, processSupplierRefresh,
   processAffiliateRefresh, processAffiliateContentGenerate,
-  processPodDiscovery, processPodProvision, processPodFulfillmentSync,
   processPushToTiktok, processPushToAmazon,
 } from "./stub-workers";
 import { processPushToShopify } from "./push-to-shopify";
 import { processContentGeneration as processContentQueue } from "./content-generation";
 import { processDistribution } from "./distribution";
 import { processAffiliateCommission as processAffiliateCommissionTrack } from "./affiliate-commission";
+import { processPodDiscovery } from "./pod-discovery";
+import { processPodProvision } from "./pod-provision";
+import { processPodFulfillmentSync } from "./pod-fulfillment-sync";
+import { processNotification } from "./notification";
 
 function logEvents(worker: Worker, label: string) {
   worker.on("completed", (job) => {

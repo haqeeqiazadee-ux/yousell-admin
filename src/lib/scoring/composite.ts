@@ -1,4 +1,6 @@
 import { calculateProfitability } from './profitability';
+import { calculatePodModifiers, applyPodModifiers, type PodTrendModifiers, type PodViralModifiers, type PodProfitModifiers } from './pod-modifiers';
+import { recommendFulfillment, type FulfillmentRecommendation } from './fulfillment';
 
 export interface CompositeScore {
   trend_score: number;
@@ -70,6 +72,79 @@ export function calculateCompositeScore(product: {
     viral_score,
     profit_score,
     final_score,
+  };
+}
+
+// --- POD-Enhanced Scoring (v8 spec Section 22.2.1) ---
+
+const POD_CATEGORIES = ['apparel', 'accessories', 'home_living', 'stationery', 'all_over', 'pet', 'pod', 'print_on_demand'];
+
+export interface PODEnhancedScore extends CompositeScore {
+  pod_modifiers_applied: boolean;
+  fulfillment_recommendation?: FulfillmentRecommendation;
+}
+
+/**
+ * Score a product with optional POD modifiers.
+ * If the product category matches a POD category, POD modifiers are applied.
+ * Base scoring remains identical for non-POD products.
+ */
+export function calculateEnhancedScore(product: {
+  price: number;
+  sales_count: number;
+  review_count: number;
+  rating: number;
+  source: string;
+  category?: string;
+  is_custom_design?: boolean;
+  pod_modifiers?: {
+    trend?: PodTrendModifiers;
+    viral?: PodViralModifiers;
+    profit?: PodProfitModifiers;
+  };
+}): PODEnhancedScore {
+  // Always start with base scoring — never modified
+  const base = calculateCompositeScore(product);
+
+  const isPOD = product.is_custom_design ||
+    (product.category && POD_CATEGORIES.includes(product.category.toLowerCase()));
+
+  if (!isPOD || !product.pod_modifiers) {
+    return { ...base, pod_modifiers_applied: false };
+  }
+
+  // Apply POD modifiers
+  const modResult = calculatePodModifiers(
+    product.pod_modifiers.trend || {},
+    product.pod_modifiers.viral || {},
+    product.pod_modifiers.profit || {},
+  );
+
+  const adjusted = applyPodModifiers(
+    base.trend_score,
+    base.viral_score,
+    base.profit_score,
+    modResult,
+  );
+
+  const final_score = calculateFinalScore(adjusted.trend_score, adjusted.viral_score, adjusted.profit_score);
+
+  // Get fulfillment recommendation
+  const fulfillment = recommendFulfillment({
+    price: product.price,
+    category: product.category,
+    source: product.source,
+    isCustomDesign: product.is_custom_design,
+    isPhysical: true,
+  });
+
+  return {
+    trend_score: adjusted.trend_score,
+    viral_score: adjusted.viral_score,
+    profit_score: adjusted.profit_score,
+    final_score,
+    pod_modifiers_applied: true,
+    fulfillment_recommendation: fulfillment,
   };
 }
 
