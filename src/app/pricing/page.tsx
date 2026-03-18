@@ -3,6 +3,20 @@ import { Check, ArrowRight, Zap, TrendingUp, Users, Shield } from "lucide-react"
 
 const plans = [
   {
+    id: "free",
+    name: "Free",
+    price: 0,
+    description: "Explore product intelligence with read-only access.",
+    features: [
+      "1 platform (read-only)",
+      "View all products + scores",
+      "5 products per week",
+      "Weekly HOT product email digest",
+      "No automation",
+    ],
+    cta: "Start Free",
+  },
+  {
     id: "starter",
     name: "Starter",
     price: 29,
@@ -144,13 +158,16 @@ export default function PricingPage() {
           <p className="text-sm text-gray-500">
             All plans include a 7-day free trial. Cancel anytime.
           </p>
+          <p className="text-sm text-emerald-400/70 mt-1">
+            Multi-channel discount: 20% off second channel, 30% off third+
+          </p>
         </div>
       </section>
 
       {/* Pricing Cards */}
       <section className="relative z-10 pb-20">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5 max-w-7xl mx-auto">
             {plans.map((plan) => (
               <div
                 key={plan.id}
