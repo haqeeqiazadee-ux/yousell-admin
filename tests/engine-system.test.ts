@@ -433,7 +433,7 @@ describe('Engine Event Flow (Integration)', () => {
     const bus = getEventBus();
     const received: EngineEvent[] = [];
 
-    bus.subscribe('*', (event) => received.push(event));
+    bus.subscribe('*', (event) => { received.push(event); });
 
     const correlationId = 'scan-chain-abc';
     await bus.emit(ENGINE_EVENTS.SCAN_COMPLETE, { scanId: '1' }, 'discovery', correlationId);
