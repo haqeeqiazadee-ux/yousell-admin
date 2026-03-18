@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { authenticateClientLite } from '@/lib/auth/client-api-auth'
+import { authenticateClient, requireEngine } from '@/lib/auth/client-api-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
   try {
-    const client = await authenticateClientLite(request)
+    const client = await authenticateClient(request)
+    requireEngine(client, 'store_integration')
     const admin = createAdminClient()
 
     const { channelId } = await request.json()
