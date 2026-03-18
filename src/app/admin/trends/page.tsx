@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScoreBadge } from "@/components/score-badge";
+import { EnginePageLayout } from "@/components/engines";
 import { TrendingUp, Plus, ArrowUp, ArrowDown, Minus } from "lucide-react";
 
 interface TrendKeyword {
@@ -101,152 +102,153 @@ export default function TrendsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-outfit tracking-tight">
-            Trend Scout
-          </h1>
-          <p className="text-muted-foreground">
-            {total} keyword{total !== 1 ? "s" : ""} tracked
-          </p>
+    <EnginePageLayout
+      engineId="trend-detection"
+      title="Trend Detection"
+      description="Emerging trend analysis and keyword tracking"
+      status="idle"
+      healthy={true}
+    >
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div></div>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger
+              render={<Button><Plus className="h-4 w-4 mr-2" />Add Keywords</Button>}
+            />
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Track Keywords</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleAddKeywords} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="keywords">Keywords (comma-separated)</Label>
+                  <Input
+                    id="keywords"
+                    value={keywords}
+                    onChange={(e) => setKeywords(e.target.value)}
+                    placeholder="e.g. wireless earbuds, phone case, LED lights"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cat">Category</Label>
+                  <Input
+                    id="cat"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    placeholder="e.g. Electronics"
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={submitting}>
+                  {submitting ? "Adding..." : "Track Keywords"}
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger
-            render={<Button><Plus className="h-4 w-4 mr-2" />Add Keywords</Button>}
-          />
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Track Keywords</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleAddKeywords} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="keywords">Keywords (comma-separated)</Label>
-                <Input
-                  id="keywords"
-                  value={keywords}
-                  onChange={(e) => setKeywords(e.target.value)}
-                  placeholder="e.g. wireless earbuds, phone case, LED lights"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cat">Category</Label>
-                <Input
-                  id="cat"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  placeholder="e.g. Electronics"
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={submitting}>
-                {submitting ? "Adding..." : "Track Keywords"}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
 
-      {error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-red-700 text-sm">
-          {error}
+        {error && (
+          <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-red-700 text-sm">
+            {error}
+          </div>
+        )}
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Rising</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-500">
+                {trends.filter((t) => t.trend_direction === "rising").length}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Stable</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-yellow-500">
+                {trends.filter((t) => t.trend_direction === "stable").length}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Declining</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-500">
+                {trends.filter((t) => t.trend_direction === "declining").length}
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      )}
 
-      <div className="grid gap-4 md:grid-cols-3">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Rising</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-500">
-              {trends.filter((t) => t.trend_direction === "rising").length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Stable</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-500">
-              {trends.filter((t) => t.trend_direction === "stable").length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Declining</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-500">
-              {trends.filter((t) => t.trend_direction === "declining").length}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardContent className="pt-6">
-          {loading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          ) : trends.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="text-lg font-medium">No keywords tracked</p>
-              <p className="text-sm">
-                Add keywords to monitor trends via Google Trends and Reddit.
-              </p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Keyword</TableHead>
-                  <TableHead>Direction</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="text-center">Volume</TableHead>
-                  <TableHead className="text-center">Score</TableHead>
-                  <TableHead>Source</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {trends.map((trend) => (
-                  <TableRow key={trend.id}>
-                    <TableCell className="font-medium">{trend.keyword}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        {directionIcons[trend.trend_direction]}
-                        <span className="text-xs capitalize">
-                          {trend.trend_direction}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {trend.category || "\u2014"}
-                    </TableCell>
-                    <TableCell className="text-center text-sm">
-                      {trend.volume.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <ScoreBadge score={trend.trend_score} />
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-xs">
-                        {trend.source}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
+          <CardContent className="pt-6">
+            {loading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
                 ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+              </div>
+            ) : trends.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-medium">No keywords tracked</p>
+                <p className="text-sm">
+                  Add keywords to monitor trends via Google Trends and Reddit.
+                </p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Keyword</TableHead>
+                    <TableHead>Direction</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead className="text-center">Volume</TableHead>
+                    <TableHead className="text-center">Score</TableHead>
+                    <TableHead>Source</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {trends.map((trend) => (
+                    <TableRow key={trend.id}>
+                      <TableCell className="font-medium">{trend.keyword}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          {directionIcons[trend.trend_direction]}
+                          <span className="text-xs capitalize">
+                            {trend.trend_direction}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {trend.category || "\u2014"}
+                      </TableCell>
+                      <TableCell className="text-center text-sm">
+                        {trend.volume.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <ScoreBadge score={trend.trend_score} />
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-xs">
+                          {trend.source}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </EnginePageLayout>
   );
 }

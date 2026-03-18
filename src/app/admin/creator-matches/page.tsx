@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScoreBadge } from "@/components/score-badge";
+import { EnginePageLayout } from "@/components/engines";
 import { UserSearch, Rocket, DollarSign, Target } from "lucide-react";
 
 interface CreatorMatch {
@@ -91,16 +92,16 @@ export default function CreatorMatchesPage() {
   };
 
   return (
+    <EnginePageLayout
+      engineId="creator-matching"
+      title="Creator Matches"
+      description="Influencer-product pairing with ROI projections"
+      status="idle"
+      healthy={true}
+    >
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-outfit tracking-tight">
-            Creator Matches
-          </h1>
-          <p className="text-muted-foreground">
-            {matches.length} match{matches.length !== 1 ? "es" : ""} found
-          </p>
-        </div>
+        <div></div>
         <div className="flex items-center gap-2">
           <Button onClick={handleRunMatching} disabled={runLoading}>
             <Rocket className="h-4 w-4 mr-1" />
@@ -191,5 +192,6 @@ export default function CreatorMatchesPage() {
         </CardContent>
       </Card>
     </div>
+    </EnginePageLayout>
   );
 }

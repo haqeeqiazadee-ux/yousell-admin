@@ -17,6 +17,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScoreBadge } from "@/components/score-badge";
+import { EnginePageLayout } from "@/components/engines";
 import {
   Music2,
   Search,
@@ -70,37 +71,38 @@ interface HashtagSignal {
 
 export default function TikTokPage() {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-outfit tracking-tight">
-            TikTok Intelligence
-          </h1>
-          <p className="text-muted-foreground">
-            Discover trending videos, extract product signals, and track hashtag velocity
-          </p>
+    <EnginePageLayout
+      engineId="tiktok-discovery"
+      title="TikTok Discovery"
+      description="Viral product discovery on TikTok"
+      status="idle"
+      healthy={true}
+    >
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div></div>
+          <DiscoveryTrigger />
         </div>
-        <DiscoveryTrigger />
+
+        <Tabs defaultValue="products" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="products">Products</TabsTrigger>
+            <TabsTrigger value="videos">Videos</TabsTrigger>
+            <TabsTrigger value="signals">Hashtag Signals</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="products">
+            <ProductsTab />
+          </TabsContent>
+          <TabsContent value="videos">
+            <VideosTab />
+          </TabsContent>
+          <TabsContent value="signals">
+            <SignalsTab />
+          </TabsContent>
+        </Tabs>
       </div>
-
-      <Tabs defaultValue="products" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="products">Products</TabsTrigger>
-          <TabsTrigger value="videos">Videos</TabsTrigger>
-          <TabsTrigger value="signals">Hashtag Signals</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="products">
-          <ProductsTab />
-        </TabsContent>
-        <TabsContent value="videos">
-          <VideosTab />
-        </TabsContent>
-        <TabsContent value="signals">
-          <SignalsTab />
-        </TabsContent>
-      </Tabs>
-    </div>
+    </EnginePageLayout>
   );
 }
 
