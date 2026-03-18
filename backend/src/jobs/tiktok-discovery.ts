@@ -1,5 +1,7 @@
 /**
  * TikTok Discovery Worker
+ * @engine tiktok-discovery
+ * @queue tiktok-discovery
  *
  * Discovers trending TikTok videos for a given query/hashtag using
  * the Apify TikTok scraper.  Stores video-level data with engagement

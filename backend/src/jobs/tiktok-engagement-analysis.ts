@@ -1,5 +1,7 @@
 /**
  * TikTok Engagement Analysis Worker
+ * @engine tiktok-discovery
+ * @queue tiktok-engagement-analysis
  *
  * Aggregates engagement signals from `tiktok_videos` per hashtag,
  * computes velocity metrics (growth rate, view velocity, creator
