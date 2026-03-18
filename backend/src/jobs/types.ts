@@ -22,6 +22,28 @@ export const QUEUES = {
   AMAZON_INTELLIGENCE: "amazon-intelligence",
   SHOPIFY_INTELLIGENCE: "shopify-intelligence",
   AD_INTELLIGENCE: "ad-intelligence",
+
+  // ── v8 Spec Queues (Phase 2 audit — stub implementations) ──
+  TRANSFORM_QUEUE: "transform-queue",
+  SCORING_QUEUE: "scoring-queue",
+  CONTENT_QUEUE: "content-queue",
+  DISTRIBUTION_QUEUE: "distribution-queue",
+  ORDER_TRACKING: "order-tracking-queue",
+  FINANCIAL_MODEL: "financial-model",
+  BLUEPRINT_QUEUE: "blueprint-queue",
+  NOTIFICATION_QUEUE: "notification-queue",
+  INFLUENCER_OUTREACH: "influencer-outreach",
+  INFLUENCER_REFRESH: "influencer-refresh",
+  SUPPLIER_REFRESH: "supplier-refresh",
+  AFFILIATE_REFRESH: "affiliate-refresh",
+  AFFILIATE_CONTENT_GENERATE: "affiliate-content-generate",
+  AFFILIATE_COMMISSION_TRACK: "affiliate-commission-track",
+  POD_DISCOVERY: "pod-discovery",
+  POD_PROVISION: "pod-provision",
+  POD_FULFILLMENT_SYNC: "pod-fulfillment-sync",
+  PUSH_TO_SHOPIFY: "push-to-shopify",
+  PUSH_TO_TIKTOK: "push-to-tiktok",
+  PUSH_TO_AMAZON: "push-to-amazon",
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
@@ -44,6 +66,26 @@ export const ENGINE_QUEUE_MAP: Record<string, string> = {
   [QUEUES.AD_INTELLIGENCE]: 'ad-intelligence',
   [QUEUES.INFLUENCER_DISCOVERY]: 'influencer-discovery',
   [QUEUES.SUPPLIER_DISCOVERY]: 'supplier-discovery',
+  [QUEUES.TRANSFORM_QUEUE]: 'discovery',
+  [QUEUES.SCORING_QUEUE]: 'scoring',
+  [QUEUES.CONTENT_QUEUE]: 'content',
+  [QUEUES.DISTRIBUTION_QUEUE]: 'content',
+  [QUEUES.ORDER_TRACKING]: 'store-integration',
+  [QUEUES.FINANCIAL_MODEL]: 'analytics',
+  [QUEUES.BLUEPRINT_QUEUE]: 'analytics',
+  [QUEUES.NOTIFICATION_QUEUE]: 'platform',
+  [QUEUES.INFLUENCER_OUTREACH]: 'influencer-discovery',
+  [QUEUES.INFLUENCER_REFRESH]: 'influencer-discovery',
+  [QUEUES.SUPPLIER_REFRESH]: 'supplier-discovery',
+  [QUEUES.AFFILIATE_REFRESH]: 'affiliate',
+  [QUEUES.AFFILIATE_CONTENT_GENERATE]: 'affiliate',
+  [QUEUES.AFFILIATE_COMMISSION_TRACK]: 'affiliate',
+  [QUEUES.POD_DISCOVERY]: 'pod',
+  [QUEUES.POD_PROVISION]: 'pod',
+  [QUEUES.POD_FULFILLMENT_SYNC]: 'pod',
+  [QUEUES.PUSH_TO_SHOPIFY]: 'store-integration',
+  [QUEUES.PUSH_TO_TIKTOK]: 'store-integration',
+  [QUEUES.PUSH_TO_AMAZON]: 'store-integration',
 } as const;
 
 // ── Job data interfaces ──────────────────────────────────────
@@ -202,5 +244,107 @@ export interface AdIntelligenceJobData {
   platforms?: ("tiktok" | "facebook")[];
   /** Number of ads to fetch per platform (default 20) */
   limit?: number;
+  userId: string;
+}
+
+// ── v8 Spec Queue Job Data (stub interfaces) ────────────────
+
+export interface TransformJobData {
+  scanId: string;
+  productIds: string[];
+  userId: string;
+}
+
+export interface ScoringJobData {
+  productIds: string[];
+  applyPodModifiers?: boolean;
+  userId: string;
+}
+
+export interface ContentQueueJobData {
+  clientId: string;
+  productId: string;
+  contentType: string;
+  channel?: string;
+  userId: string;
+}
+
+export interface DistributionJobData {
+  contentId: string;
+  channels: string[];
+  userId: string;
+}
+
+export interface OrderTrackingJobData {
+  orderId: string;
+  channelType: string;
+  userId: string;
+}
+
+export interface FinancialModelJobData {
+  productId: string;
+  userId: string;
+}
+
+export interface BlueprintJobData {
+  productId: string;
+  includeSections?: string[];
+  userId: string;
+}
+
+export interface NotificationJobData {
+  recipientId: string;
+  type: 'email' | 'in_app' | 'push';
+  template: string;
+  data: Record<string, unknown>;
+}
+
+export interface InfluencerOutreachJobData {
+  influencerId: string;
+  productId: string;
+  templateId?: string;
+  userId: string;
+}
+
+export interface RefreshJobData {
+  entityType: 'influencer' | 'supplier' | 'affiliate';
+  entityIds?: string[];
+  userId: string;
+}
+
+export interface AffiliateContentGenerateJobData {
+  programId: string;
+  contentType: string;
+  userId: string;
+}
+
+export interface AffiliateCommissionTrackJobData {
+  programId: string;
+  period?: string;
+  userId: string;
+}
+
+export interface PodDiscoveryJobData {
+  niche?: string;
+  platforms?: string[];
+  userId: string;
+}
+
+export interface PodProvisionJobData {
+  designId: string;
+  fulfillmentPartner: 'printful' | 'printify' | 'gelato';
+  userId: string;
+}
+
+export interface PodFulfillmentSyncJobData {
+  orderId: string;
+  fulfillmentPartner: string;
+  userId: string;
+}
+
+export interface StorePushJobData {
+  productId: string;
+  channelType: 'shopify' | 'tiktok' | 'amazon';
+  clientId: string;
   userId: string;
 }
