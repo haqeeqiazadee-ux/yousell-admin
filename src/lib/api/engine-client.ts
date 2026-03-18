@@ -53,7 +53,7 @@ async function engineRequest<T>(
         error: {
           code: httpStatusToErrorCode(response.status),
           message: typeof errorBody?.error === 'string' ? errorBody.error : typeof errorBody?.message === 'string' ? errorBody.message : response.statusText,
-          details: errorBody,
+          details: errorBody ?? undefined,
         },
         status: response.status,
       };
