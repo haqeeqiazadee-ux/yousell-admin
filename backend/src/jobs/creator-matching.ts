@@ -1,5 +1,7 @@
 /**
  * Creator-Product Matching Worker
+ * @engine creator-matching
+ * @queue creator-matching
  *
  * For products scoring 60+, finds matching influencers based on:
  * niche alignment, engagement quality, price range fit.
