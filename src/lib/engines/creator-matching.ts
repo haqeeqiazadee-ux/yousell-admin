@@ -1,9 +1,15 @@
 /**
  * Creator Matching Engine — Pairs products with influencers based on
  * niche alignment, engagement quality, and price range fit.
+ *
+ * Engine wrapper added in Phase B — provides lifecycle management and
+ * event bus integration. Original runCreatorMatching() export preserved.
  */
 
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getEventBus } from './event-bus';
+import type { Engine, EngineConfig, EngineEvent, EngineStatus } from './types';
+import { ENGINE_EVENTS } from './types';
 
 interface ProductForMatching {
   id: string;
@@ -209,4 +215,80 @@ function calculatePriceRangeFit(productPrice: number, inf: InfluencerForMatching
   if (productPrice >= 15 && productPrice <= 60) return 60;
   if (productPrice < 15) return 40;
   return 50;
+}
+
+// ─── Engine Interface Wrapper ──────────────────────────────
+
+export class CreatorMatchingEngine implements Engine {
+  private _status: EngineStatus = 'idle';
+
+  readonly config: EngineConfig = {
+    name: 'creator-matching',
+    version: '1.0.0',
+    dependencies: [],
+    queues: ['creator-matching'],
+    publishes: [
+      ENGINE_EVENTS.CREATOR_MATCHED,
+      ENGINE_EVENTS.MATCHES_COMPLETE,
+    ],
+    subscribes: [
+      ENGINE_EVENTS.PRODUCT_SCORED,
+    ],
+  };
+
+  status(): EngineStatus {
+    return this._status;
+  }
+
+  async init(): Promise<void> {
+    this._status = 'idle';
+  }
+
+  async start(): Promise<void> {
+    this._status = 'running';
+  }
+
+  async stop(): Promise<void> {
+    this._status = 'stopped';
+  }
+
+  async handleEvent(event: EngineEvent): Promise<void> {
+    if (event.type === ENGINE_EVENTS.PRODUCT_SCORED) {
+      // Could auto-match when new high-scoring products arrive — manual-first per G10
+      console.log(`[CreatorMatchingEngine] Product scored from ${event.source}, matching deferred to manual trigger`);
+    }
+  }
+
+  async healthCheck(): Promise<boolean> {
+    return true;
+  }
+
+  /**
+   * Run creator matching and emit events for matches found.
+   * Wraps runCreatorMatching with event bus integration.
+   */
+  async runMatching(
+    minProductScore: number = 60,
+    maxCreatorsPerProduct: number = 10,
+  ): Promise<{ productsMatched: number; matchesCreated: number; errors: string[] }> {
+    this._status = 'running';
+    try {
+      const result = await runCreatorMatching(minProductScore, maxCreatorsPerProduct);
+
+      const bus = getEventBus();
+      await bus.emit(
+        ENGINE_EVENTS.MATCHES_COMPLETE,
+        {
+          productsMatched: result.productsMatched,
+          matchesCreated: result.matchesCreated,
+          errors: result.errors,
+        },
+        'creator-matching',
+      );
+
+      return result;
+    } finally {
+      this._status = 'idle';
+    }
+  }
 }
