@@ -15,36 +15,58 @@ export function getStripe(): Stripe {
   return stripeInstance
 }
 
-// Pricing tiers matching v7 spec Section 3.2
+// Pricing tiers matching v8 spec Section 3.2 (Option C — approved pricing)
 export const PRICING_TIERS = {
   starter: {
     name: 'Starter',
     price: 29,
+    annualPrice: 19,
     productsPerPlatform: 3,
     platforms: 1,
+    contentCredits: 50,
     engines: ['discovery'],
   },
   growth: {
     name: 'Growth',
-    price: 79,
+    price: 59,
+    annualPrice: 39,
     productsPerPlatform: 10,
-    platforms: 3,
-    engines: ['discovery', 'analytics', 'content'],
+    platforms: 2,
+    contentCredits: 200,
+    engines: ['discovery', 'analytics', 'content', 'store_integration'],
   },
   professional: {
     name: 'Professional',
-    price: 149,
+    price: 99,
+    annualPrice: 69,
     productsPerPlatform: 25,
-    platforms: 5,
-    engines: ['discovery', 'analytics', 'content', 'influencer', 'supplier', 'marketing'],
+    platforms: 3,
+    contentCredits: 500,
+    engines: ['discovery', 'analytics', 'content', 'influencer', 'supplier', 'marketing', 'store_integration'],
   },
   enterprise: {
     name: 'Enterprise',
-    price: 299,
+    price: 149,
+    annualPrice: 99,
     productsPerPlatform: 50,
-    platforms: 5,
+    platforms: Infinity,
+    contentCredits: Infinity,
     engines: ['discovery', 'analytics', 'content', 'influencer', 'supplier', 'marketing', 'store_integration', 'affiliate'],
   },
 } as const
+
+// Content credit costs per content type (v8 spec Section 3.2)
+export const CONTENT_CREDIT_COSTS = {
+  caption: 1,
+  ad: 1,
+  blog: 3,
+  image: 2,
+  carousel: 5,
+  short_video: 5,
+  long_video: 8,
+  email_sequence: 3,
+} as const
+
+export type ContentType = keyof typeof CONTENT_CREDIT_COSTS
 
 export type PlanId = keyof typeof PRICING_TIERS
