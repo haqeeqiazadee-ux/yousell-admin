@@ -1,5 +1,7 @@
 /**
  * Product Scan Job
+ * @engine discovery
+ * @queue product-scan
  *
  * Scrapes products from configured platforms (TikTok, Amazon, Shopify,
  * Pinterest) and enqueues an enrich-product job for scoring + DB storage.

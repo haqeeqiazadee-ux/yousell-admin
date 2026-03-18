@@ -1,5 +1,7 @@
 /**
  * Trend Scan Job
+ * @engine trend-detection
+ * @queue trend-scan
  *
  * Fetches trend keywords from configured providers and stores them
  * in the trend_keywords table.

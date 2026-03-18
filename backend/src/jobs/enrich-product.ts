@@ -1,5 +1,7 @@
 /**
  * Enrich Product Job
+ * @engine discovery
+ * @queue enrich-product
  *
  * Receives raw scraped products, calculates composite scores,
  * upserts into Supabase, and sends HOT product alerts.
