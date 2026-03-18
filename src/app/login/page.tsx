@@ -22,10 +22,12 @@ export default function ClientLoginPage() {
   const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
 
-  // Show error from OAuth callback failures
+  // Show contextual error messages
   useEffect(() => {
     if (searchParams.get('error') === 'auth') {
       setError('Sign-in failed. Please try again.');
+    } else if (searchParams.get('kicked') === 'no_role') {
+      setError('Your account is not set up yet. Please contact support or sign in with a different account.');
     }
   }, [searchParams]);
 

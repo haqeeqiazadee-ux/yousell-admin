@@ -36,10 +36,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/admin/login', request.url))
   }
 
-  // If on client domain root, redirect logged-in users to dashboard; otherwise show homepage
+  // If on client domain root, redirect logged-in users based on role; otherwise show homepage
   if (isClientDomain && pathname === '/') {
     if (user) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+      // Check role to route correctly — avoids bounce between /dashboard and /login
+      const { data: rootRole } = await supabase.rpc('check_user_role', { user_id: user.id })
+      if (rootRole === 'admin' || rootRole === 'super_admin') {
+        return NextResponse.redirect(adminUrl(request, '/admin'))
+      }
+      if (rootRole === 'client') {
+        return NextResponse.redirect(new URL('/dashboard', request.url))
+      }
+      // No valid role — show homepage instead of starting a redirect loop
+      return supabaseResponse
     }
     // Let unauthenticated users see the homepage
     return supabaseResponse
@@ -83,8 +92,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/admin', request.url))
   }
 
+  // Only redirect logged-in users from /login to /dashboard if they don't have
+  // a ?error or ?kicked param (which means they were just bounced from /dashboard
+  // for having no valid role — redirecting back would create an infinite loop).
   if ((pathname === '/login' || pathname === '/signup') && user) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    const hasError = request.nextUrl.searchParams.has('error') || request.nextUrl.searchParams.has('kicked')
+    if (!hasError) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
   }
 
   // Client dashboard routes: require authenticated user with client role
@@ -107,7 +122,8 @@ export async function middleware(request: NextRequest) {
       if (clientRole === 'admin' || clientRole === 'super_admin') {
         return NextResponse.redirect(adminUrl(request, '/admin'))
       }
-      return NextResponse.redirect(new URL('/login', request.url))
+      // Unknown/null role — use ?kicked to prevent redirect loop with /login
+      return NextResponse.redirect(new URL('/login?kicked=no_role', request.url))
     }
   }
 
