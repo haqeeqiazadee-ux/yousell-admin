@@ -65,6 +65,7 @@ function SignUpForm() {
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/api/auth/callback?next=/dashboard`,
         data: {
           full_name: fullName,
           ...(referralCode ? { referral_code: referralCode } : {}),

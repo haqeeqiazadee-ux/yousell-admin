@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 
 function getSupabase() {
@@ -15,6 +16,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const searchParams = useSearchParams()
+
+  // Show error from OAuth callback failures
+  useEffect(() => {
+    if (searchParams.get('error') === 'auth') {
+      setError('Sign-in failed. Please try again.')
+    }
+  }, [searchParams])
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
