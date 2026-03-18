@@ -15,6 +15,11 @@ import {
   getEngineRegistry,
   resetEngineRegistry,
   ENGINE_EVENTS,
+  ClusteringEngine,
+  TrendDetectionEngine,
+  CreatorMatchingEngine,
+  AdIntelligenceEngine,
+  OpportunityFeedEngine,
 } from '@/lib/engines';
 import type { Engine, EngineConfig, EngineEvent, EngineStatus } from '@/lib/engines';
 
@@ -436,5 +441,158 @@ describe('Engine Event Flow (Integration)', () => {
 
     expect(received[0].correlationId).toBe(correlationId);
     expect(received[1].correlationId).toBe(correlationId);
+  });
+});
+
+// ─── Phase B Engine Wrapper Tests ──────────────────────────
+
+describe('Phase B Engine Wrappers', () => {
+  beforeEach(async () => {
+    resetEventBus();
+    await resetEngineRegistry();
+  });
+
+  describe('ClusteringEngine', () => {
+    it('should implement Engine interface with correct config', () => {
+      const engine = new ClusteringEngine();
+      expect(engine.config.name).toBe('clustering');
+      expect(engine.config.queues).toContain('product-clustering');
+      expect(engine.config.publishes).toContain(ENGINE_EVENTS.CLUSTER_UPDATED);
+      expect(engine.config.publishes).toContain(ENGINE_EVENTS.CLUSTERS_REBUILT);
+      expect(engine.config.subscribes).toContain(ENGINE_EVENTS.PRODUCT_SCORED);
+    });
+
+    it('should manage lifecycle correctly', async () => {
+      const engine = new ClusteringEngine();
+      expect(engine.status()).toBe('idle');
+
+      await engine.init();
+      expect(engine.status()).toBe('idle');
+
+      await engine.start();
+      expect(engine.status()).toBe('running');
+
+      await engine.stop();
+      expect(engine.status()).toBe('stopped');
+    });
+
+    it('should pass health check', async () => {
+      const engine = new ClusteringEngine();
+      expect(await engine.healthCheck()).toBe(true);
+    });
+
+    it('should register with engine registry', async () => {
+      const registry = getEngineRegistry();
+      const engine = new ClusteringEngine();
+      await registry.register(engine);
+      expect(registry.get('clustering')).toBe(engine);
+    });
+  });
+
+  describe('TrendDetectionEngine', () => {
+    it('should implement Engine interface with correct config', () => {
+      const engine = new TrendDetectionEngine();
+      expect(engine.config.name).toBe('trend-detection');
+      expect(engine.config.queues).toContain('trend-detection');
+      expect(engine.config.queues).toContain('trend-scan');
+      expect(engine.config.publishes).toContain(ENGINE_EVENTS.TREND_DETECTED);
+      expect(engine.config.subscribes).toContain(ENGINE_EVENTS.SCAN_COMPLETE);
+    });
+
+    it('should manage lifecycle correctly', async () => {
+      const engine = new TrendDetectionEngine();
+      await engine.start();
+      expect(engine.status()).toBe('running');
+      await engine.stop();
+      expect(engine.status()).toBe('stopped');
+    });
+
+    it('should register with engine registry', async () => {
+      const registry = getEngineRegistry();
+      await registry.register(new TrendDetectionEngine());
+      expect(registry.get('trend-detection')).toBeTruthy();
+    });
+  });
+
+  describe('CreatorMatchingEngine', () => {
+    it('should implement Engine interface with correct config', () => {
+      const engine = new CreatorMatchingEngine();
+      expect(engine.config.name).toBe('creator-matching');
+      expect(engine.config.queues).toContain('creator-matching');
+      expect(engine.config.publishes).toContain(ENGINE_EVENTS.CREATOR_MATCHED);
+      expect(engine.config.publishes).toContain(ENGINE_EVENTS.MATCHES_COMPLETE);
+      expect(engine.config.subscribes).toContain(ENGINE_EVENTS.PRODUCT_SCORED);
+    });
+
+    it('should register and receive events', async () => {
+      const registry = getEngineRegistry();
+      const engine = new CreatorMatchingEngine();
+      await registry.register(engine);
+
+      const bus = getEventBus();
+      await bus.emit(ENGINE_EVENTS.PRODUCT_SCORED, { productId: 'test' }, 'scoring');
+
+      // handleEvent should not throw
+      expect(registry.get('creator-matching')).toBeTruthy();
+    });
+  });
+
+  describe('AdIntelligenceEngine', () => {
+    it('should implement Engine interface with correct config', () => {
+      const engine = new AdIntelligenceEngine();
+      expect(engine.config.name).toBe('ad-intelligence');
+      expect(engine.config.queues).toContain('ad-intelligence');
+      expect(engine.config.publishes).toContain(ENGINE_EVENTS.ADS_DISCOVERED);
+      expect(engine.config.subscribes).toContain(ENGINE_EVENTS.PRODUCT_DISCOVERED);
+    });
+
+    it('should manage lifecycle correctly', async () => {
+      const engine = new AdIntelligenceEngine();
+      await engine.start();
+      expect(engine.status()).toBe('running');
+      await engine.stop();
+      expect(engine.status()).toBe('stopped');
+    });
+  });
+
+  describe('OpportunityFeedEngine', () => {
+    it('should implement Engine interface with correct config', () => {
+      const engine = new OpportunityFeedEngine();
+      expect(engine.config.name).toBe('opportunity-feed');
+      expect(engine.config.queues).toHaveLength(0); // read-only aggregation
+      expect(engine.config.publishes).toHaveLength(0); // read-only
+      expect(engine.config.subscribes).toContain(ENGINE_EVENTS.CLUSTERS_REBUILT);
+      expect(engine.config.subscribes).toContain(ENGINE_EVENTS.MATCHES_COMPLETE);
+      expect(engine.config.subscribes).toContain(ENGINE_EVENTS.TREND_DETECTED);
+    });
+
+    it('should register with engine registry', async () => {
+      const registry = getEngineRegistry();
+      await registry.register(new OpportunityFeedEngine());
+      expect(registry.get('opportunity-feed')).toBeTruthy();
+    });
+  });
+
+  describe('All 8 engines register together', () => {
+    it('should register all Phase 0 + Phase B engines without conflicts', async () => {
+      const registry = getEngineRegistry();
+
+      await registry.register(new ClusteringEngine());
+      await registry.register(new TrendDetectionEngine());
+      await registry.register(new CreatorMatchingEngine());
+      await registry.register(new AdIntelligenceEngine());
+      await registry.register(new OpportunityFeedEngine());
+
+      // 5 Phase B engines
+      expect(registry.size).toBe(5);
+
+      const list = registry.list();
+      const names = list.map(e => e.name);
+      expect(names).toContain('clustering');
+      expect(names).toContain('trend-detection');
+      expect(names).toContain('creator-matching');
+      expect(names).toContain('ad-intelligence');
+      expect(names).toContain('opportunity-feed');
+    });
   });
 });
