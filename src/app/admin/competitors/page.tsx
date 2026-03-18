@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { EnginePageLayout } from "@/components/engines";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,16 +93,16 @@ export default function CompetitorsPage() {
   };
 
   return (
+    <EnginePageLayout
+      title="Competitors"
+      engineId="shopify-intelligence"
+      description={`${total} competitor${total !== 1 ? "s" : ""} tracked`}
+      status="idle"
+      healthy={true}
+    >
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-outfit tracking-tight">
-            Competitors
-          </h1>
-          <p className="text-muted-foreground">
-            {total} competitor{total !== 1 ? "s" : ""} tracked
-          </p>
-        </div>
+        <div></div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger
             render={<Button><Plus className="h-4 w-4 mr-2" />Add Competitor</Button>}
@@ -240,5 +241,6 @@ export default function CompetitorsPage() {
         </CardContent>
       </Card>
     </div>
+    </EnginePageLayout>
   );
 }

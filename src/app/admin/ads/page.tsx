@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { authFetch } from "@/lib/auth-fetch";
+import { EnginePageLayout } from "@/components/engines";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -104,16 +105,16 @@ export default function AdsPage() {
   };
 
   return (
+    <EnginePageLayout
+      title="Ad Intelligence"
+      engineId="ad-intelligence"
+      description={`${ads.length} ad${ads.length !== 1 ? "s" : ""} tracked`}
+      status="idle"
+      healthy={true}
+    >
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-outfit tracking-tight">
-            Ad Intelligence
-          </h1>
-          <p className="text-muted-foreground">
-            {ads.length} ad{ads.length !== 1 ? "s" : ""} tracked
-          </p>
-        </div>
+        <div></div>
         <div className="flex items-center gap-2">
           <Input
             placeholder="Search niche or keyword..."
@@ -232,5 +233,6 @@ export default function AdsPage() {
         </CardContent>
       </Card>
     </div>
+    </EnginePageLayout>
   );
 }
