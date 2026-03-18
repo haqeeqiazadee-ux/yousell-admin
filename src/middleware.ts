@@ -16,9 +16,12 @@ export async function middleware(request: NextRequest) {
   const isAdminSubdomain = hostname.startsWith('admin.')
   const isClientDomain = !isAdminSubdomain && (hostname === 'yousell.online' || hostname.startsWith('www.'))
 
-  // If on admin subdomain, redirect root to /admin
+  // If on admin subdomain, redirect root based on auth state
   if (isAdminSubdomain && pathname === '/') {
-    return NextResponse.redirect(new URL('/admin', request.url))
+    if (user) {
+      return NextResponse.redirect(new URL('/admin', request.url))
+    }
+    return NextResponse.redirect(new URL('/admin/login', request.url))
   }
 
   // If on client domain root, redirect logged-in users to dashboard; otherwise show homepage
@@ -32,7 +35,7 @@ export async function middleware(request: NextRequest) {
 
   // Block client routes on admin subdomain
   if (isAdminSubdomain && (pathname.startsWith('/dashboard') || pathname === '/login' || pathname === '/signup')) {
-    return NextResponse.redirect(new URL('/admin', request.url))
+    return NextResponse.redirect(new URL(user ? '/admin' : '/admin/login', request.url))
   }
 
   // Block admin routes on client domain (except API routes shared by both)
