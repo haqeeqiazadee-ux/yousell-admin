@@ -7,6 +7,13 @@ export interface CompositeScore {
   final_score: number;
 }
 
+/**
+ * Heuristic scoring fallback — used during initial discovery when
+ * real pillar input data (TrendInputs, ViralInputs, ProfitInputs) is unavailable.
+ * Uses proxy signals (sales count, rating, platform) to estimate sub-scores.
+ *
+ * @sync-with backend/src/lib/scoring.ts — keep heuristic logic in sync
+ */
 export function calculateCompositeScore(product: {
   price: number;
   sales_count: number;
