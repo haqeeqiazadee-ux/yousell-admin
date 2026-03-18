@@ -47,7 +47,13 @@ export default function ClientLoginPage() {
         .single();
 
       if (profile?.role === 'admin' || profile?.role === 'super_admin') {
-        window.location.href = '/admin';
+        // Redirect admin users to the admin subdomain, not relative /admin
+        const host = window.location.hostname;
+        if (host === 'yousell.online' || host === 'www.yousell.online') {
+          window.location.href = 'https://admin.yousell.online/admin';
+        } else {
+          window.location.href = '/admin';
+        }
         return;
       }
     }
