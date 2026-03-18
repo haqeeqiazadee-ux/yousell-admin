@@ -196,6 +196,13 @@ The body should be plain text with line breaks (use \\n).`;
           resend_id: resendId,
         })
         .eq("id", outreach.id);
+
+      // Feedback loop: update creator_product_matches status to 'contacted'
+      await supabase
+        .from("creator_product_matches")
+        .update({ status: "contacted" })
+        .eq("product_id", productId)
+        .eq("influencer_id", influencerId);
     }
 
     return NextResponse.json({

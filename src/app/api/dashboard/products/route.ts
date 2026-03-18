@@ -6,8 +6,10 @@ export async function GET(req: NextRequest) {
   try {
     const client = await authenticateClientLite(req);
     const admin = createAdminClient();
+    const { searchParams } = new URL(req.url);
+    const productId = searchParams.get("id");
 
-    const { data: allocations, error: allocError } = await admin
+    let query = admin
       .from("product_allocations")
       .select(
         `
@@ -49,6 +51,12 @@ export async function GET(req: NextRequest) {
       )
       .eq("client_id", client.clientId)
       .eq("visible_to_client", true);
+
+    if (productId) {
+      query = query.eq("product_id", productId);
+    }
+
+    const { data: allocations, error: allocError } = await query;
 
     if (allocError) {
       return NextResponse.json({ error: allocError.message }, { status: 500 });

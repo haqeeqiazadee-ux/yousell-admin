@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     const admin = createAdminClient()
 
     const body = await request.json()
-    const { planId } = body
+    const { planId, referral_code } = body
 
     if (!planId || !PRICING_TIERS[planId as keyof typeof PRICING_TIERS]) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
@@ -49,6 +49,9 @@ export async function POST(request: NextRequest) {
       .eq('client_id', client.clientId)
       .single()
 
+    const metadata: Record<string, string> = { client_id: client.clientId, plan_id: planId }
+    if (referral_code) metadata.referral_code = referral_code
+
     const sessionParams: Record<string, unknown> = {
       mode: 'subscription' as const,
       line_items: [{
@@ -60,7 +63,7 @@ export async function POST(request: NextRequest) {
         },
         quantity: 1,
       }],
-      metadata: { client_id: client.clientId, plan_id: planId },
+      metadata,
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://yousell.online'}/dashboard/billing?success=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://yousell.online'}/dashboard/billing?cancelled=true`,
     }
