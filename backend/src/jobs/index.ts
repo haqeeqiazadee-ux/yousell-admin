@@ -35,7 +35,7 @@ import { processShopifyIntelligence } from "./shopify-intelligence";
 import { processAdIntelligence } from "./ad-intelligence";
 import {
   processTransform, processScoring, processOrderTracking, processFinancialModel, processBlueprint,
-  processInfluencerOutreach, processInfluencerRefresh, processSupplierRefresh,
+  processInfluencerRefresh, processSupplierRefresh,
   processAffiliateRefresh, processAffiliateContentGenerate,
   processPushToTiktok, processPushToAmazon,
 } from "./stub-workers";
@@ -47,6 +47,7 @@ import { processPodDiscovery } from "./pod-discovery";
 import { processPodProvision } from "./pod-provision";
 import { processPodFulfillmentSync } from "./pod-fulfillment-sync";
 import { processNotification } from "./notification";
+import { processInfluencerOutreach } from "./influencer-outreach";
 
 function logEvents(worker: Worker, label: string) {
   worker.on("completed", (job) => {

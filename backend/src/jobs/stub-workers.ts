@@ -18,7 +18,7 @@ export const processScoring = stubProcessor("scoring-queue");
 export const processOrderTracking = stubProcessor("order-tracking-queue");
 export const processFinancialModel = stubProcessor("financial-model");
 export const processBlueprint = stubProcessor("blueprint-queue");
-export const processInfluencerOutreach = stubProcessor("influencer-outreach");
+// processInfluencerOutreach — moved to influencer-outreach.ts (real implementation)
 export const processInfluencerRefresh = stubProcessor("influencer-refresh");
 export const processSupplierRefresh = stubProcessor("supplier-refresh");
 export const processAffiliateRefresh = stubProcessor("affiliate-refresh");
