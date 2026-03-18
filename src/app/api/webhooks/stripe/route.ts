@@ -146,6 +146,30 @@ export async function POST(request: NextRequest) {
           })
           .eq('stripe_subscription_id', subscription.id)
 
+        // Sync plan changes on upgrade/downgrade
+        const updatedPlan = subscription.metadata?.plan_id
+        if (updatedPlan) {
+          const planLimits: Record<string, number> = { starter: 3, growth: 10, professional: 25, enterprise: 50 }
+          await supabase
+            .from('subscriptions')
+            .update({ plan: updatedPlan })
+            .eq('stripe_subscription_id', subscription.id)
+
+          // Update client product limit
+          const { data: subRecord } = await supabase
+            .from('subscriptions')
+            .select('client_id')
+            .eq('stripe_subscription_id', subscription.id)
+            .single()
+
+          if (subRecord?.client_id) {
+            await supabase
+              .from('clients')
+              .update({ default_product_limit: planLimits[updatedPlan] || 3 })
+              .eq('id', subRecord.client_id)
+          }
+        }
+
         console.log(`[Stripe Webhook] Subscription ${subscription.id} updated: ${subscription.status}`)
         break
       }

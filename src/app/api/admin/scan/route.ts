@@ -252,8 +252,36 @@ export async function POST(req: NextRequest) {
 
   const mode = body.mode || 'quick';
   const clientId = body.clientId;
+  const useAsync = body.async === true;
   const useLive = body.live !== false; // Default to live scan; set live:false for mock
-  console.log('[SCAN] Starting scan, mode:', mode, 'live:', useLive);
+  console.log('[SCAN] Starting scan, mode:', mode, 'live:', useLive, 'async:', useAsync);
+
+  // Async mode: enqueue BullMQ job and return immediately
+  if (useAsync) {
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001';
+    try {
+      const backendRes = await fetch(`${backendUrl}/api/scan`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.BACKEND_API_KEY || ''}`,
+        },
+        body: JSON.stringify({ mode, userId: user.id, clientId }),
+        signal: AbortSignal.timeout(5000),
+      });
+
+      if (backendRes.ok) {
+        const jobData = await backendRes.json();
+        return NextResponse.json({
+          async: true,
+          jobId: jobData.jobId || jobData.id,
+          message: 'Scan job enqueued — check /api/admin/scan/:jobId for status',
+        });
+      }
+    } catch {
+      console.log('[SCAN] Backend not reachable for async — falling through to sync');
+    }
+  }
 
   try {
     // Try live discovery scan first (uses real Apify/RapidAPI providers)
