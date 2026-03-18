@@ -33,6 +33,14 @@ import { processCreatorMatching } from "./creator-matching";
 import { processAmazonIntelligence } from "./amazon-intelligence";
 import { processShopifyIntelligence } from "./shopify-intelligence";
 import { processAdIntelligence } from "./ad-intelligence";
+import {
+  processTransform, processScoring, processContentQueue, processDistribution,
+  processOrderTracking, processFinancialModel, processBlueprint, processNotification,
+  processInfluencerOutreach, processInfluencerRefresh, processSupplierRefresh,
+  processAffiliateRefresh, processAffiliateContentGenerate, processAffiliateCommissionTrack,
+  processPodDiscovery, processPodProvision, processPodFulfillmentSync,
+  processPushToShopify, processPushToTiktok, processPushToAmazon,
+} from "./stub-workers";
 
 function logEvents(worker: Worker, label: string) {
   worker.on("completed", (job) => {
@@ -157,6 +165,68 @@ export const adIntelligenceWorker = new Worker(
   { ...defaultOpts, concurrency: 1 }
 );
 logEvents(adIntelligenceWorker, "ad-intelligence");
+
+// ── v8 Spec Stub Workers (Phase 2 audit) ─────────────────────
+
+export const transformWorker = new Worker(QUEUES.TRANSFORM_QUEUE, processTransform, { ...defaultOpts, concurrency: 2 });
+logEvents(transformWorker, "transform-queue");
+
+export const scoringWorker = new Worker(QUEUES.SCORING_QUEUE, processScoring, { ...defaultOpts, concurrency: 2 });
+logEvents(scoringWorker, "scoring-queue");
+
+export const contentQueueWorker = new Worker(QUEUES.CONTENT_QUEUE, processContentQueue, { ...defaultOpts, concurrency: 1 });
+logEvents(contentQueueWorker, "content-queue");
+
+export const distributionWorker = new Worker(QUEUES.DISTRIBUTION_QUEUE, processDistribution, { ...defaultOpts, concurrency: 1 });
+logEvents(distributionWorker, "distribution-queue");
+
+export const orderTrackingWorker = new Worker(QUEUES.ORDER_TRACKING, processOrderTracking, { ...defaultOpts, concurrency: 1 });
+logEvents(orderTrackingWorker, "order-tracking-queue");
+
+export const financialModelWorker = new Worker(QUEUES.FINANCIAL_MODEL, processFinancialModel, { ...defaultOpts, concurrency: 1 });
+logEvents(financialModelWorker, "financial-model");
+
+export const blueprintWorker = new Worker(QUEUES.BLUEPRINT_QUEUE, processBlueprint, { ...defaultOpts, concurrency: 1 });
+logEvents(blueprintWorker, "blueprint-queue");
+
+export const notificationWorker = new Worker(QUEUES.NOTIFICATION_QUEUE, processNotification, { ...defaultOpts, concurrency: 2 });
+logEvents(notificationWorker, "notification-queue");
+
+export const influencerOutreachWorker = new Worker(QUEUES.INFLUENCER_OUTREACH, processInfluencerOutreach, { ...defaultOpts, concurrency: 1 });
+logEvents(influencerOutreachWorker, "influencer-outreach");
+
+export const influencerRefreshWorker = new Worker(QUEUES.INFLUENCER_REFRESH, processInfluencerRefresh, { ...defaultOpts, concurrency: 1 });
+logEvents(influencerRefreshWorker, "influencer-refresh");
+
+export const supplierRefreshWorker = new Worker(QUEUES.SUPPLIER_REFRESH, processSupplierRefresh, { ...defaultOpts, concurrency: 1 });
+logEvents(supplierRefreshWorker, "supplier-refresh");
+
+export const affiliateRefreshWorker = new Worker(QUEUES.AFFILIATE_REFRESH, processAffiliateRefresh, { ...defaultOpts, concurrency: 1 });
+logEvents(affiliateRefreshWorker, "affiliate-refresh");
+
+export const affiliateContentWorker = new Worker(QUEUES.AFFILIATE_CONTENT_GENERATE, processAffiliateContentGenerate, { ...defaultOpts, concurrency: 1 });
+logEvents(affiliateContentWorker, "affiliate-content-generate");
+
+export const affiliateCommissionWorker = new Worker(QUEUES.AFFILIATE_COMMISSION_TRACK, processAffiliateCommissionTrack, { ...defaultOpts, concurrency: 1 });
+logEvents(affiliateCommissionWorker, "affiliate-commission-track");
+
+export const podDiscoveryWorker = new Worker(QUEUES.POD_DISCOVERY, processPodDiscovery, { ...defaultOpts, concurrency: 1 });
+logEvents(podDiscoveryWorker, "pod-discovery");
+
+export const podProvisionWorker = new Worker(QUEUES.POD_PROVISION, processPodProvision, { ...defaultOpts, concurrency: 1 });
+logEvents(podProvisionWorker, "pod-provision");
+
+export const podFulfillmentSyncWorker = new Worker(QUEUES.POD_FULFILLMENT_SYNC, processPodFulfillmentSync, { ...defaultOpts, concurrency: 1 });
+logEvents(podFulfillmentSyncWorker, "pod-fulfillment-sync");
+
+export const pushToShopifyWorker = new Worker(QUEUES.PUSH_TO_SHOPIFY, processPushToShopify, { ...defaultOpts, concurrency: 1 });
+logEvents(pushToShopifyWorker, "push-to-shopify");
+
+export const pushToTiktokWorker = new Worker(QUEUES.PUSH_TO_TIKTOK, processPushToTiktok, { ...defaultOpts, concurrency: 1 });
+logEvents(pushToTiktokWorker, "push-to-tiktok");
+
+export const pushToAmazonWorker = new Worker(QUEUES.PUSH_TO_AMAZON, processPushToAmazon, { ...defaultOpts, concurrency: 1 });
+logEvents(pushToAmazonWorker, "push-to-amazon");
 
 console.log(
   "Job workers started:",
