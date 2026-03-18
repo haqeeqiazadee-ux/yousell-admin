@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import Link from 'next/link'
 import { authFetch } from '@/lib/auth-fetch'
+import { EngineStatusCard } from '@/components/engines'
+import { ENGINE_PAGE_MAP } from '@/components/layouts/engine-detail-design'
 import {
   Zap, TrendingUp, Users, Package, Activity,
   ArrowRight, Clock,
@@ -287,6 +289,27 @@ export default function AdminDashboard() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Engine Status Grid */}
+      <div>
+        <h2 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3 flex items-center gap-2">
+          <Activity size={14} /> Engine Status
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {Object.entries(ENGINE_PAGE_MAP).map(([engineId, info]) => (
+            <EngineStatusCard
+              key={engineId}
+              name={info.title}
+              engineId={engineId}
+              status="idle"
+              healthy={true}
+              queueCount={0}
+              description={info.description}
+              onClick={() => window.location.href = info.path}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Pre-Viral Alert Strip */}
