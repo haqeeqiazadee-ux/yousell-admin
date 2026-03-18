@@ -39,8 +39,9 @@ import {
   processInfluencerOutreach, processInfluencerRefresh, processSupplierRefresh,
   processAffiliateRefresh, processAffiliateContentGenerate, processAffiliateCommissionTrack,
   processPodDiscovery, processPodProvision, processPodFulfillmentSync,
-  processPushToShopify, processPushToTiktok, processPushToAmazon,
+  processPushToTiktok, processPushToAmazon,
 } from "./stub-workers";
+import { processPushToShopify } from "./push-to-shopify";
 
 function logEvents(worker: Worker, label: string) {
   worker.on("completed", (job) => {

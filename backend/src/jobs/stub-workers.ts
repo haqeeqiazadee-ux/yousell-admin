@@ -33,6 +33,6 @@ export const processAffiliateCommissionTrack = stubProcessor("affiliate-commissi
 export const processPodDiscovery = stubProcessor("pod-discovery");
 export const processPodProvision = stubProcessor("pod-provision");
 export const processPodFulfillmentSync = stubProcessor("pod-fulfillment-sync");
-export const processPushToShopify = stubProcessor("push-to-shopify");
+// processPushToShopify — moved to push-to-shopify.ts (real implementation)
 export const processPushToTiktok = stubProcessor("push-to-tiktok");
 export const processPushToAmazon = stubProcessor("push-to-amazon");
