@@ -27,17 +27,12 @@ Last updated: 2026-03-18
 - [x] B.14: Add 14 tests for Phase B engines — 33/33 total passing
 - [x] B.15: Verify + document — Phase B COMPLETE
 
-### Phase C: Frontend Design (10 batches)
-- [ ] C.1: Engine API client types — discovery, tiktok, scoring
-- [ ] C.2: Engine API client types — clustering, creators, intelligence
-- [ ] C.3: Shared API response types + error handling contract
-- [ ] C.4: EngineStatusCard component interface
-- [ ] C.5: EngineDashboardPanel component interface
-- [ ] C.6: EngineControlPanel component interface
-- [ ] C.7: DataTable component interface
-- [ ] C.8: Admin dashboard layout design
-- [ ] C.9: Engine detail page layout design
-- [ ] C.10: Sidebar navigation update review + document
+### Phase C: Frontend Design (COMPLETE — 2026-03-18)
+- [x] C.1-C.2: Engine API client types for all 8 engines + health API
+- [x] C.3: Shared API response types, error codes, pagination, type guards
+- [x] C.4-C.7: Component interfaces (EngineStatusCard, Panel, ControlPanel, DataTable)
+- [x] C.8-C.9: Page layout contracts (dashboard + engine detail)
+- [x] C.10: Sidebar navigation verified — matches engine groupings
 
 ### Phase D: Frontend Build (20 batches)
 - [ ] D.1: Engine API client — fetch wrapper
@@ -91,3 +86,9 @@ Last updated: 2026-03-18
   - 10 engine-namespaced API routes under /api/engine/*
   - 33 tests passing (19 + 14 new)
   - Zero breaking changes
+- [x] Phase C: Frontend Design — 2026-03-18
+  - Engine API client types for all 8 engines
+  - Shared API response/error/pagination types
+  - Component interfaces: EngineStatusCard, EngineDashboardPanel, EngineControlPanel, DataTable
+  - Page layout contracts: admin dashboard, engine detail page
+  - ENGINE_PAGE_MAP for all engines

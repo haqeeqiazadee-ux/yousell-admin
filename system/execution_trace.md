@@ -277,3 +277,35 @@ Core deliverables:
 3. All 15 job processors annotated with @engine/@queue ownership
 4. 10 engine-namespaced API routes under /api/engine/* (thin proxies)
 5. Full test coverage for all engine wrappers
+
+------------------------------------------------------------
+
+### [2026-03-18 02:00] DONE — Phase C: Frontend Design COMPLETE
+
+- **Task:** Design UI against new engine-based architecture
+- **Batch:** C.1-C.10
+- **Action:**
+  - C.1-C.2: Created engine API client types for all 8 engines + health API
+  - C.3: Created shared API response envelope, error codes, pagination, type guards
+  - C.4-C.7: Designed EngineStatusCard, EngineDashboardPanel, EngineControlPanel, DataTable interfaces
+  - C.8-C.9: Designed admin dashboard layout (KPI + grid + feed) and engine detail page layout (header + metrics + controls + table)
+  - C.10: Verified sidebar navigation already matches engine groupings — no changes needed
+- **Files touched:**
+  - Created: `src/lib/api/engine-clients.ts`, `src/lib/api/types.ts`, `src/components/engines/types.ts`, `src/components/data-table/types.ts`, `src/components/layouts/admin-dashboard-design.ts`, `src/components/layouts/engine-detail-design.ts`
+- **Result:** SUCCESS — all types compile cleanly, zero breaking changes
+- **Next step:** Phase D — Frontend Build, Batch D.1: Engine API client fetch wrapper
+- **Commit:** pending
+
+### PHASE C SUMMARY — FRONTEND DESIGN
+
+**Status: COMPLETE**
+
+Files created: 6 type definition files
+Breaking changes: ZERO
+
+Core deliverables:
+1. Engine API client types for all 8 engines
+2. Shared API response/error/pagination types
+3. Component interfaces: EngineStatusCard, EngineDashboardPanel, EngineControlPanel, DataTable
+4. Page layout contracts: admin dashboard, engine detail page
+5. ENGINE_PAGE_MAP mapping all engines to admin pages
