@@ -1,9 +1,15 @@
 /**
  * Ad Intelligence Engine — Discovers ads via Meta Ads Library (free)
  * and stores them in the ads table for tracking.
+ *
+ * Engine wrapper added in Phase B — provides lifecycle management and
+ * event bus integration. Original discoverAds() export preserved.
  */
 
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getEventBus } from './event-bus';
+import type { Engine, EngineConfig, EngineEvent, EngineStatus } from './types';
+import { ENGINE_EVENTS } from './types';
 
 /**
  * Discover ads from Meta Ads Library (free, no auth required).
@@ -259,4 +265,82 @@ function estimateSpend(ad: Record<string, unknown>): number {
     return Number(ad.spend);
   }
   return 0;
+}
+
+// ─── Engine Interface Wrapper ──────────────────────────────
+
+export class AdIntelligenceEngine implements Engine {
+  private _status: EngineStatus = 'idle';
+
+  readonly config: EngineConfig = {
+    name: 'ad-intelligence',
+    version: '1.0.0',
+    dependencies: [],
+    queues: ['ad-intelligence'],
+    publishes: [
+      ENGINE_EVENTS.ADS_DISCOVERED,
+    ],
+    subscribes: [
+      ENGINE_EVENTS.PRODUCT_DISCOVERED,
+    ],
+  };
+
+  status(): EngineStatus {
+    return this._status;
+  }
+
+  async init(): Promise<void> {
+    this._status = 'idle';
+  }
+
+  async start(): Promise<void> {
+    this._status = 'running';
+  }
+
+  async stop(): Promise<void> {
+    this._status = 'stopped';
+  }
+
+  async handleEvent(event: EngineEvent): Promise<void> {
+    if (event.type === ENGINE_EVENTS.PRODUCT_DISCOVERED) {
+      // Could auto-search ads for newly discovered products — manual-first per G10
+      console.log(`[AdIntelligenceEngine] Product discovered from ${event.source}, ad search deferred to manual trigger`);
+    }
+  }
+
+  async healthCheck(): Promise<boolean> {
+    return true;
+  }
+
+  /**
+   * Discover ads and emit events for results.
+   * Wraps discoverAds with event bus integration.
+   */
+  async runDiscovery(
+    query: string,
+    platforms: string[] = ['facebook'],
+    limit: number = 20,
+  ): Promise<{ adsFound: number; adsStored: number; errors: string[] }> {
+    this._status = 'running';
+    try {
+      const result = await discoverAds(query, platforms, limit);
+
+      const bus = getEventBus();
+      await bus.emit(
+        ENGINE_EVENTS.ADS_DISCOVERED,
+        {
+          query,
+          platforms,
+          adsFound: result.adsFound,
+          adsStored: result.adsStored,
+          errors: result.errors,
+        },
+        'ad-intelligence',
+      );
+
+      return result;
+    } finally {
+      this._status = 'idle';
+    }
+  }
 }
