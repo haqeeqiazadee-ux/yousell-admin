@@ -42,6 +42,14 @@ export default function DashboardPage() {
   const [requestNote, setRequestNote] = useState('');
   const [requestSubmitted, setRequestSubmitted] = useState(false);
 
+  // Clean up stale OAuth params from URL (code, next) that may leak from callback redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('code') || params.has('next')) {
+      window.history.replaceState({}, '', '/dashboard');
+    }
+  }, []);
+
   const fetchData = useCallback(async () => {
     try {
       const [productsRes, requestsRes] = await Promise.all([
