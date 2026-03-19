@@ -7,7 +7,7 @@ import os
 
 import anthropic
 
-from ..utils.retry import retry_sync
+from utils.retry import retry_sync
 
 logger = logging.getLogger("gap_analyzer")
 

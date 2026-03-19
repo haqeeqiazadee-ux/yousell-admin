@@ -8,7 +8,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
-from ..utils.retry import retry_async
+from utils.retry import retry_async
 
 logger = logging.getLogger("gap_analyzer")
 
