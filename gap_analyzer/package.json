@@ -1,0 +1,9 @@
+{
+  "name": "gap-analyzer-report",
+  "version": "1.0.0",
+  "description": "Word document report generator for Gap Analysis Engine",
+  "private": true,
+  "dependencies": {
+    "docx": "^8.5.0"
+  }
+}
