@@ -386,3 +386,21 @@ Core deliverables:
 - **Files touched:** .env.local, src/app/forgot-password/page.tsx, src/app/reset-password/page.tsx, src/app/privacy/page.tsx, src/app/terms/page.tsx, supabase/migrations/022_super_admin_and_rls_fixes.sql
 - **Result:** SUCCESS — build passes, all pages render, 0 TypeScript errors
 - **Next step:** Configure Google/Facebook OAuth providers in Supabase dashboard, fill in real env var values
+
+------------------------------------------------------------
+
+### [2026-03-19 00:00] DONE — Fix HIGH priority bugs from QA results
+
+- **Task:** Fix 6 HIGH bugs + 1 MEDIUM from QA results (system/qa_results_2026-03-18.md)
+- **Batch:** QA-FIX-1
+- **Action:**
+  1. H1-H4: Created migration 028 with all 4 missing tables (tiktok_videos, tiktok_hashtag_signals, product_clusters, creator_product_matches) + RLS + indexes — fully idempotent with IF NOT EXISTS
+  2. H1-H4: Updated 4 API routes (tiktok/videos, tiktok/signals, clusters, creator-matches) to return empty results with warning when table missing instead of 500
+  3. H5-H6: Added HMAC signature verification to TikTok and Amazon webhook routes — rejects unsigned requests with 401
+  4. M1: Added Google OAuth sign-in button to admin login page with proper Supabase auth flow
+  5. Added TIKTOK_WEBHOOK_SECRET and AMAZON_WEBHOOK_SECRET to .env.local
+- **Files touched:**
+  - Created: `supabase/migrations/028_create_missing_tables_catchup.sql`
+  - Modified: `src/app/api/admin/tiktok/videos/route.ts`, `src/app/api/admin/tiktok/signals/route.ts`, `src/app/api/admin/clusters/route.ts`, `src/app/api/admin/creator-matches/route.ts`, `src/app/api/webhooks/tiktok/route.ts`, `src/app/api/webhooks/amazon/route.ts`, `src/app/admin/login/page.tsx`, `.env.local`
+- **Result:** SUCCESS — 0 TypeScript errors
+- **Next step:** Apply migration 028 in Supabase SQL editor, set webhook secrets in env
