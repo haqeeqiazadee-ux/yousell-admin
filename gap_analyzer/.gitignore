@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+node_modules/
+.env
+gap_analyzer_cache.json
+gap_analyzer_checkpoint.txt
+gap_analyzer.log
+gap_analyzer_errors.log
+gap_analyzer_crash.log
+*.docx
+!companies_template.xlsx
