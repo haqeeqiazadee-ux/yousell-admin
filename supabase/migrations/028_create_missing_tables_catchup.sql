@@ -5,6 +5,11 @@
 -- All statements use IF NOT EXISTS for idempotency.
 -- ============================================================
 
+-- 0. Ensure super_admin enum value exists (from 022, may not have been applied)
+-- NOTE: ALTER TYPE ... ADD VALUE cannot run inside a transaction block.
+-- In the Supabase SQL Editor, run this line SEPARATELY first if it fails:
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'super_admin';
+
 -- 1. tiktok_videos (from 010)
 CREATE TABLE IF NOT EXISTS tiktok_videos (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
