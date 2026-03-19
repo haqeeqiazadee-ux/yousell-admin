@@ -14,6 +14,9 @@ export async function GET(request: Request) {
   const protocol = host.includes("localhost") ? "http" : "https";
   const origin = `${protocol}://${host}`;
 
+  // Share auth cookies across subdomains (yousell.online ↔ admin.yousell.online)
+  const cookieDomain = host.includes("yousell.online") ? ".yousell.online" : undefined;
+
   if (code) {
     const cookieStore = await cookies();
     const supabase = createServerClient(
@@ -26,7 +29,7 @@ export async function GET(request: Request) {
           },
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
+              cookieStore.set(name, value, { ...options, ...(cookieDomain ? { domain: cookieDomain } : {}) })
             );
           },
         },
