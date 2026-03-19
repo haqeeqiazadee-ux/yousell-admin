@@ -7,7 +7,7 @@ import re
 
 import pandas as pd
 
-from ..utils.domain import extract_domain, is_valid_url, normalise_url
+from utils.domain import extract_domain, is_valid_url, normalise_url
 
 logger = logging.getLogger("gap_analyzer")
 
