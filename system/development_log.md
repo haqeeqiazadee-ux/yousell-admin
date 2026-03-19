@@ -2578,3 +2578,51 @@ This is the foundation all future engines will build on.
 - Phase B: Refactor remaining API routes to engine namespaces
 - Phase C: Frontend design against engine-based architecture
 - Phase D: Frontend build
+
+------------------------------------------------------------
+
+## [2026-03-19] Fix Google OAuth Login — 2-Part Bug Fix
+
+### Problem
+Google OAuth login was broken end-to-end. Users could authenticate via Google but landed on a broken dashboard showing "Failed to load data."
+
+### Root Causes (Two Separate Bugs)
+
+**Bug 1: Missing `clients` records after Google sign-up**
+- The `handle_new_user` database trigger only created `profiles` rows, not `clients` rows
+- Dashboard API routes check `clients` table for the logged-in user — returned "Client not found" (500)
+- Additionally, the `profiles` table had RLS enabled but zero policies, blocking the callback's profile role lookup
+
+**Bug 2: Auth cookies lost during OAuth redirect**
+- The callback route (`/api/auth/callback`) called `cookieStore.set()` to store session cookies, then returned `NextResponse.redirect()` — a NEW response object
+- The redirect response did NOT carry the cookies set on the original cookieStore
+- On Netlify, this meant the browser never received the auth session cookies
+- Client-side `getSession()` returned null → all dashboard API calls failed with 401
+
+### Fixes Applied
+
+**Fix 1 (commit adcd037):**
+- Created migration `029_fix_google_oauth_client_records.sql`:
+  - Added unique constraint on `clients.email`
+  - Updated `handle_new_user` trigger to create both `profiles` AND `clients` records
+  - Added RLS SELECT/UPDATE policies on `profiles` table
+- Backfilled 4 existing Google OAuth users with missing `clients` records
+- Applied migration directly in Supabase SQL editor (live)
+
+**Fix 2 (commit 2d14a2c):**
+- Callback route now captures cookies from `exchangeCodeForSession` and explicitly sets them on the redirect response object
+- `authFetch` falls back to `refreshSession()` if `getSession()` returns no access token (handles edge cases after OAuth redirect)
+- Dashboard page strips stale `?code=&next=` query params from URL after OAuth redirect
+
+### Files Modified
+- `src/app/api/auth/callback/route.ts` — cookie forwarding on redirect response
+- `src/lib/auth-fetch.ts` — refreshSession fallback
+- `src/lib/supabase/server.ts` — cookie handling improvements
+- `src/middleware.ts` — auth flow adjustments
+- `src/app/dashboard/page.tsx` — strip stale OAuth params from URL
+
+### Files Created
+- `supabase/migrations/029_fix_google_oauth_client_records.sql`
+
+### Result
+Google OAuth login now works end-to-end: authenticate → redirect → dashboard loads with user data.

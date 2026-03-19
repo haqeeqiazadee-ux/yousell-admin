@@ -73,3 +73,4 @@ Last updated: 2026-03-17
 |------|-------|-----------|-----|-----------------|
 | 2026-03-17 | Edit tool match error on dev log | Common phrase repeated 5+ times | Added more surrounding context | Always verify uniqueness before editing |
 | 2026-03-17 | Uncommitted changes flagged by hook | Partial edit without commit | Committed immediately | Commit after each meaningful batch of changes |
+| 2026-03-19 | Google OAuth login broken — dashboard showed "Failed to load data" | Two bugs: (1) `handle_new_user` trigger didn't create `clients` records, (2) callback route cookies not forwarded to redirect response | Created migration 029 for trigger fix + RLS; fixed callback to forward cookies on redirect; added refreshSession fallback in authFetch | Always ensure DB triggers create ALL required records for a new user (not just profiles). Always verify cookies are set on the actual response object returned to the browser, not just on the cookieStore. |

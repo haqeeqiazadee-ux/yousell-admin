@@ -42,6 +42,11 @@ Last updated: 2026-03-18
 - [x] D.12-D.19: Wrapped 8 engine pages with EnginePageLayout
 - [x] D.20: Final verification — 33/33 tests passing
 
+### Bug Fixes (2026-03-19)
+- [x] Fix Google OAuth login — missing `clients` records + `profiles` RLS policies
+- [x] Fix dashboard "Failed to load data" — auth cookies lost during OAuth redirect
+- [x] Migration 029: `handle_new_user` trigger creates both profiles + clients, RLS policies on profiles
+
 ### Future Platform Build (from execution_plan.md)
 - [ ] Phase 2A: Shopify Connect
 - [ ] Phase 2B: TikTok Shop Connect
