@@ -23,6 +23,9 @@ import time
 import traceback
 import uuid
 
+# Ensure the script's directory is on the Python path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from dotenv import load_dotenv
 
 # ─── Setup logging ───────────────────────────────────────────────────────────
