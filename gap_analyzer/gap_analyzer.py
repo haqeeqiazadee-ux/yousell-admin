@@ -23,8 +23,10 @@ import time
 import traceback
 import uuid
 
-# Ensure the script's directory is on the Python path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Ensure the script's directory is on the Python path so subpackages are found
+_SCRIPT_DIR = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+if _SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPT_DIR)
 
 from dotenv import load_dotenv
 
