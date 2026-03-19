@@ -404,3 +404,29 @@ Core deliverables:
   - Modified: `src/app/api/admin/tiktok/videos/route.ts`, `src/app/api/admin/tiktok/signals/route.ts`, `src/app/api/admin/clusters/route.ts`, `src/app/api/admin/creator-matches/route.ts`, `src/app/api/webhooks/tiktok/route.ts`, `src/app/api/webhooks/amazon/route.ts`, `src/app/admin/login/page.tsx`, `.env.local`
 - **Result:** SUCCESS — 0 TypeScript errors
 - **Next step:** Apply migration 028 in Supabase SQL editor, set webhook secrets in env
+
+------------------------------------------------------------
+
+### [2026-03-19 00:10] DONE — Fix Google OAuth login (2-part fix)
+
+- **Task:** Fix Google OAuth login — users could authenticate via Google but landed on broken dashboard
+- **Batch:** OAUTH-FIX-1
+- **Action:**
+  1. **Fix 1 (adcd037):** Missing `clients` records + profiles RLS
+     - Root cause: `handle_new_user` trigger only created `profiles` rows, not `clients` rows. Dashboard APIs returned "Client not found" (500).
+     - Added unique constraint on `clients.email`
+     - Updated `handle_new_user` trigger to create both `profiles` + `clients` records
+     - Added RLS SELECT/UPDATE policies on `profiles` table (was enabled with zero policies)
+     - Created migration: `supabase/migrations/029_fix_google_oauth_client_records.sql`
+     - Backfilled 4 existing Google OAuth users with missing `clients` records
+  2. **Fix 2 (2d14a2c):** Dashboard "Failed to load data" after OAuth redirect
+     - Root cause: Callback route set cookies via `cookieStore.set()` but returned `NextResponse.redirect()` — a new response object that did NOT carry the auth cookies. On Netlify, session cookies were lost during redirect.
+     - Callback route now captures cookies from `exchangeCodeForSession` and explicitly sets them on the redirect response
+     - `authFetch` now falls back to `refreshSession()` if `getSession()` returns no token
+     - Dashboard page strips stale `?code=&next=` params from URL
+- **Files touched:**
+  - Modified: `src/app/api/auth/callback/route.ts`, `src/lib/auth-fetch.ts`, `src/lib/supabase/server.ts`, `src/middleware.ts`, `src/app/dashboard/page.tsx`
+  - Created: `supabase/migrations/029_fix_google_oauth_client_records.sql`
+- **Result:** SUCCESS — Google OAuth login now works end-to-end (authenticate → redirect → dashboard loads with data)
+- **Next step:** Monitor production for any remaining OAuth edge cases
+- **Commit:** adcd037, 2d14a2c
