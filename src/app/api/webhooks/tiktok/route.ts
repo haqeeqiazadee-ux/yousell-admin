@@ -1,9 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendOrderStatusEmail } from '@/lib/email-orders'
+import { createHmac } from 'crypto'
+
+function verifyTikTokSignature(body: string, signature: string | null): boolean {
+  const secret = process.env.TIKTOK_WEBHOOK_SECRET
+  if (!secret) {
+    // If no secret configured, reject all requests (secure by default)
+    console.error('[TikTok Webhook] TIKTOK_WEBHOOK_SECRET not configured')
+    return false
+  }
+  if (!signature) return false
+  const expected = createHmac('sha256', secret).update(body).digest('hex')
+  return signature === expected
+}
 
 export async function POST(request: NextRequest) {
   const body = await request.text()
+
+  // Verify webhook signature
+  const signature = request.headers.get('x-tiktok-signature') || request.headers.get('authorization')
+  if (!verifyTikTokSignature(body, signature)) {
+    console.warn('[TikTok Webhook] Invalid or missing signature')
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
+  }
+
   const payload = JSON.parse(body)
 
   // TikTok Shop sends a type field indicating the event

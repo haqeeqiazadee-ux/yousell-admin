@@ -21,6 +21,11 @@ export async function GET(request: NextRequest) {
   }
 
   const { data, error, count } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    if (error.message.includes("does not exist") || error.code === '42P01') {
+      return NextResponse.json({ signals: [], total: 0, warning: "Table not yet created. Run migration 028." });
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
   return NextResponse.json({ signals: data || [], total: count || 0 });
 }

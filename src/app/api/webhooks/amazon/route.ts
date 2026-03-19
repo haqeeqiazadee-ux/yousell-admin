@@ -1,10 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendOrderStatusEmail } from '@/lib/email-orders'
+import { createHmac } from 'crypto'
+
+function verifyAmazonSignature(body: string, signature: string | null): boolean {
+  const secret = process.env.AMAZON_WEBHOOK_SECRET
+  if (!secret) {
+    console.error('[Amazon Webhook] AMAZON_WEBHOOK_SECRET not configured')
+    return false
+  }
+  if (!signature) return false
+  const expected = createHmac('sha256', secret).update(body).digest('hex')
+  return signature === expected
+}
 
 // Amazon SP-API sends SQS-style notifications via EventBridge or push
 export async function POST(request: NextRequest) {
   const body = await request.text()
+
+  // Verify webhook signature
+  const signature = request.headers.get('x-amz-signature') || request.headers.get('authorization')
+  if (!verifyAmazonSignature(body, signature)) {
+    console.warn('[Amazon Webhook] Invalid or missing signature')
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
+  }
+
   const payload = JSON.parse(body)
 
   const notificationType = payload.NotificationType || payload.notificationType

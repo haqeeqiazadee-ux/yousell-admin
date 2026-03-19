@@ -19,7 +19,12 @@ export async function GET(request: NextRequest) {
   if (productId) query = query.eq("product_id", productId);
 
   const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    if (error.message.includes("does not exist") || error.code === '42P01') {
+      return NextResponse.json({ matches: [], warning: "Table not yet created. Run migration 028." });
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
   return NextResponse.json({ matches: data || [] });
 }
 
