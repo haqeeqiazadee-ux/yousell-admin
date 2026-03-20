@@ -9,6 +9,8 @@ import tempfile
 
 logger = logging.getLogger("gap_analyzer")
 
+MODEL = os.getenv("CLAUDE_MODEL", "claude-opus-4-6")
+
 
 def build_report(cache_data: dict, output_path: str) -> bool:
     """Build Word document report. Uses Node.js if available, else python-docx fallback."""
@@ -52,13 +54,17 @@ def _build_with_node(cache_data: dict, output_path: str, node_path: str, script_
                 logger.warning("[WARN] npm not found — skipping Node.js dependency install")
                 return _build_with_python_docx(cache_data, output_path)
 
-        result = subprocess.run(
-            [node_path, js_script, tmp_json.name, output_path],
-            capture_output=True,
-            text=True,
-            timeout=300,
-            cwd=pkg_dir,
-        )
+        try:
+            result = subprocess.run(
+                [node_path, js_script, tmp_json.name, output_path],
+                capture_output=True,
+                text=True,
+                timeout=300,
+                cwd=pkg_dir,
+            )
+        except subprocess.TimeoutExpired:
+            logger.error("[ERROR] Node.js report builder timed out after 5 minutes")
+            return _build_with_python_docx(cache_data, output_path)
 
         if result.returncode == 0:
             logger.info(f"[INFO] Word document generated: {output_path}")
@@ -470,12 +476,10 @@ def _build_with_python_docx(cache_data: dict, output_path: str) -> bool:
         return _build_plaintext_fallback(cache_data, output_path)
 
 
-MODEL = "claude-opus-4-6"
-
-
 def _build_plaintext_fallback(cache_data: dict, output_path: str) -> bool:
     """Last resort: save as plain text."""
-    txt_path = output_path.replace(".docx", "_fallback.txt")
+    base, _ = os.path.splitext(output_path)
+    txt_path = base + "_fallback.txt"
     try:
         with open(txt_path, "w", encoding="utf-8") as f:
             f.write("COMPETITIVE INTELLIGENCE REPORT — PLAIN TEXT FALLBACK\n")
