@@ -472,9 +472,8 @@ async def async_main(args):
         cached = state.companies.get(domain)
         if cached:
             status = cached.get("status", "")
-            if status == "success" and domain not in refresh_domains:
-                continue  # Skip — already successfully cached
-            # Re-analyse partial/failed
+            if status in ("success", "partial", "failed") and domain not in refresh_domains:
+                continue  # Skip — already processed (use --refresh to retry specific domains)
             to_process.append(company)
         else:
             to_process.append(company)
