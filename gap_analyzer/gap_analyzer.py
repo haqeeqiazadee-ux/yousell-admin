@@ -71,6 +71,7 @@ from scrapers.playwright_scraper import PlaywrightScraper
 from analysis.claude_engine import ClaudeEngine
 from analysis.synthesiser import Synthesiser
 from output.report_runner import build_report
+from output.excel_exporter import export_to_excel
 
 
 # ─── App State ───────────────────────────────────────────────────────────────
@@ -598,8 +599,8 @@ async def async_main(args):
     print(f"  Total watch-out flags          : {total_watch:,}")
     print("\u2500" * 50)
 
-    # ─── Synthesis ───
-    if not args.no_synthesis and len(state.companies) > 0:
+    # ─── Synthesis (only if explicitly requested) ───
+    if args.synthesis and len(state.companies) > 0:
         print("  Running cross-company synthesis...")
         synthesiser = Synthesiser(api_key)
         state.synthesis = synthesiser.synthesise(state.companies, project_profile)
@@ -609,33 +610,42 @@ async def async_main(args):
     else:
         claude_api_calls = claude.total_api_calls + 1
 
-    # ─── Build Word document ───
-    print("  Building Word document...")
+    # ─── Build cache data ───
     cache_data = state.to_cache_dict()
     cache_data["metadata"]["runs"] = _existing_runs
     cache_data["metadata"]["specs_hash"] = specs_hash
     cache_data["metadata"]["companies_hash"] = companies_hash
 
-    # Add report record
-    cache_data.setdefault("reports_generated", []).append({
-        "run_id": state.run_id,
-        "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        "output_file": output_path,
-        "companies_in_report": len(state.companies),
-        "synthesis_included": not args.no_synthesis,
-    })
-
-    # Ensure output directory exists
-    out_dir = os.path.dirname(os.path.abspath(output_path))
-    if out_dir:
-        os.makedirs(out_dir, exist_ok=True)
-
-    success = build_report(cache_data, output_path)
-
-    if success:
-        print(f"  \u2705  Report saved \u2192 {output_path}")
+    # ─── Excel output (default) ───
+    excel_path = os.path.splitext(output_path)[0] + ".xlsx"
+    print(f"  Building Excel report...")
+    excel_ok = export_to_excel(cache_data, excel_path)
+    if excel_ok:
+        print(f"  \u2705  Excel saved \u2192 {excel_path}")
     else:
-        print(f"  \u26a0\ufe0f  Report generation had issues. Check logs.")
+        print(f"  \u26a0\ufe0f  Excel export failed. Check logs.")
+
+    # ─── Word document (only if --report or --synthesis) ───
+    if args.report or args.synthesis:
+        print("  Building Word document...")
+        cache_data.setdefault("reports_generated", []).append({
+            "run_id": state.run_id,
+            "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "output_file": output_path,
+            "companies_in_report": len(state.companies),
+            "synthesis_included": args.synthesis,
+        })
+
+        out_dir = os.path.dirname(os.path.abspath(output_path))
+        if out_dir:
+            os.makedirs(out_dir, exist_ok=True)
+
+        success = build_report(cache_data, output_path)
+
+        if success:
+            print(f"  \u2705  Report saved \u2192 {output_path}")
+        else:
+            print(f"  \u26a0\ufe0f  Report generation had issues. Check logs.")
 
     # Write errors log
     if state.errors:
@@ -665,7 +675,8 @@ def main():
     parser.add_argument("--limit", type=int, default=None, help="Process only first N companies")
     parser.add_argument("--category", type=str, default=None, help="Process only this category")
     parser.add_argument("--resume", type=str, default="gap_analyzer_cache.json", help="Cache file path")
-    parser.add_argument("--no-synthesis", action="store_true", help="Skip final synthesis")
+    parser.add_argument("--synthesis", action="store_true", help="Run cross-company synthesis (off by default)")
+    parser.add_argument("--report", action="store_true", help="Also generate Word document report")
     parser.add_argument("--fresh", action="store_true", help="Discard cache and start fresh")
     parser.add_argument("--refresh", type=str, default=None, help="Re-analyse specific domains (comma-separated)")
     parser.add_argument("--no-overwrite", action="store_true", help="Don't overwrite existing output")
