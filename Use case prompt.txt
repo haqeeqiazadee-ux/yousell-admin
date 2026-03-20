@@ -111,142 +111,19 @@ notes
 
 TASK:
 
-Make sure each and every single line of the my message is read and the directions I am giving are reflected in all the needed project documents. 
-
-STEP (a) here we go...I want you to read each and every line of the below documents first. (non-negotiable).
-
-system/project_check_prompt.md — Comprehensive audit prompt (v2)
-
-
-
-system/development_log.md — Updated with all findings
-
-
-
-docs/content_publishing_shop_integration_strategy.md
-
-
-
-tasks/execution_plan.md
-
-
-
-claude.md
-
-
-
-
-
-https://github.com/haqeeqiazadee-ux/yousell-admin/tree/main/docs
-
-
-
-https://github.com/haqeeqiazadee-ux/yousell-admin/tree/main/system
-
-
-
-https://github.com/haqeeqiazadee-ux/yousell-admin/tree/main/tasks
-
-
-
-https://github.com/haqeeqiazadee-ux/yousell-admin/tree/main/tests
-
-
-
-https://github.com/haqeeqiazadee-ux/yousell-admin/tree/main/supabase/migrations
-
-
-
-https://github.com/haqeeqiazadee-ux/yousell-admin/tree/main/backend
-
-
-
-STEP (b) I want you read each and every line of the below (non-negotiable)
-
-1) each physical or virtual product or ai affiliate opportunity can have/should have one of the 2 options; dropship or wholesale via bulk purchase whichever applies depending on the product. e.g. physical product can be dropshipped/wholesale via bulk purchase on any of the platforms like tiktok, amazon, shopify etc......using any/all forms of content marketing included in our platform. 
-
-
-
-2) whilst another scenario could be a product category like Printables & Digital Planners or eBooks and Guides that would not necessarily have wholesale possibility but could still be considered as a dropship product as a user can link it to their tiktok, amazon accounts via an influencer campaign or create a shopify page/website etc...... to market it by using their own checkout page on Shopify or the product publisher's direct link to earn affiliate commission, given they offer any such affiliate program.....using any/all forms of content marketing included in our platform. 
-
-
-
-3) Also one very important point to consider is the AI platforms that offer a commission per sign up. 
-
-I still cannot think of the best strategy to approach this. If we offer the client to sign up with us to see such platforms we might be exposing ourselves to our competitors (content generation platforms, AI based sales platforms etc...) which we don't want to do. I think for now we should keep the AI platform commission earning opportunity to ourselves. We should have an inbuilt system that is not visible to the clients. It only appears on the admin dashboard rather than the client dashboard. It only works for us by using its AI platforms discovery strategy, our influencer outreach strategy and our content creation strategy to publish content on our own social media and ecommerce platforms. For now at least....until we discover a better way of marketing it without compromising on our overall business strategy. what say?
-
-
-
-4) I also understand that undertaking all these intelligence based tasks like Apify scraping, data cleaning, undertaking decision making and offering an idealistic response to the client could be difficult and vrey time consuming, if done all at runtime, once the client makes a particular request by clicking on a particular actionable button/link. So I propose  staying one step ahead of the client by using a Fallback strategy. This could include using Data pooling in Google sheets or any other data storage where the system has already undertaken specific use cases to enable fast, quick responses to the client. This can also be achieved by offering product options (alongwith the marketing route to take and the shop to sell on etc.), in advance to the client on their dashboard like Today's bestsellers, most suitable for you etc....Live product scraping should only be done when explicitly requested. We can use pre-existing market signals to keep a database of everything that we can expect a client might need, until they ask for something specific. Also our UI design should have explicit options for filters to help them single out the exact product/marketing/sales platform they need.
-
-
-
-5) We can also use APIs or spreadsheets (provided manually to the system by the admin) from platforms like Keepa, Fastmoss, Kelodata etc. to improve our horizon and make it easier and more reliable product suggestion decisions for the client? Think about this?
-
-
-
-I know its complicated but I think you can do it.....u can think of a database structure where the product's category, type, origin and the best marketing platform/influencer strategy should automatically suggest the customer the best approach to move forward. This intelligence system is the exact market capture strategy our platform will have that will make it unique from anything else. Just as a reminder, we have 3 main components: main website, client dashboard, admin dashboard. Each with different use interface and access rights. We are so far using this stack Netlify, Github, Resend, Railway, Apify, Supabase, Redis (possibly n8n), godaddy for domain, email. 
-
-
-
-Now I want you to do the following:
-
-
-
-consider all the new points I mentioned above (1, 2, 3, 4, 5) and undertake a thorough market research on these. Again keep a log of your research to prove yourself. Search through all relevant web sources to get and analyse as much info as possible related to our current project. Once done, I  want you to create a comprehensive use case diagram to show the exact workflow of the project based on all user inputs and outputs possible. 
-
-
-
-Once done show me the use case diagram and once I approve then update all the project documentation with the latest updates including but not limited to the following documents/folders:
-
-
-
-
-
-
-
-system/project_check_prompt.md — Comprehensive audit prompt (v2)
-
-
-
-system/development_log.md — Updated with all findings
-
-
-
-docs/content_publishing_shop_integration_strategy.md
-
-
-
-tasks/execution_plan.md
-
-
-
-claude.md
-
-
-
-
-
-https://github.com/haqeeqiazadee-ux/yousell-admin/tree/main/docs
-
-
-
-https://github.com/haqeeqiazadee-ux/yousell-admin/tree/main/system
-
-
-
-https://github.com/haqeeqiazadee-ux/yousell-admin/tree/main/tasks
-
-
-
-https://github.com/haqeeqiazadee-ux/yousell-admin/tree/main/tests
-
-
-
-https://github.com/haqeeqiazadee-ux/yousell-admin/tree/main/supabase/migrations
-
-
-
-https://github.com/haqeeqiazadee-ux/yousell-admin/tree/main/backend
-
-
+Break the V9 document attached into executable tasks just like the attached use case diagram, only difference being that here you will be writing each and every minute executable task as a new task in an excel row. Base this analysis on each engine the system is supposed to make. Think like a user who is going to do every possible action in each engine. for each action write the full e2e execution prototype e.g. The trend scout agent should do this, this, this this, and so on. One task per row with the column header "Trend Scout Agent". Repeat this task for every engine mentioned below. 
+
+Trend Scout Agent — Detects products before viral peak across all platforms
+Competitor Store Intelligence — Maps who is already monetising each trend
+Influencer Intelligence Engine — Profiles, scores, and drafts outreach for creators (with one-click invite buttons)
+Supplier Discovery Engine — Finds manufacturers in China, UK, EU, USA
+Profitability & Logistics Engine — Full unit economics before any recommendation
+Financial Modelling Engine — ROI projections for influencer and ad campaigns
+Launch Blueprint Engine — Complete one-click launch plan per product
+Client Allocation System — Assign winning products to client accounts
+Content Creation Engine — AI-generated marketing content for social channels
+Store Integration Engine — Push products to Shopify, TikTok Shop, Amazon stores
+Order Tracking Engine — Post-purchase email sequences via Resend
+Admin Command Center — One-click product deployment to YOUSELL's own stores
+Affiliate Commission Engine — Dual-stream revenue tracking (internal content + client referrals)
+Fulfillment Recommendation Engine — Auto-recommend DROPSHIP / WHOLESALE / POD / DIGITAL / AFFILIATE based on product attributes 
