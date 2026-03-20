@@ -2,8 +2,51 @@
 
 import logging
 import os
+from collections import defaultdict
 
 logger = logging.getLogger("gap_analyzer")
+
+# Sections we aggregate across all companies for the Summary tab
+_DIM_SECTIONS = [
+    ("dim2_functionality_tech", "Functionality & Technology"),
+    ("dim3_content_messaging", "Content & Messaging"),
+    ("dim4_services_products", "Services & Products"),
+    ("dim5_business_model", "Business Model"),
+]
+
+# Fields within each dimension that hold the most insightful data
+_DIM_FIELDS = {
+    "dim2_functionality_tech": [
+        ("core_product", "Core Products"),
+        ("key_features", "Key Features (across ecosystem)"),
+        ("integrations", "Integration Patterns"),
+        ("product_maturity", "Maturity Distribution"),
+        ("gap_for_your_project", "Gaps For Your Project"),
+    ],
+    "dim3_content_messaging": [
+        ("primary_message", "Messaging Approaches"),
+        ("messaging_clarity", "Clarity Distribution"),
+        ("seo_depth", "SEO Patterns"),
+        ("social_proof", "Social Proof Patterns"),
+        ("primary_cta", "CTA Patterns"),
+        ("gap_for_your_project", "Gaps For Your Project"),
+    ],
+    "dim4_services_products": [
+        ("pricing_model", "Pricing Models"),
+        ("pricing_visibility", "Pricing Visibility"),
+        ("packaging", "Packaging Approaches"),
+        ("upsell_mechanics", "Upsell Mechanics"),
+        ("gap_for_your_project", "Gaps For Your Project"),
+    ],
+    "dim5_business_model": [
+        ("business_model", "Business Models"),
+        ("revenue_model", "Revenue Models"),
+        ("icp", "Target ICPs"),
+        ("gtm_motion", "GTM Motions"),
+        ("competitive_position", "Competitive Positioning"),
+        ("gap_for_your_project", "Gaps For Your Project"),
+    ],
+}
 
 
 def export_to_excel(cache_data: dict, output_path: str) -> bool:
@@ -230,12 +273,247 @@ def export_to_excel(cache_data: dict, output_path: str) -> bool:
     for col_idx in range(1, 5):
         ws3.column_dimensions[_col_letter(col_idx)].width = 40
 
+    # ─── Sheet 4: Research Summary ───
+    _build_summary_sheet(wb, companies, header_font, header_fill, wrap, thin_border)
+
+    # Reorder: Summary as second tab
+    sheet_names = wb.sheetnames
+    if "Research Summary" in sheet_names:
+        summary_idx = sheet_names.index("Research Summary")
+        wb.move_sheet("Research Summary", offset=-(summary_idx - 1))
+
     # Save
     os.makedirs(os.path.dirname(os.path.abspath(output_path)) or ".", exist_ok=True)
     wb.save(output_path)
     logger.info(f"[INFO] Excel report saved: {output_path} ({row_idx - 2} companies, "
                 f"{opp_row - 2} opportunities, {gap_row - 2} gaps)")
     return True
+
+
+def _build_summary_sheet(wb, companies: dict, header_font, header_fill, wrap, thin_border):
+    """Build a summary sheet that aggregates findings by section with verdicts."""
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
+    ws = wb.create_sheet("Research Summary")
+
+    section_font = Font(bold=True, color="FFFFFF", size=12)
+    section_fill = PatternFill(start_color="1B2A4A", end_color="1B2A4A", fill_type="solid")
+    subsection_font = Font(bold=True, color="1B2A4A", size=11)
+    verdict_font = Font(bold=True, italic=True, color="2E86C1", size=10)
+    normal_wrap = Alignment(wrap_text=True, vertical="top")
+
+    col_widths = {1: 25, 2: 80, 3: 15}
+    for c, w in col_widths.items():
+        ws.column_dimensions[_col_letter(c)].width = w
+
+    row = 1
+
+    # ─── Header ───
+    ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=3)
+    cell = ws.cell(row=row, column=1, value="COMPETITIVE INTELLIGENCE — RESEARCH SUMMARY")
+    cell.font = Font(bold=True, color="FFFFFF", size=14)
+    cell.fill = section_fill
+    cell.alignment = Alignment(horizontal="center", vertical="center")
+    row += 1
+
+    total = len(companies)
+    success = sum(1 for d in companies.values() if d.get("status") == "success")
+    categories = set()
+    for d in companies.values():
+        cat = d.get("analysis", d).get("category", "")
+        if cat:
+            categories.add(cat)
+
+    ws.cell(row=row, column=1, value="Companies Analysed").font = Font(bold=True)
+    ws.cell(row=row, column=2, value=f"{total} ({success} successful, across {len(categories)} categories)")
+    row += 2
+
+    # ─── Section: Top Opportunities (aggregated) ───
+    row = _write_section_header(ws, row, "TOP OPPORTUNITIES ACROSS ALL COMPANIES", section_font, section_fill)
+    opp_counts = defaultdict(list)  # opportunity text -> list of company names
+    for domain, data in companies.items():
+        analysis = data.get("analysis", data)
+        name = analysis.get("company_name", domain)
+        for opp in analysis.get("top_opportunities", []):
+            opp_normalised = opp.strip().rstrip(".")
+            opp_counts[opp_normalised].append(name)
+
+    # Sort by frequency (most common patterns first)
+    sorted_opps = sorted(opp_counts.items(), key=lambda x: -len(x[1]))
+    ws.cell(row=row, column=1, value="Opportunity").font = Font(bold=True)
+    ws.cell(row=row, column=2, value="Seen At").font = Font(bold=True)
+    ws.cell(row=row, column=3, value="Frequency").font = Font(bold=True)
+    row += 1
+    for opp_text, seen_at in sorted_opps[:50]:  # Top 50 by frequency
+        ws.cell(row=row, column=1, value=opp_text).alignment = normal_wrap
+        ws.cell(row=row, column=2, value=", ".join(seen_at[:10])).alignment = normal_wrap
+        ws.cell(row=row, column=3, value=len(seen_at))
+        row += 1
+    row += 1
+
+    # ─── Section: Value-Add Ideas (aggregated) ───
+    row = _write_section_header(ws, row, "VALUE-ADD IDEAS ACROSS ALL COMPANIES", section_font, section_fill)
+    idea_counts = defaultdict(list)
+    for domain, data in companies.items():
+        analysis = data.get("analysis", data)
+        name = analysis.get("company_name", domain)
+        for idea in analysis.get("value_add_ideas", []):
+            idea_counts[idea.strip().rstrip(".")].append(name)
+
+    sorted_ideas = sorted(idea_counts.items(), key=lambda x: -len(x[1]))
+    ws.cell(row=row, column=1, value="Idea").font = Font(bold=True)
+    ws.cell(row=row, column=2, value="Seen At").font = Font(bold=True)
+    ws.cell(row=row, column=3, value="Frequency").font = Font(bold=True)
+    row += 1
+    for idea_text, seen_at in sorted_ideas[:50]:
+        ws.cell(row=row, column=1, value=idea_text).alignment = normal_wrap
+        ws.cell(row=row, column=2, value=", ".join(seen_at[:10])).alignment = normal_wrap
+        ws.cell(row=row, column=3, value=len(seen_at))
+        row += 1
+    row += 1
+
+    # ─── Section: Watch-Outs (aggregated) ───
+    row = _write_section_header(ws, row, "RISKS & WATCH-OUTS", section_font, section_fill)
+    watch_counts = defaultdict(list)
+    for domain, data in companies.items():
+        analysis = data.get("analysis", data)
+        name = analysis.get("company_name", domain)
+        for w in analysis.get("watch_out_for", []):
+            watch_counts[w.strip().rstrip(".")].append(name)
+
+    sorted_watches = sorted(watch_counts.items(), key=lambda x: -len(x[1]))
+    ws.cell(row=row, column=1, value="Risk / Watch-Out").font = Font(bold=True)
+    ws.cell(row=row, column=2, value="Seen At").font = Font(bold=True)
+    ws.cell(row=row, column=3, value="Frequency").font = Font(bold=True)
+    row += 1
+    for w_text, seen_at in sorted_watches[:50]:
+        ws.cell(row=row, column=1, value=w_text).alignment = normal_wrap
+        ws.cell(row=row, column=2, value=", ".join(seen_at[:10])).alignment = normal_wrap
+        ws.cell(row=row, column=3, value=len(seen_at))
+        row += 1
+    row += 1
+
+    # ─── Per-Dimension Sections ───
+    for dim_key, dim_title in _DIM_SECTIONS:
+        row = _write_section_header(ws, row, dim_title.upper(), section_font, section_fill)
+
+        fields = _DIM_FIELDS.get(dim_key, [])
+        for field_key, field_label in fields:
+            ws.cell(row=row, column=1, value=field_label).font = subsection_font
+            row += 1
+
+            # Collect all values for this field across companies
+            values_by_cat = defaultdict(list)  # category -> list of (company, value)
+            for domain, data in companies.items():
+                analysis = data.get("analysis", data)
+                dim_data = analysis.get(dim_key, {}) or {}
+                val = dim_data.get(field_key, "")
+                cat = analysis.get("category", "Uncategorised")
+                name = analysis.get("company_name", domain)
+
+                if isinstance(val, list):
+                    for item in val:
+                        item_str = str(item).strip()
+                        if item_str and item_str.lower() not in ("n/a", "not determinable", "none"):
+                            values_by_cat[cat].append((name, item_str))
+                elif isinstance(val, str):
+                    val = val.strip()
+                    if val and val.lower() not in ("n/a", "not determinable", "none", ""):
+                        values_by_cat[cat].append((name, val))
+
+            if not values_by_cat:
+                ws.cell(row=row, column=1, value="No data collected").alignment = normal_wrap
+                row += 1
+            else:
+                # For short-value fields (maturity, clarity, position, visibility, revenue_model)
+                # show a distribution count instead of listing every value
+                is_label_field = field_key in (
+                    "product_maturity", "messaging_clarity", "pricing_visibility",
+                    "competitive_position", "growth_stage", "revenue_model",
+                )
+                if is_label_field:
+                    label_counts = defaultdict(int)
+                    for cat_entries in values_by_cat.values():
+                        for _, v in cat_entries:
+                            label_counts[v] += 1
+                    dist_parts = [f"{label}: {count}" for label, count in
+                                  sorted(label_counts.items(), key=lambda x: -x[1])]
+                    ws.cell(row=row, column=1, value="Distribution")
+                    ws.cell(row=row, column=2, value=" | ".join(dist_parts)).alignment = normal_wrap
+                    row += 1
+                else:
+                    # For gap/text fields — group by category, show top findings
+                    for cat in sorted(values_by_cat.keys()):
+                        entries = values_by_cat[cat]
+                        if len(entries) > 5:
+                            # Summarise: show count + top examples
+                            ws.cell(row=row, column=1, value=f"{cat} ({len(entries)} findings)")
+                            examples = [f"{name}: {v}" for name, v in entries[:5]]
+                            ws.cell(row=row, column=2,
+                                    value="\n".join(examples)).alignment = normal_wrap
+                            row += 1
+                        else:
+                            for name, v in entries:
+                                ws.cell(row=row, column=1, value=f"{cat} — {name}")
+                                ws.cell(row=row, column=2, value=v).alignment = normal_wrap
+                                row += 1
+
+            # Verdict row for this field
+            total_findings = sum(len(v) for v in values_by_cat.values())
+            if total_findings > 0 and field_key == "gap_for_your_project":
+                ws.cell(row=row, column=1, value="VERDICT").font = verdict_font
+                ws.cell(row=row, column=2,
+                        value=f"{total_findings} gaps identified across {len(values_by_cat)} categories. "
+                              f"Review the Company Analysis tab filtered by this dimension to prioritise.").font = verdict_font
+                ws.cell(row=row, column=2).alignment = normal_wrap
+                row += 1
+
+            row += 1  # Spacer between fields
+
+        row += 1  # Spacer between dimensions
+
+    # ─── Category Breakdown ───
+    row = _write_section_header(ws, row, "CATEGORY BREAKDOWN", section_font, section_fill)
+    by_cat = defaultdict(list)
+    for domain, data in companies.items():
+        analysis = data.get("analysis", data)
+        cat = analysis.get("category", "Uncategorised") or "Uncategorised"
+        by_cat[cat].append(analysis)
+
+    ws.cell(row=row, column=1, value="Category").font = Font(bold=True)
+    ws.cell(row=row, column=2, value="Summary").font = Font(bold=True)
+    ws.cell(row=row, column=3, value="Count").font = Font(bold=True)
+    row += 1
+
+    for cat in sorted(by_cat.keys()):
+        entries = by_cat[cat]
+        all_opps = []
+        for e in entries:
+            all_opps.extend(e.get("top_opportunities", []))
+        top_opp = all_opps[0] if all_opps else "No opportunities identified"
+        verdicts = [e.get("one_line_verdict", "") for e in entries if e.get("one_line_verdict")]
+
+        summary_parts = [f"Top opportunity: {top_opp}"]
+        if verdicts:
+            summary_parts.append(f"Sample verdict: {verdicts[0]}")
+
+        ws.cell(row=row, column=1, value=cat)
+        ws.cell(row=row, column=2, value=" | ".join(summary_parts)).alignment = normal_wrap
+        ws.cell(row=row, column=3, value=len(entries))
+        row += 1
+
+    ws.freeze_panes = "A2"
+
+
+def _write_section_header(ws, row, title, font, fill):
+    """Write a merged section header row and return the next row."""
+    from openpyxl.styles import Alignment
+    ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=3)
+    cell = ws.cell(row=row, column=1, value=title)
+    cell.font = font
+    cell.fill = fill
+    cell.alignment = Alignment(horizontal="left", vertical="center")
+    return row + 1
 
 
 def _join_list(items: list, sep: str = "\n• ") -> str:

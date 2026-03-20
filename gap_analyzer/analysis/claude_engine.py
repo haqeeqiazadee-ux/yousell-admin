@@ -12,7 +12,7 @@ from utils.retry import retry_sync
 logger = logging.getLogger("gap_analyzer")
 
 MODEL = os.getenv("CLAUDE_MODEL", "claude-opus-4-6")
-MAX_TOKENS = 1500
+MAX_TOKENS = 2000
 
 COMPANY_ANALYSIS_PROMPT = """You are a senior product strategist and competitive intelligence analyst
 preparing a board-level briefing for an ecommerce platform startup.
@@ -36,9 +36,8 @@ YOUR TASK: Analyse this company and identify gaps and
 opportunities for YOUR PROJECT.
 
 RULES:
-- Be PRECISE but BRIEF. Every string value max 1-2 sentences.
-- key_features: max 5 items, each under 10 words.
-- top_opportunities, value_add_ideas, watch_out_for: max 3 items each, each under 20 words.
+- Be PRECISE but BRIEF. Each string value: 1-2 sentences max.
+- Each list item: under 20 words. But include ALL relevant items you find — no artificial caps.
 - gap_for_your_project: one specific, actionable sentence referencing what you saw.
 - Focus on functionality, content, services, business model — NOT visual design or UX.
 - Do not invent data. Say 'Not determinable' if unknown.
@@ -53,16 +52,16 @@ RULES:
 
   "dim2_functionality_tech": {{
     "core_product": string (1 sentence),
-    "key_features": [string] (max 5, short),
+    "key_features": [string] (all notable features, each under 10 words),
     "tech_signals": string (1 sentence),
     "integrations": string (1 sentence),
-    "product_maturity": string (1-2 words: Early/Growth/Mature/Enterprise),
+    "product_maturity": string (Early/Growth/Mature/Enterprise),
     "gap_for_your_project": string (1 actionable sentence)
   }},
 
   "dim3_content_messaging": {{
     "primary_message": string (1 sentence),
-    "messaging_clarity": string (1-2 words: Clear/Moderate/Weak),
+    "messaging_clarity": string (Clear/Moderate/Weak),
     "content_tone": string (2-3 words),
     "seo_depth": string (1 sentence),
     "social_proof": string (1 sentence),
@@ -73,7 +72,7 @@ RULES:
   "dim4_services_products": {{
     "product_catalogue": string (1 sentence),
     "pricing_model": string (1 sentence),
-    "pricing_visibility": string (1-2 words: Public/Hidden/Partial),
+    "pricing_visibility": string (Public/Hidden/Partial),
     "packaging": string (1 sentence),
     "upsell_mechanics": string (1 sentence),
     "gap_for_your_project": string (1 actionable sentence)
@@ -89,10 +88,10 @@ RULES:
     "gap_for_your_project": string (1 actionable sentence)
   }},
 
-  "top_opportunities": [string] (max 3, each under 20 words),
-  "value_add_ideas": [string] (max 3, each under 20 words),
-  "watch_out_for": [string] (max 3, each under 20 words),
-  "one_line_verdict": string (1 sentence max)
+  "top_opportunities": [string] (all you find, each under 20 words),
+  "value_add_ideas": [string] (all you find, each under 20 words),
+  "watch_out_for": [string] (all you find, each under 20 words),
+  "one_line_verdict": string (1 sentence)
 }}"""
 
 SIMPLIFIED_PROMPT = """Analyse this company for competitive intelligence. Return JSON only.
