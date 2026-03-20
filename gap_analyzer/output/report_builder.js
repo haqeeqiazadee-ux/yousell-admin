@@ -567,7 +567,7 @@ function buildReport(cacheData) {
   sections.push(bodyText(`Analysis Date: ${metadata.last_updated || "N/A"}`));
   sections.push(bodyText(`Companies File: ${metadata.companies_file || "N/A"}`));
   sections.push(bodyText(`Specs File: ${metadata.specs_file || "N/A"}`));
-  sections.push(bodyText(`Claude Model: claude-sonnet-4-5-20251022`));
+  sections.push(bodyText(`Claude Model: claude-opus-4-6`));
   sections.push(bodyText(`Total Companies: ${totalCompanies}`));
   sections.push(bodyText(`Total Runs: ${runs.length}`));
   runs.forEach((r) => {

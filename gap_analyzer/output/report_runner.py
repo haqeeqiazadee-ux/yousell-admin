@@ -465,7 +465,7 @@ def _build_with_python_docx(cache_data: dict, output_path: str) -> bool:
         return _build_plaintext_fallback(cache_data, output_path)
 
 
-MODEL = "claude-sonnet-4-5-20251022"
+MODEL = "claude-opus-4-6"
 
 
 def _build_plaintext_fallback(cache_data: dict, output_path: str) -> bool:
