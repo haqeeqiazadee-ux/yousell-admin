@@ -257,7 +257,7 @@ async def process_company(
         try:
             print(f"    [1/3] Firecrawl  \u2192 ", end="", flush=True)
             scrape_result = await asyncio.wait_for(
-                firecrawl.scrape_company(url), timeout=120
+                firecrawl.scrape_company(url), timeout=60
             )
             pages_ok = len(scrape_result.get("pages_scraped", []))
             pages_fail = len(scrape_result.get("pages_failed", []))
@@ -270,7 +270,7 @@ async def process_company(
                 pw_urls = [f"{url.rstrip('/')}/{p}" for p in empty_pages[:3]]
                 try:
                     pw_results = await asyncio.wait_for(
-                        playwright.scrape_pages(pw_urls), timeout=60
+                        playwright.scrape_pages(pw_urls), timeout=30
                     )
                     pw_count = len([v for v in pw_results.values() if v])
                     if pw_count:
@@ -309,10 +309,7 @@ async def process_company(
     # Step 2: Claude analysis
     print(f"    [3/3] Claude     \u2192 ", end="", flush=True)
 
-    loop = asyncio.get_event_loop()
-    analysis = await loop.run_in_executor(
-        None,
-        claude.analyse_company,
+    analysis = await claude.analyse_company_async(
         company,
         project_profile,
         scraped_content,
@@ -378,7 +375,7 @@ async def async_main(args):
     cache_path = args.resume or "gap_analyzer_cache.json"
     _global_cache_path = cache_path
     checkpoint_path = "gap_analyzer_checkpoint.txt"
-    workers = min(args.workers or 3, 5)
+    workers = args.workers or 20
 
     state.specs_file = os.path.abspath(specs_path)
     state.companies_file = os.path.abspath(companies_path)
@@ -497,74 +494,66 @@ async def async_main(args):
     heartbeat_interval = 300  # 5 minutes
     last_heartbeat = time.time()
     total_to_process = len(to_process)
+    _cache_lock = asyncio.Lock()
 
-    async def process_with_semaphore(company, idx):
+    async def process_with_semaphore(company, idx, domain):
         async with semaphore:
-            return await process_company(
-                company, project_profile, firecrawl, playwright, claude,
-                idx, state.total_companies,
-            )
+            try:
+                result = await process_company(
+                    company, project_profile, firecrawl, playwright, claude,
+                    idx, state.total_companies,
+                )
 
+                async with _cache_lock:
+                    state.companies[domain] = result
+                    state.processed += 1
+
+                    status = result.get("status", "unknown")
+                    if status == "success":
+                        state.succeeded += 1
+                    elif status == "partial":
+                        state.partial += 1
+                    else:
+                        state.failed += 1
+
+                    save_cache(state, cache_path, _existing_runs)
+
+                    if state.processed % 10 == 0:
+                        save_checkpoint(state, checkpoint_path)
+
+            except Exception as e:
+                logger.error(f"[ERROR] [{domain}] Unhandled error: {e}")
+                async with _cache_lock:
+                    state.errors.append({"domain": domain, "error": str(e)})
+                    state.companies[domain] = {
+                        "status": "failed",
+                        "run_id": state.run_id,
+                        "error": str(e),
+                        "analysis": {
+                            "company_name": company.get("company_name", domain),
+                            "url": company.get("url", ""),
+                            "category": company.get("category", ""),
+                            "niche": company.get("niche", ""),
+                            "top_opportunities": [],
+                            "value_add_ideas": [],
+                            "watch_out_for": [],
+                            "one_line_verdict": f"Processing failed: {e}",
+                        },
+                    }
+                    state.failed += 1
+                    state.processed += 1
+                    save_cache(state, cache_path, _existing_runs)
+
+    # Launch all companies concurrently (semaphore limits parallelism)
+    tasks = []
     for i, company in enumerate(to_process, 1):
         domain = company.get("domain", "") or f"no_domain_{i}"
+        tasks.append(process_with_semaphore(company, cached_count + i, domain))
 
-        try:
-            result = await process_with_semaphore(company, cached_count + i)
-
-            state.companies[domain] = result
-            state.processed += 1
-
-            status = result.get("status", "unknown")
-            if status == "success":
-                state.succeeded += 1
-            elif status == "partial":
-                state.partial += 1
-            else:
-                state.failed += 1
-
-            # Save cache after every company
-            save_cache(state, cache_path, _existing_runs)
-
-            # Checkpoint every 10 companies
-            if state.processed % 10 == 0:
-                save_checkpoint(state, checkpoint_path)
-
-            # Heartbeat
-            now = time.time()
-            if now - last_heartbeat >= heartbeat_interval:
-                total_done = cached_count + state.processed
-                remaining = state.total_companies - total_done
-                logger.log(
-                    HEARTBEAT,
-                    f"{total_done}/{state.total_companies} companies processed, "
-                    f"{remaining} remaining",
-                )
-                last_heartbeat = now
-
-        except Exception as e:
-            logger.error(f"[ERROR] [{domain}] Unhandled error: {e}")
-            state.errors.append({"domain": domain, "error": str(e)})
-            state.companies[domain] = {
-                "status": "failed",
-                "run_id": state.run_id,
-                "error": str(e),
-                "analysis": {
-                    "company_name": company.get("company_name", domain),
-                    "url": company.get("url", ""),
-                    "category": company.get("category", ""),
-                    "niche": company.get("niche", ""),
-                    "top_opportunities": [],
-                    "value_add_ideas": [],
-                    "watch_out_for": [],
-                    "one_line_verdict": f"Processing failed: {e}",
-                },
-            }
-            state.failed += 1
-            state.processed += 1
-            save_cache(state, cache_path, _existing_runs)
-
-    # Close Playwright
-    await playwright.close()
+    try:
+        await asyncio.gather(*tasks, return_exceptions=True)
+    finally:
+        await playwright.close()
 
     # ─── End-of-run summary ───
     total_succeeded = sum(
@@ -671,7 +660,7 @@ def main():
     parser.add_argument("--specs", type=str, default=None, help="Path to project specs (.docx/.pdf/.txt)")
     parser.add_argument("--companies", type=str, default=None, help="Path to companies Excel (.xlsx)")
     parser.add_argument("--output", type=str, default="competitive_report.docx", help="Output .docx path")
-    parser.add_argument("--workers", type=int, default=3, help="Parallel workers (max 5)")
+    parser.add_argument("--workers", type=int, default=20, help="Parallel workers (default 20)")
     parser.add_argument("--limit", type=int, default=None, help="Process only first N companies")
     parser.add_argument("--category", type=str, default=None, help="Process only this category")
     parser.add_argument("--resume", type=str, default="gap_analyzer_cache.json", help="Cache file path")
