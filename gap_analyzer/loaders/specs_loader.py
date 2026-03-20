@@ -4,10 +4,13 @@ import hashlib
 import json
 import logging
 import os
+import re
 
 import anthropic
 
 logger = logging.getLogger("gap_analyzer")
+
+MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
 
 SPECS_EXTRACTION_PROMPT = """Read this project specification document line by line.
 Extract and summarise:
@@ -95,28 +98,27 @@ def extract_project_profile(specs_text: str, api_key: str | None = None) -> dict
         specs_text = specs_text[:100000]
         logger.info("[DECISION] [PRE-FLIGHT] Specs text truncated to 100K chars for Claude processing")
 
-    response = client.messages.create(
-        model="claude-opus-4-6",
-        max_tokens=2000,
-        messages=[
-            {
-                "role": "user",
-                "content": f"{SPECS_EXTRACTION_PROMPT}\n\n---\n\nDOCUMENT CONTENT:\n{specs_text}",
-            }
-        ],
-    )
+    try:
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=2000,
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"{SPECS_EXTRACTION_PROMPT}\n\n---\n\nDOCUMENT CONTENT:\n{specs_text}",
+                }
+            ],
+        )
+    except Exception as e:
+        logger.error(f"[ERROR] Claude API call failed for specs extraction: {e}")
+        return _empty_profile(f"API call failed: {e}")
 
     if not response.content:
         logger.error("[ERROR] Claude returned empty response for specs extraction")
-        return {"services_and_features": [], "summary": "Empty response"}
+        return _empty_profile("Empty response")
+
     raw = response.content[0].text.strip()
-    # Strip markdown fences (handles ```json ... ``` and variants)
-    import re
-    fence_match = re.match(r'^```(?:json)?\s*\n?(.*?)```\s*$', raw, re.DOTALL)
-    if fence_match:
-        raw = fence_match.group(1).strip()
-    elif raw.startswith("json"):
-        raw = raw[4:].strip()
+    raw = _strip_json_fences(raw)
 
     try:
         profile = json.loads(raw)
@@ -125,19 +127,52 @@ def extract_project_profile(specs_text: str, api_key: str | None = None) -> dict
         try:
             profile = ast.literal_eval(raw)
         except Exception:
-            logger.error("[ERROR] Failed to parse project profile JSON from Claude")
-            profile = {
-                "services_and_features": [],
-                "target_audience": [],
-                "business_model": "Could not parse",
-                "revenue_model": "Could not parse",
-                "technology_stack": "Could not parse",
-                "differentiators": [],
-                "competitors_referenced": [],
-                "summary": raw[:500],
-            }
+            # Try to find JSON object anywhere in the response
+            json_match = re.search(r'\{[\s\S]*\}', raw)
+            if json_match:
+                try:
+                    profile = json.loads(json_match.group())
+                except json.JSONDecodeError:
+                    logger.error("[ERROR] Failed to parse project profile JSON from Claude")
+                    profile = _empty_profile(raw[:500])
+            else:
+                logger.error("[ERROR] Failed to parse project profile JSON from Claude")
+                profile = _empty_profile(raw[:500])
 
     return profile
+
+
+def _strip_json_fences(raw: str) -> str:
+    """Strip markdown code fences and leading 'json' tag from a response."""
+    raw = raw.strip()
+    # Handle ```json ... ``` or ``` ... ```
+    fence_match = re.match(r'^```(?:json)?\s*\n?(.*?)```\s*$', raw, re.DOTALL)
+    if fence_match:
+        return fence_match.group(1).strip()
+    # Handle leading ``` without trailing
+    if raw.startswith("```"):
+        lines = raw.split("\n", 1)
+        raw = lines[1] if len(lines) > 1 else raw[3:]
+        if raw.endswith("```"):
+            raw = raw[:-3]
+        return raw.strip()
+    if raw.startswith("json"):
+        raw = raw[4:].strip()
+    return raw
+
+
+def _empty_profile(summary: str = "") -> dict:
+    """Return a fallback empty project profile."""
+    return {
+        "services_and_features": [],
+        "target_audience": [],
+        "business_model": "Could not parse",
+        "revenue_model": "Could not parse",
+        "technology_stack": "Could not parse",
+        "differentiators": [],
+        "competitors_referenced": [],
+        "summary": summary,
+    }
 
 
 def print_project_summary(profile: dict):
