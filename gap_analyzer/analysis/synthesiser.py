@@ -8,7 +8,7 @@ import anthropic
 
 logger = logging.getLogger("gap_analyzer")
 
-MODEL = "claude-sonnet-4-5-20251022"
+MODEL = "claude-opus-4-6"
 MAX_SYNTHESIS_TOKENS = 4000
 
 SYNTHESIS_PROMPT = """You are the lead strategist preparing the final competitive intelligence

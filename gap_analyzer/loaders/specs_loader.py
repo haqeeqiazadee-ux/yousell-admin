@@ -96,7 +96,7 @@ def extract_project_profile(specs_text: str, api_key: str | None = None) -> dict
         logger.info("[DECISION] [PRE-FLIGHT] Specs text truncated to 100K chars for Claude processing")
 
     response = client.messages.create(
-        model="claude-sonnet-4-5-20251022",
+        model="claude-opus-4-6",
         max_tokens=2000,
         messages=[
             {
