@@ -12,7 +12,7 @@ from utils.retry import retry_sync
 logger = logging.getLogger("gap_analyzer")
 
 MODEL = os.getenv("CLAUDE_MODEL", "claude-opus-4-6")
-MAX_TOKENS = 2000
+MAX_TOKENS = 1500
 
 COMPANY_ANALYSIS_PROMPT = """You are a senior product strategist and competitive intelligence analyst
 preparing a board-level briefing for an ecommerce platform startup.
@@ -32,24 +32,18 @@ LIVE SCRAPED CONTENT:
 {scraped_content}
 
 ══════════════════════════════════════════════════════════
-YOUR TASK: Analyse this company across the four dimensions
-below, then identify specific gaps, opportunities, and
-recommendations for YOUR PROJECT based on what you find.
+YOUR TASK: Analyse this company and identify gaps and
+opportunities for YOUR PROJECT.
 
-Focus on core functionality, features, content strategy,
-services, and business model — NOT visual design or UX.
-
-Do not invent data. If you cannot determine something from
-the scraped content or Excel data, say 'Not determinable'
-rather than guessing.
-
-Every gap_for_your_project field must be specific and
-actionable — not generic. Reference actual features or
-patterns you saw.
+RULES:
+- Be PRECISE but BRIEF. Every string value max 1-2 sentences.
+- key_features: max 5 items, each under 10 words.
+- top_opportunities, value_add_ideas, watch_out_for: max 3 items each, each under 20 words.
+- gap_for_your_project: one specific, actionable sentence referencing what you saw.
+- Focus on functionality, content, services, business model — NOT visual design or UX.
+- Do not invent data. Say 'Not determinable' if unknown.
+- No markdown. No preamble. Return ONLY the JSON object.
 ══════════════════════════════════════════════════════════
-
-Return ONLY a JSON object with these exact keys.
-No markdown. No preamble. No explanation outside the JSON.
 
 {{
   "company_name": string,
@@ -58,47 +52,47 @@ No markdown. No preamble. No explanation outside the JSON.
   "niche": string,
 
   "dim2_functionality_tech": {{
-    "core_product": string,
-    "key_features": [string],
-    "tech_signals": string,
-    "integrations": string,
-    "product_maturity": string,
-    "gap_for_your_project": string
+    "core_product": string (1 sentence),
+    "key_features": [string] (max 5, short),
+    "tech_signals": string (1 sentence),
+    "integrations": string (1 sentence),
+    "product_maturity": string (1-2 words: Early/Growth/Mature/Enterprise),
+    "gap_for_your_project": string (1 actionable sentence)
   }},
 
   "dim3_content_messaging": {{
-    "primary_message": string,
-    "messaging_clarity": string,
-    "content_tone": string,
-    "seo_depth": string,
-    "social_proof": string,
-    "primary_cta": string,
-    "gap_for_your_project": string
+    "primary_message": string (1 sentence),
+    "messaging_clarity": string (1-2 words: Clear/Moderate/Weak),
+    "content_tone": string (2-3 words),
+    "seo_depth": string (1 sentence),
+    "social_proof": string (1 sentence),
+    "primary_cta": string (quote the CTA),
+    "gap_for_your_project": string (1 actionable sentence)
   }},
 
   "dim4_services_products": {{
-    "product_catalogue": string,
-    "pricing_model": string,
-    "pricing_visibility": string,
-    "packaging": string,
-    "upsell_mechanics": string,
-    "gap_for_your_project": string
+    "product_catalogue": string (1 sentence),
+    "pricing_model": string (1 sentence),
+    "pricing_visibility": string (1-2 words: Public/Hidden/Partial),
+    "packaging": string (1 sentence),
+    "upsell_mechanics": string (1 sentence),
+    "gap_for_your_project": string (1 actionable sentence)
   }},
 
   "dim5_business_model": {{
-    "business_model": string,
-    "revenue_model": string,
-    "icp": string,
-    "gtm_motion": string,
-    "competitive_position": string,
-    "growth_stage": string,
-    "gap_for_your_project": string
+    "business_model": string (1 sentence),
+    "revenue_model": string (SaaS/Marketplace/Commission/etc),
+    "icp": string (1 sentence),
+    "gtm_motion": string (1 sentence),
+    "competitive_position": string (Leader/Challenger/Niche/Emerging),
+    "growth_stage": string (Startup/Growth/Mature/Enterprise),
+    "gap_for_your_project": string (1 actionable sentence)
   }},
 
-  "top_opportunities": [string],
-  "value_add_ideas": [string],
-  "watch_out_for": [string],
-  "one_line_verdict": string
+  "top_opportunities": [string] (max 3, each under 20 words),
+  "value_add_ideas": [string] (max 3, each under 20 words),
+  "watch_out_for": [string] (max 3, each under 20 words),
+  "one_line_verdict": string (1 sentence max)
 }}"""
 
 SIMPLIFIED_PROMPT = """Analyse this company for competitive intelligence. Return JSON only.
