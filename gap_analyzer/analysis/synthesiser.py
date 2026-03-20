@@ -1,15 +1,17 @@
 """Cross-company synthesis engine — aggregates all findings into strategic report."""
 
+import ast
 import json
 import logging
 import os
+import re
 
 import anthropic
 
 logger = logging.getLogger("gap_analyzer")
 
 MODEL = os.getenv("CLAUDE_MODEL", "claude-opus-4-6")
-MAX_SYNTHESIS_TOKENS = 4000
+MAX_SYNTHESIS_TOKENS = 8000
 
 SYNTHESIS_PROMPT = """You are the lead strategist preparing the final competitive intelligence
 briefing for the board.
@@ -110,7 +112,7 @@ class Synthesiser:
         return summary
 
     def _parse_json(self, raw: str) -> dict | None:
-        """Parse JSON from Claude response."""
+        """Parse JSON from Claude response with multiple fallbacks."""
         raw = raw.strip()
         if raw.startswith("```"):
             raw = "\n".join(raw.split("\n")[1:])
@@ -122,7 +124,27 @@ class Synthesiser:
         try:
             return json.loads(raw)
         except json.JSONDecodeError:
-            return None
+            pass
+        # Fallback: ast.literal_eval
+        try:
+            return ast.literal_eval(raw)
+        except Exception:
+            pass
+        # Fallback: find outermost JSON object via bracket matching
+        start = raw.find("{")
+        if start != -1:
+            depth = 0
+            for i in range(start, len(raw)):
+                if raw[i] == "{":
+                    depth += 1
+                elif raw[i] == "}":
+                    depth -= 1
+                    if depth == 0:
+                        try:
+                            return json.loads(raw[start : i + 1])
+                        except json.JSONDecodeError:
+                            break
+        return None
 
     def synthesise(self, companies: dict, project_profile: dict) -> dict:
         """Run synthesis across all company analyses."""
@@ -177,7 +199,25 @@ class Synthesiser:
             if result:
                 return result
 
-            logger.error("[ERROR] Synthesis JSON parse failed")
+            # Retry once with explicit instruction
+            logger.warning("[WARN] Synthesis JSON parse failed, retrying with stricter prompt")
+            retry_response = self.client.messages.create(
+                model=MODEL,
+                max_tokens=MAX_SYNTHESIS_TOKENS,
+                messages=[
+                    {"role": "user", "content": prompt},
+                    {"role": "assistant", "content": raw},
+                    {"role": "user", "content": "Your response was not valid JSON. Return ONLY the JSON object, starting with { and ending with }. No markdown fences, no text before or after."},
+                ],
+            )
+            self.total_api_calls += 1
+            if retry_response.content:
+                raw2 = retry_response.content[0].text
+                result2 = self._parse_json(raw2)
+                if result2:
+                    return result2
+
+            logger.error("[ERROR] Synthesis JSON parse failed after retry")
             return {"executive_summary": raw[:3000], "parse_failed": True}
 
         except Exception as e:

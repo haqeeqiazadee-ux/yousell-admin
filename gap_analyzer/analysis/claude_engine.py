@@ -135,10 +135,26 @@ class ClaudeEngine:
         try:
             return json.loads(raw)
         except json.JSONDecodeError:
-            try:
-                return ast.literal_eval(raw)
-            except Exception:
-                return None
+            pass
+        try:
+            return ast.literal_eval(raw)
+        except Exception:
+            pass
+        # Fallback: find outermost JSON object via bracket matching
+        start = raw.find("{")
+        if start != -1:
+            depth = 0
+            for i in range(start, len(raw)):
+                if raw[i] == "{":
+                    depth += 1
+                elif raw[i] == "}":
+                    depth -= 1
+                    if depth == 0:
+                        try:
+                            return json.loads(raw[start : i + 1])
+                        except json.JSONDecodeError:
+                            break
+        return None
 
     @retry_sync(max_retries=3, base_delay=10.0)
     def _call_claude(self, prompt: str, max_tokens: int = MAX_TOKENS) -> str:
