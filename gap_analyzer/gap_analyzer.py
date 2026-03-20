@@ -375,7 +375,7 @@ async def async_main(args):
     cache_path = args.resume or "gap_analyzer_cache.json"
     _global_cache_path = cache_path
     checkpoint_path = "gap_analyzer_checkpoint.txt"
-    workers = min(args.workers or 10, 20)
+    workers = args.workers or 20
 
     state.specs_file = os.path.abspath(specs_path)
     state.companies_file = os.path.abspath(companies_path)
@@ -660,7 +660,7 @@ def main():
     parser.add_argument("--specs", type=str, default=None, help="Path to project specs (.docx/.pdf/.txt)")
     parser.add_argument("--companies", type=str, default=None, help="Path to companies Excel (.xlsx)")
     parser.add_argument("--output", type=str, default="competitive_report.docx", help="Output .docx path")
-    parser.add_argument("--workers", type=int, default=10, help="Parallel workers (max 20)")
+    parser.add_argument("--workers", type=int, default=20, help="Parallel workers (default 20)")
     parser.add_argument("--limit", type=int, default=None, help="Process only first N companies")
     parser.add_argument("--category", type=str, default=None, help="Process only this category")
     parser.add_argument("--resume", type=str, default="gap_analyzer_cache.json", help="Cache file path")
