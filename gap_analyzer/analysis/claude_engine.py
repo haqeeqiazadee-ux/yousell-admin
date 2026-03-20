@@ -11,7 +11,7 @@ from utils.retry import retry_sync
 
 logger = logging.getLogger("gap_analyzer")
 
-MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-5-20250514")
+MODEL = os.getenv("CLAUDE_MODEL", "claude-opus-4-6")
 MAX_TOKENS = 2000
 
 COMPANY_ANALYSIS_PROMPT = """You are a senior product strategist and competitive intelligence analyst
