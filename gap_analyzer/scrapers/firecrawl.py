@@ -35,61 +35,50 @@ USER_AGENT = (
 class FirecrawlScraper:
     """Scrapes company pages using Firecrawl API with requests fallback."""
 
-    def __init__(self, api_key: str | None = None):
+    def __init__(self, api_key: str | None = None, concurrency: int = 4):
         self.api_key = api_key or os.getenv("FIRECRAWL_API_KEY", "")
-        self._semaphore = asyncio.Semaphore(1)
-        self._last_call_time = 0.0
+        self._semaphore = asyncio.Semaphore(concurrency)
 
-    async def _rate_limit(self):
-        """Ensure minimum 0.8s between Firecrawl API calls."""
-        async with self._semaphore:
-            now = asyncio.get_event_loop().time()
-            elapsed = now - self._last_call_time
-            if elapsed < 0.8:
-                await asyncio.sleep(0.8 - elapsed)
-            self._last_call_time = asyncio.get_event_loop().time()
-
-    @retry_async(max_retries=3, base_delay=2.0)
+    @retry_async(max_retries=3, base_delay=1.0)
     async def _scrape_firecrawl(self, url: str) -> str:
         """Scrape a single URL via Firecrawl API."""
         if not self.api_key:
             raise ValueError("No Firecrawl API key configured")
 
-        await self._rate_limit()
+        async with self._semaphore:
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.api_key}",
+            }
+            payload = {
+                "url": url,
+                "formats": ["markdown"],
+                "onlyMainContent": True,
+                "waitFor": 500,
+                "timeout": 15000,
+            }
 
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}",
-        }
-        payload = {
-            "url": url,
-            "formats": ["markdown"],
-            "onlyMainContent": True,
-            "waitFor": 1500,
-            "timeout": 35000,
-        }
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda: requests.post(
+                    FIRECRAWL_API_URL,
+                    json=payload,
+                    headers=headers,
+                    timeout=20,
+                ),
+            )
 
-        loop = asyncio.get_event_loop()
-        response = await loop.run_in_executor(
-            None,
-            lambda: requests.post(
-                FIRECRAWL_API_URL,
-                json=payload,
-                headers=headers,
-                timeout=40,
-            ),
-        )
+            if response.status_code == 429:
+                raise Exception("Rate limited (429)")
+            response.raise_for_status()
 
-        if response.status_code == 429:
-            raise Exception("Rate limited (429)")
-        response.raise_for_status()
+            data = response.json()
+            if not data.get("success"):
+                return ""
 
-        data = response.json()
-        if not data.get("success"):
-            return ""
-
-        content = data.get("data", {}).get("markdown", "")
-        return content[:MAX_CHARS_PER_PAGE] if content else ""
+            content = data.get("data", {}).get("markdown", "")
+            return content[:MAX_CHARS_PER_PAGE] if content else ""
 
     async def _scrape_requests_fallback(self, url: str) -> str:
         """Fallback: scrape with requests + BeautifulSoup."""
@@ -100,7 +89,7 @@ class FirecrawlScraper:
                 resp = requests.get(
                     url,
                     headers={"User-Agent": USER_AGENT},
-                    timeout=20,
+                    timeout=15,
                     allow_redirects=True,
                 )
                 resp.raise_for_status()
@@ -117,37 +106,47 @@ class FirecrawlScraper:
 
         return await loop.run_in_executor(None, _fetch)
 
+    async def _scrape_page(self, base_url: str, page_name: str, paths: list[str]) -> tuple[str, str]:
+        """Scrape a single page category. Returns (page_name, content)."""
+        content = ""
+
+        for path in paths:
+            url = f"{base_url}{path}"
+            try:
+                content = await self._scrape_firecrawl(url)
+                if content and len(content.strip()) > 50:
+                    return page_name, content
+            except Exception as e:
+                logger.debug(f"Firecrawl failed for {url}: {e}")
+                content = ""
+
+        # Fallback to requests if Firecrawl returned empty
+        fallback_url = f"{base_url}{paths[0]}"
+        content = await self._scrape_requests_fallback(fallback_url)
+        if content:
+            logger.info(
+                f"[DECISION] [{base_url}] Requests fallback used for {page_name} — "
+                "Firecrawl returned empty"
+            )
+
+        return page_name, content
+
     async def scrape_company(self, base_url: str) -> dict:
-        """Scrape all pages for a company. Returns dict of page_name -> content."""
+        """Scrape all pages for a company in parallel. Returns dict of page_name -> content."""
         base_url = base_url.rstrip("/")
+
+        # Launch all page scrapes concurrently
+        tasks = [
+            self._scrape_page(base_url, page_name, paths)
+            for page_name, paths in PAGE_PATHS.items()
+        ]
+        results_list = await asyncio.gather(*tasks)
+
         results = {}
         pages_scraped = []
         pages_failed = []
 
-        for page_name, paths in PAGE_PATHS.items():
-            content = ""
-            tried_url = ""
-
-            for path in paths:
-                tried_url = f"{base_url}{path}"
-                try:
-                    content = await self._scrape_firecrawl(tried_url)
-                    if content and len(content.strip()) > 50:
-                        break
-                except Exception as e:
-                    logger.debug(f"Firecrawl failed for {tried_url}: {e}")
-                    content = ""
-
-            # Fallback to requests if Firecrawl returned empty
-            if not content or len(content.strip()) < 50:
-                fallback_url = f"{base_url}{paths[0]}"
-                content = await self._scrape_requests_fallback(fallback_url)
-                if content:
-                    logger.info(
-                        f"[DECISION] [{base_url}] Requests fallback used for {page_name} — "
-                        "Firecrawl returned empty"
-                    )
-
+        for page_name, content in results_list:
             if content and len(content.strip()) > 50:
                 results[page_name] = content
                 pages_scraped.append(page_name)
