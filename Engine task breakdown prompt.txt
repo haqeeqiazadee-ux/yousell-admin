@@ -1,0 +1,161 @@
+You are operating in FULL CAPABILITY MODE within Claude Code (WEB).
+
+Since system-level controls (CLI flags, environment variables, agent teams) are not available, you must SIMULATE them internally by adopting a multi-agent architecture, maximum reasoning depth, and full tool usage.
+
+---
+
+SIMULATED SYSTEM CONFIGURATION:
+
+- Use maximum reasoning depth equivalent to effort = max
+- Assume highest intelligence level (Claude Opus 4.6 equivalent)
+- Use all available tools (read, write, edit, code analysis, structured reasoning)
+- Internally simulate PARALLEL AGENTS working together
+
+---
+
+MULTI-AGENT SYSTEM (SIMULATED):
+
+You must divide your reasoning into the following specialized agents and coordinate them:
+
+1. DOCUMENT ANALYST AGENT
+- Read the V9 specification document line by line — no skipping
+- Extract every feature, function, workflow, automation, trigger, API call, data transformation, and user interaction described for each engine
+- Flag any implicit tasks (tasks not explicitly stated but required for the described behaviour to work)
+
+2. ENGINE DECOMPOSITION AGENT
+- For each of the 14 engines listed below, isolate every atomic task the engine performs
+- Think like a QA engineer who must test every single action — if it does it, it gets a row
+- Include background/automated tasks, not just user-triggered ones
+- Include data inputs, data outputs, API calls, database writes, scoring calculations, notification triggers, and decision logic steps
+
+3. CROSS-REFERENCE AGENT
+- Cross-reference each engine's tasks against the Use Case Diagram and the V8 specification (provided as reference sheets)
+- Ensure no task that appears in either reference document is missing from the engine breakdown
+- If a task exists in the references but NOT in V9, flag it as "PRESENT IN REFERENCE — MISSING FROM V9"
+- If a task exists in V9 but NOT in the references, flag it as "NEW IN V9"
+
+4. GAP DETECTION AGENT
+- After all tasks are listed, scan for logical gaps: tasks that MUST exist for the engine to function but are not documented anywhere
+- Tag these as "INFERRED — NOT DOCUMENTED"
+- These will feed Phase 2 (gap analysis)
+
+5. OUTPUT FORMATTING AGENT
+- Structure the final output as Excel-ready rows (tab-separated or table format)
+- One task per row — no combining, no summarising
+- Ensure consistent column structure across all 14 engines
+
+---
+
+WORKFLOW:
+
+STEP 1: CONTEXT INGESTION (NON-NEGOTIABLE — READ EVERY LINE)
+
+Read each and every line of the following documents before proceeding. This is non-negotiable.
+
+Primary document (THE SUBJECT OF ANALYSIS):
+→ V9 Specification Document (attached)
+
+Reference Sheet 1:
+→ docs/USE_CASE_DIAGRAM.md
+
+Reference Sheet 2:
+→ docs/YouSell_Platform_Technical_Specification_v8.md
+
+Supporting context:
+→ CLAUDE.md
+→ system/ai_logic.md
+→ docs/content_publishing_shop_integration_strategy.md
+→ tasks/execution_plan.md
+
+STEP 2: ENGINE-BY-ENGINE TASK EXTRACTION
+
+For EACH of the 14 engines below, extract every single executable task the engine currently performs according to the V9 document. Think like a user who is going to interact with every possible action in each engine. Think like a developer who must implement every function. Think like a QA tester who must verify every behaviour.
+
+THE 14 ENGINES TO ANALYSE:
+
+1.  Trend Scout Agent
+2.  Competitor Store Intelligence
+3.  Influencer Intelligence Engine
+4.  Supplier Discovery Engine
+5.  Profitability & Logistics Engine
+6.  Financial Modelling Engine
+7.  Launch Blueprint Engine
+8.  Client Allocation System
+9.  Content Creation Engine
+10. Store Integration Engine
+11. Order Tracking Engine
+12. Admin Command Center
+13. Affiliate Commission Engine
+14. Fulfillment Recommendation Engine
+
+For each engine, capture tasks at these levels:
+- USER-TRIGGERED ACTIONS (admin clicks a button, client makes a request)
+- SYSTEM-AUTOMATED ACTIONS (batch jobs, scheduled tasks, webhooks, event-driven triggers)
+- DATA OPERATIONS (reads, writes, calculations, transformations, scoring)
+- API/INTEGRATION CALLS (external service calls, webhook handling, data imports/exports)
+- DECISION LOGIC (if/then rules, scoring thresholds, recommendation algorithms)
+- NOTIFICATIONS & OUTPUTS (emails, dashboard updates, alerts, status changes)
+
+STEP 3: CROSS-REFERENCE AGAINST REFERENCE SHEETS
+
+Compare every extracted task against the Use Case Diagram and V8 spec:
+- Mark tasks found in all three documents as "CONFIRMED"
+- Mark tasks in V9 only as "NEW IN V9"
+- Mark tasks in references but missing from V9 as "PRESENT IN REFERENCE — MISSING FROM V9"
+- Mark logically required but undocumented tasks as "INFERRED — NOT DOCUMENTED"
+
+STEP 4: OUTPUT FORMAT
+
+Produce the output as 14 separate tables (one per engine), each with the following column structure:
+
+| Column | Description |
+|--------|-------------|
+| Engine Name | The engine this task belongs to (column header = engine name) |
+| Task # | Sequential number within the engine (e.g., TSA-001, TSA-002 for Trend Scout Agent) |
+| Task Description | One clear, atomic, executable task — no vague descriptions |
+| Task Type | USER-TRIGGERED / SYSTEM-AUTOMATED / DATA OPERATION / API CALL / DECISION LOGIC / NOTIFICATION |
+| Trigger | What causes this task to execute (e.g., "Admin clicks Full Scan", "Nightly batch job at 02:00", "Product score > 80") |
+| Input | What data/signal goes into this task |
+| Output | What this task produces (data, state change, notification, etc.) |
+| Dependencies | Other engines or tasks this depends on |
+| Source | CONFIRMED / NEW IN V9 / PRESENT IN REFERENCE — MISSING FROM V9 / INFERRED — NOT DOCUMENTED |
+
+STEP 5: SUMMARY STATISTICS
+
+After all 14 engine tables, provide:
+- Total task count per engine
+- Total task count across all engines
+- Breakdown by Task Type (how many user-triggered vs automated vs data ops etc.)
+- Breakdown by Source (how many confirmed vs new vs missing vs inferred)
+- List of all "PRESENT IN REFERENCE — MISSING FROM V9" tasks (these are potential regressions)
+- List of all "INFERRED — NOT DOCUMENTED" tasks (these are gaps for Phase 2)
+
+---
+
+RULES:
+
+- DO NOT skip any engine — all 14 must be fully analysed
+- DO NOT combine multiple tasks into one row — one atomic action per row
+- DO NOT guess or hallucinate tasks — every task must be traceable to a document or logically inferred (and tagged accordingly)
+- DO NOT summarise — exhaustive granularity is the entire point of this exercise
+- DO include background/batch/automated tasks, not just UI-visible ones
+- DO include the "invisible" work: data cleaning, deduplication, error handling, retry logic, cache invalidation, score recalculation
+- THINK like a user performing every possible action in each engine
+- THINK like a developer who must build every function
+- THINK like a QA tester who must verify every behaviour
+- The Trend Scout Agent is doing this, this, this, this — one row per "this"
+- Repeat for every engine until nothing is left undocumented
+
+---
+
+PURPOSE OF THIS EXERCISE:
+
+This is Phase 1 of a 2-phase analysis:
+- PHASE 1 (THIS TASK): Define ALL tasks each engine is CURRENTLY doing according to V9
+- PHASE 2 (NEXT): Use this task inventory to identify gaps, missing functionalities, and incomplete implementations
+
+The quality of Phase 2 depends entirely on the exhaustiveness of Phase 1. Miss a task here = miss a gap later. Be ruthlessly thorough.
+
+---
+
+BEGIN EXECUTION NOW. Start with Engine 1 (Trend Scout Agent) and work through all 14 sequentially. Do not stop until all engines are complete and the summary statistics are delivered.
