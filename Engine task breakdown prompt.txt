@@ -53,7 +53,7 @@ STEP 1: CONTEXT INGESTION (NON-NEGOTIABLE — READ EVERY LINE)
 Read each and every line of the following documents before proceeding. This is non-negotiable.
 
 Primary document (THE SUBJECT OF ANALYSIS):
-→ V9 Specification Document (attached)
+→ YouSell_Platform_Technical_Specification_v9.md
 
 Reference Sheet 1:
 → docs/USE_CASE_DIAGRAM.md
