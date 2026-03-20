@@ -35,8 +35,6 @@ Produce a MASTER STRATEGIC REPORT as a JSON object with:
      "recommendation": string}}
   ],
 
-  "top_ux_patterns_to_adopt": [string],
-
   "content_strategy_gaps": [string],
 
   "underserved_niches": [string],

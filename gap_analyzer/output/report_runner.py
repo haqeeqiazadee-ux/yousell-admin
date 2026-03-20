@@ -194,14 +194,6 @@ def _build_with_python_docx(cache_data: dict, output_path: str) -> bool:
         for run in h.runs:
             run.font.color.rgb = navy
 
-        ux_patterns = synthesis.get("top_ux_patterns_to_adopt", [])
-        if ux_patterns:
-            h2 = doc.add_heading("Design & UX Patterns to Adopt", level=2)
-            for run in h2.runs:
-                run.font.color.rgb = slate
-            for p in ux_patterns:
-                doc.add_paragraph(f"  {p}", style="List Bullet")
-
         missing_features = synthesis.get("top_missing_features", [])
         if missing_features:
             h2 = doc.add_heading("Top Missing Features", level=2)
@@ -299,7 +291,6 @@ def _build_with_python_docx(cache_data: dict, output_path: str) -> bool:
 
                 # Dimension table
                 dims = [
-                    ("Design/UX", "dim1_design_ux"),
                     ("Functionality", "dim2_functionality_tech"),
                     ("Content", "dim3_content_messaging"),
                     ("Services", "dim4_services_products"),
