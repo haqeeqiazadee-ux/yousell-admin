@@ -155,6 +155,8 @@ class ClaudeEngine:
             messages=[{"role": "user", "content": prompt}],
         )
         self.total_api_calls += 1
+        if not response.content:
+            raise RuntimeError("Claude returned empty response content")
         return response.content[0].text
 
     def analyse_company(

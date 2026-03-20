@@ -8,7 +8,7 @@ import anthropic
 
 logger = logging.getLogger("gap_analyzer")
 
-MODEL = "claude-opus-4-6"
+MODEL = os.getenv("CLAUDE_MODEL", "claude-opus-4-6")
 MAX_SYNTHESIS_TOKENS = 4000
 
 SYNTHESIS_PROMPT = """You are the lead strategist preparing the final competitive intelligence
@@ -171,6 +171,8 @@ class Synthesiser:
                 messages=[{"role": "user", "content": prompt}],
             )
             self.total_api_calls += 1
+            if not response.content:
+                raise RuntimeError("Claude returned empty response content")
             raw = response.content[0].text
             result = self._parse_json(raw)
 
@@ -223,11 +225,15 @@ notable_companies (list of names), risks (list). Be concise but specific."""
                     messages=[{"role": "user", "content": batch_prompt}],
                 )
                 self.total_api_calls += 1
-                parsed = self._parse_json(response.content[0].text)
+                if not response.content:
+                    batch_summaries.append({"error": "Empty response"})
+                    continue
+                raw_text = response.content[0].text
+                parsed = self._parse_json(raw_text)
                 if parsed:
                     batch_summaries.append(parsed)
                 else:
-                    batch_summaries.append({"raw": response.content[0].text[:2000]})
+                    batch_summaries.append({"raw": raw_text[:2000]})
             except Exception as e:
                 logger.error(f"[ERROR] Batch synthesis failed: {e}")
                 batch_summaries.append({"error": str(e)})
@@ -247,8 +253,11 @@ notable_companies (list of names), risks (list). Be concise but specific."""
                 messages=[{"role": "user", "content": meta_prompt}],
             )
             self.total_api_calls += 1
-            result = self._parse_json(response.content[0].text)
-            return result or {"executive_summary": response.content[0].text[:3000]}
+            if not response.content:
+                return {"executive_summary": "Meta-synthesis returned empty response", "error": "empty_content"}
+            raw_text = response.content[0].text
+            result = self._parse_json(raw_text)
+            return result or {"executive_summary": raw_text[:3000]}
         except Exception as e:
             logger.error(f"[ERROR] Meta-synthesis failed: {e}")
             return {"executive_summary": f"Synthesis failed: {e}", "error": str(e)}
