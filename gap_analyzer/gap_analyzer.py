@@ -550,10 +550,10 @@ async def async_main(args):
         domain = company.get("domain", "") or f"no_domain_{i}"
         tasks.append(process_with_semaphore(company, cached_count + i, domain))
 
-    await asyncio.gather(*tasks)
-
-    # Close Playwright
-    await playwright.close()
+    try:
+        await asyncio.gather(*tasks, return_exceptions=True)
+    finally:
+        await playwright.close()
 
     # ─── End-of-run summary ───
     total_succeeded = sum(

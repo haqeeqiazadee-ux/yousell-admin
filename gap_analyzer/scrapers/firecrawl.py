@@ -73,7 +73,11 @@ class FirecrawlScraper:
                 raise Exception("Rate limited (429)")
             response.raise_for_status()
 
-            data = response.json()
+            try:
+                data = response.json()
+            except (ValueError, requests.exceptions.JSONDecodeError):
+                logger.warning(f"[WARN] Firecrawl returned non-JSON for {url}")
+                return ""
             if not data.get("success"):
                 return ""
 
@@ -121,13 +125,17 @@ class FirecrawlScraper:
                 content = ""
 
         # Fallback to requests if Firecrawl returned empty
-        fallback_url = f"{base_url}{paths[0]}"
-        content = await self._scrape_requests_fallback(fallback_url)
-        if content:
-            logger.info(
-                f"[DECISION] [{base_url}] Requests fallback used for {page_name} — "
-                "Firecrawl returned empty"
-            )
+        try:
+            fallback_url = f"{base_url}{paths[0]}"
+            content = await self._scrape_requests_fallback(fallback_url)
+            if content:
+                logger.info(
+                    f"[DECISION] [{base_url}] Requests fallback used for {page_name} — "
+                    "Firecrawl returned empty"
+                )
+        except Exception as e:
+            logger.warning(f"[WARN] Requests fallback exception for {page_name}: {e}")
+            content = ""
 
         return page_name, content
 
