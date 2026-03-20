@@ -39,13 +39,18 @@ def _build_with_node(cache_data: dict, output_path: str, node_path: str, script_
         pkg_json = os.path.join(pkg_dir, "package.json")
         node_modules = os.path.join(pkg_dir, "node_modules")
         if os.path.exists(pkg_json) and not os.path.exists(node_modules):
-            logger.info("[INFO] Installing Node.js dependencies...")
-            subprocess.run(
-                ["npm", "install"],
-                cwd=pkg_dir,
-                capture_output=True,
-                timeout=60,
-            )
+            npm_path = shutil.which("npm")
+            if npm_path:
+                logger.info("[INFO] Installing Node.js dependencies...")
+                subprocess.run(
+                    [npm_path, "install"],
+                    cwd=pkg_dir,
+                    capture_output=True,
+                    timeout=60,
+                )
+            else:
+                logger.warning("[WARN] npm not found — skipping Node.js dependency install")
+                return _build_with_python_docx(cache_data, output_path)
 
         result = subprocess.run(
             [node_path, js_script, tmp_json.name, output_path],
