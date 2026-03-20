@@ -127,15 +127,23 @@ def extract_project_profile(specs_text: str, api_key: str | None = None) -> dict
         try:
             profile = ast.literal_eval(raw)
         except Exception:
-            # Try to find JSON object anywhere in the response
-            json_match = re.search(r'\{[\s\S]*\}', raw)
-            if json_match:
-                try:
-                    profile = json.loads(json_match.group())
-                except json.JSONDecodeError:
-                    logger.error("[ERROR] Failed to parse project profile JSON from Claude")
-                    profile = _empty_profile(raw[:500])
-            else:
+            # Try to find outermost JSON object via bracket matching
+            profile = None
+            start = raw.find("{")
+            if start != -1:
+                depth = 0
+                for i in range(start, len(raw)):
+                    if raw[i] == "{":
+                        depth += 1
+                    elif raw[i] == "}":
+                        depth -= 1
+                        if depth == 0:
+                            try:
+                                profile = json.loads(raw[start : i + 1])
+                            except json.JSONDecodeError:
+                                pass
+                            break
+            if profile is None:
                 logger.error("[ERROR] Failed to parse project profile JSON from Claude")
                 profile = _empty_profile(raw[:500])
 
