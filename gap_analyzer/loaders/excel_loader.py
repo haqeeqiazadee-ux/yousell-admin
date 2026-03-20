@@ -104,11 +104,6 @@ def load_companies(path: str) -> tuple[list[dict], dict]:
         description = str(row.get(col_mapping.get("description", ""), "")).strip()
 
         # Clean NaN values
-        for field_name in ["company_name", "category", "niche", "description"]:
-            val = locals()[field_name]
-            if val.lower() == "nan" or val == "":
-                locals()[field_name]  # already handled below
-
         if company_name.lower() == "nan":
             company_name = ""
         if category.lower() == "nan":

@@ -106,14 +106,16 @@ def extract_project_profile(specs_text: str, api_key: str | None = None) -> dict
         ],
     )
 
+    if not response.content:
+        logger.error("[ERROR] Claude returned empty response for specs extraction")
+        return {"services_and_features": [], "summary": "Empty response"}
     raw = response.content[0].text.strip()
-    # Strip markdown fences
-    if raw.startswith("```"):
-        raw = raw.split("\n", 1)[1] if "\n" in raw else raw[3:]
-    if raw.endswith("```"):
-        raw = raw[:-3]
-    raw = raw.strip()
-    if raw.startswith("json"):
+    # Strip markdown fences (handles ```json ... ``` and variants)
+    import re
+    fence_match = re.match(r'^```(?:json)?\s*\n?(.*?)```\s*$', raw, re.DOTALL)
+    if fence_match:
+        raw = fence_match.group(1).strip()
+    elif raw.startswith("json"):
         raw = raw[4:].strip()
 
     try:
