@@ -280,12 +280,6 @@ function buildReport(cacheData) {
   // ─── SECTION 2: KEY FINDINGS BY DIMENSION ───
   sections.push(heading1("2. Key Findings by Dimension"));
 
-  const uxPatterns = synthesis.top_ux_patterns_to_adopt || [];
-  if (uxPatterns.length) {
-    sections.push(heading2("Design & UX Patterns to Adopt"));
-    uxPatterns.forEach((p) => sections.push(bulletItem(p)));
-  }
-
   const missingFeatures = synthesis.top_missing_features || [];
   if (missingFeatures.length) {
     sections.push(heading2("Top Missing Features"));
@@ -379,7 +373,6 @@ function buildReport(cacheData) {
 
       // Dimension table
       const dims = [
-        ["Design/UX", "dim1_design_ux"],
         ["Functionality", "dim2_functionality_tech"],
         ["Content", "dim3_content_messaging"],
         ["Services", "dim4_services_products"],
