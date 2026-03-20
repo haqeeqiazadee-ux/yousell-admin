@@ -32,9 +32,12 @@ LIVE SCRAPED CONTENT:
 {scraped_content}
 
 ══════════════════════════════════════════════════════════
-YOUR TASK: Analyse this company across all five dimensions
+YOUR TASK: Analyse this company across the four dimensions
 below, then identify specific gaps, opportunities, and
 recommendations for YOUR PROJECT based on what you find.
+
+Focus on core functionality, features, content strategy,
+services, and business model — NOT visual design or UX.
 
 Do not invent data. If you cannot determine something from
 the scraped content or Excel data, say 'Not determinable'
@@ -53,15 +56,6 @@ No markdown. No preamble. No explanation outside the JSON.
   "url": string,
   "category": string,
   "niche": string,
-
-  "dim1_design_ux": {{
-    "design_language": string,
-    "ux_quality": string,
-    "trust_signals": string,
-    "mobile_posture": string,
-    "design_maturity": string,
-    "gap_for_your_project": string
-  }},
 
   "dim2_functionality_tech": {{
     "core_product": string,
