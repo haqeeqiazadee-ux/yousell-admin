@@ -705,3 +705,24 @@ Engine inventory (all 20):
 - **Payment:** Decided to use Square instead of Stripe (see env_registry.md)
 
 ------------------------------------------------------------
+
+### [2026-03-21 23:00] DONE — Session End Checkpoint
+
+- **Task:** Save session state for future resumption
+- **Batch:** CHECKPOINT-1
+- **Action:** Verified all system files are current. Attempted Netlify deploy via MCP but failed (zip upload timeout — repo too large). Manual deploy needed via Netlify dashboard or GitHub merge to main.
+- **Files touched:** system/execution_trace.md
+- **Result:** SUCCESS — all state saved
+- **Next step:** Resume from here. Priority order:
+  1. Deploy to Railway — verify all 3 services start clean
+  2. Trigger Netlify redeploy (dashboard → Trigger Deploy, or merge branch to main)
+  3. Verify Netlify ↔ Railway connectivity (frontend → backend API calls)
+  4. Phase 2A: Shopify Connect
+- **Commit:** pending
+
+**IMPORTANT NOTE FOR NEXT SESSION:**
+- Netlify MCP deploy fails for this repo (too large for zip upload). Use Netlify dashboard "Trigger Deploy" button or merge to main branch for auto-deploy.
+- Railway services have NOT been verified as running yet. First priority is deploying and checking logs.
+- All code is pushed to branch `claude/review-v9-engine-architecture-Adznr`.
+
+------------------------------------------------------------
