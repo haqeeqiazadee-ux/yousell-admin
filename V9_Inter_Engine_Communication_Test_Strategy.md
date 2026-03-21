@@ -830,4 +830,71 @@ Each test maps to a `Comm #` from V9_Inter_Engine_Communication_Breakdown.md:
 
 ---
 
-*Document continues in Test Suite 4B...*
+## TEST SUITE 4B: END-TO-END WORKFLOWS 3-5
+
+---
+
+### WORKFLOW 3: SUPPLIER PRICE CHANGE CASCADE
+
+**6 steps, 5 engines — Tests how a single supplier change propagates through the financial pipeline**
+
+| Test ID | Test Name | Description | Setup | Trigger | Expected Cascade | Steps |
+|---------|-----------|-------------|-------|---------|-----------------|-------|
+| TC-WF3-S1 | Cheaper supplier found triggers recalculation chain | Verify supplier change propagates | Product already scored + profitability calculated (margin: 25%, COGS: $15). | Supplier Discovery emits `supplier.found` { price: 6.75, moq: 10 } | Profitability, Financial Modelling, Fulfillment Rec all receive | Step 1 |
+| TC-WF3-S2 | Profitability recalculates improved margins | Verify margin improvement | Old COGS: $15 → New COGS: $6.75. Selling: $29.99. | Profitability receives supplier.found | Emits `profitability.calculated` { marginPercent: 64% (was 25%) } → Financial Modelling, Launch Blueprint, Fulfillment Rec | Step 2 |
+| TC-WF3-S3 | Financial Modelling updates ROI projection | Verify ROI improvement | New margin: 64%. | Financial Modelling receives profitability.calculated | Emits `financial.model_generated` with improved ROI (was 2.1 → now 4.8) → Launch Blueprint | Step 3 |
+| TC-WF3-S4 | Fulfillment Rec re-evaluates with better margins | Verify model change when economics shift | Old: POD (low margin). New: margin 64%. | Fulfillment Rec receives supplier.found + profitability.calculated | May switch from POD → bulk (high margin justifies inventory). Emits `fulfillment.recommended` { type: "bulk" } | Step 4 |
+| TC-WF3-S5 | Launch Blueprint regenerates with updated financials | Verify blueprint refresh | All upstream data updated. | Launch Blueprint receives updated profitability + financial model + fulfillment rec | Regenerates blueprint with improved numbers; emits `blueprint.generated` → Admin CC | Step 5 |
+| TC-WF3-S6 | Admin CC shows improved financials for re-approval | Verify operator notification | Blueprint regenerated. | Admin CC receives blueprint.generated | Displays "Updated Blueprint: margin improved 25% → 64%, ROI 2.1 → 4.8" with re-approve option | Step 6 |
+| TC-WF3-FULL | Complete supplier cascade end-to-end | Wire 5 engines. Emit supplier.found with cheaper price. Verify: margin improves, ROI updates, fulfillment model may change, blueprint regenerated, admin notified. |
+
+---
+
+### WORKFLOW 4: NEW CLIENT ONBOARDING PRODUCT PUSH
+
+**7 steps, 6 engines — Tests client store connection through first product deployment**
+
+| Test ID | Test Name | Description | Setup | Trigger | Expected Cascade | Steps |
+|---------|-----------|-------------|-------|---------|-----------------|-------|
+| TC-WF4-S1 | Client connects store via OAuth | Verify store connection event | Mock Shopify OAuth flow. | Store Integration emits `store.connected` { clientId: "client-001", platform: "shopify", storeId: "shop-001" } | Admin CC receives store connection notification | Step 1 |
+| TC-WF4-S2 | Client Allocation matches products to new client | Verify allocation for new client | Mock product pool: 10 HOT products available. Client tier: Premium, niche: "beauty". | Client Allocation runs allocation for new client | Emits `allocation.product_allocated` for 3 matching products → Content Creation, Store Integration | Step 2 |
+| TC-WF4-S3 | Content Creation generates client-branded content | Verify client-specific content | Mock client brand profile + Claude API. | Content Creation receives allocation events | Generates branded product descriptions, ad copy; emits `content.generated` for each → Store Integration | Step 3 |
+| TC-WF4-S4 | Store Integration pushes products to client's store | Verify Shopify product creation | Mock Shopify Admin API. | Store Integration receives content.generated + allocation data | Creates 3 products in client's Shopify store; emits `store.product_pushed` × 3 → Order Tracking, Affiliate Commission, Content Creation | Step 4 |
+| TC-WF4-S5 | Order Tracking begins monitoring | Verify monitoring setup | 3 products pushed. | Order Tracking receives 3 × store.product_pushed | Registers all 3 products for order monitoring; webhook registered with Shopify | Step 5 |
+| TC-WF4-S6 | Affiliate Commission sets up tracking | Verify affiliate link generation | 3 products pushed. | Affiliate Commission receives 3 × store.product_pushed | Creates affiliate tracking links for all 3 products | Step 6 |
+| TC-WF4-S7 | Store sync completes successfully | Verify sync confirmation | All products pushed successfully. | Store Integration emits `store.sync_complete` { productsUpdated: 3 } | Admin CC + Order Tracking receive sync confirmation | Step 7 |
+| TC-WF4-FULL | Complete client onboarding end-to-end | Wire 6 engines. Simulate OAuth → allocation → content → push → monitoring → tracking. Verify all products reach client store with content, monitoring active, affiliate links created. |
+
+---
+
+### WORKFLOW 5: MARGIN ALERT RECOVERY LOOP
+
+**6 steps, 4 engines — Tests the bounded feedback loop (max 3 iterations)**
+
+| Test ID | Test Name | Description | Setup | Trigger | Expected Cascade | Steps |
+|---------|-----------|-------------|-------|---------|-----------------|-------|
+| TC-WF5-S1 | Profitability detects margin below 20% | Verify margin alert triggers | Product margin: 12%. Threshold: 20%. | Profitability emits `profitability.margin_alert` { marginPercent: 12, threshold: 20 } | Supplier Discovery + Admin CC receive | Step 1 |
+| TC-WF5-S2a | Supplier Discovery searches for cheaper alternative — FOUND | Verify successful recovery path | Mock AliExpress with cheaper supplier ($5 vs current $12). | Supplier Discovery receives margin_alert | Emits `supplier.found` { price: 5.00 } → Profitability, Financial Modelling, Fulfillment Rec | Step 2 |
+| TC-WF5-S2b | Supplier Discovery searches — NOT FOUND | Verify failure path | Mock AliExpress with no cheaper options. | Supplier Discovery receives margin_alert | No supplier.found emitted; logs "no cheaper supplier available" | Step 2 |
+| TC-WF5-S3 | Profitability recalculates with new supplier | Verify margin recovery | New COGS: $5 (was $12). Selling: $29.99. | Profitability receives supplier.found | Recalculates: new margin 58%. If >= 20%, recovery successful. Emits profitability.calculated. | Step 3 |
+| TC-WF5-S4a | Loop iteration 2 — still below threshold | Verify loop continues | After first cheaper supplier, margin still 18% (below 20%). | Second margin_alert emitted | Supplier Discovery searches again (iteration 2) | Step 4 |
+| TC-WF5-S4b | Loop terminates at max 3 iterations | Verify bounded loop | Margin stays below 20% after 3 supplier searches. | Third iteration completes | Loop stops. Final margin_alert includes flag: "manual_review_required: true". No fourth iteration. | Step 4 |
+| TC-WF5-S5 | Recovered margin updates Financial Modelling | Verify post-recovery cascade | Margin recovered to 35% on iteration 2. | profitability.calculated emitted | Financial Modelling updates ROI → Launch Blueprint regenerated | Step 5 |
+| TC-WF5-S6 | Unrecoverable margin alerts admin for manual decision | Verify manual escalation | 3 iterations, margin still 15%. | Final margin_alert with manual_review flag | Admin CC creates high-priority alert: "Margin unrecoverable for [product]. Action required." | Step 6 |
+| TC-WF5-FULL | Complete margin recovery loop end-to-end | Wire Profitability, Supplier Discovery, Financial Modelling, Admin CC. Test all 3 scenarios: (1) recovery on iteration 1, (2) recovery on iteration 2, (3) no recovery after 3 iterations. |
+| TC-WF5-BOUND | Loop counter persists correctly across iterations | Verify iteration tracking across the feedback loop. Counter must: start at 0, increment on each margin_alert → supplier search cycle, halt at exactly 3. |
+
+---
+
+### SECTION 4B SUMMARY
+
+| Workflow | Steps | Tests | Engines Involved |
+|----------|-------|-------|-----------------|
+| WF3: Supplier Price Change Cascade | 6 | 8 tests (7 steps + 1 validation) | 5 engines |
+| WF4: Client Onboarding Product Push | 7 | 9 tests (8 steps + 1 validation) | 6 engines |
+| WF5: Margin Alert Recovery Loop | 6 | 11 tests (9 scenarios + 2 validation) | 4 engines |
+| **TOTAL SECTION 4B** | **19** | **28 tests** | |
+
+---
+
+*Document continues in Test Suite 4C...*
