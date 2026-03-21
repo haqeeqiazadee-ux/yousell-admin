@@ -87,7 +87,7 @@ export async function processInfluencerOutreach(job: Job<InfluencerOutreachData>
     })
 
     if (res.ok) {
-      const emailData = await res.json()
+      const emailData = (await res.json()) as Record<string, any>
 
       if (outreach) {
         await supabase.from('outreach_emails').update({

@@ -111,7 +111,7 @@ export async function processDistribution(job: Job<DistributionJobData>) {
             `https://${shopDomain}/admin/api/2024-01/blogs.json`,
             { headers: { 'X-Shopify-Access-Token': channelConn.access_token_encrypted } },
           )
-          const blogs = await res.json()
+          const blogs = (await res.json()) as Record<string, any>
           const blogId = blogs.blogs?.[0]?.id
           if (!blogId) {
             results[channel] = 'no_blog_found'

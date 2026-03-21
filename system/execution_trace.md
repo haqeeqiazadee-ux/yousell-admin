@@ -471,3 +471,237 @@ Engine inventory (all 20):
 - Phase 0: Discovery, TikTokDiscovery, Scoring (3)
 - Phase B: Clustering, TrendDetection, CreatorMatching, AdIntelligence, OpportunityFeed (5)
 - V9 new: CompetitorIntelligence, SupplierDiscovery, Profitability, FinancialModelling, LaunchBlueprint, ClientAllocation, ContentCreation, StoreIntegration, OrderTracking, AdminCommandCenter, AffiliateCommission, FulfillmentRecommendation (12)
+
+------------------------------------------------------------
+
+### [2026-03-21 11:00] DONE — Railway Deployment: Environment Variable Audit & Fix
+
+- **Task:** Review and fix environment variables for all 3 Railway services (Backend API, Email Service, Redis)
+- **Batch:** DEPLOY-1
+- **Action:**
+  1. **Backend API** — Audited all env vars. Fixed:
+     - `SUPABASE_URL` was placeholder (`your-project.supabase.co`) → corrected to `gqrwienipczrejscqdhk.supabase.co`
+     - `ANTHROPIC_API_KEY` was a curl command, not a key → corrected
+     - `FROM_EMAIL` mismatched → aligned to `YouSell <noreply@yousell.online>`
+     - Added missing vars: `ADMIN_EMAIL`, `EMAIL_SERVICE_SECRET`, `TIKTOK_WEBHOOK_SECRET`, `AMAZON_WEBHOOK_SECRET`
+     - Removed `NEXT_PUBLIC_*` vars (not needed in backend)
+  2. **Email Service** — Audited all env vars. Fixed:
+     - `ANTHROPIC_API_KEY` was a curl command → corrected
+     - `SUPABASE_URL` was placeholder → corrected
+     - `RESEND_API_KEY` was different from backend → unified to same key
+     - `EMAIL_SERVICE_SECRET` was weak placeholder → strengthened
+     - Added missing: `ADMIN_EMAIL`, `FRONTEND_URL`, `REDIS_URL`
+  3. **Redis** — Reviewed. All vars correctly wired via Railway template variables. No changes needed.
+- **Files touched:** None (Railway dashboard configuration only)
+- **Result:** SUCCESS — all 3 Railway services now have correct, consistent env vars
+- **Next step:** Apply pending DB migrations (028, 029), configure Google OAuth in Supabase, deploy and verify
+- **Commit:** N/A (infrastructure config, not code)
+
+------------------------------------------------------------
+
+### [2026-03-21 20:30] DONE — Netlify Env Vars: Full audit + fix on both projects
+
+- **Task:** Audit and fix all Netlify environment variables on yousell-admin + yousellonline-frontend
+- **Batch:** DEPLOY-2
+- **Action:**
+  1. Read all env vars from both Netlify projects via API
+  2. Fixed 5 broken vars on both projects:
+     - `SUPABASE_URL`: placeholder → real URL
+     - `REDIS_URL`: missing auth prefix → full connection string
+     - `API_SECRET`: weak placeholder → strong secret
+     - `RAILWAY_API_SECRET`: placeholder → real UUID
+     - `APIFY_API_TOKEN`: old key → current key
+  3. Added 8 missing vars to both projects:
+     - `FROM_EMAIL`, `ADMIN_EMAIL`, `CORS_ALLOWED_ORIGINS`, `FRONTEND_URL`
+     - `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_ADMIN_URL`, `BACKEND_API_KEY`, `META_ACCESS_TOKEN`
+  4. Deleted 2 junk vars from both: `d2eaf04a93msh...` (RapidAPI key as var name), `PORT` (not needed on Netlify)
+  5. Updated master env_registry.md — all statuses now reflect actual synced state
+  6. Deleted `Final Env Variables Netlify.txt` from git (contained exposed secrets + duplicates)
+  7. Sanitized `gap_analyzer/.env.example` (had real Anthropic key)
+- **Files touched:** `system/env_registry.md`, `gap_analyzer/.env.example`, deleted `Final Env Variables Netlify.txt`
+- **Result:** SUCCESS — all env vars consistent across Netlify (2 projects), Railway (3 services), and local
+- **Next step:** Deploy to Railway and verify all 3 services start clean
+- **Commit:** de74313
+
+------------------------------------------------------------
+
+### [2026-03-21 21:00] DONE — Apply DB Migrations 028 + 029 to Supabase
+
+- **Task:** Apply pending database migrations to live Supabase instance
+- **Batch:** DEPLOY-3
+- **Action:**
+  1. Applied `ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'super_admin'` (standalone, can't run in transaction)
+  2. Applied migration 028 via Supabase MCP `apply_migration`:
+     - Created 4 tables: tiktok_videos, tiktok_hashtag_signals, product_clusters (+junction), creator_product_matches
+     - Created indexes, RLS policies, triggers — all idempotent
+  3. Applied migration 029 via Supabase MCP `apply_migration`:
+     - `clients_email_unique` constraint already existed (skipped)
+     - Updated `handle_new_user` trigger to create both profiles + clients records
+     - Added RLS SELECT/UPDATE policies on profiles table (idempotent)
+  4. Verified: all 41 tables present in public schema
+- **Files touched:** None (database-only changes via Supabase MCP)
+- **Result:** SUCCESS — all tables, indexes, RLS policies, triggers applied
+- **Next step:** Configure OAuth providers in Supabase dashboard
+- **Commit:** faa36c5
+
+------------------------------------------------------------
+
+### [2026-03-21 21:10] DONE — Configure Google + Facebook OAuth in Supabase
+
+- **Task:** Enable social login providers in Supabase Auth
+- **Batch:** DEPLOY-4
+- **Action:**
+  1. User provided Google OAuth credentials (Client ID + Secret from Google Console)
+  2. User provided Facebook OAuth credentials (App ID + Secret from Facebook Developers)
+  3. User configured both providers in Supabase Dashboard → Authentication → Providers
+  4. Both providers confirmed active by user
+  5. Redirect URI for both: `https://gqrwienipczrejscqdhk.supabase.co/auth/v1/callback`
+- **Files touched:** None (Supabase dashboard configuration)
+- **Result:** SUCCESS — Google + Facebook OAuth both active
+- **Next step:** Deploy to Railway and verify all 3 services start clean
+- **Commit:** de74313
+
+------------------------------------------------------------
+
+### [2026-03-21 21:20] DONE — Update system memory files with today's progress
+
+- **Task:** Update execution_trace, development_log, lessons, and todo with all work done today
+- **Batch:** DEPLOY-5
+- **Action:** Updated all system files with DB migration application, OAuth configuration, env var audit results, and Stripe decision
+- **Files touched:** system/execution_trace.md, system/development_log.md, tasks/todo.md, tasks/lessons.md
+- **Result:** SUCCESS
+- **Next step:** Deploy to Railway and verify all 3 services start clean
+- **Commit:** pending
+
+------------------------------------------------------------
+
+### [2026-03-21 22:00] DONE — Domain & Routing Architecture Review
+
+- **Task:** Verify admin dashboard, client dashboard, and homepage are all linked properly
+- **Batch:** REVIEW-1
+- **Action:**
+  1. Full routing audit: middleware.ts, netlify.toml, login pages, layouts, OAuth callback
+  2. Confirmed Netlify DNS: yousell.online (primary), www.yousell.online (redirect), admin.yousell.online (alias) — all green with Netlify DNS
+  3. Confirmed Supabase Auth URL config: Site URL = https://yousell.online, 6 redirect URLs covering admin, client, www, localhost, wildcard
+  4. Verified cross-domain auth cookie sharing via `.yousell.online` domain scope
+  5. Verified role-based routing at middleware + layout levels (defense-in-depth)
+- **Files touched:** None (read-only review)
+- **Result:** SUCCESS — all 3 surfaces (homepage, client dashboard, admin dashboard) properly linked
+- **Next step:** Deploy to Railway and verify all 3 services start clean
+- **Commit:** pending (this entry)
+
+**Routing Architecture Summary (verified 2026-03-21):**
+
+| Domain | Unauthenticated | Client User | Admin User |
+|--------|----------------|-------------|------------|
+| yousell.online/ | Homepage | → /dashboard | → admin.yousell.online/admin |
+| yousell.online/login | Login page | → /dashboard | → admin.yousell.online/admin |
+| admin.yousell.online/ | → /admin/login | → /admin (blocked by layout) | → /admin |
+| admin.yousell.online/admin | → /admin/login | → /admin/unauthorized | Admin dashboard |
+
+**Netlify Production Domains (verified 2026-03-21):**
+- yousell-admin.netlify.app — Netlify subdomain
+- yousell.online — Primary domain (Netlify DNS ✓)
+- www.yousell.online — Redirects to primary (Netlify DNS ✓)
+- admin.yousell.online — Domain alias (Netlify DNS ✓)
+
+**Supabase Auth Redirect URLs (verified 2026-03-21):**
+1. https://admin.yousell.online
+2. https://admin.yousell.online/api/auth/callback
+3. https://yousell.online/api/auth/callback
+4. https://www.yousell.online/api/auth/callback
+5. http://localhost:3000/api/auth/callback
+6. https://yousell.online/**
+
+------------------------------------------------------------
+
+### [2026-03-21 22:30] DONE — Full Session State Snapshot for Future Session Recovery
+
+- **Task:** Update ALL system files so any new session picks up exactly from this point
+- **Batch:** SNAPSHOT-1
+- **Action:** Updated execution_trace.md, development_log.md, todo.md, lessons.md with comprehensive current state
+- **Files touched:** system/execution_trace.md, system/development_log.md, tasks/todo.md, tasks/lessons.md
+- **Result:** SUCCESS
+- **Next step:** Deploy to Railway and verify all 3 services start clean. Then proceed to Phase 2A: Shopify Connect.
+- **Commit:** pending
+
+============================================================
+## FULL PROJECT STATE SNAPSHOT (2026-03-21 22:30)
+## READ THIS FIRST IN ANY NEW SESSION
+============================================================
+
+### What Has Been Built (100% complete through this point):
+
+**Phase 0 — Engine Architecture Foundation (2026-03-17)**
+- EventBus: in-memory pub/sub with wildcard patterns, error isolation, 100-event history
+- EngineRegistry: dependency-ordered lifecycle management, health checks
+- Engine interface: config, init, start, stop, handleEvent, healthCheck
+- 3 engines refactored: Discovery, TikTokDiscovery, Scoring
+- 19 integration tests passing
+
+**Phase B — Backend Alignment (2026-03-18)**
+- 5 more engines wrapped (8 total): Clustering, TrendDetection, CreatorMatching, AdIntelligence, OpportunityFeed
+- ENGINE_QUEUE_MAP: 15 BullMQ queues → owning engines
+- 15 job processors annotated with @engine/@queue JSDoc
+- 10 engine-namespaced API routes under /api/engine/*
+- 33 tests passing
+
+**Phase C — Frontend Design (2026-03-18)**
+- Engine API client types for all 8 engines + health API
+- Shared API response/error/pagination types
+- Component interfaces: EngineStatusCard, EngineDashboardPanel, EngineControlPanel, DataTable
+
+**Phase D — Frontend Build (2026-03-18)**
+- Engine API client (engineGet/enginePost with typed responses)
+- useEngine hook (generic data fetching with loading/error/polling)
+- DataTable component (sortable, filterable, paginated)
+- 4 engine UI components + admin dashboard engine status grid
+- 8 engine pages wrapped with EnginePageLayout
+
+**V9 Engine Architecture (2026-03-21)**
+- 12 NEW engine implementations (20 total engines now):
+  CompetitorIntelligence, SupplierDiscovery, Profitability, FinancialModelling,
+  LaunchBlueprint, ClientAllocation, ContentCreation, StoreIntegration,
+  OrderTracking, AdminCommandCenter, AffiliateCommission, FulfillmentRecommendation
+- 365 tests passing, 0 regressions
+
+**Bug Fixes (2026-03-19)**
+- Google OAuth: handle_new_user trigger now creates profiles + clients records
+- Auth callback: cookies forwarded to redirect response (Netlify fix)
+- Migration 029 applied
+
+**Infrastructure (2026-03-21)**
+- Railway: 3 services (Backend API, Email Service, Redis) — env vars audited & fixed
+- Netlify: 2 projects (yousell-admin, yousellonline-frontend) — env vars audited & fixed
+- Supabase: Migrations 028 + 029 applied, 41 tables in public schema
+- OAuth: Google + Facebook providers configured in Supabase Auth
+- DNS: All 3 domains configured and verified in Netlify (yousell.online, www, admin)
+- Supabase Auth: 6 redirect URLs configured
+
+### What Has NOT Been Done Yet (resume here):
+
+1. **Deploy to Railway** — verify all 3 services start clean
+2. **Verify Netlify ↔ Railway connectivity** — frontend connects to backend
+3. **Phase 2A: Shopify Connect** — OAuth flow, store provisioning
+4. **Phase 2B: TikTok Shop Connect**
+5. **Phase 3A: Text Content Engine**
+6. **Phase 3B: Media Content Engine**
+7. **Phase 4: Smart Publisher**
+8. **Phase 5: Automation Orchestrator**
+9. **Phase 6: Reporting & Analytics**
+10. **Phase 7: Compliance & Launch**
+
+### Key Technical Details for New Sessions:
+
+- **Supabase Project:** gqrwienipczrejscqdhk (yousell-dashboard, PRODUCTION, main branch)
+- **Netlify Site:** yousell-admin.netlify.app (serves both yousell.online + admin.yousell.online)
+- **Git Branch:** claude/review-v9-engine-architecture-Adznr (feature branch off master)
+- **Remote main:** remotes/origin/main
+- **Test Command:** `npx vitest run` (365 tests, all passing as of last run)
+- **Build Command:** `npm run build` (Next.js 14, App Router)
+- **TypeScript:** `npx tsc --noEmit` (clean compile, 0 errors in project code)
+- **Scoring Formula:** final_score = trend_score * 0.40 + viral_score * 0.35 + profit_score * 0.25
+- **Stripe:** Code exists but NOT configured (keeping for future use)
+- **Payment:** Decided to use Square instead of Stripe (see env_registry.md)
+
+------------------------------------------------------------

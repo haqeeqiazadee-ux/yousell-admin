@@ -69,7 +69,7 @@ export class StoreIntegrationEngine implements Engine {
     productId: string,
     clientId: string,
     platform: 'shopify' | 'tiktok-shop' | 'amazon',
-    productData: {
+    _productData: {
       title: string;
       description: string;
       price: number;
@@ -105,7 +105,7 @@ export class StoreIntegrationEngine implements Engine {
   async connectStore(
     clientId: string,
     platform: string,
-    oauthCode: string,
+    _oauthCode: string,
   ): Promise<{ connected: boolean; storeId: string }> {
     const bus = getEventBus();
     // Placeholder: In production, exchanges OAuth code for access token,

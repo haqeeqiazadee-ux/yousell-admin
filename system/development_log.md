@@ -2626,3 +2626,166 @@ Google OAuth login was broken end-to-end. Users could authenticate via Google bu
 
 ### Result
 Google OAuth login now works end-to-end: authenticate → redirect → dashboard loads with user data.
+
+------------------------------------------------------------
+
+## [2026-03-21] V9 Engine Architecture — 12 New Engines Implemented
+
+### Summary
+Extended the engine architecture from 8 engines (Phase 0 + Phase B) to 20 engines total. All 12 new V9 engines implement the Engine interface with event bus integration and domain-specific methods.
+
+### New Engines (12)
+1. CompetitorIntelligenceEngine — competitor store monitoring
+2. SupplierDiscoveryEngine — supplier matching and scoring
+3. ProfitabilityEngine — margin analysis and pricing optimization
+4. FinancialModellingEngine — revenue projections and scenarios
+5. LaunchBlueprintEngine — product launch planning and templates
+6. ClientAllocationEngine — product-to-client assignment
+7. ContentCreationEngine — AI content generation for products
+8. StoreIntegrationEngine — Shopify/TikTok Shop connections
+9. OrderTrackingEngine — fulfillment monitoring
+10. AdminCommandCenterEngine — system health and controls
+11. AffiliateCommissionEngine — affiliate program management
+12. FulfillmentRecommendationEngine — shipping optimization
+
+### Files Created
+12 new engine files in `src/lib/engines/`
+
+### Verification
+- 365/365 tests passing, 0 regressions
+- Clean TypeScript compile
+- Zero breaking changes
+
+------------------------------------------------------------
+
+## [2026-03-21] Deployment Infrastructure — Full Env Var Audit + Fix
+
+### Summary
+Complete audit and fix of environment variables across all 5 deployment targets:
+- Railway Backend API, Email Service, Redis (3 services)
+- Netlify yousell-admin, yousellonline-frontend (2 projects)
+
+### Railway Changes
+- Fixed `SUPABASE_URL` placeholder on Backend API + Email Service
+- Fixed `ANTHROPIC_API_KEY` (was a curl command, not a key)
+- Unified `RESEND_API_KEY` across services
+- Added missing vars: `ADMIN_EMAIL`, `EMAIL_SERVICE_SECRET`, webhook secrets
+
+### Netlify Changes
+- Fixed 5 broken vars on both projects (SUPABASE_URL, REDIS_URL, API_SECRET, RAILWAY_API_SECRET, APIFY_API_TOKEN)
+- Added 8 missing vars to both projects
+- Deleted 2 junk vars from both
+- Created master `system/env_registry.md` with synced status
+
+### Security Fixes
+- Deleted `Final Env Variables Netlify.txt` from git (exposed secrets)
+- Sanitized `gap_analyzer/.env.example` (had real Anthropic API key)
+
+------------------------------------------------------------
+
+## [2026-03-21] Database Migrations Applied to Live Supabase
+
+### Migration 028: Create Missing Tables (Catch-up)
+Applied via Supabase MCP. Created 4 tables that were defined in code but never applied:
+- `tiktok_videos` — TikTok video data from Apify scraping
+- `tiktok_hashtag_signals` — hashtag trend metrics and velocity
+- `product_clusters` + `product_cluster_members` — product grouping by similarity
+- `creator_product_matches` — influencer-product matching scores
+
+All tables include: indexes, RLS policies (admin read/write), triggers (updated_at).
+
+### Migration 029: Fix Google OAuth Client Records
+Applied via Supabase MCP. Two fixes:
+- Updated `handle_new_user` trigger to create both `profiles` + `clients` records on signup
+- Added RLS SELECT/UPDATE policies on `profiles` table
+- `clients_email_unique` constraint was already applied (skipped)
+
+### Verification
+All 41 tables confirmed present in public schema.
+
+------------------------------------------------------------
+
+## [2026-03-21] OAuth Providers Configured in Supabase
+
+### Google OAuth
+- Provider enabled in Supabase Dashboard → Authentication → Providers → Google
+- Client ID and Secret from Google Cloud Console configured
+- Redirect URI: `https://gqrwienipczrejscqdhk.supabase.co/auth/v1/callback`
+
+### Facebook OAuth
+- Provider enabled in Supabase Dashboard → Authentication → Providers → Facebook
+- App ID and Secret from Facebook Developers configured
+- Same redirect URI
+
+### Stripe
+- Existing Stripe code retained for future use (no deletion)
+- Square integration deferred (no credentials available)
+
+### Status
+Both Google and Facebook OAuth confirmed active by user.
+
+------------------------------------------------------------
+
+## [2026-03-21] Domain & Routing Architecture Verified
+
+### Full Routing Audit
+Comprehensive audit of how the single Next.js app serves two domains:
+
+**Middleware routing (src/middleware.ts):**
+- Detects hostname: `admin.yousell.online` → admin routes, `yousell.online` → client routes
+- Cross-domain protection: admin users on client domain redirected to admin subdomain
+- Cookie sharing: `.yousell.online` domain scope enables SSO across subdomains
+- Role-based access: middleware calls `check_user_role()` RPC, layouts double-check
+
+**Netlify Production Domains (confirmed via screenshot):**
+- yousell.online — Primary domain (Netlify DNS ✓)
+- www.yousell.online — Redirects to primary (Netlify DNS ✓)
+- admin.yousell.online — Domain alias (Netlify DNS ✓)
+- yousell-admin.netlify.app — Netlify subdomain (auto)
+
+**Supabase Auth URL Configuration (confirmed via screenshot):**
+- Site URL: https://yousell.online
+- 6 Redirect URLs: admin.yousell.online, admin callback, client callback, www callback, localhost, wildcard
+
+**Verdict:** All 3 surfaces (homepage, client dashboard, admin dashboard) properly linked. No code changes needed.
+
+------------------------------------------------------------
+
+## CUMULATIVE PROJECT STATUS (as of 2026-03-21 end of day)
+
+### Completed Phases
+| Phase | Name | Date | Key Deliverables |
+|-------|------|------|-----------------|
+| 0 | Engine Architecture Foundation | 2026-03-17 | EventBus, EngineRegistry, Engine interface, 3 engines |
+| B | Backend Alignment | 2026-03-18 | 5 more engines, ENGINE_QUEUE_MAP, 15 job annotations, 10 API routes |
+| C | Frontend Design | 2026-03-18 | Engine API client types, component interfaces, layout contracts |
+| D | Frontend Build | 2026-03-18 | API client, hooks, DataTable, 4 engine components, 8 page wrappers |
+| V9 | V9 Engine Architecture | 2026-03-21 | 12 new engines (20 total), 365 tests passing |
+
+### Completed Infrastructure
+- Railway: 3 services configured (Backend API, Email Service, Redis)
+- Netlify: 2 projects configured (yousell-admin, yousellonline-frontend)
+- Supabase: 41 tables, all migrations applied, Google + Facebook OAuth active
+- DNS: All domains properly configured and verified
+
+### Remaining Work (in priority order)
+1. Deploy Railway services and verify they start clean
+2. Verify Netlify ↔ Railway backend connectivity
+3. Phase 2A: Shopify Connect (OAuth, store provisioning)
+4. Phase 2B: TikTok Shop Connect
+5. Phase 3A: Text Content Engine
+6. Phase 3B: Media Content Engine
+7. Phase 4: Smart Publisher
+8. Phase 5: Automation Orchestrator
+9. Phase 6: Reporting & Analytics
+10. Phase 7: Compliance & Launch
+
+### Key Numbers
+- 20 engines implemented (all with Engine interface)
+- 365 tests passing
+- 41 database tables
+- 80+ Next.js pages
+- 60 API routes (40 admin, 3 auth, 11 dashboard, 4 webhooks, 2 system)
+- 15 BullMQ job processors
+- 0 TypeScript errors
+- 0 breaking changes throughout all phases

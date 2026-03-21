@@ -112,7 +112,7 @@ export async function processPushToShopify(job: Job<PushToShopifyData>) {
       throw new Error(`Shopify API error ${shopifyResponse.status}: ${errText}`)
     }
 
-    const result = await shopifyResponse.json()
+    const result = (await shopifyResponse.json()) as Record<string, any>
     const shopifyProduct = result.product
 
     // Update shop_products with success

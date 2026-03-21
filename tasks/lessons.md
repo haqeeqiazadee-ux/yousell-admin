@@ -1,6 +1,6 @@
 # YOUSELL Platform — Lessons & Patterns
 
-Last updated: 2026-03-17
+Last updated: 2026-03-21
 
 ------------------------------------------------------------
 
@@ -74,3 +74,13 @@ Last updated: 2026-03-17
 | 2026-03-17 | Edit tool match error on dev log | Common phrase repeated 5+ times | Added more surrounding context | Always verify uniqueness before editing |
 | 2026-03-17 | Uncommitted changes flagged by hook | Partial edit without commit | Committed immediately | Commit after each meaningful batch of changes |
 | 2026-03-19 | Google OAuth login broken — dashboard showed "Failed to load data" | Two bugs: (1) `handle_new_user` trigger didn't create `clients` records, (2) callback route cookies not forwarded to redirect response | Created migration 029 for trigger fix + RLS; fixed callback to forward cookies on redirect; added refreshSession fallback in authFetch | Always ensure DB triggers create ALL required records for a new user (not just profiles). Always verify cookies are set on the actual response object returned to the browser, not just on the cookieStore. |
+| 2026-03-21 | Migration 028 `ALTER TYPE ADD VALUE` failed in transaction | `ALTER TYPE ... ADD VALUE` cannot run inside a transaction block in PostgreSQL | Run it as a standalone `execute_sql` call before the main `apply_migration` | Always split `ALTER TYPE ADD VALUE` into a separate non-transactional statement when using Supabase MCP migrations. |
+| 2026-03-21 | Migration 029 failed due to existing constraint | `clients_email_unique` constraint was already applied manually | Wrapped remaining statements in idempotent DO blocks, skipped the constraint | Always use `IF NOT EXISTS` or `DO $$ BEGIN ... EXCEPTION WHEN ... END $$` for DDL that may have been applied manually. |
+
+### Lesson 4 — Domain/DNS changes are external to code (2026-03-21)
+**Trigger:** Routing review showed everything is code-correct but requires Netlify dashboard + Supabase dashboard configuration.
+**Rule:** Always verify external configurations (DNS, OAuth providers, env vars) separately from code reviews. Code can be perfect but the system broken due to missing external config. Keep a checklist of external dependencies.
+
+### Lesson 5 — Single deployment serving multiple domains (2026-03-21)
+**Trigger:** yousell.online and admin.yousell.online both served from single Netlify deployment.
+**Rule:** When a single deployment serves multiple domains, middleware is the routing layer. Always test both hostname paths. Auth cookies must use parent domain (`.yousell.online`) for cross-subdomain SSO. Safari ITP may block this — monitor.

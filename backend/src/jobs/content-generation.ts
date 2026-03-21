@@ -102,7 +102,7 @@ export async function processContentGeneration(job: Job<ContentJobData>) {
     throw new Error(`Anthropic API error: ${response.status} ${errBody}`)
   }
 
-  const result = await response.json()
+  const result = (await response.json()) as Record<string, any>
   const generatedContent = result.content?.[0]?.text || ''
 
   await supabase.from('content_queue').update({

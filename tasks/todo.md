@@ -1,6 +1,6 @@
 # YOUSELL Platform — Task Tracker
 
-Last updated: 2026-03-18
+Last updated: 2026-03-21 (end of day snapshot)
 
 ------------------------------------------------------------
 
@@ -46,6 +46,25 @@ Last updated: 2026-03-18
 - [x] Fix Google OAuth login — missing `clients` records + `profiles` RLS policies
 - [x] Fix dashboard "Failed to load data" — auth cookies lost during OAuth redirect
 - [x] Migration 029: `handle_new_user` trigger creates both profiles + clients, RLS policies on profiles
+
+### Deployment & Infrastructure (2026-03-21)
+- [x] Railway Backend API — env vars audited and fixed
+- [x] Railway Email Service — env vars audited and fixed
+- [x] Railway Redis — verified (no changes needed)
+- [x] Netlify yousell-admin — env vars audited and fixed (5 fixed, 8 added, 2 deleted)
+- [x] Netlify yousellonline-frontend — env vars audited and fixed (same changes)
+- [x] Master env_registry.md — updated with synced status across all services
+- [x] Removed `Final Env Variables Netlify.txt` from git (exposed secrets)
+- [x] Sanitized `gap_analyzer/.env.example` (had real API key)
+- [ ] Keep Stripe code for future use (no action needed)
+- [x] Apply migration 028 (missing tables) in Supabase — 4 tables + RLS + indexes
+- [x] Apply migration 029 (OAuth trigger + profiles RLS) in Supabase
+- [x] Configure Google OAuth provider in Supabase dashboard
+- [x] Configure Facebook OAuth provider in Supabase dashboard
+- [ ] Deploy to Railway and verify all 3 services start clean ← **NEXT PRIORITY**
+- [ ] Verify Netlify frontend connects to Railway backend
+- [x] Verify domain routing: yousell.online, admin.yousell.online, www.yousell.online — all linked ✓
+- [x] Verify Supabase Auth redirect URLs — 6 URLs configured ✓
 
 ### Future Platform Build (from execution_plan.md)
 - [ ] Phase 2A: Shopify Connect
