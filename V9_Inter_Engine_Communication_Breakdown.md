@@ -184,4 +184,105 @@
 
 ---
 
-*Document continues in Section 2...*
+## SECTION 2: ENGINE-BY-ENGINE COMMUNICATION PATHWAYS (continued)
+
+---
+
+### ENGINE 6: CREATOR MATCHING ↔ Other Engines
+
+**Role:** Matches products with influencers/creators based on niche, audience size, engagement rate, and content style.
+
+| Comm # | Direction | Event / Mechanism | Source Engine | Target Engine | Payload | Use Case | Trigger Condition |
+|--------|-----------|-------------------|--------------|---------------|---------|----------|-------------------|
+| 6.001 | Scoring → Creator Matching | `scoring.product_scored` (indirect — Creator Matching can be triggered after scoring) | Scoring | Creator Matching | `ProductScoredPayload` | Match creators only for products scoring WARM+ (>= 60) to avoid wasting outreach on low-viability products | Product score >= 60 |
+| 6.002 | Creator Matching → Opportunity Feed | `creator.matches_complete` (EventBus) | Creator Matching | Opportunity Feed | `{ productsMatched, matchesCreated }` | Opportunity Feed updates to show matched creators alongside product cards | Matching batch completes |
+| 6.003 | Creator Matching → Opportunity Feed | `creator.creator_matched` (EventBus) | Creator Matching | Opportunity Feed | `CreatorMatchedPayload` { productId, creatorId, matchScore, platform } | Individual match updates for real-time feed | Single match found |
+| 6.004 | Creator Matching → Launch Blueprint | Shared table: `creator_product_matches` | Creator Matching | Launch Blueprint | Match records with scores | Launch Blueprint includes matched creators in the influencer marketing section of the blueprint | Matches written to DB |
+| 6.005 | Creator Matching → Content Creation | Shared table: `creator_product_matches` | Creator Matching | Content Creation | Creator profiles, content style preferences | Content Creation tailors product descriptions to match the creator's audience tone | Matches available |
+| 6.006 | Creator Matching → Financial Modelling | Shared table: `creator_product_matches` | Creator Matching | Financial Modelling | Creator rates, estimated reach | Financial Modelling includes influencer cost projections in ROI calculations | Matches available |
+| 6.007 | TikTok Discovery → Creator Matching | Shared tables: `tiktok_videos`, `tiktok_creators` | TikTok Discovery | Creator Matching | Creator follower counts, engagement rates, content categories | Creator Matching sources TikTok creator profiles for matching pool | TikTok data available |
+| 6.008 | Creator Matching → Admin Command Center | Shared table: `creator_product_matches` | Creator Matching | Admin CC | Match summary data | Admin CC displays creator match counts and top matches per product | Matches written |
+
+---
+
+### ENGINE 7: AD INTELLIGENCE ↔ Other Engines
+
+**Role:** Monitors competitor advertising activity across Meta, TikTok, and Google to detect paid promotion signals.
+
+| Comm # | Direction | Event / Mechanism | Source Engine | Target Engine | Payload | Use Case | Trigger Condition |
+|--------|-----------|-------------------|--------------|---------------|---------|----------|-------------------|
+| 7.001 | Discovery → Ad Intelligence | `discovery.product_discovered` (EventBus — potential subscription) | Discovery | Ad Intelligence | `ProductDiscoveredPayload` | When a new product is found, check if competitors are actively running ads for it | Product discovered |
+| 7.002 | Ad Intelligence → Scoring | Shared table: ad spend signals | Ad Intelligence | Scoring | Ad density, spend estimates | Scoring uses ad competition data as a negative signal (high ad spend = harder market entry) or positive signal (proven demand) | Ad data written |
+| 7.003 | Ad Intelligence → Competitor Intelligence | Shared data: ad creative analysis | Ad Intelligence | Competitor Intelligence | Ad creatives, targeting data, spend estimates | Competitor Intelligence combines ad data with listing data for full competitive picture | Ad data available |
+| 7.004 | Ad Intelligence → Profitability | Shared table: estimated CPA data | Ad Intelligence | Profitability | Cost-per-acquisition estimates | Profitability factors in required ad spend when calculating net margins | Ad cost data available |
+| 7.005 | Ad Intelligence → Financial Modelling | Shared data: ad spend benchmarks | Ad Intelligence | Financial Modelling | Industry ad spend benchmarks, estimated CAC | Financial Modelling uses ad cost benchmarks for marketing budget projections | Ad data available |
+| 7.006 | Ad Intelligence → Content Creation | Shared data: competitor ad creatives | Ad Intelligence | Content Creation | Competitor ad copy, visual styles, hooks | Content Creation references competitor ads to create differentiated content | Ad creatives stored |
+| 7.007 | Ad Intelligence → Opportunity Feed | `ads.ads_discovered` (EventBus) | Ad Intelligence | Opportunity Feed | `{ adsFound, adsStored }` | Opportunity Feed includes ad intelligence signals in product opportunity cards | Ad discovery batch completes |
+| 7.008 | TikTok Discovery → Ad Intelligence | Shared table: `tiktok_videos` | TikTok Discovery | Ad Intelligence | Video metadata with paid promotion indicators | Ad Intelligence cross-references TikTok videos to identify sponsored content vs organic | TikTok data available |
+
+---
+
+### ENGINE 8: COMPETITOR INTELLIGENCE ↔ Other Engines
+
+**Role:** Scans rival product listings, pricing, reviews, and seller activity to assess competitive landscape.
+
+| Comm # | Direction | Event / Mechanism | Source Engine | Target Engine | Payload | Use Case | Trigger Condition |
+|--------|-----------|-------------------|--------------|---------------|---------|----------|-------------------|
+| 8.001 | Discovery → Competitor Intelligence | `discovery.product_discovered` (EventBus subscription) | Discovery | Competitor Intelligence | `ProductDiscoveredPayload` | Scan for competing listings when a new product is found | Product discovered |
+| 8.002 | Scoring → Competitor Intelligence | `scoring.product_scored` (EventBus subscription) | Scoring | Competitor Intelligence | `ProductScoredPayload` | Deep competitive scan only for WARM+ products (cost control) | Score >= 60 |
+| 8.003 | Competitor Intelligence → Profitability | `competitor.detected` (EventBus) | Competitor Intelligence | Profitability | `CompetitorDetectedPayload` { productId, competitorStore, price, reviews, sellerCount } | Profitability adjusts margin calculations based on competitor pricing | Competitor listing found |
+| 8.004 | Competitor Intelligence → Financial Modelling | `competitor.detected` (EventBus) | Competitor Intelligence | Financial Modelling | `CompetitorDetectedPayload` | Financial Modelling factors competitor pricing into revenue projections | Competitor found |
+| 8.005 | Competitor Intelligence → Scoring | Shared table: `competitor_products` | Competitor Intelligence | Scoring | Competitor count, price range, review velocity | Scoring reads competitive data for profit_score adjustment | Competitor data written |
+| 8.006 | Competitor Intelligence → Supplier Discovery | `competitor.batch_complete` (EventBus) | Competitor Intelligence | Supplier Discovery | `{ productId, keyword, platforms, competitorsFound }` | Supplier Discovery uses competitor data to identify shared suppliers (same factory, different brands) | Competitor batch done |
+| 8.007 | Competitor Intelligence → Launch Blueprint | Shared table: `competitor_products` | Competitor Intelligence | Launch Blueprint | Competitive landscape summary | Launch Blueprint includes competitor analysis section with pricing strategy recommendations | Data available |
+| 8.008 | Competitor Intelligence → Admin Command Center | Shared table: `competitor_products` | Competitor Intelligence | Admin CC | Competitor counts, price ranges | Admin CC shows competitive pressure indicators on product cards | Data available |
+| 8.009 | Ad Intelligence → Competitor Intelligence | Shared data: competitor ad activity | Ad Intelligence | Competitor Intelligence | Ad spend, targeting, creatives | Competitor Intelligence enriches profiles with advertising activity data | Ad data available |
+| 8.010 | Competitor Intelligence → Content Creation | Shared table: `competitor_products` | Competitor Intelligence | Content Creation | Competitor product titles, descriptions, USPs | Content Creation creates differentiated copy that avoids competitor messaging | Data available |
+
+---
+
+### ENGINE 9: SUPPLIER DISCOVERY ↔ Other Engines
+
+**Role:** Finds and verifies suppliers (AliExpress, Alibaba, CJ Dropshipping, Printful) for viable products.
+
+| Comm # | Direction | Event / Mechanism | Source Engine | Target Engine | Payload | Use Case | Trigger Condition |
+|--------|-----------|-------------------|--------------|---------------|---------|----------|-------------------|
+| 9.001 | Scoring → Supplier Discovery | `scoring.product_scored` (EventBus subscription) | Scoring | Supplier Discovery | `ProductScoredPayload` | Search for suppliers only for WARM+ products | Score >= 60 |
+| 9.002 | Profitability → Supplier Discovery | `profitability.calculated` (EventBus subscription) | Profitability | Supplier Discovery | `ProfitabilityPayload` { productId, margin, marginPercent, cogs } | Supplier Discovery uses profitability data to filter suppliers by price threshold | Profitability calculated |
+| 9.003 | Supplier Discovery → Profitability | `supplier.found` (EventBus) | Supplier Discovery | Profitability | `SupplierFoundPayload` { supplierId, productId, price, moq, shippingCost, platform } | Profitability recalculates margins when a new supplier with different pricing is found | Supplier found |
+| 9.004 | Supplier Discovery → Financial Modelling | `supplier.found` (EventBus) | Supplier Discovery | Financial Modelling | `SupplierFoundPayload` | Financial Modelling updates COGS projections with actual supplier pricing | Supplier found |
+| 9.005 | Supplier Discovery → Launch Blueprint | `supplier.verified` (EventBus) | Supplier Discovery | Launch Blueprint | `{ supplierId, productId, verified, score }` | Launch Blueprint includes verified supplier as the recommended source in the launch plan | Supplier passes verification |
+| 9.006 | Supplier Discovery → Fulfillment Recommendation | `supplier.found` (EventBus) | Supplier Discovery | Fulfillment Rec | `SupplierFoundPayload` | Fulfillment Rec evaluates supplier capabilities to recommend fulfillment model | Supplier found |
+| 9.007 | Competitor Intelligence → Supplier Discovery | `competitor.batch_complete` (EventBus) | Competitor Intelligence | Supplier Discovery | `{ productId, keyword, platforms, competitorsFound }` | Supplier Discovery cross-references competitor data to find shared suppliers | Competitor batch done |
+| 9.008 | Supplier Discovery → Admin Command Center | Shared table: `suppliers`, `product_suppliers` | Supplier Discovery | Admin CC | Supplier profiles, verification status | Admin CC shows supplier options per product with verification badges | Data written |
+| 9.009 | Supplier Discovery → Opportunity Feed | Shared table: `product_suppliers` | Supplier Discovery | Opportunity Feed | Supplier count, best price, MOQ | Opportunity Feed shows supplier availability in product cards | Data available |
+
+**Bidirectional Loop (Supplier ↔ Profitability):**
+
+| Comm # | Direction | Description |
+|--------|-----------|-------------|
+| 9.010 | Supplier → Profitability → Supplier | Circular refinement: Supplier Discovery finds suppliers → Profitability calculates margins → if margin too low, Supplier Discovery searches for cheaper alternatives. This loop is bounded by max 3 iterations per product. |
+
+---
+
+### ENGINE 10: PROFITABILITY ↔ Other Engines
+
+**Role:** Calculates unit economics — COGS, margins, break-even — using supplier pricing, competitor data, and fulfillment costs.
+
+| Comm # | Direction | Event / Mechanism | Source Engine | Target Engine | Payload | Use Case | Trigger Condition |
+|--------|-----------|-------------------|--------------|---------------|---------|----------|-------------------|
+| 10.001 | Scoring → Profitability | `scoring.product_scored` (EventBus subscription) | Scoring | Profitability | `ProductScoredPayload` | Initial profitability calculation triggered by scoring | Product scored |
+| 10.002 | Supplier Discovery → Profitability | `supplier.found` (EventBus subscription) | Supplier Discovery | Profitability | `SupplierFoundPayload` | Recalculate margins with actual supplier COGS | Supplier found |
+| 10.003 | Competitor Intelligence → Profitability | `competitor.detected` (EventBus subscription) | Competitor Intelligence | Profitability | `CompetitorDetectedPayload` | Adjust pricing strategy based on competitor price points | Competitor detected |
+| 10.004 | Profitability → Financial Modelling | `profitability.calculated` (EventBus) | Profitability | Financial Modelling | `ProfitabilityPayload` { productId, margin, marginPercent, cogs, sellingPrice, fees } | Financial Modelling builds ROI projections from margin data | Profitability calculated |
+| 10.005 | Profitability → Launch Blueprint | `profitability.calculated` (EventBus) | Profitability | Launch Blueprint | `ProfitabilityPayload` | Launch Blueprint includes margin analysis and pricing strategy | Profitability calculated |
+| 10.006 | Profitability → Supplier Discovery | `profitability.margin_alert` (EventBus) | Profitability | Supplier Discovery | `{ productId, margin, marginPercent, threshold }` | When margins drop below threshold, trigger search for cheaper suppliers | Margin < 20% |
+| 10.007 | Profitability → Fulfillment Recommendation | `profitability.calculated` (EventBus) | Profitability | Fulfillment Rec | `ProfitabilityPayload` | Fulfillment Rec uses margin data to recommend POD (lower margin, no inventory risk) vs dropship (higher margin, more risk) | Profitability calculated |
+| 10.008 | Profitability → Client Allocation | Shared table: profitability data | Profitability | Client Allocation | Margin percentages per product | Client Allocation considers profitability when matching products to client tier (premium clients get higher-margin products) | Data available |
+| 10.009 | Profitability → Opportunity Feed | Shared table: profitability data | Profitability | Opportunity Feed | Margin %, COGS, recommended price | Opportunity Feed shows profitability indicators on product cards | Data available |
+| 10.010 | Profitability → Admin Command Center | `profitability.margin_alert` (EventBus) | Profitability | Admin CC | `{ productId, margin, threshold }` | Admin CC displays margin alerts for products falling below profitability threshold | Margin alert triggered |
+| 10.011 | Ad Intelligence → Profitability | Shared data: CPA estimates | Ad Intelligence | Profitability | Cost-per-acquisition benchmarks | Profitability factors in advertising costs when calculating true net margin | Ad cost data available |
+
+---
+
+*Document continues in Section 3...*
