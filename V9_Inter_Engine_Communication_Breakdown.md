@@ -505,4 +505,296 @@
 
 ---
 
-*Document continues in Section 4...*
+## SECTION 4: FULL CROSS-ENGINE COMMUNICATION MATRIX
+
+This matrix shows **every direct communication** between engine pairs. Each cell indicates the mechanism and direction.
+
+**Legend:**
+- `→E` = EventBus event (source publishes, target subscribes)
+- `→Q` = BullMQ queue enqueue (source enqueues job in target's queue)
+- `→D` = Database dependency (source writes table, target reads it)
+- `→M` = Manual trigger via API (admin-initiated)
+- `—` = No direct communication
+- Cells show `A→B` direction; reverse direction shown separately
+
+---
+
+### 4.1 EVENT-BASED COMMUNICATION MATRIX (EventBus Only)
+
+| Source ↓ / Target → | Discovery | TikTok Disc | Scoring | Clustering | Trend Det | Creator Match | Ad Intel | Competitor Intel | Supplier Disc | Profitability | Financial Mod | Launch BP | Client Alloc | Content Create | Store Integ | Order Track | Admin CC | Affiliate Comm | Fulfillment Rec | Opportunity Feed |
+|---------------------|-----------|-------------|---------|------------|-----------|---------------|----------|-----------------|---------------|---------------|---------------|-----------|--------------|----------------|-------------|-------------|----------|----------------|-----------------|------------------|
+| **Discovery** | — | `scan_complete` | `product_discovered` | — | `scan_complete` | — | `product_discovered` | `product_discovered` | — | — | — | — | — | — | — | — | — | — | — | — |
+| **TikTok Disc** | — | — | — | — | `videos_found`, `hashtags_analyzed` | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — |
+| **Scoring** | — | — | — | `product_scored` | — | — | — | `product_scored` | `product_scored` | `product_scored` | — | — | `product_scored` | — | — | — | `product_scored` | — | `product_scored` | — |
+| **Clustering** | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | `cluster_updated`, `clusters_rebuilt` |
+| **Trend Det** | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | `direction_changed` | — | — | `trend_detected` |
+| **Creator Match** | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | `creator_matched`, `matches_complete` |
+| **Ad Intel** | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | `ads_discovered` |
+| **Competitor Intel** | — | — | — | — | — | — | — | — | `batch_complete` | `detected` | `detected` | — | — | — | — | — | — | — | — | — |
+| **Supplier Disc** | — | — | — | — | — | — | — | — | — | `found` | `found` | `verified` | — | — | — | — | — | — | `found` | — |
+| **Profitability** | — | — | — | — | — | — | — | — | `margin_alert` | — | `calculated` | `calculated` | — | — | — | — | `margin_alert` | — | `calculated` | — |
+| **Financial Mod** | — | — | — | — | — | — | — | — | — | — | — | `model_generated`, `roi_projected` | — | — | — | — | — | — | — | — |
+| **Launch BP** | — | — | — | — | — | — | — | — | — | — | — | — | `approved` | `approved` | `approved` | — | `generated` | — | — | — |
+| **Client Alloc** | — | — | — | — | — | — | — | — | — | — | — | — | — | `product_allocated` | `product_allocated` | — | `batch_complete` | — | — | — |
+| **Content Create** | — | — | — | — | — | — | — | — | — | — | — | — | — | — | `generated` | — | `batch_complete` | — | — | — |
+| **Store Integ** | — | — | — | — | — | — | — | — | — | — | — | — | — | `product_pushed` | — | `product_pushed`, `sync_complete` | `connected`, `sync_complete` | `product_pushed` | — | — |
+| **Order Track** | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | `received`, `fulfilled`, `tracking_sent` | `received`, `fulfilled` | — | — |
+| **Admin CC** | `→M` | — | `→M` | — | — | — | — | — | — | — | — | `→M approve` | — | — | `deployed`, `batch_deploy` | — | — | — | — | — |
+| **Affiliate Comm** | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — |
+| **Fulfillment Rec** | — | — | — | — | — | — | — | — | — | — | — | `recommended` | — | — | `recommended` | — | `overridden` | — | — | — |
+| **Opportunity Feed** | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — |
+
+---
+
+### 4.2 DATABASE-LEVEL DEPENDENCY MATRIX
+
+| Shared Table | Writer Engine(s) | Reader Engine(s) | Critical Data |
+|-------------|-----------------|-----------------|---------------|
+| `products` | Discovery | Scoring, Clustering, Trend Detection, Competitor Intel, Profitability, Supplier Discovery, Launch BP, Content Creation, Store Integration, Opportunity Feed, Admin CC, Fulfillment Rec | Product records, metadata, URLs |
+| `trend_signals` | Discovery (seed), Trend Detection (primary) | Scoring, Content Creation, Opportunity Feed, Admin CC | Keyword scores, direction, platforms |
+| `tiktok_hashtag_signals` | TikTok Discovery | Trend Detection, Scoring | Hashtag acceleration data |
+| `tiktok_videos` | TikTok Discovery | Ad Intelligence, Creator Matching | Video metadata, creator data |
+| `competitor_products` | Competitor Intelligence | Scoring, Profitability, Launch BP, Content Creation, Admin CC, Opportunity Feed | Competitor listings, prices, reviews |
+| `product_clusters` | Clustering | Launch BP, Client Allocation, Opportunity Feed, Admin CC | Cluster groupings |
+| `creator_product_matches` | Creator Matching | Launch BP, Content Creation, Financial Modelling, Opportunity Feed, Admin CC | Match records, scores |
+| `product_suppliers` | Supplier Discovery | Profitability, Financial Modelling, Fulfillment Rec, Launch BP, Opportunity Feed, Admin CC | Supplier pricing, MOQ, verification |
+| `product_allocations` | Client Allocation | Opportunity Feed, Admin CC | Product-to-client assignments |
+| `launch_blueprints` | Launch Blueprint | Opportunity Feed, Admin CC | Blueprint content, status |
+| `financial_models` | Financial Modelling | Client Allocation, Opportunity Feed, Admin CC | ROI, break-even projections |
+| `orders` | Order Tracking | Financial Modelling, Profitability, Admin CC, Affiliate Commission | Order data, fulfillment status |
+| `commissions` | Affiliate Commission | Financial Modelling, Profitability, Admin CC | Commission rates, payouts |
+
+---
+
+### 4.3 QUEUE-BASED CROSS-ENGINE COMMUNICATION
+
+| Source Engine | Enqueues To Queue | Queue Owner Engine | Job Data | Use Case |
+|-------------- |-------------------|-------------------|----------|----------|
+| Discovery | `trend-scan` | Trend Detection | `{ keyword, source, scanId }` | Trigger trend analysis for scanned keyword |
+| Discovery | `enrich-product` | Discovery (self) | `{ productId, source, rawUrl }` | Internal enrichment chain |
+| TikTok Discovery | `tiktok-product-extract` | TikTok Discovery (self) | `{ videoId, productUrl }` | Internal extraction chain |
+| TikTok Discovery → Discovery | `enrich-product` (via chain) | Discovery | `{ productId, source }` | Products found in TikTok videos sent to Discovery for enrichment |
+| Admin CC | `product-scan` | Discovery | `{ keywords[], sources[] }` | Manual scan trigger |
+| Admin CC | `scoring-queue` | Scoring | `{ productIds[] }` | Manual re-scoring trigger |
+| Admin CC | `product-push` | Store Integration | `{ productId, targetStore }` | One-click deployment |
+
+---
+
+## SECTION 5: END-TO-END WORKFLOW SCENARIOS
+
+These scenarios trace a product's journey through the entire engine pipeline, showing every inter-engine handoff.
+
+---
+
+### SCENARIO 1: Full Product Lifecycle (Discovery → Sale)
+
+**Trigger:** Admin clicks "Run Scan" for keyword "portable blender"
+
+```
+Step  Engine                  Event/Action                           Next Engine(s)
+───── ─────────────────────── ────────────────────────────────────── ──────────────────────────────
+1     Admin CC                → Manual trigger: enqueue product-scan → Discovery
+2     Discovery               → Scans marketplaces via Apify
+                               → Publishes: discovery.product_discovered → Scoring, Competitor Intel, Ad Intel
+                               → Publishes: discovery.scan_complete      → Trend Detection, TikTok Discovery
+                               → Enqueues: trend-scan job               → Trend Detection
+                               → Enqueues: enrich-product job           → Discovery (self)
+3     Trend Detection         → Analyzes keyword trajectory
+                               → Publishes: trend.trend_detected         → Opportunity Feed
+                               → Writes: trend_signals table             → Scoring (data dep)
+4     TikTok Discovery        → Scans TikTok for keyword
+                               → Publishes: tiktok.videos_found          → Trend Detection
+                               → Publishes: tiktok.hashtags_analyzed     → Trend Detection
+                               → Writes: tiktok_hashtag_signals          → Scoring (data dep)
+5     Scoring                 → Calculates composite score (trend 40% + viral 35% + profit 25%)
+                               → Publishes: scoring.product_scored       → Clustering, Competitor Intel, Supplier Disc,
+                                                                            Profitability, Client Alloc, Admin CC, Fulfillment Rec
+6     Competitor Intelligence → Scans rival listings (only if score >= 60)
+                               → Publishes: competitor.detected           → Profitability, Financial Modelling
+                               → Publishes: competitor.batch_complete     → Supplier Discovery
+7     Supplier Discovery      → Searches AliExpress, Alibaba, CJ
+                               → Publishes: supplier.found               → Profitability, Financial Modelling, Fulfillment Rec
+                               → Publishes: supplier.verified             → Launch Blueprint
+8     Profitability           → Calculates margins with supplier COGS + competitor pricing
+                               → Publishes: profitability.calculated      → Financial Modelling, Launch Blueprint, Fulfillment Rec
+                               → Publishes: profitability.margin_alert    → Supplier Discovery (if margin < 20%), Admin CC
+9     Fulfillment Rec         → Recommends: POD vs dropship vs bulk
+                               → Publishes: fulfillment.recommended       → Launch Blueprint, Store Integration
+10    Financial Modelling     → Builds ROI model
+                               → Publishes: financial.model_generated     → Launch Blueprint
+11    Creator Matching        → Matches product to influencers (can run in parallel with steps 6-10)
+                               → Publishes: creator.matches_complete      → Opportunity Feed
+12    Launch Blueprint        → Generates comprehensive launch plan
+                               → Publishes: blueprint.generated           → Admin CC
+13    Admin CC                → Admin reviews and approves blueprint
+                               → Triggers: blueprint.approved             → Client Allocation, Content Creation, Store Integration
+14    Client Allocation       → Assigns product to matching client
+                               → Publishes: allocation.product_allocated  → Content Creation, Store Integration
+15    Content Creation        → Generates product descriptions, ad copy (Claude Haiku/Sonnet)
+                               → Publishes: content.generated             → Store Integration
+16    Store Integration       → Pushes product to client's Shopify/TikTok Shop
+                               → Publishes: store.product_pushed          → Order Tracking, Affiliate Commission, Content Creation
+17    Order Tracking          → Monitors for incoming orders
+                               → Publishes: order.received               → Admin CC, Affiliate Commission
+18    Affiliate Commission    → Records commission on fulfilled orders
+                               → Publishes: affiliate.commission_recorded → (terminal)
+19    Order Tracking          → Order fulfilled, tracking sent
+                               → Publishes: order.fulfilled              → Admin CC, Affiliate Commission
+                               → Publishes: order.tracking_sent          → Admin CC
+```
+
+**Total inter-engine handoffs in this scenario: 35+**
+
+---
+
+### SCENARIO 2: Trend Reversal Response
+
+**Trigger:** Trend Detection detects a HOT keyword switching to FALLING
+
+```
+Step  Engine              Event                              Response
+───── ─────────────────── ────────────────────────────────── ────────────────────────────────────
+1     Trend Detection     → trend.direction_changed           → Admin CC receives alert
+2     Admin CC            → Displays trend reversal warning   → Admin reviews affected products
+3     Admin CC            → Manual trigger: re-score products → Scoring
+4     Scoring             → Recalculates with updated trend   → scoring.product_scored
+                            (trend_score drops → composite drops)
+5     Profitability       → Recalculates margins              → profitability.margin_alert (if margin now < 20%)
+6     Admin CC            → Receives margin alert             → Admin decides: continue or halt
+7     Admin CC            → If halt: pause store listings     → Store Integration (manual pause)
+```
+
+---
+
+### SCENARIO 3: Supplier Price Change Cascade
+
+**Trigger:** Supplier Discovery finds a cheaper supplier for an existing product
+
+```
+Step  Engine              Event                              Response
+───── ─────────────────── ────────────────────────────────── ────────────────────────────────────
+1     Supplier Discovery  → supplier.found (new supplier)     → Profitability, Financial Modelling, Fulfillment Rec
+2     Profitability       → Recalculates margins (improved)   → profitability.calculated
+3     Financial Modelling → Updates ROI projections (improved) → financial.model_generated
+4     Fulfillment Rec     → Re-evaluates model (bulk now      → fulfillment.recommended
+                            viable with lower MOQ)
+5     Launch Blueprint    → Regenerates with updated data     → blueprint.generated → Admin CC
+6     Admin CC            → Shows updated financials          → Admin may re-approve blueprint
+```
+
+---
+
+### SCENARIO 4: New Client Onboarding Product Push
+
+**Trigger:** Client connects their Shopify store, Client Allocation has queued products
+
+```
+Step  Engine              Event                              Response
+───── ─────────────────── ────────────────────────────────── ────────────────────────────────────
+1     Store Integration   → store.connected                   → Admin CC (dashboard update)
+2     Client Allocation   → Identifies products matching      → allocation.product_allocated
+                            client tier/niche
+3     Content Creation    → Generates client-branded content  → content.generated
+4     Store Integration   → Pushes product to client store    → store.product_pushed
+5     Order Tracking      → Begins monitoring                → (waiting for orders)
+6     Affiliate Commission→ Sets up tracking links            → (waiting for orders)
+7     Store Integration   → store.sync_complete              → Admin CC, Order Tracking
+```
+
+---
+
+### SCENARIO 5: Margin Alert Recovery Loop
+
+**Trigger:** Profitability detects margin dropped below 20% threshold
+
+```
+Step  Engine              Event                              Response
+───── ─────────────────── ────────────────────────────────── ────────────────────────────────────
+1     Profitability       → profitability.margin_alert        → Supplier Discovery, Admin CC
+2     Supplier Discovery  → Searches for cheaper alternative  → supplier.found (if found)
+3     Profitability       → Recalculates with new supplier    → profitability.calculated
+4     If margin still low → Loop back to step 1 (max 3 iterations per G10)
+5     If margin recovered → Financial Modelling updates ROI   → financial.model_generated
+6     If no recovery      → Admin CC alerts operator          → Manual decision required
+```
+
+---
+
+## SECTION 6: ARCHITECTURAL OBSERVATIONS & EDGE CASES
+
+### 6.1 Critical Communication Patterns
+
+| Pattern | Description | Engines Involved |
+|---------|-------------|-----------------|
+| **Fan-Out** | One event triggers multiple downstream engines simultaneously | Scoring → 8 subscribers; blueprint.approved → 3 subscribers |
+| **Pipeline** | Sequential chain where output of one is input to next | Discovery → Scoring → Profitability → Financial Modelling → Launch Blueprint |
+| **Feedback Loop** | Circular with bounded iterations | Supplier ↔ Profitability (max 3 iterations) |
+| **Aggregation** | Multiple sources feed into one consumer | All engines → Opportunity Feed (9+ tables) |
+| **Manual Gate** | Human approval required before downstream flow | Admin CC → blueprint.approved (the launch gate) |
+| **Broadcast** | One event consumed by many engines but none respond back | scoring.product_scored (8 subscribers, no direct response events to Scoring) |
+
+### 6.2 Engines with NO Outbound Events
+
+| Engine | Reason |
+|--------|--------|
+| Opportunity Feed | Pure aggregator — read-only consumer |
+| Affiliate Commission | Terminal engine — records commissions but triggers nothing downstream |
+
+### 6.3 Engines with NO Inbound Event Subscriptions
+
+| Engine | How They Receive Work |
+|--------|----------------------|
+| Discovery | Manual trigger via Admin CC API only (G10) |
+| Creator Matching | Manual trigger or scheduled (no event subscriptions) |
+| Ad Intelligence | Manual trigger or scheduled (no event subscriptions) |
+
+### 6.4 The "Blueprint Approval" Critical Gate
+
+The `blueprint.approved` event is the **most impactful single event** in the system:
+- It transitions a product from "research phase" to "launch phase"
+- Simultaneously triggers: Client Allocation, Content Creation, Store Integration
+- Requires manual admin approval (G10 compliance)
+- Everything upstream (8+ engines) feeds INTO the blueprint
+- Everything downstream (5+ engines) flows FROM the blueprint approval
+
+### 6.5 Potential Circular Dependencies (All Bounded)
+
+| Loop | Engines | Bound | Resolution |
+|------|---------|-------|------------|
+| Supplier ↔ Profitability | Supplier Discovery, Profitability | Max 3 iterations | If margin still low after 3 suppliers, flag for manual review |
+| Content ↔ Store | Content Creation, Store Integration | Max 2 iterations | Initial content → push → platform-specific optimization → update listing |
+| Fulfillment ↔ Profitability | Fulfillment Rec, Profitability | Max 2 iterations | Model recommendation changes costs → margin recalc → possible model change |
+
+### 6.6 Communication Statistics
+
+| Metric | Count |
+|--------|-------|
+| Total unique inter-engine communication pathways | **148** |
+| EventBus event types | **46** (including system events) |
+| Event-based connections | **52** |
+| Database-level dependencies | **65+** |
+| Queue-based cross-engine connections | **7** |
+| Manual trigger connections | **6** |
+| Engines that publish events | **18** (all except Opportunity Feed and Affiliate Commission*) |
+| Engines that subscribe to events | **17** (all except Discovery, Creator Matching, Ad Intelligence) |
+| Maximum fan-out from single event | **8** (scoring.product_scored) |
+| Longest pipeline chain | **10 steps** (Discovery → ... → Order Tracking) |
+
+*Affiliate Commission publishes events but has no downstream subscribers.
+
+---
+
+## DOCUMENT STATISTICS
+
+| Metric | Value |
+|--------|-------|
+| Engines covered | 20 |
+| Communication entries (Comm #) | 148+ |
+| End-to-end scenarios | 5 |
+| Architectural patterns identified | 6 |
+| Edge cases documented | 6 |
+| Tables referenced | 13 shared tables |
+
+---
+
+**END OF DOCUMENT — V9 Inter-Engine Communication Breakdown**
