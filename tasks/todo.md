@@ -56,10 +56,11 @@ Last updated: 2026-03-18
 - [x] Master env_registry.md — updated with synced status across all services
 - [x] Removed `Final Env Variables Netlify.txt` from git (exposed secrets)
 - [x] Sanitized `gap_analyzer/.env.example` (had real API key)
-- [ ] Delete dead Stripe code (`src/lib/stripe.ts`, `src/app/api/webhooks/stripe/route.ts`)
+- [ ] Keep Stripe code for future use (no action needed)
 - [x] Apply migration 028 (missing tables) in Supabase — 4 tables + RLS + indexes
 - [x] Apply migration 029 (OAuth trigger + profiles RLS) in Supabase
-- [ ] Configure Google OAuth provider in Supabase dashboard
+- [x] Configure Google OAuth provider in Supabase dashboard
+- [x] Configure Facebook OAuth provider in Supabase dashboard
 - [ ] Deploy to Railway and verify all 3 services start clean
 - [ ] Verify Netlify frontend connects to Railway backend
 
