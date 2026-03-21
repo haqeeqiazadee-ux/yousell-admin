@@ -43,16 +43,17 @@
 
 ## 1. CRITICAL REQUIRED (App won't run without these)
 
-| Variable | Value / Status | Netlify | Railway | Local |
-|----------|---------------|---------|---------|-------|
-| `NEXT_PUBLIC_SUPABASE_URL` | ✅ `https://gqrwienipczrejscqdhk.supabase.co` | MUST SET | MUST SET | ✅ |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ (JWT — anon role) | MUST SET | — | ✅ |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅ (JWT — service_role) | MUST SET | MUST SET | ✅ |
-| `SUPABASE_URL` | ✅ Same as NEXT_PUBLIC_SUPABASE_URL | — | MUST SET | ✅ |
-| `ANTHROPIC_API_KEY` | ⚠️ NEEDS VALUE | MUST SET | MUST SET | ❌ |
-| `APIFY_API_TOKEN` | ✅ `apify_api_7hWK...bkbzg` | MUST SET | MUST SET | ✅ |
-| `RESEND_API_KEY` | ⚠️ NEEDS VALUE | MUST SET | MUST SET | ❌ |
-| `REDIS_URL` | ⚠️ Railway provides this | — | AUTO | ❌ |
+| Variable | Status | Netlify | Railway | Local |
+|----------|--------|---------|---------|-------|
+| `NEXT_PUBLIC_SUPABASE_URL` | ✅ `https://gqrwienipczrejscqdhk.supabase.co` | 🔄 CHECK | ✅ | ✅ |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ (JWT — anon role) | 🔄 CHECK | ✅ | ✅ |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ (JWT — service_role) | 🔄 CHECK | ✅ | ✅ |
+| `SUPABASE_URL` | ✅ Same as NEXT_PUBLIC_SUPABASE_URL | — | ✅ | ✅ |
+| `ANTHROPIC_API_KEY` | ✅ `sk-ant-api03-dRJL...RC27JQAA` | 🔄 CHECK | ✅ | ✅ |
+| `APIFY_API_TOKEN` | ✅ `apify_api_7qDN...R8m` | 🔄 CHECK | ✅ | ✅ |
+| `RESEND_API_KEY` | ✅ `re_i9WTCRkp_...A99a` | 🔄 CHECK | ✅ | ✅ |
+| `REDIS_URL` | ✅ Railway internal: `redis://default:iPFK...@redis.railway.internal:6379` / Public: `redis://default:iPFK...@centerbeam.proxy.rlwy.net:21015` | — | ✅ (internal) | ✅ (public) |
+| `RAPIDAPI_KEY` | ✅ `0e1280d8b3...2967` | 🔄 CHECK | ✅ | ✅ |
 
 ---
 
