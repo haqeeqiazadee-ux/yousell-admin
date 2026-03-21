@@ -520,5 +520,55 @@ Engine inventory (all 20):
   7. Sanitized `gap_analyzer/.env.example` (had real Anthropic key)
 - **Files touched:** `system/env_registry.md`, `gap_analyzer/.env.example`, deleted `Final Env Variables Netlify.txt`
 - **Result:** SUCCESS — all env vars consistent across Netlify (2 projects), Railway (3 services), and local
-- **Next step:** Apply pending DB migrations (028, 029), configure Google OAuth in Supabase, deploy and verify
+- **Next step:** Deploy to Railway and verify all 3 services start clean
+- **Commit:** de74313
+
+------------------------------------------------------------
+
+### [2026-03-21 21:00] DONE — Apply DB Migrations 028 + 029 to Supabase
+
+- **Task:** Apply pending database migrations to live Supabase instance
+- **Batch:** DEPLOY-3
+- **Action:**
+  1. Applied `ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'super_admin'` (standalone, can't run in transaction)
+  2. Applied migration 028 via Supabase MCP `apply_migration`:
+     - Created 4 tables: tiktok_videos, tiktok_hashtag_signals, product_clusters (+junction), creator_product_matches
+     - Created indexes, RLS policies, triggers — all idempotent
+  3. Applied migration 029 via Supabase MCP `apply_migration`:
+     - `clients_email_unique` constraint already existed (skipped)
+     - Updated `handle_new_user` trigger to create both profiles + clients records
+     - Added RLS SELECT/UPDATE policies on profiles table (idempotent)
+  4. Verified: all 41 tables present in public schema
+- **Files touched:** None (database-only changes via Supabase MCP)
+- **Result:** SUCCESS — all tables, indexes, RLS policies, triggers applied
+- **Next step:** Configure OAuth providers in Supabase dashboard
+- **Commit:** faa36c5
+
+------------------------------------------------------------
+
+### [2026-03-21 21:10] DONE — Configure Google + Facebook OAuth in Supabase
+
+- **Task:** Enable social login providers in Supabase Auth
+- **Batch:** DEPLOY-4
+- **Action:**
+  1. User provided Google OAuth credentials (Client ID + Secret from Google Console)
+  2. User provided Facebook OAuth credentials (App ID + Secret from Facebook Developers)
+  3. User configured both providers in Supabase Dashboard → Authentication → Providers
+  4. Both providers confirmed active by user
+  5. Redirect URI for both: `https://gqrwienipczrejscqdhk.supabase.co/auth/v1/callback`
+- **Files touched:** None (Supabase dashboard configuration)
+- **Result:** SUCCESS — Google + Facebook OAuth both active
+- **Next step:** Deploy to Railway and verify all 3 services start clean
+- **Commit:** de74313
+
+------------------------------------------------------------
+
+### [2026-03-21 21:20] DONE — Update system memory files with today's progress
+
+- **Task:** Update execution_trace, development_log, lessons, and todo with all work done today
+- **Batch:** DEPLOY-5
+- **Action:** Updated all system files with DB migration application, OAuth configuration, env var audit results, and Stripe decision
+- **Files touched:** system/execution_trace.md, system/development_log.md, tasks/todo.md, tasks/lessons.md
+- **Result:** SUCCESS
+- **Next step:** Deploy to Railway and verify all 3 services start clean
 - **Commit:** pending

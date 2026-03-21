@@ -2626,3 +2626,100 @@ Google OAuth login was broken end-to-end. Users could authenticate via Google bu
 
 ### Result
 Google OAuth login now works end-to-end: authenticate → redirect → dashboard loads with user data.
+
+------------------------------------------------------------
+
+## [2026-03-21] V9 Engine Architecture — 12 New Engines Implemented
+
+### Summary
+Extended the engine architecture from 8 engines (Phase 0 + Phase B) to 20 engines total. All 12 new V9 engines implement the Engine interface with event bus integration and domain-specific methods.
+
+### New Engines (12)
+1. CompetitorIntelligenceEngine — competitor store monitoring
+2. SupplierDiscoveryEngine — supplier matching and scoring
+3. ProfitabilityEngine — margin analysis and pricing optimization
+4. FinancialModellingEngine — revenue projections and scenarios
+5. LaunchBlueprintEngine — product launch planning and templates
+6. ClientAllocationEngine — product-to-client assignment
+7. ContentCreationEngine — AI content generation for products
+8. StoreIntegrationEngine — Shopify/TikTok Shop connections
+9. OrderTrackingEngine — fulfillment monitoring
+10. AdminCommandCenterEngine — system health and controls
+11. AffiliateCommissionEngine — affiliate program management
+12. FulfillmentRecommendationEngine — shipping optimization
+
+### Files Created
+12 new engine files in `src/lib/engines/`
+
+### Verification
+- 365/365 tests passing, 0 regressions
+- Clean TypeScript compile
+- Zero breaking changes
+
+------------------------------------------------------------
+
+## [2026-03-21] Deployment Infrastructure — Full Env Var Audit + Fix
+
+### Summary
+Complete audit and fix of environment variables across all 5 deployment targets:
+- Railway Backend API, Email Service, Redis (3 services)
+- Netlify yousell-admin, yousellonline-frontend (2 projects)
+
+### Railway Changes
+- Fixed `SUPABASE_URL` placeholder on Backend API + Email Service
+- Fixed `ANTHROPIC_API_KEY` (was a curl command, not a key)
+- Unified `RESEND_API_KEY` across services
+- Added missing vars: `ADMIN_EMAIL`, `EMAIL_SERVICE_SECRET`, webhook secrets
+
+### Netlify Changes
+- Fixed 5 broken vars on both projects (SUPABASE_URL, REDIS_URL, API_SECRET, RAILWAY_API_SECRET, APIFY_API_TOKEN)
+- Added 8 missing vars to both projects
+- Deleted 2 junk vars from both
+- Created master `system/env_registry.md` with synced status
+
+### Security Fixes
+- Deleted `Final Env Variables Netlify.txt` from git (exposed secrets)
+- Sanitized `gap_analyzer/.env.example` (had real Anthropic API key)
+
+------------------------------------------------------------
+
+## [2026-03-21] Database Migrations Applied to Live Supabase
+
+### Migration 028: Create Missing Tables (Catch-up)
+Applied via Supabase MCP. Created 4 tables that were defined in code but never applied:
+- `tiktok_videos` — TikTok video data from Apify scraping
+- `tiktok_hashtag_signals` — hashtag trend metrics and velocity
+- `product_clusters` + `product_cluster_members` — product grouping by similarity
+- `creator_product_matches` — influencer-product matching scores
+
+All tables include: indexes, RLS policies (admin read/write), triggers (updated_at).
+
+### Migration 029: Fix Google OAuth Client Records
+Applied via Supabase MCP. Two fixes:
+- Updated `handle_new_user` trigger to create both `profiles` + `clients` records on signup
+- Added RLS SELECT/UPDATE policies on `profiles` table
+- `clients_email_unique` constraint was already applied (skipped)
+
+### Verification
+All 41 tables confirmed present in public schema.
+
+------------------------------------------------------------
+
+## [2026-03-21] OAuth Providers Configured in Supabase
+
+### Google OAuth
+- Provider enabled in Supabase Dashboard → Authentication → Providers → Google
+- Client ID and Secret from Google Cloud Console configured
+- Redirect URI: `https://gqrwienipczrejscqdhk.supabase.co/auth/v1/callback`
+
+### Facebook OAuth
+- Provider enabled in Supabase Dashboard → Authentication → Providers → Facebook
+- App ID and Secret from Facebook Developers configured
+- Same redirect URI
+
+### Stripe
+- Existing Stripe code retained for future use (no deletion)
+- Square integration deferred (no credentials available)
+
+### Status
+Both Google and Facebook OAuth confirmed active by user.
