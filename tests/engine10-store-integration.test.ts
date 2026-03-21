@@ -50,7 +50,9 @@ describe('Engine 10 — Config & Lifecycle', () => {
   it('has correct name, queues, publishes, subscribes', () => {
     expect(engine.config.name).toBe('store-integration')
     expect(engine.config.queues).toContain('shop-sync')
-    expect(engine.config.queues).toContain('product-push')
+    expect(engine.config.queues).toContain('push-to-shopify')
+    expect(engine.config.queues).toContain('push-to-tiktok')
+    expect(engine.config.queues).toContain('push-to-amazon')
     expect(engine.config.publishes).toContain(ENGINE_EVENTS.PRODUCT_PUSHED)
     expect(engine.config.publishes).toContain(ENGINE_EVENTS.STORE_CONNECTED)
     expect(engine.config.publishes).toContain(ENGINE_EVENTS.STORE_SYNC_COMPLETE)
@@ -88,12 +90,12 @@ describe('Engine 10 — Event Handling', () => {
     const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
     await engine.handleEvent({
       type: ENGINE_EVENTS.BLUEPRINT_APPROVED,
-      payload: { blueprintId: 'bp-001' },
+      payload: { blueprintId: 'bp-001', productId: 'prod-001' },
       source: 'launch-blueprint',
       timestamp: new Date().toISOString(),
     })
     expect(spy).toHaveBeenCalledWith(
-      expect.stringContaining('store push deferred')
+      expect.stringContaining('manual push available')
     )
     spy.mockRestore()
   })
@@ -107,7 +109,7 @@ describe('Engine 10 — Event Handling', () => {
       timestamp: new Date().toISOString(),
     })
     expect(spy).toHaveBeenCalledWith(
-      expect.stringContaining('listing update deferred')
+      expect.stringContaining('listing can be updated')
     )
     spy.mockRestore()
   })
@@ -175,9 +177,9 @@ describe('Engine 10 — connectStore()', () => {
   })
 
   it('returns connected=true and storeId', async () => {
-    const result = await engine.connectStore('client-001', 'shopify', 'oauth_code_abc')
+    const result = await engine.connectStore('client-001', 'shopify', 'store-abc-123')
     expect(result.connected).toBe(true)
-    expect(result.storeId).toContain('store_client-001_shopify')
+    expect(result.storeId).toBe('store-abc-123')
   })
 
   it('emits STORE_CONNECTED event', async () => {
@@ -187,7 +189,7 @@ describe('Engine 10 — connectStore()', () => {
       received.push(e)
     })
 
-    await engine.connectStore('client-001', 'tiktok_shop', 'code_xyz')
+    await engine.connectStore('client-001', 'tiktok_shop', 'store-xyz-456')
 
     expect(received).toHaveLength(1)
     expect(received[0].payload).toMatchObject({
@@ -237,7 +239,111 @@ describe('Engine 10 — syncInventory()', () => {
 })
 
 // ─────────────────────────────────────────────────────────────
-// SECTION 6: Business Rule Specifications (V9 Tasks)
+// SECTION 6: Token Encryption (AES-256-GCM)
+// ─────────────────────────────────────────────────────────────
+
+describe('Engine 10 — Token Encryption', () => {
+  const TEST_KEY = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+
+  beforeEach(() => {
+    process.env.ENCRYPTION_KEY = TEST_KEY
+  })
+
+  it('encrypts and decrypts a token round-trip', async () => {
+    const { encryptToken, decryptToken } = await import('@/lib/crypto')
+    const token = 'shpat_abc123_test_token'
+    const encrypted = encryptToken(token)
+    expect(encrypted).not.toBe(token)
+    expect(encrypted.length).toBeGreaterThan(40)
+    const decrypted = decryptToken(encrypted)
+    expect(decrypted).toBe(token)
+  })
+
+  it('produces different ciphertext for the same plaintext (random IV)', async () => {
+    const { encryptToken } = await import('@/lib/crypto')
+    const token = 'shpat_same_token'
+    const enc1 = encryptToken(token)
+    const enc2 = encryptToken(token)
+    expect(enc1).not.toBe(enc2)
+  })
+
+  it('detects tampering (auth tag validation)', async () => {
+    const { encryptToken, decryptToken } = await import('@/lib/crypto')
+    const encrypted = encryptToken('my_secret_token')
+    // Flip a byte in the ciphertext
+    const buf = Buffer.from(encrypted, 'base64')
+    buf[15] = buf[15] ^ 0xff
+    const tampered = buf.toString('base64')
+    expect(() => decryptToken(tampered)).toThrow()
+  })
+
+  it('throws if ENCRYPTION_KEY is missing', async () => {
+    delete process.env.ENCRYPTION_KEY
+    const { encryptToken } = await import('@/lib/crypto')
+    expect(() => encryptToken('test')).toThrow('ENCRYPTION_KEY')
+  })
+
+  it('throws if ENCRYPTION_KEY is wrong length', async () => {
+    process.env.ENCRYPTION_KEY = 'tooshort'
+    const { encryptToken } = await import('@/lib/crypto')
+    expect(() => encryptToken('test')).toThrow('64-character')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────
+// SECTION 7: Shopify GraphQL Client
+// ─────────────────────────────────────────────────────────────
+
+describe('Engine 10 — Shopify GraphQL Client', () => {
+  it('ShopifyAPIError has statusCode', async () => {
+    const { ShopifyAPIError } = await import('@/lib/integrations/shopify/client')
+    const err = new ShopifyAPIError('test error', 429)
+    expect(err.statusCode).toBe(429)
+    expect(err.message).toBe('test error')
+    expect(err.name).toBe('ShopifyAPIError')
+  })
+
+  it('toShopifyProduct maps DB product correctly', async () => {
+    const { toShopifyProduct } = await import('@/lib/integrations/shopify/products')
+    const result = toShopifyProduct({
+      title: 'Smart Widget',
+      description: 'A cool widget',
+      price: 29.99,
+      compare_at_price: 39.99,
+      category: 'Electronics',
+      source: 'tiktok',
+      trend_stage: 'HOT',
+      image_url: 'https://example.com/img.jpg',
+      sku: 'SW-001',
+    })
+
+    expect(result.title).toBe('Smart Widget')
+    expect(result.descriptionHtml).toBe('A cool widget')
+    expect(result.vendor).toBe('YouSell')
+    expect(result.productType).toBe('Electronics')
+    expect(result.tags).toEqual(['tiktok', 'HOT'])
+    expect(result.images).toEqual(['https://example.com/img.jpg'])
+    expect(result.variants?.[0]?.price).toBe('29.99')
+    expect(result.variants?.[0]?.compareAtPrice).toBe('39.99')
+    expect(result.variants?.[0]?.sku).toBe('SW-001')
+    expect(result.status).toBe('ACTIVE')
+  })
+
+  it('toShopifyProduct handles nulls gracefully', async () => {
+    const { toShopifyProduct } = await import('@/lib/integrations/shopify/products')
+    const result = toShopifyProduct({
+      title: 'Minimal Product',
+    })
+
+    expect(result.title).toBe('Minimal Product')
+    expect(result.descriptionHtml).toBe('')
+    expect(result.images).toEqual([])
+    expect(result.variants?.[0]?.price).toBe('0.00')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────
+// SECTION 8: Business Rule Specifications (V9 Tasks)
 // ─────────────────────────────────────────────────────────────
 
 describe('Engine 10 — Business Rule Specs', () => {

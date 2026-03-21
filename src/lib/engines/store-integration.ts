@@ -46,14 +46,14 @@ export class StoreIntegrationEngine implements Engine {
 
     // Subscribe to relevant events
     const bus = getEventBus();
-    bus.on(ENGINE_EVENTS.PRODUCT_ALLOCATED, async (event) => {
-      await this.handleEvent(event);
+    bus.subscribe(ENGINE_EVENTS.PRODUCT_ALLOCATED, (event) => {
+      this.handleEvent(event);
     });
-    bus.on(ENGINE_EVENTS.BLUEPRINT_APPROVED, async (event) => {
-      await this.handleEvent(event);
+    bus.subscribe(ENGINE_EVENTS.BLUEPRINT_APPROVED, (event) => {
+      this.handleEvent(event);
     });
-    bus.on(ENGINE_EVENTS.CONTENT_GENERATED, async (event) => {
-      await this.handleEvent(event);
+    bus.subscribe(ENGINE_EVENTS.CONTENT_GENERATED, (event) => {
+      this.handleEvent(event);
     });
   }
 
