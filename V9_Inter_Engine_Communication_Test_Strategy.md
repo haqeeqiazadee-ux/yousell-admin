@@ -1165,6 +1165,207 @@ All 240 tests must pass for the V9 engine system to be considered production-rea
 
 ---
 
-**END OF V9 INTER-ENGINE COMMUNICATION TEST STRATEGY**
+## ADDENDUM A: GAP CLOSURE — 44 PREVIOUSLY UNTESTED PATHWAYS
 
-**Total: 240 tests across 6 test files covering 148+ communication pathways, 5 end-to-end workflows, 46 event types, 13 shared tables, 7 queue connections, and 6 architectural patterns.**
+**Date:** 2026-03-21
+**Audit Result:** Original strategy covered 133/177 pathways (75.1%). This addendum closes the remaining 44 gaps to achieve 100% coverage.
+
+---
+
+### A1: SCORING PRODUCER GAPS (6 missing pathways)
+
+**File:** `tests/inter-engine-L1-scoring-producer-gaps.test.ts`
+
+| Test ID | Comm # | Direction | Description | Expected Result |
+|---------|--------|-----------|-------------|----------------|
+| TC-3.003a | 3.003 | Scoring → Competitor Intelligence | product_scored (score >= 60) triggers competitor scan | Competitor Intelligence receives event; initiates competitor monitoring for WARM+ products |
+| TC-3.005a | 3.005 | Scoring → Profitability | product_scored triggers initial profitability calculation | Profitability receives event; begins margin estimation with available data |
+| TC-3.009a | 3.009 | Scoring → Opportunity Feed (DB) | Score columns written to products table → Feed reads | Opportunity Feed reads updated scores; displays correct tier badges |
+| TC-6.001a | 6.001 | Scoring → Creator Matching (indirect) | product_scored (score >= 60) triggers creator search | Creator Matching receives; begins influencer matching for WARM+ products |
+| TC-8.002a | 8.002 | Scoring → Competitor Intelligence (duplicate of 3.003) | Confirmed: same pathway as 3.003 | Tests score >= 60 threshold filter specifically |
+| TC-10.001a | 10.001 | Scoring → Profitability (duplicate of 3.005) | Confirmed: same pathway as 3.005 | Tests Profitability's initial margin estimation from score data |
+
+---
+
+### A2: CONTENT CREATION CONSUMER GAPS (8 missing pathways)
+
+**File:** `tests/inter-engine-L1-content-creation-consumers.test.ts`
+
+| Test ID | Comm # | Direction | Description | Expected Result |
+|---------|--------|-----------|-------------|----------------|
+| TC-5.009a | 5.009 | Trend Detection → Content Creation (DB) | Content Creation reads trend_signals for trending keywords | Content uses trending keywords in SEO metadata and product descriptions |
+| TC-6.005a | 6.005 | Creator Matching → Content Creation (DB) | Content Creation reads creator_product_matches for creator style | Content adapts tone/style to match recommended creator's audience |
+| TC-7.006a | 7.006 | Ad Intelligence → Content Creation (DB) | Content Creation reads competitor ad creatives for inspiration | Content differentiates from competitor ad copy; avoids similar hooks |
+| TC-8.010a | 8.010 | Competitor Intelligence → Content Creation (DB) | Content reads competitor_products for differentiation | Content highlights unique selling points vs competitor weaknesses |
+| TC-14.006a | 14.006 | Trend Detection → Content Creation (DB) | Same as 5.009 — confirmed duplicate pathway | Content includes trending hashtags in social media posts |
+| TC-14.007a | 14.007 | Competitor Intelligence → Content Creation (DB) | Same as 8.010 — confirmed duplicate pathway | Content uses competitor pricing gaps in ad copy ("Save 20% vs brand X") |
+| TC-14.008a | 14.008 | Ad Intelligence → Content Creation (DB) | Same as 7.006 — confirmed duplicate pathway | Content avoids ad fatigue by varying from competitor creative styles |
+| TC-14.009a | 14.009 | Creator Matching → Content Creation (DB) | Same as 6.005 — confirmed duplicate pathway | Content matches creator's typical content format (review, unboxing, tutorial) |
+
+---
+
+### A3: ADMIN CC CONSUMER GAPS (8 missing pathways)
+
+**File:** `tests/inter-engine-L1-admin-cc-consumers.test.ts`
+
+| Test ID | Comm # | Direction | Description | Expected Result |
+|---------|--------|-----------|-------------|----------------|
+| TC-4.004a | 4.004 | Clustering → Admin CC (DB) | Admin CC reads product_clusters for cluster overview | Dashboard shows cluster groupings with avg scores and product counts |
+| TC-6.008a | 6.008 | Creator Matching → Admin CC (DB) | Admin CC reads creator_product_matches for match summary | Dashboard shows matched creator count per product; top matches listed |
+| TC-8.008a | 8.008 | Competitor Intelligence → Admin CC (DB) | Admin CC reads competitor_products for pressure indicators | Dashboard shows competitor count, avg competitor price, threat level |
+| TC-9.008a | 9.008 | Supplier Discovery → Admin CC (DB) | Admin CC reads suppliers/product_suppliers for supplier options | Dashboard shows available suppliers, best price, verification status |
+| TC-11.008a | 11.008 | Financial Modelling → Admin CC (DB) | Admin CC reads financial_models for financial health | Dashboard shows ROI, break-even, projected revenue per product |
+| TC-17.009a | 17.009 | Trend Detection → Admin CC | direction_changed event reaches Admin CC (NOTE: partially covered in TC-5.008a/b but missing explicit Comm # mapping) | Admin CC creates trend reversal alert with affected product list |
+| TC-17.010a | 17.010 | Profitability → Admin CC | margin_alert event reaches Admin CC (NOTE: partially covered in TC-10.006b but missing explicit Comm # mapping) | Admin CC creates low-margin alert with product details and threshold |
+| TC-18.005a | 18.005 | Affiliate Commission → Admin CC (DB) | Admin CC reads commission data for dashboard | Dashboard shows total commissions, pending payouts, top affiliates |
+
+---
+
+### A4: CLIENT ALLOCATION CONSUMER GAPS (6 missing pathways)
+
+**File:** `tests/inter-engine-L1-client-allocation-consumers.test.ts`
+
+| Test ID | Comm # | Direction | Description | Expected Result |
+|---------|--------|-----------|-------------|----------------|
+| TC-4.006a | 4.006 | Clustering → Client Allocation (DB) | Client Allocation reads product_clusters for cluster avoidance | Allocation avoids assigning same-cluster products to same client (prevents cannibalization) |
+| TC-10.008a | 10.008 | Profitability → Client Allocation (DB) | Client Allocation reads profitability data for margin-based allocation | Premium clients get higher-margin products; Starter clients get lower-margin |
+| TC-11.010a | 11.010 | Financial Modelling → Client Allocation (DB) | Client Allocation reads financial_models for ROI-based allocation | Products with higher projected ROI allocated to Premium tier clients first |
+| TC-13.007a | 13.007 | Clustering → Client Allocation (DB) | Same pathway as 4.006 — cluster data for allocation decisions | Allocation uses cluster proximity to diversify client portfolio |
+| TC-13.008a | 13.008 | Profitability → Client Allocation (DB) | Same pathway as 10.008 — margin data for tier matching | Tests specific tier-to-margin mapping: Premium >= 40%, Growth >= 25%, Starter >= 15% |
+| TC-13.009a | 13.009 | Financial Modelling → Client Allocation (DB) | Same pathway as 11.010 — ROI data for tier matching | Tests ROI threshold per tier: Premium >= 3x, Growth >= 2x, Starter >= 1.5x |
+
+---
+
+### A5: OPPORTUNITY FEED CONSUMER GAPS (6 missing pathways)
+
+**File:** `tests/inter-engine-L1-opportunity-feed-consumers.test.ts`
+
+| Test ID | Comm # | Direction | Description | Expected Result |
+|---------|--------|-----------|-------------|----------------|
+| TC-3.009b | 3.009 | Scoring → Opportunity Feed (DB) | Feed reads products table score columns | Feed displays correct composite score, tier badge, and component breakdown |
+| TC-9.009a | 9.009 | Supplier Discovery → Opportunity Feed (DB) | Feed reads product_suppliers for availability status | Feed shows "Supplier Found" / "No Supplier" indicator per product |
+| TC-10.009a | 10.009 | Profitability → Opportunity Feed (DB) | Feed reads profitability data for margin indicators | Feed shows margin percentage badge (green >= 40%, yellow >= 20%, red < 20%) |
+| TC-11.009a | 11.009 | Financial Modelling → Opportunity Feed (DB) | Feed reads financial_models for financial viability | Feed shows ROI projection and break-even estimate |
+| TC-12.008a | 12.008 | Launch Blueprint → Opportunity Feed (DB) | Feed reads launch_blueprints for status | Feed shows blueprint status (Generated, Approved, Rejected, Pending) |
+| TC-13.006a | 13.006 | Client Allocation → Opportunity Feed (DB) | Feed reads product_allocations for allocation status | Feed shows "Allocated to Client X" or "Available" |
+
+---
+
+### A6: CLUSTERING PRODUCER GAPS (5 missing pathways)
+
+**File:** `tests/inter-engine-L1-clustering-producer-gaps.test.ts`
+
+| Test ID | Comm # | Direction | Description | Expected Result |
+|---------|--------|-----------|-------------|----------------|
+| TC-4.004b | 4.004 | Clustering → Admin CC (DB write) | Clustering writes product_clusters that Admin CC reads | product_clusters table contains correct cluster assignments with avgScore |
+| TC-4.005a | 4.005 | Clustering → Launch Blueprint (DB) | Launch Blueprint reads product_clusters for cluster position | Blueprint includes cluster context: "Product is in cluster of N similar items, avg score X" |
+| TC-4.006b | 4.006 | Clustering → Client Allocation (DB write) | Clustering writes cluster data that Client Allocation reads | Allocation can query which products are in same cluster for diversification |
+| TC-12.009a | 12.009 | Clustering → Launch Blueprint (DB) | Same table as 4.005 — blueprint reads cluster metadata | Blueprint includes competitive cluster position and market saturation info |
+| TC-13.007b | 13.007 | Clustering → Client Allocation (DB) | Same table as 4.006 — allocation reads cluster membership | Allocation avoids placing 2+ products from same cluster with one client |
+
+---
+
+### A7: AD INTELLIGENCE PRODUCER GAPS (5 missing pathways)
+
+**File:** `tests/inter-engine-L1-ad-intelligence-producer-gaps.test.ts`
+
+| Test ID | Comm # | Direction | Description | Expected Result |
+|---------|--------|-----------|-------------|----------------|
+| TC-7.002a | 7.002 | Ad Intelligence → Scoring (DB) | Ad spend signals factor into profit_score | Scoring reads ad competition data; high ad spend → lower profit_score (harder to compete) |
+| TC-7.005a | 7.005 | Ad Intelligence → Financial Modelling (DB) | Financial Modelling reads ad benchmarks for budget projections | Financial model includes projected ad spend based on competitor benchmarks |
+| TC-7.008a | 7.008 | TikTok Discovery → Ad Intelligence (DB) | Ad Intelligence reads tiktok_videos for sponsored content | Ad Intelligence detects sponsored indicators in TikTok videos for market analysis |
+| TC-11.005a | 11.005 | Ad Intelligence → Financial Modelling (DB) | Same pathway as 7.005 — ad spend benchmarks in financial model | Financial model's marketing budget projection uses ad intelligence benchmarks |
+
+Note: TC-7.006a and TC-14.008a already covered in Section A2 (Content Creation consumer gaps).
+
+---
+
+### A8: TREND DETECTION PRODUCER GAPS (5 missing pathways)
+
+**File:** `tests/inter-engine-L1-trend-detection-producer-gaps.test.ts`
+
+| Test ID | Comm # | Direction | Description | Expected Result |
+|---------|--------|-----------|-------------|----------------|
+| TC-1.009a | 1.009 | Trend Detection → Discovery (indirect) | HOT trend (score >= 80) signals Discovery to scan for more products | Discovery receives trend signal; may enqueue additional product-scan jobs for the hot keyword |
+| TC-5.007a | 5.007 | Trend Detection → Discovery (indirect) | Same as 1.009 — trend >= 80 triggers additional scanning | Discovery rate-limits: max 1 additional scan per keyword per 24h (prevents infinite loop) |
+| TC-5.009b | 5.009 | Trend Detection → Content Creation (DB) | Already covered in A2 TC-5.009a | Duplicate — same pathway |
+| TC-14.006b | 14.006 | Trend Detection → Content Creation (DB) | Already covered in A2 TC-14.006a | Duplicate — same pathway |
+| TC-17.009b | 17.009 | Trend Detection → Admin CC | Already covered in A3 TC-17.009a | Duplicate — same pathway |
+
+---
+
+### A9: REMAINING GAPS (11 pathways)
+
+| Test ID | Comm # | Direction | Description | Expected Result |
+|---------|--------|-----------|-------------|----------------|
+| TC-2.005a | 2.005 | TikTok Discovery → Discovery | TikTok video contains product → enqueues enrich-product for Discovery | Discovery's enrich-product worker processes the TikTok-sourced product URL |
+| TC-2.006a | 2.006 | TikTok Discovery → Ad Intelligence (DB) | Ad Intelligence reads tiktok_videos for sponsored detection | Same as TC-7.008a — covered in A7 |
+| TC-8.005a | 8.005 | Competitor Intelligence → Scoring (DB) | Competitor pricing data adjusts profit_score | Scoring reads competitor_products; high competition → lower profit_score |
+| TC-8.007a | 8.007 | Competitor Intelligence → Launch Blueprint (DB) | Blueprint reads competitor_products for competitive landscape | Blueprint includes section: "Competitive Analysis: N competitors, avg price X, threat level Y" |
+| TC-12.010a | 12.010 | Competitor Intelligence → Launch Blueprint (DB) | Same table as 8.007 — confirmed duplicate | Blueprint uses competitor data for positioning strategy |
+| TC-12.012a | 12.012 | Blueprint Approval Gate (CRITICAL) | Manual admin approval is required before launch phase | No blueprint.approved event emitted without explicit admin action; G10 enforcement verified |
+| TC-16.008a | 16.008 | Order Tracking → Financial Modelling (DB) | Financial Modelling reads orders table for sales validation | Financial model validates projections against actual sales data |
+| TC-16.009a | 16.009 | Order Tracking → Profitability (DB) | Profitability reads orders table for revenue validation | Profitability compares projected margins vs actual order revenue |
+| TC-17.006a | 17.006 | Admin CC → Launch Blueprint (manual) | Admin approves blueprint → triggers approval event | Admin CC emits blueprint.approved after manual review; this IS the manual gate |
+| TC-18.004a | 18.004 | Affiliate Commission → Financial Modelling (DB) | Financial Modelling reads commission data for cost projections | Financial model deducts commission costs from net revenue projection |
+| TC-18.006a | 18.006 | Affiliate Commission → Profitability (DB) | Profitability reads commission data for net margin | Net margin reduced by affiliate commission percentage |
+| TC-19.007a | 19.007 | Fulfillment Recommendation → Profitability (indirect) | Fulfillment model costs feed back to margin calculation | POD costs vs dropship costs vs bulk costs affect margin differently |
+| TC-19.008a | 19.008 | Fulfillment Recommendation → Financial Modelling (DB) | Financial model includes fulfillment cost scenarios | ROI model shows 3 scenarios: POD margin, dropship margin, bulk margin |
+
+---
+
+### A10: MISSING INDIVIDUAL ENGINE TEST FILES
+
+These engines have NO dedicated test file and need one:
+
+| Engine | Priority | Rationale | Suggested File |
+|--------|----------|-----------|---------------|
+| **Discovery (Engine 1)** | P0 | Core engine — scan logic, dedup, enrichment untested in isolation | `engine1-discovery.test.ts` |
+| **Scoring (Engine 3)** | P0 | Core engine — composite formula, tier assignment, 4-source aggregation | `engine3-scoring.test.ts` |
+| **Profitability (Engine 5)** | P1 | Financial pipeline — margin calc, COGS aggregation, fee estimation | `engine5-profitability.test.ts` |
+| **Financial Modelling (Engine 6)** | P1 | Financial pipeline — ROI projection, break-even, scenario analysis | `engine6-financial-modelling.test.ts` |
+| **Trend Detection** | P1 | Core intelligence — direction detection, momentum calculation | `engine-trend-detection.test.ts` |
+| **Clustering** | P2 | Grouping logic — similarity scoring, cluster management | `engine-clustering.test.ts` |
+| **Creator Matching** | P2 | Matching logic — compatibility scoring, platform weighting | `engine-creator-matching.test.ts` |
+| **Ad Intelligence** | P2 | Ad detection — creative analysis, spend estimation | `engine-ad-intelligence.test.ts` |
+| **Opportunity Feed** | P2 | Aggregation — 9-table join, sorting, filtering | `engine-opportunity-feed.test.ts` |
+| **Fulfillment Recommendation** | P2 | Model selection — POD vs dropship vs bulk decision logic | `engine-fulfillment-recommendation.test.ts` |
+| **POD Engine** | P3 | Print-on-demand — Printful/Printify integration | `engine-pod.test.ts` |
+| **Amazon Intelligence** | P3 | Backend-only — product intelligence | `engine-amazon-intelligence.test.ts` |
+| **Shopify Intelligence** | P3 | Backend-only — store intelligence | `engine-shopify-intelligence.test.ts` |
+
+---
+
+### ADDENDUM SUMMARY
+
+| Section | New Tests | Comm # Pathways Closed |
+|---------|----------|----------------------|
+| A1: Scoring Producer Gaps | 6 | 3.003, 3.005, 3.009, 6.001, 8.002, 10.001 |
+| A2: Content Creation Consumer Gaps | 8 | 5.009, 6.005, 7.006, 8.010, 14.006, 14.007, 14.008, 14.009 |
+| A3: Admin CC Consumer Gaps | 8 | 4.004, 6.008, 8.008, 9.008, 11.008, 17.009, 17.010, 18.005 |
+| A4: Client Allocation Consumer Gaps | 6 | 4.006, 10.008, 11.010, 13.007, 13.008, 13.009 |
+| A5: Opportunity Feed Consumer Gaps | 6 | 3.009, 9.009, 10.009, 11.009, 12.008, 13.006 |
+| A6: Clustering Producer Gaps | 5 | 4.004, 4.005, 4.006, 12.009, 13.007 |
+| A7: Ad Intelligence Producer Gaps | 4 | 7.002, 7.005, 7.008, 11.005 |
+| A8: Trend Detection Producer Gaps | 2 (+ 3 dupes) | 1.009, 5.007 |
+| A9: Remaining Gaps | 13 | 2.005, 8.005, 8.007, 12.010, 12.012, 16.008, 16.009, 17.006, 18.004, 18.006, 19.007, 19.008 |
+| A10: Missing Individual Tests | 13 engine files | Full individual coverage |
+| **ADDENDUM TOTAL** | **58 new inter-engine tests + 13 engine test files** | **44 Comm # gaps closed** |
+
+---
+
+### REVISED GRAND TOTAL
+
+| Metric | Original | After Addendum | Coverage |
+|--------|----------|---------------|----------|
+| Inter-Engine Tests | 240 | **298** | +24% |
+| Comm # Pathways Covered | 133/177 | **177/177** | **100%** |
+| Individual Engine Test Files | 10 | **23** (10 existing + 13 new) | **100%** |
+| End-to-End Workflows | 5 | 5 | 100% |
+| Error/Resilience Tests | 37 | 37 | Full |
+
+---
+
+**END OF V9 INTER-ENGINE COMMUNICATION TEST STRATEGY (REVISED)**
+
+**Total: 298 inter-engine tests + 13 individual engine test files, covering ALL 177 communication pathways, 5 end-to-end workflows, 53 event types, 13 shared tables, 32 queue connections, and 6 architectural patterns across 20 implemented engines.**
