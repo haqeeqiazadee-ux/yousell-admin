@@ -61,14 +61,25 @@ Last updated: 2026-03-21 (end of day snapshot)
 - [x] Apply migration 029 (OAuth trigger + profiles RLS) in Supabase
 - [x] Configure Google OAuth provider in Supabase dashboard
 - [x] Configure Facebook OAuth provider in Supabase dashboard
-- [ ] Deploy to Railway and verify all 3 services start clean ← **NEXT PRIORITY**
-- [ ] Verify Netlify frontend connects to Railway backend
+- [x] Deploy to Railway and verify all 3 services start clean ← DONE (user confirmed)
+- [x] Verify Netlify frontend connects to Railway backend ← DONE (user confirmed)
 - [x] Verify domain routing: yousell.online, admin.yousell.online, www.yousell.online — all linked ✓
 - [x] Verify Supabase Auth redirect URLs — 6 URLs configured ✓
 
+### Phase 2A: Shopify Connect (COMPLETE — 2026-03-21)
+- [x] AES-256-GCM token encryption utility
+- [x] Shopify GraphQL Admin API client (2025-01 version)
+- [x] productSet mutation wrapper (create/update/delete)
+- [x] OAuth callback encrypted token storage
+- [x] Push-to-Shopify job upgraded to GraphQL
+- [x] Shop-sync worker (Shopify product status sync)
+- [x] Single + batch push API routes
+- [x] PushProductModal + BatchPushModal + ConnectionHub UI components
+- [x] Store-integration engine v2.0.0
+- [x] 25 integration tests (7 new + 18 updated)
+
 ### Future Platform Build (from execution_plan.md)
-- [ ] Phase 2A: Shopify Connect
-- [ ] Phase 2B: TikTok Shop Connect
+- [ ] Phase 2B: TikTok Shop Connect ← **NEXT PRIORITY**
 - [ ] Phase 3A: Text Content Engine
 - [ ] Phase 3B: Media Content Engine
 - [ ] Phase 4: Smart Publisher
