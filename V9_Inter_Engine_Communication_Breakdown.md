@@ -285,4 +285,224 @@
 
 ---
 
-*Document continues in Section 3...*
+## SECTION 3: ENGINE-BY-ENGINE COMMUNICATION PATHWAYS (continued)
+
+---
+
+### ENGINE 11: FINANCIAL MODELLING ↔ Other Engines
+
+**Role:** Builds ROI projections, break-even analysis, and marketing budget models using margin, supplier, and competitor data.
+
+| Comm # | Direction | Event / Mechanism | Source Engine | Target Engine | Payload | Use Case | Trigger Condition |
+|--------|-----------|-------------------|--------------|---------------|---------|----------|-------------------|
+| 11.001 | Profitability → Financial Modelling | `profitability.calculated` (EventBus subscription) | Profitability | Financial Modelling | `ProfitabilityPayload` | Build ROI model from margin data | Profitability calculated |
+| 11.002 | Supplier Discovery → Financial Modelling | `supplier.found` (EventBus subscription) | Supplier Discovery | Financial Modelling | `SupplierFoundPayload` | Update COGS projections with actual supplier prices; compare multiple supplier scenarios | Supplier found |
+| 11.003 | Competitor Intelligence → Financial Modelling | `competitor.detected` (EventBus subscription) | Competitor Intelligence | Financial Modelling | `CompetitorDetectedPayload` | Factor competitor pricing into revenue projections and market share estimates | Competitor detected |
+| 11.004 | Creator Matching → Financial Modelling | Shared table: `creator_product_matches` | Creator Matching | Financial Modelling | Creator rates, estimated reach, engagement | Include influencer marketing costs and projected conversion rates in ROI model | Match data available |
+| 11.005 | Ad Intelligence → Financial Modelling | Shared data: ad spend benchmarks | Ad Intelligence | Financial Modelling | CPA benchmarks, industry ad spend | Marketing budget section includes ad spend projections based on competitor benchmarks | Ad data available |
+| 11.006 | Financial Modelling → Launch Blueprint | `financial.model_generated` (EventBus) | Financial Modelling | Launch Blueprint | `FinancialModelPayload` { productId, roi, breakEvenUnits, projectedRevenue, marketingBudget } | Launch Blueprint includes financial projections as the business case section | Financial model generated |
+| 11.007 | Financial Modelling → Launch Blueprint | `financial.roi_projected` (EventBus) | Financial Modelling | Launch Blueprint | `{ productId, roi, breakEvenConversions, influencerCost }` | Launch Blueprint highlights ROI expectations and break-even timeline | ROI projection completed |
+| 11.008 | Financial Modelling → Admin Command Center | Shared table: `financial_models` | Financial Modelling | Admin CC | ROI %, break-even units, projected revenue | Admin CC shows financial health indicators per product | Model data available |
+| 11.009 | Financial Modelling → Opportunity Feed | Shared table: `financial_models` | Financial Modelling | Opportunity Feed | ROI projections, break-even data | Opportunity Feed includes financial viability score in product cards | Model data available |
+| 11.010 | Financial Modelling → Client Allocation | Shared table: `financial_models` | Financial Modelling | Client Allocation | ROI projections per product | Client Allocation matches high-ROI products to premium clients | Model data available |
+
+---
+
+### ENGINE 12: LAUNCH BLUEPRINT ↔ Other Engines
+
+**Role:** Generates comprehensive product launch plans combining all upstream intelligence into an actionable playbook.
+
+| Comm # | Direction | Event / Mechanism | Source Engine | Target Engine | Payload | Use Case | Trigger Condition |
+|--------|-----------|-------------------|--------------|---------------|---------|----------|-------------------|
+| 12.001 | Financial Modelling → Launch Blueprint | `financial.model_generated` (EventBus subscription) | Financial Modelling | Launch Blueprint | `FinancialModelPayload` | Trigger blueprint generation when financial model is ready | Financial model generated |
+| 12.002 | Profitability → Launch Blueprint | `profitability.calculated` (EventBus subscription) | Profitability | Launch Blueprint | `ProfitabilityPayload` | Include margin analysis and pricing strategy in blueprint | Profitability calculated |
+| 12.003 | Supplier Discovery → Launch Blueprint | `supplier.verified` (EventBus subscription) | Supplier Discovery | Launch Blueprint | `{ supplierId, productId, verified, score }` | Include verified supplier as recommended source with lead times and MOQs | Supplier verified |
+| 12.004 | Launch Blueprint → Client Allocation | `blueprint.approved` (EventBus) | Launch Blueprint | Client Allocation | `{ blueprintId, productId, approvedBy, approvedAt }` | Client Allocation can now assign the product to clients since it has an approved launch plan | Admin approves blueprint |
+| 12.005 | Launch Blueprint → Content Creation | `blueprint.approved` (EventBus) | Launch Blueprint | Content Creation | `{ blueprintId, productId, approvedBy, approvedAt }` | Content Creation begins generating product descriptions, ad copy, and social content | Blueprint approved |
+| 12.006 | Launch Blueprint → Store Integration | `blueprint.approved` (EventBus) | Launch Blueprint | Store Integration | `{ blueprintId, productId, approvedBy, approvedAt }` | Store Integration prepares product listing data for push to Shopify/TikTok Shop | Blueprint approved |
+| 12.007 | Launch Blueprint → Admin Command Center | `blueprint.generated` (EventBus) | Launch Blueprint | Admin CC | `BlueprintPayload` { productId, blueprint, sections } | Admin CC displays generated blueprint for review and approval | Blueprint generated |
+| 12.008 | Launch Blueprint → Opportunity Feed | Shared table: `launch_blueprints` | Launch Blueprint | Opportunity Feed | Blueprint status, key metrics | Opportunity Feed shows blueprint readiness status per product | Data available |
+| 12.009 | Clustering → Launch Blueprint | Shared table: `product_clusters` | Clustering | Launch Blueprint | Cluster position, related products | Blueprint considers cluster context — avoids launching 5 similar products simultaneously | Data available |
+| 12.010 | Competitor Intelligence → Launch Blueprint | Shared table: `competitor_products` | Competitor Intelligence | Launch Blueprint | Competitive landscape, pricing range | Blueprint includes competitive positioning strategy | Data available |
+| 12.011 | Creator Matching → Launch Blueprint | Shared table: `creator_product_matches` | Creator Matching | Launch Blueprint | Matched creators, rates, platforms | Blueprint includes influencer outreach plan with specific creator recommendations | Data available |
+
+**Blueprint Approval Flow (Critical Gate):**
+
+| Comm # | Description |
+|--------|-------------|
+| 12.012 | Blueprint approval is a **manual gate** (G10). Admin reviews → approves → `blueprint.approved` event fires → triggers Content Creation, Store Integration, and Client Allocation simultaneously. This is the single most important inter-engine trigger in the system — it transitions a product from "research phase" to "launch phase". |
+
+---
+
+### ENGINE 13: CLIENT ALLOCATION ↔ Other Engines
+
+**Role:** Matches scored, blueprinted products to client businesses based on their tier, niche, budget, and capacity.
+
+| Comm # | Direction | Event / Mechanism | Source Engine | Target Engine | Payload | Use Case | Trigger Condition |
+|--------|-----------|-------------------|--------------|---------------|---------|----------|-------------------|
+| 13.001 | Scoring → Client Allocation | `scoring.product_scored` (EventBus subscription) | Scoring | Client Allocation | `ProductScoredPayload` | Consider product tier when matching to clients | Product scored |
+| 13.002 | Launch Blueprint → Client Allocation | `blueprint.approved` (EventBus subscription) | Launch Blueprint | Client Allocation | `{ blueprintId, productId, approvedBy }` | Product is now launch-ready — allocate to matching client | Blueprint approved |
+| 13.003 | Client Allocation → Content Creation | `allocation.product_allocated` (EventBus) | Client Allocation | Content Creation | `AllocationPayload` { productId, clientId, tier, allocatedAt } | Content Creation generates client-branded content for the allocated product | Product allocated to client |
+| 13.004 | Client Allocation → Store Integration | `allocation.product_allocated` (EventBus) | Client Allocation | Store Integration | `AllocationPayload` | Store Integration pushes product to the client's connected store | Product allocated |
+| 13.005 | Client Allocation → Admin Command Center | `allocation.batch_complete` (EventBus) | Client Allocation | Admin CC | `{ productCount, allocated, skipped, tier }` | Admin CC updates allocation dashboard with batch results | Allocation batch completes |
+| 13.006 | Client Allocation → Opportunity Feed | Shared table: `product_allocations` | Client Allocation | Opportunity Feed | Allocation status per product | Opportunity Feed shows which products are allocated vs available | Data available |
+| 13.007 | Clustering → Client Allocation | Shared table: `product_clusters` | Clustering | Client Allocation | Cluster assignments | Avoid allocating multiple products from same cluster to same client (prevent cannibalization) | Data available |
+| 13.008 | Profitability → Client Allocation | Shared table: profitability data | Profitability | Client Allocation | Margin % per product | Premium clients receive higher-margin products; starter clients get moderate-margin products | Data available |
+| 13.009 | Financial Modelling → Client Allocation | Shared table: `financial_models` | Financial Modelling | Client Allocation | ROI projections | Allocate high-ROI products to clients with larger marketing budgets | Data available |
+
+---
+
+### ENGINE 14: CONTENT CREATION ↔ Other Engines
+
+**Role:** Generates product descriptions, ad copy, social media content, and SEO metadata using AI (Claude Haiku/Sonnet).
+
+| Comm # | Direction | Event / Mechanism | Source Engine | Target Engine | Payload | Use Case | Trigger Condition |
+|--------|-----------|-------------------|--------------|---------------|---------|----------|-------------------|
+| 14.001 | Launch Blueprint → Content Creation | `blueprint.approved` (EventBus subscription) | Launch Blueprint | Content Creation | `{ blueprintId, productId }` | Begin generating all content types for the approved product | Blueprint approved |
+| 14.002 | Client Allocation → Content Creation | `allocation.product_allocated` (EventBus subscription) | Client Allocation | Content Creation | `AllocationPayload` | Generate client-branded version of content with client's brand voice and guidelines | Product allocated to client |
+| 14.003 | Store Integration → Content Creation | `store.product_pushed` (EventBus subscription) | Store Integration | Content Creation | `StoreProductPushedPayload` | Generate platform-specific content optimizations after seeing how the listing performs | Product pushed to store |
+| 14.004 | Content Creation → Store Integration | `content.generated` (EventBus) | Content Creation | Store Integration | `ContentGeneratedPayload` { productId, contentType, content, platform } | Store Integration uses generated content for product listings | Content generated |
+| 14.005 | Content Creation → Admin Command Center | `content.batch_complete` (EventBus) | Content Creation | Admin CC | `{ requestCount, generated, failed, totalCredits }` | Admin CC shows content generation status and AI credit usage | Batch completes |
+| 14.006 | Trend Detection → Content Creation | Shared table: `trend_signals` | Trend Detection | Content Creation | Trending keywords, momentum | Content Creation incorporates trending keywords for SEO optimization | Data available |
+| 14.007 | Competitor Intelligence → Content Creation | Shared table: `competitor_products` | Competitor Intelligence | Content Creation | Competitor titles, descriptions | Content Creation creates differentiated copy that avoids competitor messaging | Data available |
+| 14.008 | Ad Intelligence → Content Creation | Shared data: competitor ad creatives | Ad Intelligence | Content Creation | Ad hooks, visual styles | Content Creation references competitor ads to create differentiated marketing angles | Data available |
+| 14.009 | Creator Matching → Content Creation | Shared table: `creator_product_matches` | Creator Matching | Content Creation | Creator style, audience demographics | Tailor content to match the influencer's audience tone and preferences | Data available |
+
+**AI Model Selection (G12 Compliance):**
+
+| Comm # | Description |
+|--------|-------------|
+| 14.010 | Content Creation uses **Claude Haiku** for bulk operations (product descriptions, basic ad copy) and **Claude Sonnet** for premium content (launch narratives, detailed blog posts). Model selection is determined by content type and client tier. |
+
+---
+
+### ENGINE 15: STORE INTEGRATION ↔ Other Engines
+
+**Role:** Manages product listing push/sync to Shopify, TikTok Shop, and Amazon. Handles OAuth connections and inventory sync.
+
+| Comm # | Direction | Event / Mechanism | Source Engine | Target Engine | Payload | Use Case | Trigger Condition |
+|--------|-----------|-------------------|--------------|---------------|---------|----------|-------------------|
+| 15.001 | Launch Blueprint → Store Integration | `blueprint.approved` (EventBus subscription) | Launch Blueprint | Store Integration | `{ blueprintId, productId }` | Prepare product listing for push to target store | Blueprint approved |
+| 15.002 | Client Allocation → Store Integration | `allocation.product_allocated` (EventBus subscription) | Client Allocation | Store Integration | `AllocationPayload` | Push product to the specific client's connected store | Product allocated |
+| 15.003 | Content Creation → Store Integration | `content.generated` (EventBus subscription) | Content Creation | Store Integration | `ContentGeneratedPayload` | Use generated content (title, description, images) for the store listing | Content generated |
+| 15.004 | Store Integration → Order Tracking | `store.product_pushed` (EventBus) | Store Integration | Order Tracking | `StoreProductPushedPayload` { productId, storeId, platform, listingUrl } | Order Tracking begins monitoring for orders on the pushed product | Product pushed to store |
+| 15.005 | Store Integration → Order Tracking | `store.sync_complete` (EventBus) | Store Integration | Order Tracking | `{ clientId, storeId, productsUpdated }` | Order Tracking refreshes order data after sync | Store sync completes |
+| 15.006 | Store Integration → Affiliate Commission | `store.product_pushed` (EventBus) | Store Integration | Affiliate Commission | `StoreProductPushedPayload` | Affiliate Commission sets up tracking for the product's affiliate links | Product pushed |
+| 15.007 | Store Integration → Content Creation | `store.product_pushed` (EventBus) | Store Integration | Content Creation | `StoreProductPushedPayload` | Content Creation generates platform-specific optimizations post-listing | Product live on store |
+| 15.008 | Store Integration → Admin Command Center | `store.connected` (EventBus) | Store Integration | Admin CC | `{ clientId, platform, storeId }` | Admin CC updates store connection status dashboard | New store connected |
+| 15.009 | Store Integration → Admin Command Center | `store.sync_complete` (EventBus) | Store Integration | Admin CC | `{ clientId, storeId, productsUpdated }` | Admin CC shows sync results and inventory status | Sync completes |
+
+---
+
+### ENGINE 16: ORDER TRACKING ↔ Other Engines
+
+**Role:** Monitors orders from connected stores, tracks fulfillment status, sends customer notifications via Resend.
+
+| Comm # | Direction | Event / Mechanism | Source Engine | Target Engine | Payload | Use Case | Trigger Condition |
+|--------|-----------|-------------------|--------------|---------------|---------|----------|-------------------|
+| 16.001 | Store Integration → Order Tracking | `store.product_pushed` (EventBus subscription) | Store Integration | Order Tracking | `StoreProductPushedPayload` | Begin order monitoring for this product listing | Product pushed |
+| 16.002 | Store Integration → Order Tracking | `store.sync_complete` (EventBus subscription) | Store Integration | Order Tracking | `{ clientId, storeId, productsUpdated }` | Refresh order data after store sync | Sync complete |
+| 16.003 | Order Tracking → Admin Command Center | `order.received` (EventBus) | Order Tracking | Admin CC | `OrderPayload` { orderId, productId, storeId, customer, amount } | Admin CC displays new order notifications and updates revenue dashboard | New order received |
+| 16.004 | Order Tracking → Affiliate Commission | `order.received` (EventBus) | Order Tracking | Affiliate Commission | `OrderPayload` | Affiliate Commission calculates commission for the order's product | Order received |
+| 16.005 | Order Tracking → Affiliate Commission | `order.fulfilled` (EventBus) | Order Tracking | Affiliate Commission | `{ orderId, trackingNumber, carrier, fulfilledAt }` | Affiliate Commission confirms commission is payable (only pay on fulfilled orders) | Order fulfilled |
+| 16.006 | Order Tracking → Admin Command Center | `order.fulfilled` (EventBus) | Order Tracking | Admin CC | `{ orderId, trackingNumber, carrier }` | Admin CC updates fulfillment status dashboard | Order fulfilled |
+| 16.007 | Order Tracking → Admin Command Center | `order.tracking_sent` (EventBus) | Order Tracking | Admin CC | `{ orderId, customerEmail, sent }` | Admin CC logs customer notification status | Tracking email sent |
+| 16.008 | Order Tracking → Financial Modelling | Shared table: order data | Order Tracking | Financial Modelling | Actual sales volume, revenue | Financial Modelling validates projections against actual order data (model accuracy feedback loop) | Order data available |
+| 16.009 | Order Tracking → Profitability | Shared table: order data | Order Tracking | Profitability | Actual revenue per product | Profitability validates margin calculations against real revenue | Order data available |
+
+---
+
+### ENGINE 17: ADMIN COMMAND CENTER ↔ Other Engines
+
+**Role:** Central admin dashboard — monitors all engines, triggers manual operations, one-click deployment.
+
+| Comm # | Direction | Event / Mechanism | Source Engine | Target Engine | Payload | Use Case | Trigger Condition |
+|--------|-----------|-------------------|--------------|---------------|---------|----------|-------------------|
+| 17.001 | Scoring → Admin CC | `scoring.product_scored` (EventBus subscription) | Scoring | Admin CC | `ProductScoredPayload` | Update product score badges and tier distribution charts | Product scored |
+| 17.002 | Launch Blueprint → Admin CC | `blueprint.generated` (EventBus subscription) | Launch Blueprint | Admin CC | `BlueprintPayload` | Display generated blueprint for admin review and approval | Blueprint generated |
+| 17.003 | Order Tracking → Admin CC | `order.received` (EventBus subscription) | Order Tracking | Admin CC | `OrderPayload` | Real-time order notifications and revenue dashboard updates | Order received |
+| 17.004 | Admin CC → Discovery | Manual trigger via API | Admin CC | Discovery | `{ keywords[], sources[], config }` | Admin initiates product scan for specific keywords | Admin clicks "Run Scan" |
+| 17.005 | Admin CC → Scoring | Manual trigger via API | Admin CC | Scoring | `{ productIds[] }` | Admin triggers re-scoring for specific products | Admin clicks "Re-Score" |
+| 17.006 | Admin CC → Launch Blueprint | Manual approval → `blueprint.approved` | Admin CC | Launch Blueprint | `{ blueprintId, approvedBy }` | Admin approves blueprint, triggering downstream launch flow | Admin clicks "Approve" |
+| 17.007 | Admin CC → Store Integration | `admin.product_deployed` (EventBus) | Admin CC | Store Integration | `{ productId, targetStore, deploymentId, deployedBy }` | One-click deploy: admin pushes product directly to YOUSELL's own stores | Admin clicks "Deploy" |
+| 17.008 | Admin CC → Store Integration | `admin.batch_deploy_complete` (EventBus) | Admin CC | Store Integration | `{ productCount, deployed, failed, targetStore, deployedBy }` | Batch deployment results trigger store sync | Batch deploy completes |
+| 17.009 | Trend Detection → Admin CC | `trend.direction_changed` (EventBus) | Trend Detection | Admin CC | `{ keyword, direction }` | Alert admin when a trend reverses direction | Direction change |
+| 17.010 | Profitability → Admin CC | `profitability.margin_alert` (EventBus) | Profitability | Admin CC | `{ productId, margin, threshold }` | Alert admin when product margins fall below threshold | Margin < 20% |
+| 17.011 | Content Creation → Admin CC | `content.batch_complete` (EventBus) | Content Creation | Admin CC | `{ requestCount, generated, failed, totalCredits }` | Show AI credit usage and content generation status | Content batch done |
+| 17.012 | Client Allocation → Admin CC | `allocation.batch_complete` (EventBus) | Client Allocation | Admin CC | `{ productCount, allocated, skipped }` | Show allocation results | Allocation batch done |
+| 17.013 | Store Integration → Admin CC | `store.connected` / `store.sync_complete` (EventBus) | Store Integration | Admin CC | Store connection/sync status | Show store health and sync status | Store events fire |
+
+**Admin CC as System Orchestrator:**
+
+| Comm # | Description |
+|--------|-------------|
+| 17.014 | Admin Command Center is the **only engine that can manually trigger other engines**. It serves as the human-in-the-loop control plane. All other inter-engine communication is event-driven and automatic (when enabled). Admin CC enforces G10 (manual-first) by requiring explicit admin action to start automation flows. |
+
+---
+
+### ENGINE 18: AFFILIATE COMMISSION ↔ Other Engines
+
+**Role:** Tracks affiliate revenue splits — dual-stream (YOUSELL's own content revenue + client referral commissions).
+
+| Comm # | Direction | Event / Mechanism | Source Engine | Target Engine | Payload | Use Case | Trigger Condition |
+|--------|-----------|-------------------|--------------|---------------|---------|----------|-------------------|
+| 18.001 | Order Tracking → Affiliate Commission | `order.received` (EventBus subscription) | Order Tracking | Affiliate Commission | `OrderPayload` | Record pending commission for the order's affiliate link | Order received |
+| 18.002 | Order Tracking → Affiliate Commission | `order.fulfilled` (EventBus subscription) | Order Tracking | Affiliate Commission | `{ orderId, trackingNumber, fulfilledAt }` | Move commission from "pending" to "payable" — only pay on fulfilled orders | Order fulfilled |
+| 18.003 | Store Integration → Affiliate Commission | `store.product_pushed` (EventBus subscription) | Store Integration | Affiliate Commission | `StoreProductPushedPayload` | Set up affiliate tracking links for the newly listed product | Product pushed |
+| 18.004 | Affiliate Commission → Financial Modelling | Shared table: commission data | Affiliate Commission | Financial Modelling | Commission rates, payout history | Financial Modelling includes affiliate costs in ROI projections | Data available |
+| 18.005 | Affiliate Commission → Admin Command Center | Shared table: commission/payout data | Affiliate Commission | Admin CC | Commission totals, payout schedule | Admin CC shows affiliate revenue dashboard and pending payouts | Data available |
+| 18.006 | Affiliate Commission → Profitability | Shared table: commission data | Affiliate Commission | Profitability | Commission rates per product | Profitability deducts affiliate commissions from net margin calculations | Data available |
+
+---
+
+### ENGINE 19: FULFILLMENT RECOMMENDATION ↔ Other Engines
+
+**Role:** Recommends optimal fulfillment model (POD, dropshipping, bulk wholesale, hybrid) based on product characteristics, margins, and supplier capabilities.
+
+| Comm # | Direction | Event / Mechanism | Source Engine | Target Engine | Payload | Use Case | Trigger Condition |
+|--------|-----------|-------------------|--------------|---------------|---------|----------|-------------------|
+| 19.001 | Scoring → Fulfillment Rec | `scoring.product_scored` (EventBus subscription) | Scoring | Fulfillment Rec | `ProductScoredPayload` | Score tier influences fulfillment model — HOT products may justify bulk purchasing | Product scored |
+| 19.002 | Supplier Discovery → Fulfillment Rec | `supplier.found` (EventBus subscription) | Supplier Discovery | Fulfillment Rec | `SupplierFoundPayload` | Supplier capabilities (MOQ, fulfillment services, shipping times) influence model selection | Supplier found |
+| 19.003 | Profitability → Fulfillment Rec | `profitability.calculated` (EventBus subscription) | Profitability | Fulfillment Rec | `ProfitabilityPayload` | Margin data determines if POD (lower margin, no risk) or bulk (higher margin, inventory risk) is viable | Profitability calculated |
+| 19.004 | Fulfillment Rec → Launch Blueprint | `fulfillment.recommended` (EventBus) | Fulfillment Rec | Launch Blueprint | `FulfillmentPayload` { productId, recommendedType, confidence, reasoning } | Launch Blueprint includes fulfillment model recommendation in the operations section | Recommendation made |
+| 19.005 | Fulfillment Rec → Store Integration | `fulfillment.recommended` (EventBus) | Fulfillment Rec | Store Integration | `FulfillmentPayload` | Store Integration configures fulfillment settings (e.g., Printful for POD, supplier direct for dropship) | Recommendation made |
+| 19.006 | Fulfillment Rec → Admin Command Center | `fulfillment.overridden` (EventBus) | Fulfillment Rec | Admin CC | `{ productId, overriddenType, reason }` | Admin CC logs when an admin manually overrides the AI's fulfillment recommendation | Admin overrides |
+| 19.007 | Fulfillment Rec → Profitability | `fulfillment.recommended` (indirect) | Fulfillment Rec | Profitability | Fulfillment costs by model type | Profitability recalculates margins based on the recommended fulfillment model's cost structure | Recommendation made |
+| 19.008 | Fulfillment Rec → Financial Modelling | Shared data: fulfillment cost models | Fulfillment Rec | Financial Modelling | Cost per unit by fulfillment model | Financial Modelling includes fulfillment cost scenarios in ROI projections | Data available |
+
+---
+
+### ENGINE 20: OPPORTUNITY FEED ↔ Other Engines
+
+**Role:** Read-only aggregator — combines data from all engines into a unified opportunity dashboard. Does NOT produce events.
+
+| Comm # | Direction | Event / Mechanism | Source Engine | Target Engine | Payload | Use Case | Trigger Condition |
+|--------|-----------|-------------------|--------------|---------------|---------|----------|-------------------|
+| 20.001 | Clustering → Opportunity Feed | `clustering.clusters_rebuilt` (EventBus subscription) | Clustering | Opportunity Feed | `{ clustersCreated, productsAssigned }` | Refresh cluster-based groupings in the feed | Clusters rebuilt |
+| 20.002 | Creator Matching → Opportunity Feed | `creator.matches_complete` (EventBus subscription) | Creator Matching | Opportunity Feed | `{ productsMatched, matchesCreated }` | Show matched creator count per product | Matching completes |
+| 20.003 | Trend Detection → Opportunity Feed | `trend.trend_detected` (EventBus subscription) | Trend Detection | Opportunity Feed | `TrendDetectedPayload` | Highlight products associated with newly detected trends | Trend detected |
+| 20.004 | Ad Intelligence → Opportunity Feed | `ads.ads_discovered` (EventBus) | Ad Intelligence | Opportunity Feed | `{ adsFound, adsStored }` | Show ad competition indicators on product cards | Ads discovered |
+
+**Database Aggregation Sources:**
+
+| Comm # | Table | Source Engine | Data Consumed |
+|--------|-------|---------------|---------------|
+| 20.005 | `products` | Discovery, Scoring | Product details, scores, tiers |
+| 20.006 | `product_clusters` | Clustering | Cluster groupings |
+| 20.007 | `creator_product_matches` | Creator Matching | Influencer matches per product |
+| 20.008 | `product_allocations` | Client Allocation | Allocation status |
+| 20.009 | `launch_blueprints` | Launch Blueprint | Blueprint status and key metrics |
+| 20.010 | `financial_models` | Financial Modelling | ROI projections, break-even data |
+| 20.011 | `trend_signals` | Trend Detection | Trend scores and direction |
+| 20.012 | `competitor_products` | Competitor Intelligence | Competitive pressure indicators |
+| 20.013 | `product_suppliers` | Supplier Discovery | Supplier availability and pricing |
+
+**Opportunity Feed Is Unique:**
+
+| Comm # | Description |
+|--------|-------------|
+| 20.014 | Opportunity Feed is the **only engine that never publishes events**. It is a pure consumer — a read-only aggregation layer that joins 9+ tables to produce a unified view. It subscribes to 4 event types for real-time updates but primarily operates via database reads on API request. |
+
+---
+
+*Document continues in Section 4...*
