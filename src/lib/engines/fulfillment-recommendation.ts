@@ -152,10 +152,10 @@ export class FulfillmentRecommendationEngine implements Engine {
         ENGINE_EVENTS.FULFILLMENT_RECOMMENDED,
         {
           productId,
-          recommendedType: fulfillmentType,
+          recommendedType: fulfillmentType as FulfillmentPayload['recommendedType'],
           confidence,
           comparisonTable,
-        } satisfies FulfillmentPayload,
+        },
         'fulfillment-recommendation',
       );
 
