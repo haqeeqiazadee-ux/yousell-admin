@@ -897,4 +897,96 @@ Each test maps to a `Comm #` from V9_Inter_Engine_Communication_Breakdown.md:
 
 ---
 
-*Document continues in Test Suite 4C...*
+## TEST SUITE 5: ERROR RESILIENCE, CONCURRENCY & EDGE CASES
+
+**File:** `tests/inter-engine-L7-resilience.test.ts`
+**Purpose:** Verify the system handles failures, concurrent events, and boundary conditions correctly
+
+---
+
+### 5A: ERROR ISOLATION TESTS
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result |
+|---------|-----------|-------------|-------|--------|----------------|
+| TC-ERR-01 | Subscriber crash doesn't block other subscribers | One of 8 Scoring subscribers throws | Register all 8 subscribers. Make Clustering throw `new Error("DB connection lost")`. | Emit `scoring.product_scored` | 7 other subscribers receive and process; Clustering error logged with event details |
+| TC-ERR-02 | EventBus continues after handler throws synchronously | Handler throws immediately | Register handler that throws. | Emit event | EventBus catches, logs, continues to next handler |
+| TC-ERR-03 | EventBus continues after handler throws asynchronously | Handler rejects promise | Register async handler that rejects. | Emit event | EventBus awaits, catches rejection, logs, continues |
+| TC-ERR-04 | Failed handler receives next event normally | Handler fails once, then recovers | Register handler that throws on first call, succeeds on second. | Emit event twice | First: fails + logged. Second: succeeds. Handler not permanently disabled. |
+| TC-ERR-05 | Missing payload fields don't crash receiver | Event with partial data | Emit `scoring.product_scored` with { productId } only (no scores, no tier). | Receivers process | Each subscriber handles gracefully — logs warning for missing fields, doesn't throw |
+| TC-ERR-06 | Null/undefined event payload handled | Malformed event | Emit event with payload: null. | EventBus delivers | Subscribers check for null; log error; don't crash |
+| TC-ERR-07 | Unknown event type silently ignored | Unrecognized event | Emit `nonexistent.fake_event`. | EventBus processes | No subscribers called; no error logged; event added to history |
+| TC-ERR-08 | Database write failure in handler doesn't poison event bus | Supabase insert fails mid-handler | Mock Supabase to reject insert. Scoring tries to write score. | Emit product_discovered → Scoring tries to score → DB fails | Scoring logs error; other subscribers of product_discovered unaffected |
+
+---
+
+### 5B: CONCURRENCY & RACE CONDITION TESTS
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result |
+|---------|-----------|-------------|-------|--------|----------------|
+| TC-CONC-01 | 100 simultaneous product_scored events | Verify all reach all subscribers | Register 8 subscribers. | Emit 100 `scoring.product_scored` events in rapid succession | Each subscriber receives exactly 100 events; no dropped events |
+| TC-CONC-02 | Duplicate event detection | Same event emitted twice with same correlationId | Register subscriber with dedup logic. | Emit identical event twice (same correlationId) | Subscriber processes only the first; second detected as duplicate |
+| TC-CONC-03 | Interleaved events from different engines | Discovery and TikTok Discovery emit simultaneously | Both engines emit to Trend Detection at same time. | Emit `discovery.scan_complete` AND `tiktok.videos_found` concurrently | Trend Detection receives both; processes each independently; no data corruption |
+| TC-CONC-04 | Slow subscriber doesn't delay fast subscribers | One handler takes 5 seconds | Register fast handler (1ms) and slow handler (5000ms). | Emit event | Fast handler completes immediately; slow handler completes later; no blocking |
+| TC-CONC-05 | Event ordering within same engine's emissions | Discovery emits product_discovered then scan_complete | Register subscribers for both events. | Discovery emits both in sequence | Subscribers receive events in emission order (product_discovered before scan_complete) |
+| TC-CONC-06 | Multiple engines writing same table concurrently | Scoring and Competitor Intel both write to products | Mock Supabase with race condition detection. | Both engines process same product simultaneously | No data corruption; last-write-wins or optimistic locking prevents inconsistency |
+
+---
+
+### 5C: CIRCULAR DEPENDENCY & FEEDBACK LOOP TESTS
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result |
+|---------|-----------|-------------|-------|--------|----------------|
+| TC-CIRC-01 | Supplier ↔ Profitability loop bounded at 3 iterations | Verify the primary feedback loop bound | Wire Supplier Discovery + Profitability. Set margin perpetually below 20%. | Start with `profitability.margin_alert` | Loop executes exactly 3 times: margin_alert → supplier.found → profitability.calculated → margin_alert → ... → STOP after 3rd cycle |
+| TC-CIRC-02 | Supplier ↔ Profitability loop exits early on recovery | Verify early exit when margin recovers | Wire both engines. First iteration: margin 15%. Second: margin 25% (recovered). | Start with margin_alert | Loop executes 2 times: first supplier doesn't help enough, second supplier fixes margin. No third iteration. |
+| TC-CIRC-03 | Content ↔ Store loop bounded at 2 iterations | Verify content optimization loop | Wire Content Creation + Store Integration. | content.generated → store.product_pushed → content optimizes → store updates → STOP | Exactly 2 cycles. Third content.generated does NOT trigger another store push. |
+| TC-CIRC-04 | Fulfillment ↔ Profitability loop bounded at 2 iterations | Verify fulfillment model change loop | Wire Fulfillment Rec + Profitability. Fulfillment changes model (POD → dropship) → margin changes → possible model re-evaluation. | Start with fulfillment.recommended | Max 2 iterations. Model stabilizes or stops at bound. |
+| TC-CIRC-05 | Loop counter resets between different products | Verify loop bound is per-product, not global | Process product A (3 iterations, exhausted). Then process product B. | Start product B loop | Product B gets fresh 3-iteration budget; not affected by product A's exhaustion |
+| TC-CIRC-06 | Trend Detection → Discovery indirect loop doesn't cascade infinitely | Verify trend hotness doesn't create infinite scan loop | Trend score >= 80 signals Discovery to scan more. New products → new trends → more scanning. | trend.trend_detected with score: 90 | Discovery may scan once based on trend signal; does NOT create unbounded scan loop. Rate limiting or cooldown enforced. |
+
+---
+
+### 5D: EDGE CASE TESTS
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result |
+|---------|-----------|-------------|-------|--------|----------------|
+| TC-EC-01 | Product rejected at scoring — all downstream silent | Verify COLD product stops pipeline | Score: 25, tier: "COLD" | Emit `scoring.product_rejected` | NO events from: Competitor Intel, Supplier Discovery, Profitability, Financial Modelling, Launch Blueprint, Client Allocation, Content Creation, Store Integration |
+| TC-EC-02 | Margin threshold breach mid-lifecycle | Product was profitable, now isn't | Product live in store. Supplier raises price. | New supplier.found with higher price → Profitability recalculates | margin_alert emitted → Admin CC shows "Existing product margin at risk" |
+| TC-EC-03 | Trend reversal for product already deployed | HOT product on store, trend now FALLING | Product live. Trend Detection detects reversal. | trend.direction_changed emitted | Admin CC alert: "Deployed product affected by trend reversal". Operator can pause listing. |
+| TC-EC-04 | Supplier verification fails — Blueprint generates without supplier | Supplier found but not verified | supplier.found emitted (score: 35, unverified). NO supplier.verified. | Launch Blueprint generates | Blueprint created with "Supplier pending verification" warning; not blocked |
+| TC-EC-05 | Blueprint approval denied — no downstream activation | Admin rejects blueprint | Admin clicks "Reject" instead of "Approve". | NO blueprint.approved event emitted | Client Allocation, Content Creation, Store Integration do NOT activate. Product stays in research phase. |
+| TC-EC-06 | Store connection drops during product push | Shopify API returns 503 mid-push | Mock Shopify to fail after 2 of 5 products. | Store Integration pushing batch | 2 products succeed (store.product_pushed emitted). 3 fail. Admin CC notified of partial failure. Retry queued. |
+| TC-EC-07 | Order webhook arrives for unknown product | Shopify sends order for product not in system | Mock webhook with unknown productId. | Order Tracking receives webhook | Logs "unknown product" warning; does NOT crash; does NOT emit order.received |
+| TC-EC-08 | Commission without fulfilled order — stays pending indefinitely | Order received but never fulfilled | Emit order.received only. Wait. | No order.fulfilled ever comes | Commission stays "pending" permanently. Included in aging report. Never moves to "payable". |
+| TC-EC-09 | Duplicate order webhook — idempotent handling | Shopify sends same order webhook twice | Emit order.received with same orderId twice. | Second processing | First: commission recorded. Second: detected as duplicate; no double commission. |
+| TC-EC-10 | All engines healthy but no data — empty system behavior | Brand new system, no products | All engines registered. No products in DB. | Query Opportunity Feed | Returns empty feed with "No products discovered yet" message. No errors. |
+| TC-EC-11 | Scoring with all zero inputs | No trend data, no TikTok data, no competitor data | All mock tables empty. | Score a product | Composite: 0 or minimum baseline. Tier: "COLD". No crash. |
+| TC-EC-12 | Blueprint generation with partial upstream data | Only profitability available, no suppliers or financial model | Mock only profitability data. | Launch Blueprint triggers | Blueprint generated with available sections only. Missing sections marked "Data pending". Not blocked. |
+
+---
+
+### 5E: QUEUE RESILIENCE TESTS
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result |
+|---------|-----------|-------------|-------|--------|----------------|
+| TC-Q-01 | BullMQ job fails — retry behavior | Job processor throws | Mock BullMQ with retry config (3 attempts, exponential backoff). | product-scan job fails | Job retried 3 times with backoff. After 3 failures → moved to dead letter queue. |
+| TC-Q-02 | Queue message ordering preserved | 5 jobs enqueued in sequence | Enqueue: scan-1, scan-2, scan-3, scan-4, scan-5. | Process all | Processed in FIFO order: scan-1 first, scan-5 last |
+| TC-Q-03 | Dead letter queue captures failed jobs | Job fails all retries | Mock job that always throws. | Process with 3 retry limit | Job moved to DLQ with: original payload, error message, retry count, timestamps |
+| TC-Q-04 | Queue handles large payload | Job with 10KB of product data | Enqueue job with large rawData payload. | Process | Job processed successfully; no payload truncation |
+| TC-Q-05 | Multiple queues process independently | product-scan and trend-scan running simultaneously | Enqueue jobs to both queues. Make trend-scan fail. | Both process | product-scan succeeds. trend-scan fails independently. No cross-contamination. |
+
+---
+
+### SECTION 5 SUMMARY
+
+| Category | Test Count |
+|----------|-----------|
+| Error Isolation | 8 tests |
+| Concurrency & Race Conditions | 6 tests |
+| Circular Dependencies & Feedback Loops | 6 tests |
+| Edge Cases | 12 tests |
+| Queue Resilience | 5 tests |
+| **TOTAL SECTION 5** | **37 tests** |
+
+---
+
+*Document continues in Final Summary...*
