@@ -242,4 +242,211 @@ Each test maps to a `Comm #` from V9_Inter_Engine_Communication_Breakdown.md:
 
 ---
 
-*Document continues in Test Suite 2...*
+## TEST SUITE 2: PAIRWISE EVENT CHAINS — INTELLIGENCE & SUPPLY CLUSTER (Engines 6-10)
+
+**File:** `tests/inter-engine-L1-intelligence-supply.test.ts`
+**Engines Under Test:** Creator Matching, Ad Intelligence, Competitor Intelligence, Supplier Discovery, Profitability
+
+---
+
+### 2A: CREATOR MATCHING → OPPORTUNITY FEED (Comm # 6.002, 6.003, 20.002)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-6.002a | Creator Matching matches_complete reaches Opportunity Feed | Verify Opportunity Feed receives batch match results | Register both engines. | Emit `creator.matches_complete` with { productsMatched: 12, matchesCreated: 34 } | Opportunity Feed's handleEvent called; updates creator match counts in feed | 6.002, 20.002 |
+| TC-6.003a | Creator Matching creator_matched reaches Opportunity Feed | Verify individual match updates flow in real-time | Register both engines. | Emit `creator.creator_matched` with { productId, creatorId, matchScore: 0.87, platform: "tiktok" } | Opportunity Feed updates specific product card with new creator match | 6.003 |
+
+---
+
+### 2B: CREATOR MATCHING → LAUNCH BLUEPRINT (Shared Table) (Comm # 6.004, 12.011)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-6.004a | Launch Blueprint reads creator matches for influencer plan | Verify Blueprint assembles creator data | Mock creator_product_matches with 3 matched creators for productId. | Launch Blueprint generates blueprint | Blueprint includes influencer outreach section with creator names, rates, platforms, match scores | 6.004, 12.011 |
+| TC-6.004b | Launch Blueprint handles zero creator matches | Verify Blueprint generates without creator section when no matches exist | Mock empty creator_product_matches. | Generate blueprint | Blueprint created successfully with "No creators matched yet" placeholder in influencer section | 6.004 |
+
+---
+
+### 2C: CREATOR MATCHING → FINANCIAL MODELLING (Shared Table) (Comm # 6.006, 11.004)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-6.006a | Financial Modelling reads creator rates for influencer cost projection | Verify Financial Modelling includes influencer costs in ROI | Mock creator_product_matches with rates: $500, $200, $150. | Generate financial model | Financial model includes influencer marketing cost: $850 total; factors into break-even calculation | 6.006, 11.004 |
+| TC-6.006b | Financial Modelling handles missing creator rate data | Verify graceful fallback when rates not available | Mock creator_product_matches with no rate data. | Generate financial model | Financial model uses industry average rates as fallback; flags as "estimated" | 6.006 |
+
+---
+
+### 2D: TIKTOK DISCOVERY → CREATOR MATCHING (Shared Tables) (Comm # 2.007, 6.007)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-2.007a | Creator Matching reads TikTok creator profiles from shared tables | Verify Creator Matching sources TikTok creators for matching pool | Mock tiktok_videos and tiktok_creators with 20 creator profiles. | Creator Matching runs for a product | Matching pool includes TikTok creators; match scores consider TikTok engagement rates | 2.007, 6.007 |
+| TC-2.007b | Creator Matching handles empty TikTok creator data | Verify matching works with other platforms when TikTok data missing | Mock empty tiktok_creators table. | Creator Matching runs | Matching proceeds with non-TikTok creator sources; no crash | 2.007 |
+
+---
+
+### 2E: AD INTELLIGENCE → OPPORTUNITY FEED (Comm # 7.007, 20.004)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-7.007a | Ad Intelligence ads_discovered reaches Opportunity Feed | Verify ad signals appear in feed | Register both engines. | Emit `ads.ads_discovered` with { adsFound: 8, adsStored: 6 } | Opportunity Feed's handleEvent called; adds ad competition indicator to product cards | 7.007, 20.004 |
+
+---
+
+### 2F: AD INTELLIGENCE → PROFITABILITY (Shared Data) (Comm # 7.004, 10.011)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-7.004a | Profitability reads CPA estimates from Ad Intelligence data | Verify ad costs factor into margin calculation | Mock ad data with estimated CPA: $12.50 per acquisition. | Profitability calculates margins | Net margin reduced by estimated ad spend per unit; flags if ad cost exceeds margin | 7.004, 10.011 |
+| TC-7.004b | Profitability handles missing ad data | Verify margin calculation works without ad intelligence | Mock empty ad data. | Profitability calculates | Margin calculated without ad cost deduction; result valid but flagged as "ad cost unknown" | 7.004 |
+
+---
+
+### 2G: AD INTELLIGENCE → COMPETITOR INTELLIGENCE (Shared Data) (Comm # 7.003, 8.009)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-7.003a | Competitor Intelligence enriches profiles with Ad Intelligence ad data | Verify competitor profiles include ad activity | Mock ad creative data for competitor store. | Competitor Intelligence generates competitor profile | Profile includes: ad spend estimate, targeting demographics, creative types used | 7.003, 8.009 |
+
+---
+
+### 2H: COMPETITOR INTELLIGENCE → PROFITABILITY (Comm # 8.003, 10.003)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-8.003a | Competitor detected event reaches Profitability | Verify Profitability receives competitor pricing data | Register both engines. | Emit `competitor.detected` with { productId, competitorStore: "amazon", price: 24.99, reviews: 150, sellerCount: 8 } | Profitability's handleEvent called; adjusts pricing strategy based on competitor price | 8.003, 10.003 |
+| TC-8.003b | Profitability adjusts margins when competitor undercuts | Verify competitive pricing impact on profit_score | Mock current selling price: $29.99. Competitor price: $19.99. | Emit competitor.detected → Profitability recalculates | Margin recalculated with competitive pressure; may trigger margin_alert if below threshold | 8.003 |
+| TC-8.003c | Multiple competitors detected — Profitability uses worst-case pricing | Verify Profitability considers all competitors | Emit 3 competitor.detected events with prices: $24.99, $19.99, $29.99 | Profitability processes all | Profitability uses lowest competitor price ($19.99) for conservative margin calculation | 8.003 |
+
+---
+
+### 2I: COMPETITOR INTELLIGENCE → FINANCIAL MODELLING (Comm # 8.004, 11.003)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-8.004a | Competitor detected event reaches Financial Modelling | Verify Financial Modelling factors competitor pricing into revenue projections | Register both engines. | Emit `competitor.detected` | Financial Modelling's handleEvent called; updates revenue projection with competitive pricing | 8.004, 11.003 |
+| TC-8.004b | Financial Modelling adjusts market share estimate with competitor data | Verify ROI model accounts for competition | Mock 5 competitors with strong reviews. | Financial Modelling generates model | ROI projection includes market share reduction based on competitor strength | 8.004 |
+
+---
+
+### 2J: COMPETITOR INTELLIGENCE → SUPPLIER DISCOVERY (Comm # 8.006, 9.007)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-8.006a | Competitor batch_complete reaches Supplier Discovery | Verify Supplier Discovery cross-references competitor data to find shared suppliers | Register both engines. | Emit `competitor.batch_complete` with { productId, keyword: "portable blender", platforms: ["amazon", "ebay"], competitorsFound: 12 } | Supplier Discovery's handleEvent called; uses competitor product data to identify potential shared suppliers | 8.006, 9.007 |
+| TC-8.006b | Supplier Discovery finds shared supplier from competitor data | Verify cross-referencing logic | Mock competitor products with identifiable supplier patterns (same factory, similar branding) | Supplier Discovery processes competitor data | Identifies potential shared supplier; flags for verification | 8.006 |
+
+---
+
+### 2K: SCORING → SUPPLIER DISCOVERY (Comm # 3.004, 9.001)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-3.004a | Scoring product_scored reaches Supplier Discovery | Verify Supplier Discovery receives scored products | Register both engines. | Emit `scoring.product_scored` with { productId, scores: { composite: 72 }, tier: "WARM" } | Supplier Discovery's handleEvent called | 3.004, 9.001 |
+| TC-3.004b | Supplier Discovery only searches for WARM+ products (>= 60) | Verify cost-control filter | Emit product_scored with composite: 45, tier: "WATCH" | Supplier Discovery receives | Supplier Discovery skips processing — score below threshold (saves API costs) | 3.004 |
+| TC-3.004c | Supplier Discovery initiates AliExpress/Alibaba search for WARM+ product | Verify supplier search triggered | Mock Apify AliExpress scraper. Emit product_scored with composite: 75. | Supplier Discovery processes | Enqueues `supplier-discovery` job; eventually emits `supplier.found` | 3.004 |
+
+---
+
+### 2L: SUPPLIER DISCOVERY → PROFITABILITY (Comm # 9.003, 10.002)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-9.003a | Supplier found event reaches Profitability | Verify Profitability recalculates with real supplier COGS | Register both engines. | Emit `supplier.found` with { supplierId, productId, price: 8.50, moq: 50, shippingCost: 2.30, platform: "aliexpress" } | Profitability's handleEvent called; recalculates margin with COGS = $8.50 + $2.30 shipping | 9.003, 10.002 |
+| TC-9.003b | Profitability improves margin with cheaper supplier | Verify margin update when better supplier found | Initial margin calculation with COGS: $15. New supplier COGS: $8.50. | Emit supplier.found → Profitability recalculates | Margin improves; new profitability.calculated event emitted with updated margins | 9.003 |
+| TC-9.003c | Multiple suppliers found — Profitability uses best price | Verify Profitability considers all suppliers | Emit 3 supplier.found events with prices: $8.50, $12.00, $6.75 | Profitability processes all | Uses best supplier ($6.75) for primary margin calculation; records alternatives | 9.003 |
+
+---
+
+### 2M: SUPPLIER DISCOVERY → FINANCIAL MODELLING (Comm # 9.004, 11.002)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-9.004a | Supplier found event reaches Financial Modelling | Verify Financial Modelling updates COGS projections | Register both engines. | Emit `supplier.found` with supplier pricing data | Financial Modelling's handleEvent called; updates COGS in ROI model | 9.004, 11.002 |
+| TC-9.004b | Financial Modelling compares multiple supplier scenarios | Verify scenario analysis with different suppliers | Emit 2 supplier.found events with different pricing | Financial Modelling generates | Model includes best-case and worst-case COGS scenarios | 9.004 |
+
+---
+
+### 2N: SUPPLIER DISCOVERY → LAUNCH BLUEPRINT (Comm # 9.005, 12.003)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-9.005a | Supplier verified event reaches Launch Blueprint | Verify Launch Blueprint includes verified supplier | Register both engines. | Emit `supplier.verified` with { supplierId, productId, verified: true, score: 92 } | Launch Blueprint's handleEvent called; includes supplier in recommended source section | 9.005, 12.003 |
+| TC-9.005b | Launch Blueprint excludes unverified suppliers | Verify only verified suppliers appear in blueprint | Emit supplier.found (not verified) — no supplier.verified event | Launch Blueprint generates | Blueprint does NOT include unverified supplier in recommendations | 9.005 |
+
+---
+
+### 2O: SUPPLIER DISCOVERY → FULFILLMENT RECOMMENDATION (Comm # 9.006, 19.002)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-9.006a | Supplier found event reaches Fulfillment Recommendation | Verify Fulfillment Rec evaluates supplier capabilities | Register both engines. | Emit `supplier.found` with { moq: 50, shippingCost: 2.30, platform: "aliexpress" } | Fulfillment Rec's handleEvent called; evaluates supplier for dropship viability | 9.006, 19.002 |
+| TC-9.006b | Fulfillment Rec recommends POD when supplier MOQ too high | Verify MOQ threshold affects model selection | Emit supplier.found with moq: 500, price: $3.00 | Fulfillment Rec processes | Recommends POD (no inventory risk) instead of bulk (high MOQ commitment) | 9.006 |
+| TC-9.006c | Fulfillment Rec recommends dropship when supplier offers fulfillment | Verify fulfillment service detection | Emit supplier.found with fulfillmentService: true, moq: 1 | Fulfillment Rec processes | Recommends dropship model with supplier-managed fulfillment | 9.006 |
+
+---
+
+### 2P: PROFITABILITY → FINANCIAL MODELLING (Comm # 10.004, 11.001)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-10.004a | Profitability calculated event reaches Financial Modelling | Verify Financial Modelling builds ROI from margin data | Register both engines. | Emit `profitability.calculated` with { productId, margin: 12.50, marginPercent: 42, cogs: 8.50, sellingPrice: 29.99, fees: 8.99 } | Financial Modelling's handleEvent called; builds ROI projection from margin data | 10.004, 11.001 |
+| TC-10.004b | Financial Modelling calculates break-even from profitability data | Verify break-even calculation | Emit profitability.calculated with margin: $12.50 per unit, marketing budget: $500 | Financial Modelling processes | Break-even = $500 / $12.50 = 40 units; included in model | 10.004 |
+
+---
+
+### 2Q: PROFITABILITY → SUPPLIER DISCOVERY (Margin Alert Loop) (Comm # 10.006, 9.002)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-10.006a | Profitability margin_alert reaches Supplier Discovery | Verify margin alert triggers supplier search | Register both engines. | Emit `profitability.margin_alert` with { productId, margin: 3.50, marginPercent: 12, threshold: 20 } | Supplier Discovery's handleEvent called; initiates search for cheaper supplier | 10.006, 9.002 |
+| TC-10.006b | Profitability margin_alert reaches Admin CC | Verify admin gets notified of low margins | Register Profitability + Admin CC. | Emit margin_alert | Admin CC's handleEvent called; creates low-margin alert for operator | 10.010 |
+| TC-10.006c | Margin alert loop bounded at 3 iterations | Verify the feedback loop doesn't run infinitely | Setup: margin stays below 20% after each supplier search. | Supplier Discovery finds supplier → Profitability recalculates → still low → repeat | Loop terminates after 3 iterations; final margin_alert flags for manual review | 9.010 |
+
+---
+
+### 2R: PROFITABILITY → LAUNCH BLUEPRINT (Comm # 10.005, 12.002)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-10.005a | Profitability calculated event reaches Launch Blueprint | Verify Launch Blueprint includes margin analysis | Register both engines. | Emit `profitability.calculated` | Launch Blueprint's handleEvent called; includes margin analysis and pricing strategy section | 10.005, 12.002 |
+
+---
+
+### 2S: PROFITABILITY → FULFILLMENT RECOMMENDATION (Comm # 10.007, 19.003)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-10.007a | Profitability calculated event reaches Fulfillment Rec | Verify margin data influences fulfillment model | Register both engines. | Emit `profitability.calculated` with marginPercent: 15 | Fulfillment Rec's handleEvent called; low margin → recommends POD (lower margin OK, no risk) | 10.007, 19.003 |
+| TC-10.007b | High margin triggers bulk fulfillment recommendation | Verify high margins enable riskier models | Emit profitability.calculated with marginPercent: 55 | Fulfillment Rec processes | Recommends bulk purchasing (high margin justifies inventory risk) | 10.007 |
+
+---
+
+### SECTION 2 SUMMARY
+
+| Category | Test Count | Comm # Coverage |
+|----------|-----------|-----------------|
+| Creator Matching → Opportunity Feed | 2 tests | 6.002, 6.003, 20.002 |
+| Creator Matching → Launch Blueprint (DB) | 2 tests | 6.004, 12.011 |
+| Creator Matching → Financial Modelling (DB) | 2 tests | 6.006, 11.004 |
+| TikTok Discovery → Creator Matching (DB) | 2 tests | 2.007, 6.007 |
+| Ad Intelligence → Opportunity Feed | 1 test | 7.007, 20.004 |
+| Ad Intelligence → Profitability (DB) | 2 tests | 7.004, 10.011 |
+| Ad Intelligence → Competitor Intel (DB) | 1 test | 7.003, 8.009 |
+| Competitor Intel → Profitability | 3 tests | 8.003, 10.003 |
+| Competitor Intel → Financial Modelling | 2 tests | 8.004, 11.003 |
+| Competitor Intel → Supplier Discovery | 2 tests | 8.006, 9.007 |
+| Scoring → Supplier Discovery | 3 tests | 3.004, 9.001 |
+| Supplier Discovery → Profitability | 3 tests | 9.003, 10.002 |
+| Supplier Discovery → Financial Modelling | 2 tests | 9.004, 11.002 |
+| Supplier Discovery → Launch Blueprint | 2 tests | 9.005, 12.003 |
+| Supplier Discovery → Fulfillment Rec | 3 tests | 9.006, 19.002 |
+| Profitability → Financial Modelling | 2 tests | 10.004, 11.001 |
+| Profitability → Supplier Discovery (loop) | 3 tests | 10.006, 9.002, 9.010 |
+| Profitability → Launch Blueprint | 1 test | 10.005, 12.002 |
+| Profitability → Fulfillment Rec | 2 tests | 10.007, 19.003 |
+| **TOTAL SECTION 2** | **40 tests** | **38 Comm # pathways** |
+
+---
+
+*Document continues in Test Suite 3...*
