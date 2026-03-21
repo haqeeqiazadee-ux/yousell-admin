@@ -1,279 +1,282 @@
 /**
- * Engine 10: Store Integration Engine — V9 Task Coverage Tests
+ * Engine 10: Store Integration Engine — V9 Tests
  *
- * Tests against V9 tasks 10.01–10.44:
- * - OAuth flows (10.02–10.14)
- * - Token management & refresh (10.15–10.18)
- * - Webhook signature validation (10.19–10.20)
- * - Product push flow (10.21–10.35)
- * - Rate limiting (10.30)
- * - Listing status management (10.33–10.34)
- * - API endpoints (10.41–10.44)
+ * Tests the REAL StoreIntegrationEngine class:
+ * - Config, lifecycle, healthCheck
+ * - Event handling (BLUEPRINT_APPROVED, CONTENT_GENERATED)
+ * - Domain methods: pushProduct(), connectStore(), syncInventory()
+ * - Event emission verification
+ * - Business rule specifications (OAuth, HMAC, rate limits)
  */
 
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import * as crypto from 'crypto'
 
-// ── Tasks 10.02–10.14: OAuth Flow Contracts ─────────────────
+// ── Mocks (required by barrel import transitive deps) ────────
+vi.mock('server-only', () => ({}))
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: () => ({
+    from: vi.fn(() => ({
+      select: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: null, error: null }),
+      limit: vi.fn().mockReturnThis(),
+    })),
+  }),
+}))
 
-describe('Engine 10 — Tasks 10.02-10.14: OAuth Flows', () => {
-  it('generates Shopify OAuth redirect URL (10.02)', () => {
-    const buildShopifyAuthUrl = (shop: string, clientId: string, redirectUri: string, scopes: string) => {
-      return `https://${shop}/admin/oauth/authorize?client_id=${clientId}&scope=${scopes}&redirect_uri=${encodeURIComponent(redirectUri)}`
-    }
+import {
+  StoreIntegrationEngine,
+  getEventBus,
+  resetEventBus,
+  ENGINE_EVENTS,
+} from '@/lib/engines'
+import type { EngineEvent } from '@/lib/engines'
 
-    const url = buildShopifyAuthUrl('my-store.myshopify.com', 'key123', 'https://app.yousell.online/auth/callback', 'write_products,read_orders')
-    expect(url).toContain('my-store.myshopify.com')
-    expect(url).toContain('client_id=key123')
-    expect(url).toContain('write_products')
+// ─────────────────────────────────────────────────────────────
+// SECTION 1: Config & Lifecycle
+// ─────────────────────────────────────────────────────────────
+
+describe('Engine 10 — Config & Lifecycle', () => {
+  let engine: InstanceType<typeof StoreIntegrationEngine>
+
+  beforeEach(() => {
+    resetEventBus()
+    engine = new StoreIntegrationEngine()
   })
 
-  it('validates Shopify token scopes include write_products (10.05)', () => {
-    const validateScopes = (scopes: string[]) => scopes.includes('write_products')
-    expect(validateScopes(['write_products', 'read_orders'])).toBe(true)
-    expect(validateScopes(['read_products', 'read_orders'])).toBe(false)
-    expect(validateScopes([])).toBe(false)
+  it('has correct name, queues, publishes, subscribes', () => {
+    expect(engine.config.name).toBe('store-integration')
+    expect(engine.config.queues).toContain('shop-sync')
+    expect(engine.config.queues).toContain('product-push')
+    expect(engine.config.publishes).toContain(ENGINE_EVENTS.PRODUCT_PUSHED)
+    expect(engine.config.publishes).toContain(ENGINE_EVENTS.STORE_CONNECTED)
+    expect(engine.config.publishes).toContain(ENGINE_EVENTS.STORE_SYNC_COMPLETE)
+    expect(engine.config.subscribes).toContain(ENGINE_EVENTS.BLUEPRINT_APPROVED)
+    expect(engine.config.subscribes).toContain(ENGINE_EVENTS.PRODUCT_ALLOCATED)
+    expect(engine.config.subscribes).toContain(ENGINE_EVENTS.CONTENT_GENERATED)
   })
 
-  it('generates TikTok Shop OAuth with HMAC-SHA256 (10.07)', () => {
-    const generateTikTokAuth = (appKey: string) => {
-      return `https://auth.tiktok-shops.com/oauth/authorize?app_key=${appKey}&state=random`
-    }
-    const url = generateTikTokAuth('tk_app_123')
-    expect(url).toContain('app_key=tk_app_123')
+  it('transitions through lifecycle states', async () => {
+    expect(engine.status()).toBe('idle')
+    await engine.start()
+    expect(engine.status()).toBe('running')
+    await engine.stop()
+    expect(engine.status()).toBe('stopped')
   })
 
-  it('creates connected_stores record with correct platform (10.06, 10.10, 10.14)', () => {
-    const platforms = ['shopify', 'tiktok_shop', 'amazon']
-    platforms.forEach(p => {
-      const record = {
-        client_id: 'c1',
-        platform: p,
-        status: 'active',
-        connected_at: new Date().toISOString(),
-      }
-      expect(record.platform).toBe(p)
-      expect(record.status).toBe('active')
+  it('healthCheck returns true', async () => {
+    expect(await engine.healthCheck()).toBe(true)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────
+// SECTION 2: Event Handling
+// ─────────────────────────────────────────────────────────────
+
+describe('Engine 10 — Event Handling', () => {
+  let engine: InstanceType<typeof StoreIntegrationEngine>
+
+  beforeEach(() => {
+    resetEventBus()
+    engine = new StoreIntegrationEngine()
+  })
+
+  it('handles BLUEPRINT_APPROVED event (deferred per G10)', async () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    await engine.handleEvent({
+      type: ENGINE_EVENTS.BLUEPRINT_APPROVED,
+      payload: { blueprintId: 'bp-001' },
+      source: 'launch-blueprint',
+      timestamp: new Date().toISOString(),
+    })
+    expect(spy).toHaveBeenCalledWith(
+      expect.stringContaining('store push deferred')
+    )
+    spy.mockRestore()
+  })
+
+  it('handles CONTENT_GENERATED event', async () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    await engine.handleEvent({
+      type: ENGINE_EVENTS.CONTENT_GENERATED,
+      payload: { contentId: 'cnt-001' },
+      source: 'content-engine',
+      timestamp: new Date().toISOString(),
+    })
+    expect(spy).toHaveBeenCalledWith(
+      expect.stringContaining('listing update deferred')
+    )
+    spy.mockRestore()
+  })
+})
+
+// ─────────────────────────────────────────────────────────────
+// SECTION 3: Domain Methods — pushProduct()
+// ─────────────────────────────────────────────────────────────
+
+describe('Engine 10 — pushProduct()', () => {
+  let engine: InstanceType<typeof StoreIntegrationEngine>
+
+  beforeEach(() => {
+    resetEventBus()
+    engine = new StoreIntegrationEngine()
+  })
+
+  it('returns shopProductId and storeUrl', async () => {
+    const result = await engine.pushProduct('prod-001', 'client-001', 'shopify', {
+      title: 'Smart Widget', description: 'Cool widget', price: 29.99, images: ['https://img.example.com/1.jpg'],
+    })
+
+    expect(result.shopProductId).toContain('shop_shopify_prod-001')
+    expect(typeof result.storeUrl).toBe('string')
+  })
+
+  it('emits PRODUCT_PUSHED event with correct payload', async () => {
+    const bus = getEventBus()
+    const received: EngineEvent[] = []
+    bus.subscribe(ENGINE_EVENTS.PRODUCT_PUSHED, (e: EngineEvent) => {
+      received.push(e)
+    })
+
+    await engine.pushProduct('prod-001', 'client-001', 'tiktok-shop', {
+      title: 'Widget', description: 'Desc', price: 19.99, images: [],
+    })
+
+    expect(received).toHaveLength(1)
+    expect(received[0].payload).toMatchObject({
+      productId: 'prod-001',
+      platform: 'tiktok-shop',
+      clientId: 'client-001',
+    })
+    expect(received[0].source).toBe('store-integration')
+  })
+
+  it('transitions status: running → idle after completion', async () => {
+    await engine.pushProduct('p1', 'c1', 'amazon', {
+      title: 'W', description: 'D', price: 10, images: [],
+    })
+    expect(engine.status()).toBe('idle')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────
+// SECTION 4: Domain Methods — connectStore()
+// ─────────────────────────────────────────────────────────────
+
+describe('Engine 10 — connectStore()', () => {
+  let engine: InstanceType<typeof StoreIntegrationEngine>
+
+  beforeEach(() => {
+    resetEventBus()
+    engine = new StoreIntegrationEngine()
+  })
+
+  it('returns connected=true and storeId', async () => {
+    const result = await engine.connectStore('client-001', 'shopify', 'oauth_code_abc')
+    expect(result.connected).toBe(true)
+    expect(result.storeId).toContain('store_client-001_shopify')
+  })
+
+  it('emits STORE_CONNECTED event', async () => {
+    const bus = getEventBus()
+    const received: EngineEvent[] = []
+    bus.subscribe(ENGINE_EVENTS.STORE_CONNECTED, (e: EngineEvent) => {
+      received.push(e)
+    })
+
+    await engine.connectStore('client-001', 'tiktok_shop', 'code_xyz')
+
+    expect(received).toHaveLength(1)
+    expect(received[0].payload).toMatchObject({
+      clientId: 'client-001',
+      platform: 'tiktok_shop',
     })
   })
 })
 
-// ── Tasks 10.15–10.18: Token Management ─────────────────────
+// ─────────────────────────────────────────────────────────────
+// SECTION 5: Domain Methods — syncInventory()
+// ─────────────────────────────────────────────────────────────
 
-describe('Engine 10 — Tasks 10.15-10.18: Token Management', () => {
-  it('detects TikTok token approaching expiry within 24h (10.15)', () => {
-    const isExpiringSoon = (expiresAt: string) => {
-      const timeUntilExpiry = new Date(expiresAt).getTime() - Date.now()
-      return timeUntilExpiry < 24 * 60 * 60 * 1000 && timeUntilExpiry > 0
-    }
+describe('Engine 10 — syncInventory()', () => {
+  let engine: InstanceType<typeof StoreIntegrationEngine>
 
-    const soonExpiry = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString() // 12h from now
-    const farExpiry = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString() // 48h from now
-    const alreadyExpired = new Date(Date.now() - 1000).toISOString()
-
-    expect(isExpiringSoon(soonExpiry)).toBe(true)
-    expect(isExpiringSoon(farExpiry)).toBe(false)
-    expect(isExpiringSoon(alreadyExpired)).toBe(false)
+  beforeEach(() => {
+    resetEventBus()
+    engine = new StoreIntegrationEngine()
   })
 
-  it('handles token refresh failure by flagging re-auth required (10.18)', () => {
-    const handleRefreshFailure = (clientId: string) => ({
-      action: 'notify_client',
-      message: `Store token refresh failed. Please re-authenticate your store.`,
-      clientId,
+  it('returns productsUpdated count', async () => {
+    const result = await engine.syncInventory('client-001', 'store-001')
+    expect(typeof result.productsUpdated).toBe('number')
+  })
+
+  it('emits STORE_SYNC_COMPLETE event', async () => {
+    const bus = getEventBus()
+    const received: EngineEvent[] = []
+    bus.subscribe(ENGINE_EVENTS.STORE_SYNC_COMPLETE, (e: EngineEvent) => {
+      received.push(e)
     })
 
-    const result = handleRefreshFailure('c1')
-    expect(result.action).toBe('notify_client')
-    expect(result.clientId).toBe('c1')
+    await engine.syncInventory('client-001', 'store-001')
+
+    expect(received).toHaveLength(1)
+    expect(received[0].payload).toMatchObject({
+      clientId: 'client-001',
+      storeId: 'store-001',
+    })
+  })
+
+  it('transitions status: running → idle after completion', async () => {
+    await engine.syncInventory('c1', 's1')
+    expect(engine.status()).toBe('idle')
   })
 })
 
-// ── Tasks 10.19–10.20: Webhook Signature Validation ─────────
+// ─────────────────────────────────────────────────────────────
+// SECTION 6: Business Rule Specifications (V9 Tasks)
+// ─────────────────────────────────────────────────────────────
 
-describe('Engine 10 — Tasks 10.19-10.20: Webhook Signature Validation', () => {
-  it('validates Shopify HMAC-SHA256 signature (10.20)', () => {
+describe('Engine 10 — Business Rule Specs', () => {
+  it('Shopify HMAC-SHA256 webhook validation (10.20)', () => {
     const secret = 'test_shopify_secret'
     const payload = JSON.stringify({ order_id: 123, total: 29.99 })
-    const expectedHmac = crypto
-      .createHmac('sha256', secret)
-      .update(payload, 'utf8')
-      .digest('base64')
+    const hmac = crypto.createHmac('sha256', secret).update(payload, 'utf8').digest('base64')
 
-    const receivedHmac = expectedHmac
-    const isValid = receivedHmac === expectedHmac
-    expect(isValid).toBe(true)
+    // Same input produces same HMAC
+    const hmac2 = crypto.createHmac('sha256', secret).update(payload, 'utf8').digest('base64')
+    expect(hmac).toBe(hmac2)
+
+    // Different input produces different HMAC
+    const hmac3 = crypto.createHmac('sha256', secret).update('tampered', 'utf8').digest('base64')
+    expect(hmac).not.toBe(hmac3)
   })
 
-  it('rejects invalid Shopify HMAC signature (10.20)', () => {
-    const secret = 'test_shopify_secret'
-    const payload = JSON.stringify({ order_id: 123 })
-    const validHmac = crypto
-      .createHmac('sha256', secret)
-      .update(payload, 'utf8')
-      .digest('base64')
-
-    const tamperedHmac = 'invalid_signature_here'
-    expect(tamperedHmac === validHmac).toBe(false)
+  it('TikTok rate limit: 50 req/sec (10.30)', () => {
+    const RATE_LIMIT = 50
+    const isAllowed = (currentCount: number) => currentCount < RATE_LIMIT
+    expect(isAllowed(49)).toBe(true)
+    expect(isAllowed(50)).toBe(false)
   })
 
-  it('validates TikTok Shop HMAC-SHA256 signature (10.19)', () => {
-    const appSecret = 'test_tiktok_secret'
-    const payload = JSON.stringify({ event_type: 'ORDER_STATUS_UPDATE', order_id: '456' })
-    const signature = crypto
-      .createHmac('sha256', appSecret)
-      .update(payload, 'utf8')
-      .digest('hex')
-
-    expect(signature).toBeTruthy()
-    expect(signature.length).toBeGreaterThan(0)
-
-    // Verify same payload produces same signature
-    const signature2 = crypto
-      .createHmac('sha256', appSecret)
-      .update(payload, 'utf8')
-      .digest('hex')
-
-    expect(signature).toBe(signature2)
-  })
-})
-
-// ── Tasks 10.21–10.35: Product Push Flow ────────────────────
-
-describe('Engine 10 — Tasks 10.21-10.35: Product Push Flow', () => {
-  it('builds correct Shopify product payload (10.28)', () => {
-    const product = {
-      title: 'Smart Widget',
-      description: 'An amazing smart widget',
-      price: 29.99,
-      category: 'Electronics',
-      image_url: 'https://img.example.com/widget.jpg',
-      source: 'tiktok',
-      trend_stage: 'rising',
-    }
-
-    const shopifyPayload = {
-      product: {
-        title: product.title,
-        body_html: product.description,
-        vendor: 'YouSell',
-        product_type: product.category,
-        tags: [product.source, product.trend_stage].filter(Boolean).join(', '),
-        variants: [{ price: String(product.price), inventory_management: null }],
-        images: product.image_url ? [{ src: product.image_url }] : [],
-      },
-    }
-
-    expect(shopifyPayload.product.title).toBe('Smart Widget')
-    expect(shopifyPayload.product.vendor).toBe('YouSell')
-    expect(shopifyPayload.product.tags).toBe('tiktok, rising')
-    expect(shopifyPayload.product.variants[0].price).toBe('29.99')
-    expect(shopifyPayload.product.images).toHaveLength(1)
-  })
-
-  it('creates product_listings record on success (10.33)', () => {
-    const listing = {
-      client_id: 'c1',
-      product_id: 'p1',
-      platform: 'shopify',
-      external_product_id: '12345678',
-      status: 'active',
-      listed_at: new Date().toISOString(),
-    }
-    expect(listing.status).toBe('active')
-    expect(listing.external_product_id).toBeTruthy()
-  })
-
-  it('updates listing status to failed with error on push failure (10.34)', () => {
-    const listing = {
-      status: 'failed',
-      error_message: 'Shopify API error 422: Product title too long',
-      retry_count: 1,
-    }
-    expect(listing.status).toBe('failed')
-    expect(listing.error_message).toContain('422')
-    expect(listing.retry_count).toBeGreaterThan(0)
-  })
-
-  it('retries failed pushes up to 3 times with exponential backoff (10.35)', () => {
-    const maxRetries = 3
-    const getBackoff = (attempt: number) => Math.pow(2, attempt) * 1000 // 2s, 4s, 8s
-
+  it('retry with exponential backoff: 2s, 4s, 8s (10.35)', () => {
+    const getBackoff = (attempt: number) => Math.pow(2, attempt) * 1000
     expect(getBackoff(1)).toBe(2000)
     expect(getBackoff(2)).toBe(4000)
     expect(getBackoff(3)).toBe(8000)
-    expect(maxRetries).toBe(3)
   })
-})
 
-// ── Task 10.30: TikTok Rate Limiting ────────────────────────
-
-describe('Engine 10 — Task 10.30: TikTok Rate Limiting', () => {
-  it('enforces 50 req/sec rate limit', () => {
-    const TIKTOK_RATE_LIMIT = 50
-    const rateLimiter = {
-      maxPerSecond: TIKTOK_RATE_LIMIT,
-      isAllowed: (currentCount: number) => currentCount < TIKTOK_RATE_LIMIT,
+  it('token expiry detection: < 24h = refresh needed (10.15)', () => {
+    const isExpiringSoon = (expiresAt: string) => {
+      const remaining = new Date(expiresAt).getTime() - Date.now()
+      return remaining < 24 * 3600000 && remaining > 0
     }
-
-    expect(rateLimiter.isAllowed(0)).toBe(true)
-    expect(rateLimiter.isAllowed(49)).toBe(true)
-    expect(rateLimiter.isAllowed(50)).toBe(false)
-    expect(rateLimiter.isAllowed(100)).toBe(false)
-  })
-})
-
-// ── Task 10.40: Store Disconnection ─────────────────────────
-
-describe('Engine 10 — Task 10.40: Store Disconnection', () => {
-  it('sets store status to disconnected and removes token', () => {
-    const disconnectStore = (store: { status: string; token: string | null }) => {
-      return { ...store, status: 'disconnected', token: null }
-    }
-
-    const active = { status: 'active', token: 'enc_token_abc' }
-    const disconnected = disconnectStore(active)
-    expect(disconnected.status).toBe('disconnected')
-    expect(disconnected.token).toBeNull()
-  })
-})
-
-// ── Tasks 10.41–10.44: API Endpoint Contracts ───────────────
-
-describe('Engine 10 — Tasks 10.41-10.44: API Endpoint Contracts', () => {
-  it('GET /api/stores/connected returns client stores (10.41)', () => {
-    const stores = [
-      { id: 's1', platform: 'shopify', status: 'active' },
-      { id: 's2', platform: 'tiktok_shop', status: 'active' },
-    ]
-    expect(stores).toHaveLength(2)
-    stores.forEach(s => expect(s.status).toBe('active'))
-  })
-
-  it('POST /api/stores/push validates required fields (10.42)', () => {
-    const validate = (body: Record<string, unknown>) => {
-      if (!body.product_id) return { error: 'product_id required' }
-      if (!body.platform) return { error: 'platform required' }
-      return { valid: true }
-    }
-
-    expect(validate({ product_id: 'p1', platform: 'shopify' })).toHaveProperty('valid')
-    expect(validate({})).toHaveProperty('error')
-  })
-
-  it('handles Meta Commerce as traffic-driver only (10.44)', () => {
-    const handleMetaPush = (platform: string) => {
-      if (platform === 'meta') {
-        return { type: 'traffic_driver', checkout: false, link_generated: true }
-      }
-      return { type: 'full_push', checkout: true }
-    }
-
-    const meta = handleMetaPush('meta')
-    expect(meta.checkout).toBe(false)
-    expect(meta.link_generated).toBe(true)
-
-    const shopify = handleMetaPush('shopify')
-    expect(shopify.checkout).toBe(true)
+    const soonExpiry = new Date(Date.now() + 12 * 3600000).toISOString()
+    const farExpiry = new Date(Date.now() + 48 * 3600000).toISOString()
+    expect(isExpiringSoon(soonExpiry)).toBe(true)
+    expect(isExpiringSoon(farExpiry)).toBe(false)
   })
 })
