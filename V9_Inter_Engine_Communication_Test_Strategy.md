@@ -449,4 +449,292 @@ Each test maps to a `Comm #` from V9_Inter_Engine_Communication_Breakdown.md:
 
 ---
 
-*Document continues in Test Suite 3...*
+## TEST SUITE 3: PAIRWISE EVENT CHAINS — LAUNCH & FULFILLMENT CLUSTER (Engines 11-20)
+
+**File:** `tests/inter-engine-L1-launch-fulfillment.test.ts`
+**Engines Under Test:** Financial Modelling, Launch Blueprint, Client Allocation, Content Creation, Store Integration, Order Tracking, Admin Command Center, Affiliate Commission, Fulfillment Recommendation, Opportunity Feed
+
+---
+
+### 3A: FINANCIAL MODELLING → LAUNCH BLUEPRINT (Comm # 11.006, 11.007, 12.001)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-11.006a | Financial model_generated reaches Launch Blueprint | Verify Launch Blueprint triggers generation from financial model | Register both engines. | Emit `financial.model_generated` with { productId, roi: 3.2, breakEvenUnits: 40, projectedRevenue: 12000, marketingBudget: 1500 } | Launch Blueprint's handleEvent called; starts blueprint generation with financial data | 11.006, 12.001 |
+| TC-11.007a | Financial roi_projected reaches Launch Blueprint | Verify ROI projection data flows to blueprint | Register both engines. | Emit `financial.roi_projected` with { productId, roi: 3.2, breakEvenConversions: 40, influencerCost: 850 } | Launch Blueprint includes ROI expectations and break-even timeline in business case section | 11.007 |
+| TC-11.006b | Launch Blueprint waits for all upstream data before generating | Verify Blueprint doesn't generate prematurely | Register Financial Modelling + Launch Blueprint. Only send financial model (no supplier/profitability). | Emit financial.model_generated only | Launch Blueprint queues the financial data but waits for minimum required inputs before generating | 11.006 |
+
+---
+
+### 3B: LAUNCH BLUEPRINT → CLIENT ALLOCATION (Comm # 12.004, 13.002)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-12.004a | Blueprint approved event reaches Client Allocation | Verify Client Allocation activates on blueprint approval | Register both engines. | Emit `blueprint.approved` with { blueprintId, productId, approvedBy: "admin@yousell.online", approvedAt: "2026-03-21T10:00:00Z" } | Client Allocation's handleEvent called; begins matching product to eligible clients | 12.004, 13.002 |
+| TC-12.004b | Client Allocation matches product to correct client tier | Verify tier-based allocation logic | Mock client pool: 3 Premium, 5 Standard, 10 Starter. Product tier: HOT (score 85). | Emit blueprint.approved → Client Allocation processes | HOT product allocated to Premium client first; emits `allocation.product_allocated` | 12.004 |
+| TC-12.004c | Client Allocation skips when no eligible clients | Verify graceful handling of empty client pool | Mock empty client pool (all at capacity). | Emit blueprint.approved | Client Allocation logs "no eligible clients"; does NOT emit allocation event; flags for admin review | 12.004 |
+
+---
+
+### 3C: LAUNCH BLUEPRINT → CONTENT CREATION (Comm # 12.005, 14.001)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-12.005a | Blueprint approved event reaches Content Creation | Verify Content Creation begins generating on approval | Register both engines. | Emit `blueprint.approved` | Content Creation's handleEvent called; enqueues content generation jobs | 12.005, 14.001 |
+| TC-12.005b | Content Creation generates all content types for approved product | Verify full content suite generated | Mock Claude API responses. | Emit blueprint.approved → Content Creation processes | Generates: product description, ad copy (3 variants), social media posts, SEO metadata; emits `content.generated` for each | 12.005 |
+
+---
+
+### 3D: LAUNCH BLUEPRINT → STORE INTEGRATION (Comm # 12.006, 15.001)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-12.006a | Blueprint approved event reaches Store Integration | Verify Store Integration prepares listing on approval | Register both engines. | Emit `blueprint.approved` | Store Integration's handleEvent called; prepares product listing data for target store | 12.006, 15.001 |
+| TC-12.006b | Store Integration waits for content before pushing | Verify Store Integration doesn't push without content | Emit blueprint.approved but no content.generated yet. | Store Integration receives blueprint.approved | Store Integration queues the listing but waits for content.generated before pushing to store | 12.006 |
+
+---
+
+### 3E: BLUEPRINT APPROVED FAN-OUT — 3 SIMULTANEOUS SUBSCRIBERS (Comm # 12.004-12.006)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-12.FAN-a | blueprint.approved reaches all 3 subscribers simultaneously | Verify fan-out to Client Allocation, Content Creation, Store Integration | Register all 4 engines (Launch Blueprint + 3 subscribers). | Emit `blueprint.approved` | All 3 subscriber engines' handleEvent methods called with identical payload | 12.004-12.006 |
+| TC-12.FAN-b | Blueprint fan-out error isolation | Verify one subscriber's failure doesn't block others | Make Content Creation's handleEvent throw. | Emit blueprint.approved | Client Allocation and Store Integration still receive and process; Content Creation error logged | 12.004-12.006 |
+
+---
+
+### 3F: CLIENT ALLOCATION → CONTENT CREATION (Comm # 13.003, 14.002)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-13.003a | Allocation product_allocated reaches Content Creation | Verify Content Creation generates client-branded content | Register both engines. | Emit `allocation.product_allocated` with { productId, clientId: "client-001", tier: "Premium", allocatedAt } | Content Creation's handleEvent called; generates client-specific branded content | 13.003, 14.002 |
+| TC-13.003b | Content Creation uses client brand guidelines | Verify content customization per client | Mock client profile with brand voice: "professional", colors: "#2563EB". | Emit allocation.product_allocated → Content Creation processes | Generated content matches client's brand voice and style; not generic | 13.003 |
+
+---
+
+### 3G: CLIENT ALLOCATION → STORE INTEGRATION (Comm # 13.004, 15.002)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-13.004a | Allocation product_allocated reaches Store Integration | Verify Store Integration pushes to client's store | Register both engines. | Emit `allocation.product_allocated` with { productId, clientId: "client-001" } | Store Integration's handleEvent called; identifies client's connected store for push | 13.004, 15.002 |
+| TC-13.004b | Store Integration handles client with no connected store | Verify graceful handling | Mock client with no store connection (storeId: null). | Emit allocation.product_allocated | Store Integration logs warning "client has no connected store"; does NOT attempt push; flags for admin | 13.004 |
+
+---
+
+### 3H: CONTENT CREATION → STORE INTEGRATION (Comm # 14.004, 15.003)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-14.004a | Content generated event reaches Store Integration | Verify Store Integration uses generated content for listing | Register both engines. | Emit `content.generated` with { productId, contentType: "product_description", content: "...", platform: "shopify" } | Store Integration's handleEvent called; uses content for product listing title, description, images | 14.004, 15.003 |
+| TC-14.004b | Store Integration assembles multi-type content into listing | Verify Store Integration combines description + images + SEO | Emit 3 content.generated events: product_description, image_set, seo_metadata. | Store Integration processes all 3 | Creates complete Shopify product listing with all content types combined | 14.004 |
+
+---
+
+### 3I: STORE INTEGRATION → ORDER TRACKING (Comm # 15.004, 15.005, 16.001, 16.002)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-15.004a | Store product_pushed reaches Order Tracking | Verify Order Tracking begins monitoring pushed product | Register both engines. | Emit `store.product_pushed` with { productId, storeId: "shop-001", platform: "shopify", listingUrl: "https://..." } | Order Tracking's handleEvent called; registers product for order monitoring | 15.004, 16.001 |
+| TC-15.005a | Store sync_complete reaches Order Tracking | Verify Order Tracking refreshes after sync | Register both engines. | Emit `store.sync_complete` with { clientId, storeId, productsUpdated: 5 } | Order Tracking's handleEvent called; refreshes order data for synced products | 15.005, 16.002 |
+
+---
+
+### 3J: STORE INTEGRATION → AFFILIATE COMMISSION (Comm # 15.006, 18.003)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-15.006a | Store product_pushed reaches Affiliate Commission | Verify Affiliate Commission sets up tracking | Register both engines. | Emit `store.product_pushed` with { productId, storeId, platform: "shopify" } | Affiliate Commission's handleEvent called; creates affiliate tracking links for the product | 15.006, 18.003 |
+| TC-15.006b | Affiliate Commission generates correct tracking URLs | Verify tracking link format | Mock affiliate config with commission rate: 15%. | Emit store.product_pushed → Affiliate Commission processes | Tracking links generated with correct UTM parameters and commission rate assignment | 15.006 |
+
+---
+
+### 3K: STORE INTEGRATION → CONTENT CREATION (Bidirectional) (Comm # 15.007, 14.003)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-15.007a | Store product_pushed triggers Content Creation optimization | Verify Content Creation generates platform-specific optimizations | Register both engines. | Emit `store.product_pushed` with { platform: "tiktok_shop" } | Content Creation's handleEvent called; generates TikTok Shop-specific content optimizations | 15.007, 14.003 |
+| TC-15.007b | Content ↔ Store bidirectional loop bounded at 2 iterations | Verify no infinite loop between Content and Store | Track event count between both engines. | Content generates → Store pushes → Content optimizes → Store updates → STOP | Loop completes after 2 iterations; no third cycle | 15.007 |
+
+---
+
+### 3L: STORE INTEGRATION → ADMIN CC (Comm # 15.008, 15.009, 17.013)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-15.008a | Store connected event reaches Admin CC | Verify Admin CC updates store dashboard | Register both engines. | Emit `store.connected` with { clientId, platform: "shopify", storeId: "shop-001" } | Admin CC's handleEvent called; updates store connection status in dashboard | 15.008, 17.013 |
+| TC-15.009a | Store sync_complete reaches Admin CC | Verify Admin CC shows sync results | Register both engines. | Emit `store.sync_complete` with { clientId, storeId, productsUpdated: 8 } | Admin CC updates sync status dashboard with products synced count | 15.009, 17.013 |
+
+---
+
+### 3M: ORDER TRACKING → ADMIN CC (Comm # 16.003, 16.006, 16.007, 17.001-17.003)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-16.003a | Order received event reaches Admin CC | Verify Admin CC shows new order notification | Register both engines. | Emit `order.received` with { orderId, productId, storeId, customer: { name, email }, amount: 29.99 } | Admin CC's handleEvent called; creates new order notification; updates revenue dashboard | 16.003, 17.003 |
+| TC-16.006a | Order fulfilled event reaches Admin CC | Verify Admin CC updates fulfillment status | Register both engines. | Emit `order.fulfilled` with { orderId, trackingNumber: "1Z999...", carrier: "UPS", fulfilledAt } | Admin CC updates order status from "pending" to "fulfilled" in dashboard | 16.006 |
+| TC-16.007a | Order tracking_sent reaches Admin CC | Verify Admin CC logs notification status | Register both engines. | Emit `order.tracking_sent` with { orderId, customerEmail: "buyer@email.com", sent: true } | Admin CC logs tracking email sent status for the order | 16.007 |
+
+---
+
+### 3N: ORDER TRACKING → AFFILIATE COMMISSION (Comm # 16.004, 16.005, 18.001, 18.002)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-16.004a | Order received event reaches Affiliate Commission | Verify commission recorded as pending | Register both engines. | Emit `order.received` with { orderId, productId, amount: 29.99 } | Affiliate Commission's handleEvent called; records pending commission at configured rate | 16.004, 18.001 |
+| TC-16.004b | Affiliate Commission calculates correct commission amount | Verify commission rate applied | Mock commission rate: 15% for this product. Order amount: $29.99. | Emit order.received → Affiliate Commission processes | Commission recorded: $4.50 (15% of $29.99); status: "pending" | 16.004 |
+| TC-16.005a | Order fulfilled event confirms commission payable | Verify commission moves from pending to payable | Emit order.received first (creates pending commission), then emit order.fulfilled. | order.fulfilled processed | Commission status changes from "pending" to "payable"; affiliate.commission_recorded emitted | 16.005, 18.002 |
+| TC-16.005b | Unfulfilled orders don't generate payable commissions | Verify commission stays pending without fulfillment | Emit order.received only (no order.fulfilled). | Commission stays pending | Commission remains in "pending" status; NOT included in payout calculations | 16.005 |
+
+---
+
+### 3O: ADMIN CC → DISCOVERY (Manual Trigger) (Comm # 1.008, 17.004)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-17.004a | Admin CC triggers product scan via API | Verify manual scan trigger works | Mock BullMQ product-scan queue. | Admin CC dispatches scan job with { keywords: ["portable blender"], sources: ["tiktok", "amazon"] } | `product-scan` job enqueued with correct parameters; Discovery processes it | 1.008, 17.004 |
+| TC-17.004b | Admin CC scan trigger with multiple keywords | Verify batch keyword scan | Dispatch with 5 keywords. | Admin CC enqueues 5 jobs | 5 separate product-scan jobs enqueued; each processed independently | 17.004 |
+
+---
+
+### 3P: ADMIN CC → SCORING (Manual Trigger) (Comm # 17.005)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-17.005a | Admin CC triggers re-scoring via API | Verify manual re-scoring works | Mock scoring queue. | Admin CC dispatches re-score with { productIds: ["prod-001", "prod-002"] } | scoring-queue jobs enqueued for each product; Scoring recalculates and emits updated product_scored events | 17.005 |
+
+---
+
+### 3Q: ADMIN CC → STORE INTEGRATION (Deploy) (Comm # 17.007, 17.008)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-17.007a | Admin CC one-click deploy reaches Store Integration | Verify direct deployment works | Register both engines. | Emit `admin.product_deployed` with { productId, targetStore: "yousell-shopify", deploymentId, deployedBy: "admin" } | Store Integration's handleEvent called; pushes product to YOUSELL's own store | 17.007 |
+| TC-17.008a | Admin CC batch deploy reaches Store Integration | Verify batch deployment works | Register both engines. | Emit `admin.batch_deploy_complete` with { productCount: 10, deployed: 8, failed: 2, targetStore, deployedBy } | Store Integration processes batch results; triggers sync for deployed products | 17.008 |
+
+---
+
+### 3R: FULFILLMENT RECOMMENDATION → LAUNCH BLUEPRINT (Comm # 19.004, 12.003 extended)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-19.004a | Fulfillment recommended event reaches Launch Blueprint | Verify Launch Blueprint includes fulfillment model | Register both engines. | Emit `fulfillment.recommended` with { productId, recommendedType: "dropship", confidence: 0.87, reasoning: "low MOQ, supplier offers fulfillment" } | Launch Blueprint includes fulfillment model recommendation in operations section | 19.004 |
+| TC-19.004b | Launch Blueprint uses fulfillment model for cost calculations | Verify fulfillment type affects blueprint content | Emit fulfillment.recommended with type: "POD" (Printful). | Launch Blueprint generates | Blueprint operations section specifies Printful as fulfillment partner; no inventory required | 19.004 |
+
+---
+
+### 3S: FULFILLMENT RECOMMENDATION → STORE INTEGRATION (Comm # 19.005)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-19.005a | Fulfillment recommended event reaches Store Integration | Verify Store Integration configures fulfillment settings | Register both engines. | Emit `fulfillment.recommended` with { recommendedType: "POD" } | Store Integration configures Printful integration for the product listing | 19.005 |
+| TC-19.005b | Store Integration configures dropship fulfillment correctly | Verify dropship configuration | Emit fulfillment.recommended with type: "dropship", supplier with direct ship capability. | Store Integration processes | Product listing configured with supplier's shipping settings; no Printful integration | 19.005 |
+
+---
+
+### 3T: FULFILLMENT RECOMMENDATION → ADMIN CC (Override) (Comm # 19.006)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-19.006a | Fulfillment overridden event reaches Admin CC | Verify admin override is logged | Register both engines. | Emit `fulfillment.overridden` with { productId, overriddenType: "bulk", reason: "admin prefers no inventory risk" } | Admin CC's handleEvent called; logs override with reason for audit trail | 19.006 |
+
+---
+
+### 3U: SCORING → CLIENT ALLOCATION (Comm # 3.006, 13.001)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-3.006a | Scoring product_scored reaches Client Allocation | Verify Client Allocation receives score tier info | Register both engines. | Emit `scoring.product_scored` with tier: "HOT" | Client Allocation's handleEvent called; considers score tier when allocating | 3.006, 13.001 |
+
+---
+
+### 3V: SCORING → ADMIN CC (Comm # 3.007, 17.001)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-3.007a | Scoring product_scored reaches Admin CC | Verify Admin CC updates score displays | Register both engines. | Emit `scoring.product_scored` with { productId, tier: "HOT", scores: { composite: 87 } } | Admin CC updates product card with score badge and tier indicator | 3.007, 17.001 |
+
+---
+
+### 3W: SCORING → FULFILLMENT RECOMMENDATION (Comm # 3.008, 19.001)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-3.008a | Scoring product_scored reaches Fulfillment Rec | Verify score tier influences fulfillment model | Register both engines. | Emit `scoring.product_scored` with tier: "HOT", composite: 92 | Fulfillment Rec's handleEvent called; HOT products may justify bulk purchasing (higher commitment, higher reward) | 3.008, 19.001 |
+| TC-3.008b | WATCH products default to POD | Verify low-score products get low-risk fulfillment | Emit product_scored with tier: "WATCH", composite: 45 | Fulfillment Rec processes | Recommends POD (minimal investment for uncertain products) | 3.008 |
+
+---
+
+### 3X: LAUNCH BLUEPRINT → ADMIN CC (Comm # 12.007, 17.002)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-12.007a | Blueprint generated event reaches Admin CC | Verify Admin CC displays blueprint for review | Register both engines. | Emit `blueprint.generated` with { productId, blueprint: {...}, sections: ["pricing", "suppliers", "marketing", "operations"] } | Admin CC's handleEvent called; displays blueprint with "Approve" and "Reject" buttons | 12.007, 17.002 |
+
+---
+
+### 3Y: CLIENT ALLOCATION → ADMIN CC (Comm # 13.005, 17.012)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-13.005a | Allocation batch_complete reaches Admin CC | Verify Admin CC shows allocation results | Register both engines. | Emit `allocation.batch_complete` with { productCount: 20, allocated: 15, skipped: 5, tier: "HOT" } | Admin CC updates allocation dashboard with batch summary | 13.005, 17.012 |
+
+---
+
+### 3Z: CONTENT CREATION → ADMIN CC (Comm # 14.005, 17.011)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-14.005a | Content batch_complete reaches Admin CC | Verify Admin CC shows AI credit usage | Register both engines. | Emit `content.batch_complete` with { requestCount: 50, generated: 47, failed: 3, totalCredits: 0.85 } | Admin CC displays content generation stats and AI credit consumption | 14.005, 17.011 |
+
+---
+
+### 3AA: OPPORTUNITY FEED — PURE AGGREGATOR (Comm # 20.005-20.014)
+
+| Test ID | Test Name | Description | Setup | Action | Expected Result | Comm # |
+|---------|-----------|-------------|-------|--------|----------------|--------|
+| TC-20.005a | Opportunity Feed reads products table correctly | Verify product data aggregation | Mock products table with 10 scored products. | Opportunity Feed queries | Returns all products with scores, tiers, sources | 20.005 |
+| TC-20.006a | Opportunity Feed reads product_clusters table | Verify cluster grouping in feed | Mock product_clusters with 3 clusters. | Opportunity Feed queries | Products displayed with cluster groupings | 20.006 |
+| TC-20.007a | Opportunity Feed reads creator_product_matches | Verify creator match display | Mock matches for 5 products. | Opportunity Feed queries | Products show matched creator count and top creator info | 20.007 |
+| TC-20.008a | Opportunity Feed reads product_allocations | Verify allocation status display | Mock allocations for 3 products. | Opportunity Feed queries | Products show "Allocated to Client X" vs "Available" status | 20.008 |
+| TC-20.009a | Opportunity Feed reads launch_blueprints | Verify blueprint status display | Mock blueprints: 2 approved, 3 pending, 1 rejected. | Opportunity Feed queries | Products show blueprint status badges | 20.009 |
+| TC-20.010a | Opportunity Feed reads financial_models | Verify ROI display | Mock financial models with ROI projections. | Opportunity Feed queries | Products show ROI percentage and break-even estimate | 20.010 |
+| TC-20.ALL | Opportunity Feed aggregates all 9 tables correctly | Verify full aggregation | Mock all 9 tables with interconnected data. | Opportunity Feed generates unified view | Unified feed with: products + scores + clusters + creators + allocations + blueprints + financials + trends + suppliers + competitors | 20.005-20.013 |
+
+---
+
+### SECTION 3 SUMMARY
+
+| Category | Test Count | Comm # Coverage |
+|----------|-----------|-----------------|
+| Financial Modelling → Launch Blueprint | 3 tests | 11.006, 11.007, 12.001 |
+| Launch Blueprint → Client Allocation | 3 tests | 12.004, 13.002 |
+| Launch Blueprint → Content Creation | 2 tests | 12.005, 14.001 |
+| Launch Blueprint → Store Integration | 2 tests | 12.006, 15.001 |
+| Blueprint Approved Fan-Out | 2 tests | 12.004-12.006 |
+| Client Allocation → Content Creation | 2 tests | 13.003, 14.002 |
+| Client Allocation → Store Integration | 2 tests | 13.004, 15.002 |
+| Content Creation → Store Integration | 2 tests | 14.004, 15.003 |
+| Store Integration → Order Tracking | 2 tests | 15.004, 15.005 |
+| Store Integration → Affiliate Commission | 2 tests | 15.006, 18.003 |
+| Store ↔ Content (bidirectional) | 2 tests | 15.007, 14.003 |
+| Store Integration → Admin CC | 2 tests | 15.008, 15.009 |
+| Order Tracking → Admin CC | 3 tests | 16.003, 16.006, 16.007 |
+| Order Tracking → Affiliate Commission | 4 tests | 16.004, 16.005, 18.001, 18.002 |
+| Admin CC → Discovery (manual) | 2 tests | 1.008, 17.004 |
+| Admin CC → Scoring (manual) | 1 test | 17.005 |
+| Admin CC → Store Integration (deploy) | 2 tests | 17.007, 17.008 |
+| Fulfillment Rec → Launch Blueprint | 2 tests | 19.004 |
+| Fulfillment Rec → Store Integration | 2 tests | 19.005 |
+| Fulfillment Rec → Admin CC | 1 test | 19.006 |
+| Scoring → Client Allocation | 1 test | 3.006, 13.001 |
+| Scoring → Admin CC | 1 test | 3.007, 17.001 |
+| Scoring → Fulfillment Rec | 2 tests | 3.008, 19.001 |
+| Launch Blueprint → Admin CC | 1 test | 12.007, 17.002 |
+| Client Allocation → Admin CC | 1 test | 13.005, 17.012 |
+| Content Creation → Admin CC | 1 test | 14.005, 17.011 |
+| Opportunity Feed Aggregation | 7 tests | 20.005-20.013 |
+| **TOTAL SECTION 3** | **57 tests** | **52 Comm # pathways** |
+
+---
+
+*Document continues in Test Suite 4...*
