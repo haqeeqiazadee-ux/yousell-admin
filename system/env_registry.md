@@ -14,7 +14,7 @@
 | Service | URL / Dashboard | Purpose |
 |---------|----------------|---------|
 | **Netlify** | https://app.netlify.com | Frontend hosting (admin.yousell.online + yousell.online) |
-| **Railway** | https://railway.app | Backend API + BullMQ workers |
+| **Railway** | https://railway.app | Backend API + Email Service + Redis |
 | **Supabase** | https://supabase.com/dashboard | PostgreSQL, Auth, Realtime, Storage |
 | **Redis** | Via Railway add-on | BullMQ job queue + caching |
 | **Apify** | https://console.apify.com | Scraping actors (paid plan) |
@@ -33,9 +33,8 @@
 
 | Symbol | Meaning |
 |--------|---------|
-| ✅ | Value known and saved locally |
+| ✅ | Value known, set, and synced across all required services |
 | ⚠️ | Needs to be obtained / created |
-| 🔄 | Exists but needs syncing across services |
 | ❌ | Not yet set up |
 | ➖ | Optional / not needed yet |
 
@@ -43,17 +42,17 @@
 
 ## 1. CRITICAL REQUIRED (App won't run without these)
 
-| Variable | Status | Netlify | Railway | Local |
-|----------|--------|---------|---------|-------|
-| `NEXT_PUBLIC_SUPABASE_URL` | ✅ `https://gqrwienipczrejscqdhk.supabase.co` | 🔄 CHECK | ✅ | ✅ |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ (JWT — anon role) | 🔄 CHECK | ✅ | ✅ |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅ (JWT — service_role) | 🔄 CHECK | ✅ | ✅ |
-| `SUPABASE_URL` | ✅ Same as NEXT_PUBLIC_SUPABASE_URL | — | ✅ | ✅ |
-| `ANTHROPIC_API_KEY` | ✅ `sk-ant-api03-dRJL...RC27JQAA` | 🔄 CHECK | ✅ | ✅ |
-| `APIFY_API_TOKEN` | ✅ `apify_api_7qDN...R8m` | 🔄 CHECK | ✅ | ✅ |
-| `RESEND_API_KEY` | ✅ `re_i9WTCRkp_...A99a` | 🔄 CHECK | ✅ | ✅ |
-| `REDIS_URL` | ✅ Railway internal: `redis://default:iPFK...@redis.railway.internal:6379` / Public: `redis://default:iPFK...@centerbeam.proxy.rlwy.net:21015` | — | ✅ (internal) | ✅ (public) |
-| `RAPIDAPI_KEY` | ✅ `0e1280d8b3...2967` | 🔄 CHECK | ✅ | ✅ |
+| Variable | Status | Value | Netlify | Railway | Local |
+|----------|--------|-------|---------|---------|-------|
+| `NEXT_PUBLIC_SUPABASE_URL` | ✅ | `https://gqrwienipczrejscqdhk.supabase.co` | ✅ | ✅ | ✅ |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | JWT — anon role | ✅ | ✅ | ✅ |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | JWT — service_role | ✅ | ✅ | ✅ |
+| `SUPABASE_URL` | ✅ | `https://gqrwienipczrejscqdhk.supabase.co` | ✅ | ✅ | ✅ |
+| `ANTHROPIC_API_KEY` | ✅ | `sk-ant-api03-dRJL...RC27JQAA` | ✅ | ✅ | ✅ |
+| `APIFY_API_TOKEN` | ✅ | `apify_api_8vso...LDcEu` | ✅ | ✅ | ✅ |
+| `RESEND_API_KEY` | ✅ | `re_i9WTCRkp_Nre75uDEfwyLukGHTvWxA99a` | ✅ | ✅ | ✅ |
+| `REDIS_URL` | ✅ | Internal: `redis://default:iPFk...@redis.railway.internal:6379` / Public: `redis://default:iPFk...@centerbeam.proxy.rlwy.net:21015` | ✅ (public) | ✅ (internal) | ✅ (public) |
+| `RAPIDAPI_KEY` | ✅ | `0e1280d8b3...2967` | ✅ | ✅ | ✅ |
 
 ---
 
@@ -61,35 +60,36 @@
 
 | Variable | Value / Status | Netlify | Railway | Local |
 |----------|---------------|---------|---------|-------|
-| `SQUARE_ACCESS_TOKEN` | ⚠️ Get from Square Developer Dashboard | MUST SET | MUST SET | ❌ |
-| `SQUARE_ENVIRONMENT` | `sandbox` (switch to `production` at launch) | MUST SET | MUST SET | ✅ |
-| `SQUARE_LOCATION_ID` | ⚠️ Get from Square Dashboard → Locations | MUST SET | MUST SET | ❌ |
-| `SQUARE_WEBHOOK_SIGNATURE_KEY` | ⚠️ Get after creating webhook endpoint | MUST SET | — | ❌ |
+| `SQUARE_ACCESS_TOKEN` | ⚠️ Get from Square Developer Dashboard | ❌ | ❌ | ❌ |
+| `SQUARE_ENVIRONMENT` | `sandbox` (switch to `production` at launch) | ❌ | ❌ | ✅ |
+| `SQUARE_LOCATION_ID` | ⚠️ Get from Square Dashboard → Locations | ❌ | ❌ | ❌ |
+| `SQUARE_WEBHOOK_SIGNATURE_KEY` | ⚠️ Get after creating webhook endpoint | ❌ | — | ❌ |
 
-> **ACTION:** Old Stripe vars (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`) in `.env.example` need replacing with Square.
+> **ACTION:** Old Stripe vars (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`) in `.env.example` need replacing with Square. Dead Stripe code exists in `src/lib/stripe.ts` and `src/app/api/webhooks/stripe/route.ts` — should be deleted.
 
 ---
 
 ## 3. SITE URLs
 
-| Variable | Value / Status | Netlify | Railway | Local |
-|----------|---------------|---------|---------|-------|
-| `NEXT_PUBLIC_SITE_URL` | Production: `https://yousell.online` | MUST SET | — | ✅ (localhost) |
-| `NEXT_PUBLIC_ADMIN_URL` | Production: `https://admin.yousell.online` | MUST SET | — | ✅ (localhost) |
-| `NEXT_PUBLIC_BACKEND_URL` | ⚠️ Railway deploy URL | MUST SET | — | ✅ (localhost:3001) |
-| `FRONTEND_URL` | Production: `https://admin.yousell.online` | — | MUST SET | ✅ (localhost) |
-| `NEXT_PUBLIC_APP_URL` | Same as SITE_URL (fallback to request origin) | OPTIONAL | — | ➖ |
+| Variable | Value | Netlify | Railway | Local |
+|----------|-------|---------|---------|-------|
+| `NEXT_PUBLIC_SITE_URL` | `https://yousell.online` | ✅ | — | ✅ |
+| `NEXT_PUBLIC_ADMIN_URL` | `https://admin.yousell.online` | ✅ | — | ✅ |
+| `NEXT_PUBLIC_BACKEND_URL` | `https://yousell-backend-production.up.railway.app` | ✅ | — | ✅ |
+| `BACKEND_URL` | `https://yousell-backend-production.up.railway.app` | ✅ | ✅ | ✅ |
+| `FRONTEND_URL` | `https://yousell.online` | ✅ | ✅ | ✅ |
+| `NEXT_PUBLIC_APP_URL` | Same as SITE_URL (fallback to request origin) | ➖ | — | ➖ |
 
 ---
 
 ## 4. EMAIL
 
-| Variable | Value / Status | Netlify | Railway | Local |
-|----------|---------------|---------|---------|-------|
-| `RESEND_API_KEY` | ⚠️ NEEDS VALUE | MUST SET | MUST SET | ❌ |
-| `FROM_EMAIL` | `noreply@yousell.online` | MUST SET | MUST SET | ➖ |
-| `RESEND_FROM` | `YouSell <noreply@yousell.online>` | — | MUST SET | ➖ |
-| `ADMIN_EMAIL` | `admin@yousell.online` | MUST SET | MUST SET | ➖ |
+| Variable | Value | Netlify | Railway | Local |
+|----------|-------|---------|---------|-------|
+| `RESEND_API_KEY` | `re_i9WTCRkp_...A99a` | ✅ | ✅ | ✅ |
+| `FROM_EMAIL` | `YouSell <noreply@yousell.online>` | ✅ | ✅ | ✅ |
+| `RESEND_FROM` | `YouSell <noreply@yousell.online>` | — | ✅ | ✅ |
+| `ADMIN_EMAIL` | `admin@yousell.online` | ✅ | ✅ | ✅ |
 
 > **ACTION:** Verify Resend domain (yousell.online) is verified with DNS records in GoDaddy.
 
@@ -101,34 +101,32 @@
 
 | Variable | Value / Status | Netlify | Railway |
 |----------|---------------|---------|---------|
-| `SHOPIFY_CLIENT_ID` | ⚠️ Create Shopify Partner app | MUST SET | — |
-| `SHOPIFY_CLIENT_SECRET` | ⚠️ From Shopify Partner app | MUST SET | — |
-| `SHOPIFY_WEBHOOK_SECRET` | ⚠️ From Shopify webhook config | MUST SET | — |
-| `SHOPIFY_SCRAPER_KEY` | ➖ Fallback if Apify unavailable | OPTIONAL | OPTIONAL |
+| `SHOPIFY_CLIENT_ID` | ⚠️ Create Shopify Partner app | ❌ | — |
+| `SHOPIFY_CLIENT_SECRET` | ⚠️ From Shopify Partner app | ❌ | — |
+| `SHOPIFY_WEBHOOK_SECRET` | ⚠️ From Shopify webhook config | ❌ | — |
+| `SHOPIFY_SCRAPER_KEY` | ➖ Fallback if Apify unavailable | ➖ | ➖ |
 
 ### TikTok
 
 | Variable | Value / Status | Netlify | Railway |
 |----------|---------------|---------|---------|
-| `TIKTOK_CLIENT_KEY` | ⚠️ TikTok Developer Portal | MUST SET | — |
-| `TIKTOK_CLIENT_SECRET` | ⚠️ TikTok Developer Portal | MUST SET | — |
-| `TIKTOK_SHOP_APP_KEY` | ⚠️ TikTok Shop Partner Center | MUST SET | — |
-| `TIKTOK_SHOP_APP_SECRET` | ⚠️ TikTok Shop Partner Center | MUST SET | — |
-| `TIKTOK_WEBHOOK_SECRET` | ⚠️ TikTok webhook config | MUST SET | — |
-| `TIKTOK_API_KEY` | ➖ Direct API fallback | OPTIONAL | OPTIONAL |
-| `TIKTOK_RESEARCH_API_KEY` | ➖ Research API access | OPTIONAL | OPTIONAL |
-| `TIKTOK_CREATIVE_CENTER_KEY` | ➖ Creative Center API | OPTIONAL | OPTIONAL |
+| `TIKTOK_CLIENT_KEY` | ⚠️ TikTok Developer Portal | ❌ | — |
+| `TIKTOK_CLIENT_SECRET` | ⚠️ TikTok Developer Portal | ❌ | — |
+| `TIKTOK_SHOP_APP_KEY` | ⚠️ TikTok Shop Partner Center | ❌ | — |
+| `TIKTOK_SHOP_APP_SECRET` | ⚠️ TikTok Shop Partner Center | ❌ | — |
+| `TIKTOK_WEBHOOK_SECRET` | ✅ Set | ✅ | ✅ |
+| `TIKTOK_API_KEY` | ➖ Direct API fallback | ➖ | ➖ |
 
 ### Amazon
 
 | Variable | Value / Status | Netlify | Railway |
 |----------|---------------|---------|---------|
-| `AMAZON_SP_CLIENT_ID` | ⚠️ Amazon SP-API app | MUST SET | — |
-| `AMAZON_SP_CLIENT_SECRET` | ⚠️ Amazon SP-API app | MUST SET | — |
-| `AMAZON_PA_API_KEY` | ➖ Product Advertising API | OPTIONAL | OPTIONAL |
-| `AMAZON_PA_API_SECRET` | ➖ Product Advertising API | OPTIONAL | OPTIONAL |
-| `AMAZON_ASSOCIATE_TAG` | ➖ Affiliate tag | OPTIONAL | OPTIONAL |
-| `AMAZON_WEBHOOK_SECRET` | ⚠️ Webhook verification | MUST SET | — |
+| `AMAZON_SP_CLIENT_ID` | ⚠️ Amazon SP-API app | ❌ | — |
+| `AMAZON_SP_CLIENT_SECRET` | ⚠️ Amazon SP-API app | ❌ | — |
+| `AMAZON_PA_API_KEY` | ➖ Product Advertising API | ➖ | ➖ |
+| `AMAZON_PA_API_SECRET` | ➖ Product Advertising API | ➖ | ➖ |
+| `AMAZON_ASSOCIATE_TAG` | ➖ Affiliate tag | ➖ | ➖ |
+| `AMAZON_WEBHOOK_SECRET` | ✅ Set | ✅ | ✅ |
 
 ---
 
@@ -140,10 +138,9 @@
 | `GOOGLE_CLIENT_SECRET` | ⚠️ Google Console → Credentials | Supabase Auth → Providers → Google |
 | `META_APP_ID` | ⚠️ Meta Developer → App Dashboard | Supabase Auth → Providers → Facebook |
 | `META_APP_SECRET` | ⚠️ Meta Developer → App Dashboard | Supabase Auth → Providers → Facebook |
-| `META_ACCESS_TOKEN` | ⚠️ Meta Marketing API | Railway (backend ads job) |
+| `META_ACCESS_TOKEN` | ✅ Set | ✅ Netlify + Railway |
 
 > **NOTE:** Google/Meta OAuth is configured in **Supabase Dashboard** (Auth → Providers), NOT in env vars.
-> The Supabase client handles the OAuth flow automatically.
 
 ---
 
@@ -151,23 +148,23 @@
 
 | Variable | Value / Status | Netlify | Railway |
 |----------|---------------|---------|---------|
-| `APIFY_API_TOKEN` | ✅ Set | MUST SET | MUST SET |
-| `RAPIDAPI_KEY` | ➖ Amazon fallback | OPTIONAL | OPTIONAL |
-| `SERPAPI_KEY` | ➖ Google Trends fallback | OPTIONAL | OPTIONAL |
-| `SCRAPE_CREATORS_API_KEY` | ➖ TikTok creator scraping | OPTIONAL | OPTIONAL |
+| `APIFY_API_TOKEN` | ✅ Set | ✅ | ✅ |
+| `RAPIDAPI_KEY` | ✅ Set | ✅ | ✅ |
+| `SERPAPI_KEY` | ➖ Google Trends fallback | ➖ | ➖ |
+| `SCRAPE_CREATORS_API_KEY` | ➖ TikTok creator scraping | ➖ | ➖ |
 
 ### Provider Selection (controls which scraper backend to use)
 
 | Variable | Default | Netlify | Railway |
 |----------|---------|---------|---------|
-| `TIKTOK_PROVIDER` | `apify` | MUST SET | MUST SET |
-| `AMAZON_PROVIDER` | `apify_rapidapi` | MUST SET | MUST SET |
-| `INFLUENCER_PROVIDER` | `ainfluencer` | MUST SET | MUST SET |
-| `SUPPLIER_PROVIDER` | `apify` | MUST SET | MUST SET |
-| `SHOPIFY_PROVIDER` | `apify` | MUST SET | MUST SET |
-| `PINTEREST_PROVIDER` | `apify` | MUST SET | MUST SET |
-| `TRENDS_PROVIDER` | `pytrends` | MUST SET | MUST SET |
-| `GOOGLE_TRENDS_PROVIDER` | `pytrends` | MUST SET | MUST SET |
+| `TIKTOK_PROVIDER` | `apify` | ✅ | ✅ |
+| `AMAZON_PROVIDER` | `apify_rapidapi` | ✅ | ✅ |
+| `INFLUENCER_PROVIDER` | `ainfluencer` | ✅ | ✅ |
+| `SUPPLIER_PROVIDER` | `apify` | ✅ | ✅ |
+| `SHOPIFY_PROVIDER` | `apify` | ✅ | ✅ |
+| `PINTEREST_PROVIDER` | `apify` | ✅ | ✅ |
+| `TRENDS_PROVIDER` | `pytrends` | ✅ | ✅ |
+| `GOOGLE_TRENDS_PROVIDER` | `pytrends` | ➖ | ➖ |
 
 ---
 
@@ -223,11 +220,14 @@
 
 ## 12. BACKEND INTERNAL
 
-| Variable | Value / Status | Where |
-|----------|---------------|-------|
-| `PORT` | `3001` (backend) / `4000` (alt) | Railway |
-| `BACKEND_API_KEY` | ⚠️ Shared secret frontend↔backend | Netlify + Railway |
-| `CORS_ALLOWED_ORIGINS` | Production URLs | Railway |
+| Variable | Value | Netlify | Railway |
+|----------|-------|---------|---------|
+| `PORT` | `4000` (backend) | — | ✅ |
+| `BACKEND_API_KEY` | ✅ Same as `API_SECRET` | ✅ | ✅ |
+| `API_SECRET` | ✅ Strong secret set | ✅ | ✅ |
+| `RAILWAY_API_SECRET` | ✅ `cc225516-...` | ✅ | — |
+| `CORS_ALLOWED_ORIGINS` | `https://admin.yousell.online,https://yousell.online` | ✅ | ✅ |
+| `RAILWAY_API_URL` | `yousell-admin-production.up.railway.app` | ✅ | — |
 
 ---
 
@@ -253,105 +253,19 @@
 
 ---
 
-## SYNC CHECKLIST — Copy to each platform
+## SYNC STATUS — 2026-03-21
 
-### Netlify (Site → Environment Variables)
-```
-NEXT_PUBLIC_SUPABASE_URL=https://gqrwienipczrejscqdhk.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon JWT>
-SUPABASE_SERVICE_ROLE_KEY=<service role JWT>
-NEXT_PUBLIC_SITE_URL=https://yousell.online
-NEXT_PUBLIC_ADMIN_URL=https://admin.yousell.online
-NEXT_PUBLIC_BACKEND_URL=<railway deploy URL>
-ANTHROPIC_API_KEY=<from Anthropic console>
-APIFY_API_TOKEN=apify_api_7hWK...bkbzg
-RESEND_API_KEY=<from Resend dashboard>
-FROM_EMAIL=noreply@yousell.online
-ADMIN_EMAIL=admin@yousell.online
-SQUARE_ACCESS_TOKEN=<from Square developer>
-SQUARE_ENVIRONMENT=production
-SQUARE_LOCATION_ID=<from Square dashboard>
-SQUARE_WEBHOOK_SIGNATURE_KEY=<from Square webhook>
-SHOPIFY_CLIENT_ID=<from Shopify Partner>
-SHOPIFY_CLIENT_SECRET=<from Shopify Partner>
-TIKTOK_CLIENT_KEY=<from TikTok Developer>
-TIKTOK_CLIENT_SECRET=<from TikTok Developer>
-AMAZON_SP_CLIENT_ID=<from Amazon SP-API>
-AMAZON_SP_CLIENT_SECRET=<from Amazon SP-API>
-BACKEND_API_KEY=<generate shared secret>
-TIKTOK_PROVIDER=apify
-AMAZON_PROVIDER=apify_rapidapi
-INFLUENCER_PROVIDER=ainfluencer
-SUPPLIER_PROVIDER=apify
-SHOPIFY_PROVIDER=apify
-PINTEREST_PROVIDER=apify
-TRENDS_PROVIDER=pytrends
-GOOGLE_TRENDS_PROVIDER=pytrends
-```
+All critical vars are now synced across Netlify (both projects), Railway (backend + email + redis), and local .env.local.
 
-### Railway (Project → Variables)
-```
-PORT=3001
-REDIS_URL=<railway auto-provides>
-SUPABASE_URL=https://gqrwienipczrejscqdhk.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=<service role JWT>
-ANTHROPIC_API_KEY=<same as Netlify>
-APIFY_API_TOKEN=apify_api_7hWK...bkbzg
-RESEND_API_KEY=<same as Netlify>
-RESEND_FROM=YouSell <noreply@yousell.online>
-ADMIN_EMAIL=admin@yousell.online
-FRONTEND_URL=https://admin.yousell.online
-BACKEND_API_KEY=<same shared secret as Netlify>
-CORS_ALLOWED_ORIGINS=https://admin.yousell.online,https://yousell.online
-SQUARE_ACCESS_TOKEN=<same as Netlify>
-SQUARE_ENVIRONMENT=production
-SQUARE_LOCATION_ID=<same as Netlify>
-META_ACCESS_TOKEN=<from Meta Marketing API>
-TIKTOK_PROVIDER=apify
-AMAZON_PROVIDER=apify_rapidapi
-SUPPLIER_PROVIDER=apify
-```
+### What's still needed (priority order):
 
-### Supabase (Dashboard → Auth → Providers)
-```
-Google OAuth:
-  - Client ID: <from Google Console>
-  - Client Secret: <from Google Console>
-  - Redirect URL: https://gqrwienipczrejscqdhk.supabase.co/auth/v1/callback
-
-Facebook OAuth:
-  - App ID: <from Meta Developer>
-  - App Secret: <from Meta Developer>
-  - Redirect URL: https://gqrwienipczrejscqdhk.supabase.co/auth/v1/callback
-```
-
-### GoDaddy DNS Records (for Resend email + Netlify)
-```
-Required for Resend (email delivery):
-  - SPF TXT record
-  - DKIM CNAME records (3x)
-  - DMARC TXT record
-
-Required for Netlify:
-  - A record → Netlify load balancer IP
-  - CNAME: admin → Netlify site
-  - CNAME: www → Netlify site
-```
-
----
-
-## IMMEDIATE ACTION ITEMS (Priority Order)
-
-1. **Get Anthropic API key** → Set in Netlify + Railway + .env.local
-2. **Get Resend API key** → Set in Netlify + Railway + .env.local → Verify domain DNS in GoDaddy
-3. **Get Square sandbox credentials** → Set in Netlify + Railway + .env.local
-4. **Configure Google OAuth** → Google Console → Supabase Auth Providers
-5. **Configure Meta OAuth** → Meta Developer → Supabase Auth Providers
-6. **Generate BACKEND_API_KEY** → Shared secret for frontend↔backend auth
-7. **Deploy Railway** → Get REDIS_URL + deploy URL → Set NEXT_PUBLIC_BACKEND_URL in Netlify
-8. **Set Netlify env vars** → Copy from sync checklist above
-9. **Set Railway env vars** → Copy from sync checklist above
-10. **Verify GoDaddy DNS** → Resend domain verification + Netlify DNS
+1. **Square credentials** — Get from Square Developer Dashboard (sandbox first)
+2. **Google OAuth** — Google Console → Supabase Auth Providers
+3. **Meta OAuth** — Meta Developer → Supabase Auth Providers
+4. **Delete dead Stripe code** — `src/lib/stripe.ts`, `src/app/api/webhooks/stripe/route.ts`
+5. **Shopify Partner app** — When Phase 2A starts
+6. **TikTok Developer app** — When Phase 2B starts
+7. **Verify Resend domain DNS** — GoDaddy SPF/DKIM/DMARC records
 
 ---
 

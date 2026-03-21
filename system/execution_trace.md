@@ -496,3 +496,29 @@ Engine inventory (all 20):
 - **Result:** SUCCESS — all 3 Railway services now have correct, consistent env vars
 - **Next step:** Apply pending DB migrations (028, 029), configure Google OAuth in Supabase, deploy and verify
 - **Commit:** N/A (infrastructure config, not code)
+
+------------------------------------------------------------
+
+### [2026-03-21 20:30] DONE — Netlify Env Vars: Full audit + fix on both projects
+
+- **Task:** Audit and fix all Netlify environment variables on yousell-admin + yousellonline-frontend
+- **Batch:** DEPLOY-2
+- **Action:**
+  1. Read all env vars from both Netlify projects via API
+  2. Fixed 5 broken vars on both projects:
+     - `SUPABASE_URL`: placeholder → real URL
+     - `REDIS_URL`: missing auth prefix → full connection string
+     - `API_SECRET`: weak placeholder → strong secret
+     - `RAILWAY_API_SECRET`: placeholder → real UUID
+     - `APIFY_API_TOKEN`: old key → current key
+  3. Added 8 missing vars to both projects:
+     - `FROM_EMAIL`, `ADMIN_EMAIL`, `CORS_ALLOWED_ORIGINS`, `FRONTEND_URL`
+     - `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_ADMIN_URL`, `BACKEND_API_KEY`, `META_ACCESS_TOKEN`
+  4. Deleted 2 junk vars from both: `d2eaf04a93msh...` (RapidAPI key as var name), `PORT` (not needed on Netlify)
+  5. Updated master env_registry.md — all statuses now reflect actual synced state
+  6. Deleted `Final Env Variables Netlify.txt` from git (contained exposed secrets + duplicates)
+  7. Sanitized `gap_analyzer/.env.example` (had real Anthropic key)
+- **Files touched:** `system/env_registry.md`, `gap_analyzer/.env.example`, deleted `Final Env Variables Netlify.txt`
+- **Result:** SUCCESS — all env vars consistent across Netlify (2 projects), Railway (3 services), and local
+- **Next step:** Apply pending DB migrations (028, 029), configure Google OAuth in Supabase, deploy and verify
+- **Commit:** pending
