@@ -27,12 +27,24 @@ export type {
   TrendDetectedPayload,
   CreatorMatchedPayload,
   EngineLifecyclePayload,
+  // V9 engine payloads
+  CompetitorDetectedPayload,
+  SupplierFoundPayload,
+  ProfitabilityPayload,
+  FinancialModelPayload,
+  BlueprintPayload,
+  AllocationPayload,
+  ContentGeneratedPayload,
+  StoreProductPushedPayload,
+  OrderPayload,
+  CommissionPayload,
+  FulfillmentPayload,
 } from './types';
 
 // ─── Constants ────────────────────────────────────────────
 export { ENGINE_EVENTS } from './types';
 
-// ─── Engine Implementations ──────────────────────────────
+// ─── Engine Implementations (Phase 0 + Phase B: 8 engines) ──
 export { TikTokDiscoveryEngine } from './tiktok-discovery';
 export { DiscoveryEngine } from './discovery';
 export { ScoringEngine } from './scoring-engine';
@@ -41,3 +53,17 @@ export { TrendDetectionEngine } from './trend-detection';
 export { CreatorMatchingEngine } from './creator-matching';
 export { AdIntelligenceEngine } from './ad-intelligence';
 export { OpportunityFeedEngine } from './opportunity-feed';
+
+// ─── V9 Engine Implementations (12 new engines) ─────────
+export { CompetitorIntelligenceEngine } from './competitor-intelligence';
+export { SupplierDiscoveryEngine } from './supplier-discovery';
+export { ProfitabilityEngine } from './profitability-engine';
+export { FinancialModellingEngine } from './financial-modelling';
+export { LaunchBlueprintEngine } from './launch-blueprint';
+export { ClientAllocationEngine } from './client-allocation';
+export { ContentCreationEngine } from './content-creation';
+export { StoreIntegrationEngine } from './store-integration';
+export { OrderTrackingEngine } from './order-tracking';
+export { AdminCommandCenterEngine } from './admin-command-center';
+export { AffiliateCommissionEngine } from './affiliate-commission';
+export { FulfillmentRecommendationEngine } from './fulfillment-recommendation';

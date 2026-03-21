@@ -31,7 +31,11 @@ export type EngineName =
   | 'financial-model'
   | 'pod-engine'
   | 'affiliate-engine'
-  | 'admin-command-center';
+  | 'admin-command-center'
+  | 'competitor-intelligence'
+  | 'profitability'
+  | 'client-allocation'
+  | 'fulfillment-recommendation';
 
 export type EngineStatus = 'idle' | 'running' | 'paused' | 'error' | 'stopped';
 
@@ -161,6 +165,93 @@ export interface CreatorMatchedPayload {
   estimatedRoi: number;
 }
 
+// ─── V9 Engine Event Payloads ───────────────────────────────
+
+export interface CompetitorDetectedPayload {
+  productId: string;
+  competitorStore: string;
+  platform: string;
+  pricePoint: number;
+  estimatedRevenue: number;
+}
+
+export interface SupplierFoundPayload {
+  productId: string;
+  supplierId: string;
+  platform: string;
+  unitCost: number;
+  moq: number;
+  shipDays: number;
+}
+
+export interface ProfitabilityPayload {
+  productId: string;
+  margin: number;
+  breakEvenUnits: number;
+  recommendedPrice: number;
+  fulfillmentType: string;
+}
+
+export interface FinancialModelPayload {
+  productId: string;
+  projectedRevenue: number;
+  projectedCost: number;
+  projectedProfit: number;
+  roiPercent: number;
+  paybackDays: number;
+}
+
+export interface BlueprintPayload {
+  productId: string;
+  blueprintId: string;
+  steps: number;
+  estimatedLaunchDays: number;
+}
+
+export interface AllocationPayload {
+  productId: string;
+  clientId: string;
+  tier: string;
+  channel: string;
+}
+
+export interface ContentGeneratedPayload {
+  productId: string;
+  contentType: string;
+  platform: string;
+  creditsCost: number;
+}
+
+export interface StoreProductPushedPayload {
+  productId: string;
+  shopProductId: string;
+  platform: string;
+  storeUrl: string;
+}
+
+export interface OrderPayload {
+  orderId: string;
+  productId: string;
+  platform: string;
+  status: string;
+  revenue: number;
+}
+
+export interface CommissionPayload {
+  orderId: string;
+  productId: string;
+  commissionType: 'internal' | 'client_referral';
+  amount: number;
+  rate: number;
+}
+
+export interface FulfillmentPayload {
+  productId: string;
+  recommendedType: 'DROPSHIP' | 'WHOLESALE' | 'POD' | 'DIGITAL' | 'AFFILIATE';
+  confidence: number;
+  comparisonTable: Record<string, { margin: number; upfrontCost: number; risk: string }>;
+}
+
 // ─── Engine Lifecycle Events ────────────────────────────────
 
 export interface EngineLifecyclePayload {
@@ -209,6 +300,58 @@ export const ENGINE_EVENTS = {
   // Amazon / Shopify
   AMAZON_PRODUCTS_FOUND: 'amazon.products_found',
   SHOPIFY_PRODUCTS_FOUND: 'shopify.products_found',
+
+  // Competitor Intelligence (Engine 2)
+  COMPETITOR_DETECTED: 'competitor.detected',
+  COMPETITOR_UPDATED: 'competitor.updated',
+  COMPETITOR_BATCH_COMPLETE: 'competitor.batch_complete',
+
+  // Supplier Discovery (Engine 4)
+  SUPPLIER_FOUND: 'supplier.found',
+  SUPPLIER_VERIFIED: 'supplier.verified',
+  SUPPLIER_BATCH_COMPLETE: 'supplier.batch_complete',
+
+  // Profitability & Logistics (Engine 5)
+  PROFITABILITY_CALCULATED: 'profitability.calculated',
+  MARGIN_ALERT: 'profitability.margin_alert',
+
+  // Financial Modelling (Engine 6)
+  FINANCIAL_MODEL_GENERATED: 'financial.model_generated',
+  ROI_PROJECTED: 'financial.roi_projected',
+
+  // Launch Blueprint (Engine 7)
+  BLUEPRINT_GENERATED: 'blueprint.generated',
+  BLUEPRINT_APPROVED: 'blueprint.approved',
+
+  // Client Allocation (Engine 8)
+  PRODUCT_ALLOCATED: 'allocation.product_allocated',
+  ALLOCATION_BATCH_COMPLETE: 'allocation.batch_complete',
+
+  // Content Creation (Engine 9)
+  CONTENT_GENERATED: 'content.generated',
+  CONTENT_BATCH_COMPLETE: 'content.batch_complete',
+
+  // Store Integration (Engine 10)
+  PRODUCT_PUSHED: 'store.product_pushed',
+  STORE_CONNECTED: 'store.connected',
+  STORE_SYNC_COMPLETE: 'store.sync_complete',
+
+  // Order Tracking (Engine 11)
+  ORDER_RECEIVED: 'order.received',
+  ORDER_FULFILLED: 'order.fulfilled',
+  ORDER_TRACKING_SENT: 'order.tracking_sent',
+
+  // Admin Command Center (Engine 12)
+  ADMIN_PRODUCT_DEPLOYED: 'admin.product_deployed',
+  ADMIN_BATCH_DEPLOY_COMPLETE: 'admin.batch_deploy_complete',
+
+  // Affiliate Commission (Engine 13)
+  COMMISSION_RECORDED: 'affiliate.commission_recorded',
+  PAYOUT_CALCULATED: 'affiliate.payout_calculated',
+
+  // Fulfillment Recommendation (Engine 14)
+  FULFILLMENT_RECOMMENDED: 'fulfillment.recommended',
+  FULFILLMENT_OVERRIDDEN: 'fulfillment.overridden',
 } as const;
 
 export type EngineEventType = typeof ENGINE_EVENTS[keyof typeof ENGINE_EVENTS];

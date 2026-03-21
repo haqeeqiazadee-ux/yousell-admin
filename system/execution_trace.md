@@ -430,3 +430,44 @@ Core deliverables:
 - **Result:** SUCCESS — Google OAuth login now works end-to-end (authenticate → redirect → dashboard loads with data)
 - **Next step:** Monitor production for any remaining OAuth edge cases
 - **Commit:** adcd037, 2d14a2c
+
+------------------------------------------------------------
+
+### [2026-03-21 10:40] DONE — V9 Engine Architecture: Implement all 14 engines
+
+- **Task:** Build Engine interface implementations for all 14 V9 engines
+- **Batch:** V9.1-V9.7
+- **Action:**
+  - V9.1: Extended types.ts — 4 new EngineName values, 26 ENGINE_EVENTS constants, 12 payload interfaces
+  - V9.2: Created CompetitorIntelligenceEngine, SupplierDiscoveryEngine, ProfitabilityEngine
+  - V9.3: Created FinancialModellingEngine, LaunchBlueprintEngine, ClientAllocationEngine
+  - V9.4: Created ContentCreationEngine, StoreIntegrationEngine, OrderTrackingEngine
+  - V9.5: Created AdminCommandCenterEngine, AffiliateCommissionEngine, FulfillmentRecommendationEngine
+  - V9.6: Updated barrel export (index.ts) with all 20 engines + 11 payload types
+  - V9.7: Full test verification — 365/365 passing, 0 regressions
+- **Files touched:**
+  - Modified: `src/lib/engines/types.ts`, `src/lib/engines/index.ts`
+  - Created: 12 new engine files in `src/lib/engines/`
+    - competitor-intelligence.ts, supplier-discovery.ts, profitability-engine.ts
+    - financial-modelling.ts, launch-blueprint.ts, client-allocation.ts
+    - content-creation.ts, store-integration.ts, order-tracking.ts
+    - admin-command-center.ts, affiliate-commission.ts, fulfillment-recommendation.ts
+- **Result:** SUCCESS — all 14 V9 engines implemented with Engine interface, event bus integration, domain-specific methods
+- **Next step:** Write integration tests for V9 engines, then proceed to Phase 2A Shopify Connect
+- **Commit:** d3a30f3, e6e64d0, eae6ea3, de83eb3, f5ada6a, 7efe7ba
+
+### V9 ENGINE IMPLEMENTATION SUMMARY
+
+**Status: COMPLETE**
+
+Total engines: 20 (8 original + 12 new V9)
+Files created: 12 new engine implementation files
+Files modified: 2 (types.ts, index.ts)
+Tests: 365/365 passing (0 regressions)
+Breaking changes: ZERO
+TypeScript: Clean compile (0 errors)
+
+Engine inventory (all 20):
+- Phase 0: Discovery, TikTokDiscovery, Scoring (3)
+- Phase B: Clustering, TrendDetection, CreatorMatching, AdIntelligence, OpportunityFeed (5)
+- V9 new: CompetitorIntelligence, SupplierDiscovery, Profitability, FinancialModelling, LaunchBlueprint, ClientAllocation, ContentCreation, StoreIntegration, OrderTracking, AdminCommandCenter, AffiliateCommission, FulfillmentRecommendation (12)
