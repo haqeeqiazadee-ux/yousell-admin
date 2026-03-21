@@ -44,6 +44,7 @@ export const QUEUES = {
   PUSH_TO_SHOPIFY: "push-to-shopify",
   PUSH_TO_TIKTOK: "push-to-tiktok",
   PUSH_TO_AMAZON: "push-to-amazon",
+  SHOP_SYNC: "shop-sync",
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
@@ -86,6 +87,7 @@ export const ENGINE_QUEUE_MAP: Record<string, string> = {
   [QUEUES.PUSH_TO_SHOPIFY]: 'store-integration',
   [QUEUES.PUSH_TO_TIKTOK]: 'store-integration',
   [QUEUES.PUSH_TO_AMAZON]: 'store-integration',
+  [QUEUES.SHOP_SYNC]: 'store-integration',
 } as const;
 
 // ── Job data interfaces ──────────────────────────────────────
