@@ -57,7 +57,7 @@ export async function processPodFulfillmentSync(job: Job<PodFulfillmentSyncData>
 
         if (!res.ok) return { status: 'api_error', code: res.status }
 
-        const data = await res.json()
+        const data = (await res.json()) as Record<string, any>
         const printfulStatus = data.result?.status
 
         // Map Printful status to our status

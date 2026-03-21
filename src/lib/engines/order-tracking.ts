@@ -118,8 +118,8 @@ export class OrderTrackingEngine implements Engine {
   async sendTrackingEmail(
     orderId: string,
     customerEmail: string,
-    trackingNumber: string,
-    carrier: string,
+    _trackingNumber: string,
+    _carrier: string,
   ): Promise<{ sent: boolean }> {
     const bus = getEventBus();
     // Placeholder: In production, calls Resend API

@@ -74,7 +74,7 @@ export async function processPodProvision(job: Job<PodProvisionData>) {
           throw new Error(`Printful API error: ${res.status} ${err}`)
         }
 
-        const result = await res.json()
+        const result = (await res.json()) as Record<string, any>
         console.log(`[pod-provision] Printful product created:`, result.result?.id)
         return { status: 'provisioned', partner: 'printful', external_id: result.result?.id }
       } catch (err) {

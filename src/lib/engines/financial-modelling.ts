@@ -80,7 +80,7 @@ export class FinancialModellingEngine implements Engine {
   }> {
     this._status = 'running';
     try {
-      const { sellingPrice, unitCost, monthlyAdBudget, estimatedCpa, estimatedMonthlyUnits, months } = input;
+      const { sellingPrice, unitCost, monthlyAdBudget, estimatedMonthlyUnits, months } = input;
       const totalRevenue = sellingPrice * estimatedMonthlyUnits * months;
       const totalCogs = unitCost * estimatedMonthlyUnits * months;
       const totalAdSpend = monthlyAdBudget * months;

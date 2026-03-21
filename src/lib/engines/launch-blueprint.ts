@@ -64,7 +64,7 @@ export class LaunchBlueprintEngine implements Engine {
    */
   async generateBlueprint(
     productId: string,
-    input: {
+    _input: {
       productTitle: string;
       platform: string;
       tier: string;
