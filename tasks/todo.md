@@ -47,6 +47,16 @@ Last updated: 2026-03-18
 - [x] Fix dashboard "Failed to load data" — auth cookies lost during OAuth redirect
 - [x] Migration 029: `handle_new_user` trigger creates both profiles + clients, RLS policies on profiles
 
+### Deployment & Infrastructure (2026-03-21)
+- [x] Railway Backend API — env vars audited and fixed
+- [x] Railway Email Service — env vars audited and fixed
+- [x] Railway Redis — verified (no changes needed)
+- [ ] Apply migration 028 (missing tables) in Supabase SQL editor
+- [ ] Apply migration 029 (OAuth fix + profiles RLS) in Supabase SQL editor
+- [ ] Configure Google OAuth provider in Supabase dashboard
+- [ ] Deploy to Railway and verify all 3 services start clean
+- [ ] Verify Netlify frontend connects to Railway backend
+
 ### Future Platform Build (from execution_plan.md)
 - [ ] Phase 2A: Shopify Connect
 - [ ] Phase 2B: TikTok Shop Connect

@@ -471,3 +471,28 @@ Engine inventory (all 20):
 - Phase 0: Discovery, TikTokDiscovery, Scoring (3)
 - Phase B: Clustering, TrendDetection, CreatorMatching, AdIntelligence, OpportunityFeed (5)
 - V9 new: CompetitorIntelligence, SupplierDiscovery, Profitability, FinancialModelling, LaunchBlueprint, ClientAllocation, ContentCreation, StoreIntegration, OrderTracking, AdminCommandCenter, AffiliateCommission, FulfillmentRecommendation (12)
+
+------------------------------------------------------------
+
+### [2026-03-21 11:00] DONE — Railway Deployment: Environment Variable Audit & Fix
+
+- **Task:** Review and fix environment variables for all 3 Railway services (Backend API, Email Service, Redis)
+- **Batch:** DEPLOY-1
+- **Action:**
+  1. **Backend API** — Audited all env vars. Fixed:
+     - `SUPABASE_URL` was placeholder (`your-project.supabase.co`) → corrected to `gqrwienipczrejscqdhk.supabase.co`
+     - `ANTHROPIC_API_KEY` was a curl command, not a key → corrected
+     - `FROM_EMAIL` mismatched → aligned to `YouSell <noreply@yousell.online>`
+     - Added missing vars: `ADMIN_EMAIL`, `EMAIL_SERVICE_SECRET`, `TIKTOK_WEBHOOK_SECRET`, `AMAZON_WEBHOOK_SECRET`
+     - Removed `NEXT_PUBLIC_*` vars (not needed in backend)
+  2. **Email Service** — Audited all env vars. Fixed:
+     - `ANTHROPIC_API_KEY` was a curl command → corrected
+     - `SUPABASE_URL` was placeholder → corrected
+     - `RESEND_API_KEY` was different from backend → unified to same key
+     - `EMAIL_SERVICE_SECRET` was weak placeholder → strengthened
+     - Added missing: `ADMIN_EMAIL`, `FRONTEND_URL`, `REDIS_URL`
+  3. **Redis** — Reviewed. All vars correctly wired via Railway template variables. No changes needed.
+- **Files touched:** None (Railway dashboard configuration only)
+- **Result:** SUCCESS — all 3 Railway services now have correct, consistent env vars
+- **Next step:** Apply pending DB migrations (028, 029), configure Google OAuth in Supabase, deploy and verify
+- **Commit:** N/A (infrastructure config, not code)
