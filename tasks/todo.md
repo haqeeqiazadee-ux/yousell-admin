@@ -1,6 +1,6 @@
 # YOUSELL Platform — Task Tracker
 
-Last updated: 2026-03-21
+Last updated: 2026-03-21 (end of day snapshot)
 
 ------------------------------------------------------------
 
@@ -61,8 +61,10 @@ Last updated: 2026-03-21
 - [x] Apply migration 029 (OAuth trigger + profiles RLS) in Supabase
 - [x] Configure Google OAuth provider in Supabase dashboard
 - [x] Configure Facebook OAuth provider in Supabase dashboard
-- [ ] Deploy to Railway and verify all 3 services start clean
+- [ ] Deploy to Railway and verify all 3 services start clean ← **NEXT PRIORITY**
 - [ ] Verify Netlify frontend connects to Railway backend
+- [x] Verify domain routing: yousell.online, admin.yousell.online, www.yousell.online — all linked ✓
+- [x] Verify Supabase Auth redirect URLs — 6 URLs configured ✓
 
 ### Future Platform Build (from execution_plan.md)
 - [ ] Phase 2A: Shopify Connect

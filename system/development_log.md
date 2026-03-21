@@ -2723,3 +2723,69 @@ All 41 tables confirmed present in public schema.
 
 ### Status
 Both Google and Facebook OAuth confirmed active by user.
+
+------------------------------------------------------------
+
+## [2026-03-21] Domain & Routing Architecture Verified
+
+### Full Routing Audit
+Comprehensive audit of how the single Next.js app serves two domains:
+
+**Middleware routing (src/middleware.ts):**
+- Detects hostname: `admin.yousell.online` → admin routes, `yousell.online` → client routes
+- Cross-domain protection: admin users on client domain redirected to admin subdomain
+- Cookie sharing: `.yousell.online` domain scope enables SSO across subdomains
+- Role-based access: middleware calls `check_user_role()` RPC, layouts double-check
+
+**Netlify Production Domains (confirmed via screenshot):**
+- yousell.online — Primary domain (Netlify DNS ✓)
+- www.yousell.online — Redirects to primary (Netlify DNS ✓)
+- admin.yousell.online — Domain alias (Netlify DNS ✓)
+- yousell-admin.netlify.app — Netlify subdomain (auto)
+
+**Supabase Auth URL Configuration (confirmed via screenshot):**
+- Site URL: https://yousell.online
+- 6 Redirect URLs: admin.yousell.online, admin callback, client callback, www callback, localhost, wildcard
+
+**Verdict:** All 3 surfaces (homepage, client dashboard, admin dashboard) properly linked. No code changes needed.
+
+------------------------------------------------------------
+
+## CUMULATIVE PROJECT STATUS (as of 2026-03-21 end of day)
+
+### Completed Phases
+| Phase | Name | Date | Key Deliverables |
+|-------|------|------|-----------------|
+| 0 | Engine Architecture Foundation | 2026-03-17 | EventBus, EngineRegistry, Engine interface, 3 engines |
+| B | Backend Alignment | 2026-03-18 | 5 more engines, ENGINE_QUEUE_MAP, 15 job annotations, 10 API routes |
+| C | Frontend Design | 2026-03-18 | Engine API client types, component interfaces, layout contracts |
+| D | Frontend Build | 2026-03-18 | API client, hooks, DataTable, 4 engine components, 8 page wrappers |
+| V9 | V9 Engine Architecture | 2026-03-21 | 12 new engines (20 total), 365 tests passing |
+
+### Completed Infrastructure
+- Railway: 3 services configured (Backend API, Email Service, Redis)
+- Netlify: 2 projects configured (yousell-admin, yousellonline-frontend)
+- Supabase: 41 tables, all migrations applied, Google + Facebook OAuth active
+- DNS: All domains properly configured and verified
+
+### Remaining Work (in priority order)
+1. Deploy Railway services and verify they start clean
+2. Verify Netlify ↔ Railway backend connectivity
+3. Phase 2A: Shopify Connect (OAuth, store provisioning)
+4. Phase 2B: TikTok Shop Connect
+5. Phase 3A: Text Content Engine
+6. Phase 3B: Media Content Engine
+7. Phase 4: Smart Publisher
+8. Phase 5: Automation Orchestrator
+9. Phase 6: Reporting & Analytics
+10. Phase 7: Compliance & Launch
+
+### Key Numbers
+- 20 engines implemented (all with Engine interface)
+- 365 tests passing
+- 41 database tables
+- 80+ Next.js pages
+- 60 API routes (40 admin, 3 auth, 11 dashboard, 4 webhooks, 2 system)
+- 15 BullMQ job processors
+- 0 TypeScript errors
+- 0 breaking changes throughout all phases

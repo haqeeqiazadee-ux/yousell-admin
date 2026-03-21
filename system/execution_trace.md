@@ -572,3 +572,136 @@ Engine inventory (all 20):
 - **Result:** SUCCESS
 - **Next step:** Deploy to Railway and verify all 3 services start clean
 - **Commit:** pending
+
+------------------------------------------------------------
+
+### [2026-03-21 22:00] DONE — Domain & Routing Architecture Review
+
+- **Task:** Verify admin dashboard, client dashboard, and homepage are all linked properly
+- **Batch:** REVIEW-1
+- **Action:**
+  1. Full routing audit: middleware.ts, netlify.toml, login pages, layouts, OAuth callback
+  2. Confirmed Netlify DNS: yousell.online (primary), www.yousell.online (redirect), admin.yousell.online (alias) — all green with Netlify DNS
+  3. Confirmed Supabase Auth URL config: Site URL = https://yousell.online, 6 redirect URLs covering admin, client, www, localhost, wildcard
+  4. Verified cross-domain auth cookie sharing via `.yousell.online` domain scope
+  5. Verified role-based routing at middleware + layout levels (defense-in-depth)
+- **Files touched:** None (read-only review)
+- **Result:** SUCCESS — all 3 surfaces (homepage, client dashboard, admin dashboard) properly linked
+- **Next step:** Deploy to Railway and verify all 3 services start clean
+- **Commit:** pending (this entry)
+
+**Routing Architecture Summary (verified 2026-03-21):**
+
+| Domain | Unauthenticated | Client User | Admin User |
+|--------|----------------|-------------|------------|
+| yousell.online/ | Homepage | → /dashboard | → admin.yousell.online/admin |
+| yousell.online/login | Login page | → /dashboard | → admin.yousell.online/admin |
+| admin.yousell.online/ | → /admin/login | → /admin (blocked by layout) | → /admin |
+| admin.yousell.online/admin | → /admin/login | → /admin/unauthorized | Admin dashboard |
+
+**Netlify Production Domains (verified 2026-03-21):**
+- yousell-admin.netlify.app — Netlify subdomain
+- yousell.online — Primary domain (Netlify DNS ✓)
+- www.yousell.online — Redirects to primary (Netlify DNS ✓)
+- admin.yousell.online — Domain alias (Netlify DNS ✓)
+
+**Supabase Auth Redirect URLs (verified 2026-03-21):**
+1. https://admin.yousell.online
+2. https://admin.yousell.online/api/auth/callback
+3. https://yousell.online/api/auth/callback
+4. https://www.yousell.online/api/auth/callback
+5. http://localhost:3000/api/auth/callback
+6. https://yousell.online/**
+
+------------------------------------------------------------
+
+### [2026-03-21 22:30] DONE — Full Session State Snapshot for Future Session Recovery
+
+- **Task:** Update ALL system files so any new session picks up exactly from this point
+- **Batch:** SNAPSHOT-1
+- **Action:** Updated execution_trace.md, development_log.md, todo.md, lessons.md with comprehensive current state
+- **Files touched:** system/execution_trace.md, system/development_log.md, tasks/todo.md, tasks/lessons.md
+- **Result:** SUCCESS
+- **Next step:** Deploy to Railway and verify all 3 services start clean. Then proceed to Phase 2A: Shopify Connect.
+- **Commit:** pending
+
+============================================================
+## FULL PROJECT STATE SNAPSHOT (2026-03-21 22:30)
+## READ THIS FIRST IN ANY NEW SESSION
+============================================================
+
+### What Has Been Built (100% complete through this point):
+
+**Phase 0 — Engine Architecture Foundation (2026-03-17)**
+- EventBus: in-memory pub/sub with wildcard patterns, error isolation, 100-event history
+- EngineRegistry: dependency-ordered lifecycle management, health checks
+- Engine interface: config, init, start, stop, handleEvent, healthCheck
+- 3 engines refactored: Discovery, TikTokDiscovery, Scoring
+- 19 integration tests passing
+
+**Phase B — Backend Alignment (2026-03-18)**
+- 5 more engines wrapped (8 total): Clustering, TrendDetection, CreatorMatching, AdIntelligence, OpportunityFeed
+- ENGINE_QUEUE_MAP: 15 BullMQ queues → owning engines
+- 15 job processors annotated with @engine/@queue JSDoc
+- 10 engine-namespaced API routes under /api/engine/*
+- 33 tests passing
+
+**Phase C — Frontend Design (2026-03-18)**
+- Engine API client types for all 8 engines + health API
+- Shared API response/error/pagination types
+- Component interfaces: EngineStatusCard, EngineDashboardPanel, EngineControlPanel, DataTable
+
+**Phase D — Frontend Build (2026-03-18)**
+- Engine API client (engineGet/enginePost with typed responses)
+- useEngine hook (generic data fetching with loading/error/polling)
+- DataTable component (sortable, filterable, paginated)
+- 4 engine UI components + admin dashboard engine status grid
+- 8 engine pages wrapped with EnginePageLayout
+
+**V9 Engine Architecture (2026-03-21)**
+- 12 NEW engine implementations (20 total engines now):
+  CompetitorIntelligence, SupplierDiscovery, Profitability, FinancialModelling,
+  LaunchBlueprint, ClientAllocation, ContentCreation, StoreIntegration,
+  OrderTracking, AdminCommandCenter, AffiliateCommission, FulfillmentRecommendation
+- 365 tests passing, 0 regressions
+
+**Bug Fixes (2026-03-19)**
+- Google OAuth: handle_new_user trigger now creates profiles + clients records
+- Auth callback: cookies forwarded to redirect response (Netlify fix)
+- Migration 029 applied
+
+**Infrastructure (2026-03-21)**
+- Railway: 3 services (Backend API, Email Service, Redis) — env vars audited & fixed
+- Netlify: 2 projects (yousell-admin, yousellonline-frontend) — env vars audited & fixed
+- Supabase: Migrations 028 + 029 applied, 41 tables in public schema
+- OAuth: Google + Facebook providers configured in Supabase Auth
+- DNS: All 3 domains configured and verified in Netlify (yousell.online, www, admin)
+- Supabase Auth: 6 redirect URLs configured
+
+### What Has NOT Been Done Yet (resume here):
+
+1. **Deploy to Railway** — verify all 3 services start clean
+2. **Verify Netlify ↔ Railway connectivity** — frontend connects to backend
+3. **Phase 2A: Shopify Connect** — OAuth flow, store provisioning
+4. **Phase 2B: TikTok Shop Connect**
+5. **Phase 3A: Text Content Engine**
+6. **Phase 3B: Media Content Engine**
+7. **Phase 4: Smart Publisher**
+8. **Phase 5: Automation Orchestrator**
+9. **Phase 6: Reporting & Analytics**
+10. **Phase 7: Compliance & Launch**
+
+### Key Technical Details for New Sessions:
+
+- **Supabase Project:** gqrwienipczrejscqdhk (yousell-dashboard, PRODUCTION, main branch)
+- **Netlify Site:** yousell-admin.netlify.app (serves both yousell.online + admin.yousell.online)
+- **Git Branch:** claude/review-v9-engine-architecture-Adznr (feature branch off master)
+- **Remote main:** remotes/origin/main
+- **Test Command:** `npx vitest run` (365 tests, all passing as of last run)
+- **Build Command:** `npm run build` (Next.js 14, App Router)
+- **TypeScript:** `npx tsc --noEmit` (clean compile, 0 errors in project code)
+- **Scoring Formula:** final_score = trend_score * 0.40 + viral_score * 0.35 + profit_score * 0.25
+- **Stripe:** Code exists but NOT configured (keeping for future use)
+- **Payment:** Decided to use Square instead of Stripe (see env_registry.md)
+
+------------------------------------------------------------
