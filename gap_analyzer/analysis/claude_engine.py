@@ -12,10 +12,12 @@ from utils.retry import retry_async, retry_sync
 logger = logging.getLogger("gap_analyzer")
 
 MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-6")
-MAX_TOKENS = 2000
+MAX_TOKENS = 4096
 
-COMPANY_ANALYSIS_PROMPT = """You are a senior product strategist and competitive intelligence analyst
-preparing a board-level briefing for an ecommerce platform startup.
+COMPANY_ANALYSIS_PROMPT = """You are a senior product strategist, competitive intelligence analyst,
+and M&A due-diligence expert preparing a board-level briefing for an
+ecommerce platform startup. Your analysis must be thorough, evidence-based,
+and actionable — the kind of work a top-tier consulting firm would produce.
 
 YOUR PROJECT (the startup you are advising):
 {project_profile_json}
@@ -32,14 +34,14 @@ LIVE SCRAPED CONTENT:
 {scraped_content}
 
 ══════════════════════════════════════════════════════════
-YOUR TASK: Analyse this company and identify gaps and
-opportunities for YOUR PROJECT.
+YOUR TASK: Perform a deep expert analysis of this company
+and identify gaps, threats, and opportunities for YOUR PROJECT.
 
 RULES:
-- Be PRECISE but BRIEF. Each string value: 1-2 sentences max.
-- Each list item: under 20 words. But include ALL relevant items you find — no artificial caps.
-- gap_for_your_project: one specific, actionable sentence referencing what you saw.
-- Focus on functionality, content, services, business model — NOT visual design or UX.
+- Be PRECISE and THOROUGH. Each string value: 2-3 sentences for depth.
+- Each list item: under 25 words. Include ALL relevant items — no artificial caps.
+- gap_for_your_project: specific, actionable, referencing what you observed.
+- Focus on functionality, strategy, content, services, business model — NOT visual design.
 - Do not invent data. Say 'Not determinable' if unknown.
 - No markdown. No preamble. Return ONLY the JSON object.
 ══════════════════════════════════════════════════════════
@@ -51,47 +53,67 @@ RULES:
   "niche": string,
 
   "dim2_functionality_tech": {{
-    "core_product": string (1 sentence),
+    "core_product": string (2-3 sentences — what they sell and who it serves),
     "key_features": [string] (all notable features, each under 10 words),
-    "tech_signals": string (1 sentence),
-    "integrations": string (1 sentence),
+    "tech_signals": string (2 sentences — tech stack hints, performance, modern patterns),
+    "integrations": string (2 sentences — ecosystem, API, partner integrations observed),
+    "api_ecosystem": string (2 sentences — developer docs, API availability, extensibility),
+    "scalability_signals": string (1-2 sentences — enterprise readiness, multi-tenant, scale indicators),
     "product_maturity": string (Early/Growth/Mature/Enterprise),
-    "gap_for_your_project": string (1 actionable sentence)
+    "gap_for_your_project": string (2 sentences — specific, actionable)
   }},
 
   "dim3_content_messaging": {{
-    "primary_message": string (1 sentence),
+    "primary_message": string (2 sentences — their core value proposition and how they frame it),
     "messaging_clarity": string (Clear/Moderate/Weak),
     "content_tone": string (2-3 words),
-    "seo_depth": string (1 sentence),
-    "social_proof": string (1 sentence),
+    "seo_depth": string (2 sentences — keyword strategy, content volume, organic signals),
+    "content_strategy_depth": string (2 sentences — blog sophistication, thought leadership, content types used),
+    "social_proof": string (2 sentences — logos, testimonials, case studies, metrics they cite),
+    "trust_signals": string (2 sentences — security badges, certifications, guarantees, review scores),
+    "brand_positioning": string (2 sentences — how they position vs competitors, aspirational vs practical),
     "primary_cta": string (quote the CTA),
-    "gap_for_your_project": string (1 actionable sentence)
+    "gap_for_your_project": string (2 sentences — specific, actionable)
   }},
 
   "dim4_services_products": {{
-    "product_catalogue": string (1 sentence),
-    "pricing_model": string (1 sentence),
+    "product_catalogue": string (2 sentences — breadth and depth of product/service offerings),
+    "pricing_model": string (2 sentences — how they charge, price anchoring, tiers observed),
     "pricing_visibility": string (Public/Hidden/Partial),
-    "packaging": string (1 sentence),
-    "upsell_mechanics": string (1 sentence),
-    "gap_for_your_project": string (1 actionable sentence)
+    "packaging": string (2 sentences — how tiers differ, feature gating strategy),
+    "upsell_mechanics": string (2 sentences — cross-sell, upsell, expansion revenue tactics),
+    "monetisation_sophistication": string (2 sentences — how advanced their revenue extraction is),
+    "customer_retention_levers": string (2 sentences — lock-in, switching costs, loyalty mechanisms),
+    "gap_for_your_project": string (2 sentences — specific, actionable)
   }},
 
   "dim5_business_model": {{
-    "business_model": string (1 sentence),
-    "revenue_model": string (SaaS/Marketplace/Commission/etc),
-    "icp": string (1 sentence),
-    "gtm_motion": string (1 sentence),
+    "business_model": string (2 sentences — how they create and capture value),
+    "revenue_model": string (SaaS/Marketplace/Commission/Hybrid/etc),
+    "icp": string (2 sentences — ideal customer profile, segments they target),
+    "gtm_motion": string (2 sentences — sales-led vs product-led, distribution channels),
     "competitive_position": string (Leader/Challenger/Niche/Emerging),
     "growth_stage": string (Startup/Growth/Mature/Enterprise),
-    "gap_for_your_project": string (1 actionable sentence)
+    "funding_signals": string (1-2 sentences — any indicators of funding stage, team size, scale),
+    "market_share_indicators": string (1-2 sentences — customer count claims, usage stats, market presence),
+    "defensibility": string (2 sentences — moats, network effects, data advantages, switching costs),
+    "gap_for_your_project": string (2 sentences — specific, actionable)
   }},
 
-  "top_opportunities": [string] (all you find, each under 20 words),
-  "value_add_ideas": [string] (all you find, each under 20 words),
-  "watch_out_for": [string] (all you find, each under 20 words),
-  "one_line_verdict": string (1 sentence)
+  "expert_assessment": {{
+    "strategic_threat_level": string (None/Low/Medium/High/Critical — to your project),
+    "what_they_do_better": string (2-3 sentences — honest assessment of their strengths vs your project),
+    "what_they_do_worse": string (2-3 sentences — weaknesses you can exploit),
+    "blind_spots": string (2 sentences — market segments or capabilities they are missing),
+    "partnership_potential": string (1-2 sentences — could they be a partner rather than competitor?),
+    "estimated_arr_range": string (estimate based on signals: e.g. "$1M-5M" or "Not determinable"),
+    "key_differentiator": string (1 sentence — the single thing that sets them apart)
+  }},
+
+  "top_opportunities": [string] (all you find, each under 25 words — be thorough),
+  "value_add_ideas": [string] (all you find, each under 25 words — be creative and specific),
+  "watch_out_for": [string] (all you find, each under 25 words — risks, threats, competitive moves),
+  "one_line_verdict": string (2 sentences — strategic summary and recommended action)
 }}"""
 
 SIMPLIFIED_PROMPT = """Analyse this company for competitive intelligence. Return JSON only.

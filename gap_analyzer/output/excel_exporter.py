@@ -12,6 +12,7 @@ _DIM_SECTIONS = [
     ("dim3_content_messaging", "Content & Messaging"),
     ("dim4_services_products", "Services & Products"),
     ("dim5_business_model", "Business Model"),
+    ("expert_assessment", "Expert Assessment"),
 ]
 
 # Fields within each dimension that hold the most insightful data
@@ -20,6 +21,8 @@ _DIM_FIELDS = {
         ("core_product", "Core Products"),
         ("key_features", "Key Features (across ecosystem)"),
         ("integrations", "Integration Patterns"),
+        ("api_ecosystem", "API & Developer Ecosystem"),
+        ("scalability_signals", "Scalability & Enterprise Readiness"),
         ("product_maturity", "Maturity Distribution"),
         ("gap_for_your_project", "Gaps For Your Project"),
     ],
@@ -27,7 +30,10 @@ _DIM_FIELDS = {
         ("primary_message", "Messaging Approaches"),
         ("messaging_clarity", "Clarity Distribution"),
         ("seo_depth", "SEO Patterns"),
+        ("content_strategy_depth", "Content Strategy Sophistication"),
         ("social_proof", "Social Proof Patterns"),
+        ("trust_signals", "Trust Signals & Credibility"),
+        ("brand_positioning", "Brand Positioning"),
         ("primary_cta", "CTA Patterns"),
         ("gap_for_your_project", "Gaps For Your Project"),
     ],
@@ -36,6 +42,8 @@ _DIM_FIELDS = {
         ("pricing_visibility", "Pricing Visibility"),
         ("packaging", "Packaging Approaches"),
         ("upsell_mechanics", "Upsell Mechanics"),
+        ("monetisation_sophistication", "Monetisation Sophistication"),
+        ("customer_retention_levers", "Customer Retention Levers"),
         ("gap_for_your_project", "Gaps For Your Project"),
     ],
     "dim5_business_model": [
@@ -44,7 +52,19 @@ _DIM_FIELDS = {
         ("icp", "Target ICPs"),
         ("gtm_motion", "GTM Motions"),
         ("competitive_position", "Competitive Positioning"),
+        ("funding_signals", "Funding & Scale Signals"),
+        ("market_share_indicators", "Market Share Indicators"),
+        ("defensibility", "Competitive Moats & Defensibility"),
         ("gap_for_your_project", "Gaps For Your Project"),
+    ],
+    "expert_assessment": [
+        ("strategic_threat_level", "Strategic Threat Level"),
+        ("what_they_do_better", "What They Do Better"),
+        ("what_they_do_worse", "What They Do Worse"),
+        ("blind_spots", "Blind Spots"),
+        ("partnership_potential", "Partnership Potential"),
+        ("estimated_arr_range", "Estimated ARR Range"),
+        ("key_differentiator", "Key Differentiator"),
     ],
 }
 
@@ -93,6 +113,8 @@ def export_to_excel(cache_data: dict, output_path: str) -> bool:
         "Key Features",
         "Tech Signals",
         "Integrations",
+        "API & Developer Ecosystem",
+        "Scalability Signals",
         "Product Maturity",
         "Functionality Gap",
         # Dim 3: Content
@@ -100,7 +122,10 @@ def export_to_excel(cache_data: dict, output_path: str) -> bool:
         "Messaging Clarity",
         "Content Tone",
         "SEO Depth",
+        "Content Strategy Depth",
         "Social Proof",
+        "Trust Signals",
+        "Brand Positioning",
         "Primary CTA",
         "Content Gap",
         # Dim 4: Services
@@ -109,6 +134,8 @@ def export_to_excel(cache_data: dict, output_path: str) -> bool:
         "Pricing Visibility",
         "Packaging",
         "Upsell Mechanics",
+        "Monetisation Sophistication",
+        "Customer Retention Levers",
         "Services Gap",
         # Dim 5: Business Model
         "Business Model",
@@ -117,7 +144,18 @@ def export_to_excel(cache_data: dict, output_path: str) -> bool:
         "GTM Motion",
         "Competitive Position",
         "Growth Stage",
+        "Funding Signals",
+        "Market Share Indicators",
+        "Defensibility",
         "Business Model Gap",
+        # Expert Assessment
+        "Strategic Threat Level",
+        "What They Do Better",
+        "What They Do Worse",
+        "Blind Spots",
+        "Partnership Potential",
+        "Estimated ARR Range",
+        "Key Differentiator",
         # Lists
         "Top Opportunities",
         "Value-Add Ideas",
@@ -147,6 +185,7 @@ def export_to_excel(cache_data: dict, output_path: str) -> bool:
         dim3 = analysis.get("dim3_content_messaging", {}) or {}
         dim4 = analysis.get("dim4_services_products", {}) or {}
         dim5 = analysis.get("dim5_business_model", {}) or {}
+        expert = analysis.get("expert_assessment", {}) or {}
 
         row = [
             domain,
@@ -162,6 +201,8 @@ def export_to_excel(cache_data: dict, output_path: str) -> bool:
             _join_list(dim2.get("key_features", [])),
             dim2.get("tech_signals", ""),
             dim2.get("integrations", ""),
+            dim2.get("api_ecosystem", ""),
+            dim2.get("scalability_signals", ""),
             dim2.get("product_maturity", ""),
             dim2.get("gap_for_your_project", ""),
             # Dim 3
@@ -169,7 +210,10 @@ def export_to_excel(cache_data: dict, output_path: str) -> bool:
             dim3.get("messaging_clarity", ""),
             dim3.get("content_tone", ""),
             dim3.get("seo_depth", ""),
+            dim3.get("content_strategy_depth", ""),
             dim3.get("social_proof", ""),
+            dim3.get("trust_signals", ""),
+            dim3.get("brand_positioning", ""),
             dim3.get("primary_cta", ""),
             dim3.get("gap_for_your_project", ""),
             # Dim 4
@@ -178,6 +222,8 @@ def export_to_excel(cache_data: dict, output_path: str) -> bool:
             dim4.get("pricing_visibility", ""),
             dim4.get("packaging", ""),
             dim4.get("upsell_mechanics", ""),
+            dim4.get("monetisation_sophistication", ""),
+            dim4.get("customer_retention_levers", ""),
             dim4.get("gap_for_your_project", ""),
             # Dim 5
             dim5.get("business_model", ""),
@@ -186,7 +232,18 @@ def export_to_excel(cache_data: dict, output_path: str) -> bool:
             dim5.get("gtm_motion", ""),
             dim5.get("competitive_position", ""),
             dim5.get("growth_stage", ""),
+            dim5.get("funding_signals", ""),
+            dim5.get("market_share_indicators", ""),
+            dim5.get("defensibility", ""),
             dim5.get("gap_for_your_project", ""),
+            # Expert Assessment
+            expert.get("strategic_threat_level", ""),
+            expert.get("what_they_do_better", ""),
+            expert.get("what_they_do_worse", ""),
+            expert.get("blind_spots", ""),
+            expert.get("partnership_potential", ""),
+            expert.get("estimated_arr_range", ""),
+            expert.get("key_differentiator", ""),
             # Lists
             _join_list(analysis.get("top_opportunities", [])),
             _join_list(analysis.get("value_add_ideas", [])),
@@ -430,6 +487,7 @@ def _build_summary_sheet(wb, companies: dict, header_font, header_fill, wrap, th
                 is_label_field = field_key in (
                     "product_maturity", "messaging_clarity", "pricing_visibility",
                     "competitive_position", "growth_stage", "revenue_model",
+                    "strategic_threat_level", "estimated_arr_range",
                 )
                 if is_label_field:
                     label_counts = defaultdict(int)
