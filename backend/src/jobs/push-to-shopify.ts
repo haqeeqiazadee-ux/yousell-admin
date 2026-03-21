@@ -1,8 +1,12 @@
 /**
  * Push-to-Shopify Job Processor
  *
- * Pushes a product to a client's connected Shopify store via the Shopify Admin API.
+ * Pushes a product to a client's connected Shopify store via the GraphQL Admin API.
+ * Uses the `productSet` mutation (REST API is deprecated since April 2025).
  * Feature-flagged: only calls Shopify API when SHOPIFY_PUSH_ENABLED=true.
+ *
+ * @engine store-integration
+ * @queue push-to-shopify
  */
 import { Job } from 'bullmq'
 import { createClient } from '@supabase/supabase-js'
@@ -12,12 +16,53 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || '',
 )
 
+// Inline decrypt since backend doesn't share src/lib path
+import { createDecipheriv } from 'crypto'
+
+function decryptToken(encoded: string): string {
+  const hex = process.env.ENCRYPTION_KEY
+  if (!hex || hex.length !== 64) {
+    throw new Error('ENCRYPTION_KEY not configured (64-char hex string required)')
+  }
+  const key = Buffer.from(hex, 'hex')
+  const packed = Buffer.from(encoded, 'base64')
+  const iv = packed.subarray(0, 12)
+  const authTag = packed.subarray(packed.length - 16)
+  const ciphertext = packed.subarray(12, packed.length - 16)
+  const decipher = createDecipheriv('aes-256-gcm', key, iv)
+  decipher.setAuthTag(authTag)
+  return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8')
+}
+
 interface PushToShopifyData {
   product_id: string
   client_id: string
   shop_product_id: string
   userId?: string
 }
+
+const SHOPIFY_API_VERSION = '2025-01'
+
+const PRODUCT_SET_MUTATION = `
+  mutation productSet($input: ProductSetInput!, $synchronous: Boolean!) {
+    productSet(input: $input, synchronous: $synchronous) {
+      product {
+        id
+        title
+        handle
+        onlineStoreUrl
+        status
+        variants(first: 5) {
+          nodes { id price }
+        }
+      }
+      userErrors {
+        field
+        message
+      }
+    }
+  }
+`
 
 export async function processPushToShopify(job: Job<PushToShopifyData>) {
   const { product_id, client_id, shop_product_id } = job.data
@@ -75,53 +120,87 @@ export async function processPushToShopify(job: Job<PushToShopifyData>) {
       return { status: 'disabled', product_id }
     }
 
-    // Call Shopify Admin API to create product
+    // Decrypt access token
+    const accessToken = decryptToken(channel.access_token_encrypted)
     const shopDomain = (channel.metadata as Record<string, string>)?.shop_domain
     if (!shopDomain) {
       throw new Error('Shop domain not found in channel metadata')
     }
 
-    const shopifyResponse = await fetch(
-      `https://${shopDomain}/admin/api/2024-01/products.json`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Shopify-Access-Token': channel.access_token_encrypted,
-        },
-        body: JSON.stringify({
-          product: {
-            title: product.title,
-            body_html: product.description || '',
-            vendor: 'YouSell',
-            product_type: product.category || '',
-            tags: [product.source, product.trend_stage].filter(Boolean).join(', '),
-            variants: [{
-              price: String(product.price || '0.00'),
-              inventory_management: null,
-            }],
-            images: product.image_url ? [{ src: product.image_url }] : [],
-          },
-        }),
-        signal: AbortSignal.timeout(30000),
+    // Check if this is an update (existing external_product_id)
+    const { data: existingShopProduct } = await supabase
+      .from('shop_products')
+      .select('external_product_id')
+      .eq('id', shop_product_id)
+      .single()
+
+    // Build productSet input
+    const input: Record<string, unknown> = {
+      title: product.title,
+      descriptionHtml: product.description || '',
+      vendor: 'YouSell',
+      productType: product.category || '',
+      tags: [product.source, product.trend_stage].filter(Boolean),
+      status: 'ACTIVE',
+      productOptions: [{ name: 'Default', values: [{ name: 'Default' }] }],
+      variants: [{
+        optionValues: [{ optionName: 'Default', name: 'Default' }],
+        price: String(product.price || '0.00'),
+        position: 1,
+      }],
+    }
+
+    // If updating existing product, include Shopify GID
+    if (existingShopProduct?.external_product_id) {
+      input.id = existingShopProduct.external_product_id
+    }
+
+    // Add images
+    if (product.image_url) {
+      input.files = [{ originalSource: product.image_url, contentType: 'IMAGE' }]
+    }
+
+    // Call Shopify GraphQL Admin API
+    const graphqlUrl = `https://${shopDomain}/admin/api/${SHOPIFY_API_VERSION}/graphql.json`
+    const shopifyResponse = await fetch(graphqlUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Shopify-Access-Token': accessToken,
       },
-    )
+      body: JSON.stringify({
+        query: PRODUCT_SET_MUTATION,
+        variables: { input, synchronous: true },
+      }),
+      signal: AbortSignal.timeout(30000),
+    })
 
     if (!shopifyResponse.ok) {
       const errText = await shopifyResponse.text()
       throw new Error(`Shopify API error ${shopifyResponse.status}: ${errText}`)
     }
 
-    const result = (await shopifyResponse.json()) as Record<string, any>
-    const shopifyProduct = result.product
+    const result = await shopifyResponse.json() as Record<string, any>
+    const productSet = result.data?.productSet
+
+    if (productSet?.userErrors?.length > 0) {
+      const errors = productSet.userErrors.map((e: any) => e.message).join('; ')
+      throw new Error(`Shopify product errors: ${errors}`)
+    }
+
+    const shopifyProduct = productSet?.product
+    if (!shopifyProduct) {
+      throw new Error('productSet returned no product')
+    }
 
     // Update shop_products with success
+    const productUrl = shopifyProduct.onlineStoreUrl || `https://${shopDomain}/products/${shopifyProduct.handle}`
     await supabase
       .from('shop_products')
       .update({
         push_status: 'live',
-        external_product_id: String(shopifyProduct.id),
-        external_url: `https://${shopDomain}/products/${shopifyProduct.handle}`,
+        external_product_id: shopifyProduct.id,
+        external_url: productUrl,
         pushed_at: new Date().toISOString(),
         last_synced_at: new Date().toISOString(),
         sync_error: null,
