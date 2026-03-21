@@ -989,4 +989,182 @@ Each test maps to a `Comm #` from V9_Inter_Engine_Communication_Breakdown.md:
 
 ---
 
-*Document continues in Final Summary...*
+## FINAL SUMMARY: COMPLETE TEST COVERAGE MATRIX
+
+---
+
+### TOTAL TEST COUNT BY SUITE
+
+| Suite | File | Tests | Coverage |
+|-------|------|-------|----------|
+| Suite 1: Discovery Cluster (Engines 1-5) | `inter-engine-L1-discovery-cluster.test.ts` | 42 | 28 Comm # pathways |
+| Suite 2: Intelligence & Supply (Engines 6-10) | `inter-engine-L1-intelligence-supply.test.ts` | 40 | 38 Comm # pathways |
+| Suite 3: Launch & Fulfillment (Engines 11-20) | `inter-engine-L1-launch-fulfillment.test.ts` | 57 | 52 Comm # pathways |
+| Suite 4A: Workflows 1-2 | `inter-engine-L6-workflows.test.ts` | 36 | WF1 (19 steps) + WF2 (7 steps) |
+| Suite 4B: Workflows 3-5 | `inter-engine-L6-workflows.test.ts` | 28 | WF3 (6 steps) + WF4 (7 steps) + WF5 (6 steps) |
+| Suite 5: Resilience & Edge Cases | `inter-engine-L7-resilience.test.ts` | 37 | Error, concurrency, loops, queues |
+| **GRAND TOTAL** | **6 test files** | **240 tests** | **148+ Comm # pathways** |
+
+---
+
+### COVERAGE BY ENGINE (Producer → Consumer)
+
+| Engine | As Producer (Events Out) | As Consumer (Events In) | Shared Table Writes | Shared Table Reads | Test Count |
+|--------|-------------------------|------------------------|--------------------|--------------------|------------|
+| Discovery | 4 event types, 7 queue jobs | 1 (Admin CC trigger) | products, product_scans, trend_signals (seed) | — | 18 |
+| TikTok Discovery | 2 event types | 1 (scan_complete) | tiktok_hashtag_signals, tiktok_videos, tiktok_creators | — | 8 |
+| Scoring | 2 event types (8 fan-out) | 1 (product_discovered) | products (score cols) | trend_signals, tiktok_hashtag_signals, products, competitor_products | 15 |
+| Clustering | 2 event types | 1 (product_scored) | product_clusters | — | 5 |
+| Trend Detection | 2 event types | 4 (scan_complete, videos_found, hashtags_analyzed, trend-scan) | trend_signals | tiktok_hashtag_signals | 10 |
+| Creator Matching | 2 event types | 1 (product_scored indirect) | creator_product_matches | tiktok_videos, tiktok_creators | 6 |
+| Ad Intelligence | 1 event type | 1 (product_discovered) | — | tiktok_videos | 5 |
+| Competitor Intelligence | 2 event types | 2 (product_discovered, product_scored) | competitor_products | — | 9 |
+| Supplier Discovery | 2 event types | 3 (product_scored, margin_alert, batch_complete) | product_suppliers | competitor_products | 12 |
+| Profitability | 2 event types | 3 (product_scored, supplier.found, competitor.detected) | — | product_suppliers, competitor_products | 12 |
+| Financial Modelling | 2 event types | 4 (profitability, supplier, competitor, creator) | financial_models | creator_product_matches | 8 |
+| Launch Blueprint | 2 event types | 6 (financial, profitability, supplier, fulfillment, clustering, competitor) | launch_blueprints | product_clusters, creator_product_matches, competitor_products | 10 |
+| Client Allocation | 2 event types | 3 (product_scored, blueprint.approved, clustering) | product_allocations | product_clusters, financial_models | 7 |
+| Content Creation | 2 event types | 4 (blueprint.approved, allocation, store.pushed, trend) | — | trend_signals, creator_product_matches, competitor_products | 7 |
+| Store Integration | 4 event types | 5 (blueprint.approved, allocation, content, admin deploy, fulfillment) | — | — | 12 |
+| Order Tracking | 3 event types | 2 (store.pushed, store.sync_complete) | orders | — | 8 |
+| Admin Command Center | 2 event types + manual triggers | 10+ event subscriptions | — | All tables (read-only) | 14 |
+| Affiliate Commission | 0 event types (terminal) | 3 (order.received, order.fulfilled, store.pushed) | commissions | — | 6 |
+| Fulfillment Rec | 2 event types | 3 (product_scored, supplier.found, profitability.calculated) | — | product_suppliers | 8 |
+| Opportunity Feed | 0 event types (pure reader) | 4 event subscriptions | — | 9 tables (read-only aggregator) | 10 |
+
+---
+
+### COVERAGE BY COMMUNICATION MECHANISM
+
+| Mechanism | Pathways | Tests | Coverage |
+|-----------|----------|-------|----------|
+| EventBus Events | 46 event types, 52 connections | 139 | 100% of event connections |
+| Database Shared Tables | 13 tables, 65+ dependencies | 40 | All critical data flows |
+| BullMQ Queues | 7 cross-engine queues | 12 | All queue dispatches |
+| Manual API Triggers | 6 admin triggers | 8 | All manual actions |
+| Webhook Pipelines | Shopify order webhooks | 5 | Order capture + processing |
+| **TOTAL** | **148+** | **240** | **Full coverage** |
+
+---
+
+### COVERAGE BY ARCHITECTURAL PATTERN
+
+| Pattern | Description | Tests | Key Test IDs |
+|---------|-------------|-------|-------------|
+| Fan-Out | One event → N subscribers | 8 | TC-3.FAN-*, TC-12.FAN-* |
+| Pipeline | Sequential A → B → C → D | 27 | TC-WF1-S1 through TC-WF1-S19 |
+| Feedback Loop | Bounded circular: A ↔ B | 6 | TC-CIRC-01 through TC-CIRC-06 |
+| Aggregation | Many → One (Opportunity Feed) | 7 | TC-20.005a through TC-20.ALL |
+| Manual Gate | Admin approval checkpoint | 4 | TC-WF1-S13, TC-EC-05 |
+| Broadcast | One event, multiple independent consumers | 4 | TC-3.FAN-a, scoring fan-out tests |
+
+---
+
+### EXECUTION PLAN — IMPLEMENTATION ORDER
+
+Tests should be implemented in this order based on dependency and risk:
+
+#### Phase 1: Foundation (MUST DO FIRST)
+| Priority | Test File | Tests | Rationale |
+|----------|-----------|-------|-----------|
+| P0 | `inter-engine-L7-resilience.test.ts` — Error Isolation (5A) | 8 | If errors aren't isolated, nothing else matters |
+| P0 | Suite 1 Section 1O: Scoring Fan-Out | 4 | Most critical architectural pattern (8 subscribers) |
+
+#### Phase 2: Core Pairwise Chains
+| Priority | Test File | Tests | Rationale |
+|----------|-----------|-------|-----------|
+| P1 | Suite 1: Discovery → Scoring → Clustering chain | 12 | Primary data pipeline |
+| P1 | Suite 1: TikTok → Trend → Scoring data deps | 8 | Scoring accuracy depends on these |
+| P1 | Suite 2: Scoring → Supplier/Competitor → Profitability | 12 | Financial pipeline accuracy |
+
+#### Phase 3: Financial & Launch Pipeline
+| Priority | Test File | Tests | Rationale |
+|----------|-----------|-------|-----------|
+| P2 | Suite 2: Profitability → Financial Modelling → Launch Blueprint | 8 | Blueprint generation accuracy |
+| P2 | Suite 3: Blueprint Approval Fan-Out | 6 | Critical gate for launch phase |
+| P2 | Suite 3: Client Allocation → Content → Store chain | 10 | Product deployment pipeline |
+
+#### Phase 4: Order & Commission Pipeline
+| Priority | Test File | Tests | Rationale |
+|----------|-----------|-------|-----------|
+| P3 | Suite 3: Store → Order Tracking → Affiliate Commission | 10 | Revenue tracking accuracy |
+| P3 | Suite 3: Admin CC event subscriptions | 8 | Operator visibility |
+
+#### Phase 5: End-to-End Workflows
+| Priority | Test File | Tests | Rationale |
+|----------|-----------|-------|-----------|
+| P4 | Suite 4A: Workflow 1 (Full Lifecycle) | 27 | The ultimate integration test |
+| P4 | Suite 4A: Workflow 2 (Trend Reversal) | 9 | Most common reactive scenario |
+| P4 | Suite 4B: Workflows 3-5 | 28 | Remaining business scenarios |
+
+#### Phase 6: Resilience & Edge Cases
+| Priority | Test File | Tests | Rationale |
+|----------|-----------|-------|-----------|
+| P5 | Suite 5: Concurrency tests | 6 | Production readiness |
+| P5 | Suite 5: Circular loop bounds | 6 | Prevent infinite loops |
+| P5 | Suite 5: Edge cases + queue resilience | 17 | Corner case coverage |
+| P5 | Suite 3: Opportunity Feed aggregation | 7 | Read-only aggregator validation |
+
+---
+
+### TEST INFRASTRUCTURE REQUIREMENTS
+
+```
+Required Test Setup:
+├── Mock Factory
+│   ├── createMockSupabase()          — Shared mock DB with realistic data
+│   ├── createMockBullMQ()            — Mock queue with job tracking
+│   ├── createMockApify()             — Mock scraper responses
+│   ├── createMockClaude()            — Mock AI API responses
+│   └── createMockShopifyAPI()        — Mock store API responses
+├── Test Utilities
+│   ├── waitForEvent(eventName, timeout)  — Async event waiter
+│   ├── captureEvents(engineName)         — Spy on all events for an engine
+│   ├── createTestProduct(overrides)      — Factory for test product data
+│   ├── createTestScores(overrides)       — Factory for score payloads
+│   └── assertEventChain(events[])        — Verify ordered event sequence
+├── Shared Test Data
+│   ├── fixtures/products.json            — Realistic product records
+│   ├── fixtures/suppliers.json           — Supplier test data
+│   ├── fixtures/competitors.json         — Competitor test data
+│   └── fixtures/creators.json            — Creator match test data
+└── Test Configuration
+    ├── vitest.config.integration.ts      — Separate config for integration tests
+    ├── setup/eventbus-reset.ts           — Reset EventBus between tests
+    └── setup/registry-reset.ts           — Reset EngineRegistry between tests
+```
+
+---
+
+### SUCCESS CRITERIA
+
+All 240 tests must pass for the V9 engine system to be considered production-ready:
+
+| Criterion | Threshold | Measurement |
+|-----------|-----------|-------------|
+| All pairwise chains verified | 139/139 pass | Suite 1-3 |
+| All workflows complete end-to-end | 64/64 pass | Suite 4A-4B |
+| Error isolation proven | 8/8 pass | Suite 5A |
+| No infinite loops | 6/6 pass | Suite 5C |
+| All edge cases handled | 12/12 pass | Suite 5D |
+| Queue resilience confirmed | 5/5 pass | Suite 5E |
+| Zero dropped events under load | TC-CONC-01 pass | Suite 5B |
+| Correlation IDs trace end-to-end | TC-WF1-TRACE pass | Suite 4A |
+
+---
+
+### DOCUMENT CROSS-REFERENCE
+
+| Document | Relationship |
+|----------|-------------|
+| `V9_Inter_Engine_Communication_Breakdown.md` | Source of all 148+ Comm # entries tested here |
+| `V9_Review_Engine_Architecture.md` | Engine architecture this strategy validates |
+| `docs/YouSell_Platform_Technical_Specification_v8.md` | Master architecture specification |
+| `tests/engine-system.test.ts` | Existing infrastructure tests (EventBus, Registry) |
+| `tests/engine*-*.test.ts` | Existing individual engine logic tests |
+
+---
+
+**END OF V9 INTER-ENGINE COMMUNICATION TEST STRATEGY**
+
+**Total: 240 tests across 6 test files covering 148+ communication pathways, 5 end-to-end workflows, 46 event types, 13 shared tables, 7 queue connections, and 6 architectural patterns.**
