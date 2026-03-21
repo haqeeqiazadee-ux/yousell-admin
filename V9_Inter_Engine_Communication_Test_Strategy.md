@@ -737,4 +737,97 @@ Each test maps to a `Comm #` from V9_Inter_Engine_Communication_Breakdown.md:
 
 ---
 
-*Document continues in Test Suite 4...*
+## TEST SUITE 4A: END-TO-END WORKFLOWS 1-2
+
+**File:** `tests/inter-engine-L6-workflows.test.ts`
+**Purpose:** Verify complete multi-engine event cascades that represent real business flows
+
+---
+
+### WORKFLOW 1: FULL PRODUCT LIFECYCLE (Discovery → Sale)
+
+**The longest pipeline in the system: 19 steps, 15+ engines, 20+ events**
+
+#### Phase A: Discovery & Intelligence (Steps 1-5)
+
+| Test ID | Test Name | Description | Setup | Trigger | Expected Cascade | Steps |
+|---------|-----------|-------------|-------|---------|-----------------|-------|
+| TC-WF1-S1 | Admin triggers product scan | Verify manual scan dispatches Discovery job | Mock BullMQ, Supabase. | Admin CC dispatches `product-scan` job with { keywords: ["portable blender"], sources: ["tiktok"] } | Discovery receives job; begins scanning | Step 1 |
+| TC-WF1-S2a | Discovery publishes product_discovered to 3 subscribers | Verify fan-out after product found | Discovery finds product. | Discovery emits `discovery.product_discovered` | Scoring, Competitor Intel, and Ad Intel all receive the event simultaneously | Step 2 |
+| TC-WF1-S2b | Discovery publishes scan_complete to 2 subscribers | Verify scan batch completion fan-out | Discovery completes scan batch. | Discovery emits `discovery.scan_complete` | Trend Detection AND TikTok Discovery both receive the event | Step 2b |
+| TC-WF1-S2c | Discovery enqueues trend-scan job | Verify queue-based handoff to Trend Detection | Discovery's product-scan processor completes. | `trend-scan` job enqueued | BullMQ queue receives { keyword: "portable blender", source: "tiktok", scanId } | Step 2c |
+| TC-WF1-S2d | Discovery self-enqueues enrich-product | Verify internal enrichment pipeline | Discovery finds new product URL. | `enrich-product` job enqueued | Discovery enrichment worker receives { productId, source, rawUrl } | Step 2d |
+| TC-WF1-S3 | Trend Detection analyzes keyword and writes trend_signals | Verify trend analysis from scan data | Trend Detection receives scan_complete. Mock trend_signals table. | Trend Detection processes scan data | Writes trend score to DB; emits `trend.trend_detected` with { keyword, score, direction: "rising" } | Step 3 |
+| TC-WF1-S4 | TikTok Discovery scans and publishes to Trend Detection | Verify TikTok video/hashtag analysis | TikTok Discovery receives scan_complete. Mock Apify. | TikTok Discovery processes | Emits `tiktok.videos_found` AND `tiktok.hashtags_analyzed` → both reach Trend Detection | Step 4 |
+| TC-WF1-S5 | Scoring calculates composite from 4 data sources | Verify full scoring pipeline | Mock: trend_signals (85), tiktok_hashtag_signals (accel: 0.8), products ($29.99), competitor_products (avg: $24.99). | Scoring receives product_discovered + reads 4 tables | Emits `scoring.product_scored` with composite ~77, tier: "WARM" | Step 5 |
+
+#### Phase B: Analysis & Supply Chain (Steps 6-10)
+
+| Test ID | Test Name | Description | Setup | Trigger | Expected Cascade | Steps |
+|---------|-----------|-------------|-------|---------|-----------------|-------|
+| TC-WF1-S6 | Scoring fan-out triggers Competitor Intelligence (score >= 60) | Verify threshold gate | Score: 77 (WARM). | `scoring.product_scored` emitted | Competitor Intel receives; scans; emits `competitor.detected` → Profitability, Financial Modelling | Step 6 |
+| TC-WF1-S6b | Competitor batch_complete triggers Supplier Discovery | Verify cross-reference flow | Competitor Intel finishes scanning. | Emits `competitor.batch_complete` | Supplier Discovery receives; cross-references competitor data | Step 6b |
+| TC-WF1-S7 | Scoring fan-out triggers Supplier Discovery (score >= 60) | Verify supplier search initiated | Score: 77. | `scoring.product_scored` emitted | Supplier Discovery searches AliExpress; emits `supplier.found` → Profitability, Financial Modelling, Fulfillment Rec | Step 7 |
+| TC-WF1-S7b | Verified supplier reaches Launch Blueprint | Verify verification gate | Supplier passes checks. | `supplier.verified` emitted | Launch Blueprint receives verified supplier data | Step 7b |
+| TC-WF1-S8 | Profitability calculates margins from supplier + competitor | Verify multi-source margin calculation | COGS: $8.50. Competitor avg: $24.99. Selling: $29.99. | Profitability receives supplier.found + competitor.detected | Emits `profitability.calculated` { margin: 12.50, marginPercent: 42% } | Step 8 |
+| TC-WF1-S8b | Low margin triggers margin_alert cascade | Verify margin < 20% path | COGS: $22. Selling: $29.99. Margin: 8%. | Profitability calculates | Emits `profitability.margin_alert` → Supplier Discovery + Admin CC | Step 8b |
+| TC-WF1-S9 | Fulfillment Rec recommends model | Verify fulfillment selection | MOQ: 1, margin: 42%. | Receives supplier.found + profitability.calculated | Emits `fulfillment.recommended` { type: "dropship" } → Launch Blueprint, Store Integration | Step 9 |
+| TC-WF1-S10 | Financial Modelling builds ROI | Verify comprehensive model | All financial data available. | Receives profitability + supplier + competitor data | Emits `financial.model_generated` { roi: 3.2, breakEvenUnits: 40 } → Launch Blueprint | Step 10 |
+
+#### Phase C: Launch Preparation (Steps 11-15)
+
+| Test ID | Test Name | Description | Setup | Trigger | Expected Cascade | Steps |
+|---------|-----------|-------------|-------|---------|-----------------|-------|
+| TC-WF1-S11 | Creator Matching runs in parallel with analysis | Verify parallel execution | Score: 77. Mock creator DB. | Receives product_scored (parallel with 6-10) | Emits `creator.matches_complete` { matchesCreated: 5 } → Opportunity Feed | Step 11 |
+| TC-WF1-S12 | Launch Blueprint generates comprehensive plan | Verify all data assembled | All upstream data ready. | Blueprint has all required inputs | Emits `blueprint.generated` → Admin CC | Step 12 |
+| TC-WF1-S13 | Admin approval triggers 3-way fan-out | Verify CRITICAL manual gate | Admin approves. | `blueprint.approved` emitted | Client Allocation + Content Creation + Store Integration all receive | Step 13 |
+| TC-WF1-S14 | Client Allocation assigns product to client | Verify tier-based allocation | Premium clients available. | Receives blueprint.approved | Emits `allocation.product_allocated` { clientId, tier: "Premium" } | Step 14 |
+| TC-WF1-S15 | Content Creation generates client-branded content | Verify AI generation | Mock Claude Haiku. | Receives allocation.product_allocated | Emits `content.generated` for description + ad copy + SEO | Step 15 |
+
+#### Phase D: Deployment & Sales (Steps 16-19)
+
+| Test ID | Test Name | Description | Setup | Trigger | Expected Cascade | Steps |
+|---------|-----------|-------------|-------|---------|-----------------|-------|
+| TC-WF1-S16 | Store Integration pushes to Shopify | Verify store push with content | Content + allocation ready. Mock Shopify API. | Receives content.generated | Emits `store.product_pushed` → Order Tracking, Affiliate Commission, Content Creation | Step 16 |
+| TC-WF1-S17 | Order Tracking detects new order | Verify order capture | Mock Shopify webhook. | Order received | Emits `order.received` { amount: 29.99 } → Admin CC, Affiliate Commission | Step 17 |
+| TC-WF1-S18 | Affiliate Commission records pending commission | Verify tracking | Rate: 15%. Amount: $29.99. | Receives order.received | Records $4.50 commission, status: "pending" | Step 18 |
+| TC-WF1-S19 | Order fulfillment completes lifecycle | Verify end-to-end | Fulfilled with tracking. | `order.fulfilled` + `order.tracking_sent` emitted | Admin CC updated; commission → "payable"; tracking email sent | Step 19 |
+
+#### Workflow 1 — Full Chain Validation
+
+| Test ID | Test Name | Description |
+|---------|-----------|-------------|
+| TC-WF1-FULL | Complete 19-step lifecycle end-to-end | Wire all 15+ engines. Trigger step 1. Verify 2-12 auto-complete. Manually trigger step 13. Verify 14-19 auto-complete. Confirm: order.fulfilled received, commission recorded, tracking sent. |
+| TC-WF1-TRACE | Correlation IDs trace through entire lifecycle | Verify single correlationId propagates from Discovery → Order Tracking across all 19 steps. |
+| TC-WF1-COLD | COLD product terminates at step 5 | Emit scoring.product_rejected. Verify NO engines from steps 6-19 activate. |
+
+---
+
+### WORKFLOW 2: TREND REVERSAL RESPONSE
+
+**Reactive workflow: 7 steps, 5 engines, operator decision required**
+
+| Test ID | Test Name | Description | Setup | Trigger | Expected Cascade | Steps |
+|---------|-----------|-------------|-------|---------|-----------------|-------|
+| TC-WF2-S1 | Trend Detection detects direction reversal | Verify trend monitoring | Mock: "fidget spinner" was "rising" → now "falling". | Trend Detection analyzes updated data | Emits `trend.direction_changed` { keyword, direction: "falling", previousDirection: "rising" } → Admin CC | Step 1 |
+| TC-WF2-S2 | Admin CC surfaces alert to operator | Verify notification | Receives direction_changed. | Admin CC processes | Creates urgent alert: "Trend Reversal: fidget spinner FALLING"; shows affected product count | Step 2 |
+| TC-WF2-S3 | Admin triggers manual re-score | Verify re-scoring | Operator clicks "Re-Score". | Admin CC dispatches scoring-queue jobs | Scoring re-calculates with updated trend_signals | Step 3 |
+| TC-WF2-S4 | Scoring recalculates with new trend data | Verify score update | trend_signals now: direction "falling", score: 25 (was 85). | Scoring recalculates | Composite drops significantly; tier may change HOT → WATCH | Step 4 |
+| TC-WF2-S5 | Profitability recalculates on lower projections | Verify downstream cascade | Lower score → reduced volume. | Profitability receives updated product_scored | Recalculates margins; may emit margin_alert | Step 5 |
+| TC-WF2-S6 | Admin CC receives margin_alert | Verify double-alert | Profitability emits margin_alert. | Admin CC receives | Displays: "Low margin: fidget spinner (was 42%, now 15%)" | Step 6 |
+| TC-WF2-S7 | Admin pauses store listings | Verify halt action | Operator decides to halt. | Admin CC → Store Integration pause | Active listings deactivated; no new orders | Step 7 |
+| TC-WF2-FULL | Complete trend reversal workflow | Wire 5 engines. Simulate reversal. Verify all 7 steps with correct data flow and operator alerts. |
+
+---
+
+### SECTION 4A SUMMARY
+
+| Workflow | Steps | Tests | Engines Involved |
+|----------|-------|-------|-----------------|
+| WF1: Full Product Lifecycle | 19 | 27 tests (24 steps + 3 validation) | 15+ engines |
+| WF2: Trend Reversal Response | 7 | 9 tests (8 steps + 1 validation) | 5 engines |
+| **TOTAL SECTION 4A** | **26** | **36 tests** | |
+
+---
+
+*Document continues in Test Suite 4B...*
