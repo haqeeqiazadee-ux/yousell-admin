@@ -50,6 +50,8 @@ function mockChain(data: unknown = null, error: unknown = null) {
   chain.select = vi.fn().mockReturnValue(chain)
   chain.insert = vi.fn().mockReturnValue(chain)
   chain.update = vi.fn().mockReturnValue(chain)
+  chain.upsert = vi.fn().mockReturnValue(chain)
+  chain.delete = vi.fn().mockReturnValue(chain)
   chain.eq = vi.fn().mockReturnValue(chain)
   chain.gt = vi.fn().mockReturnValue(chain)
   chain.lte = vi.fn().mockReturnValue(chain)
