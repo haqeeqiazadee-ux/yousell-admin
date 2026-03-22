@@ -1111,3 +1111,14 @@ Engine inventory (all 20):
 - **Result:** SUCCESS — TypeScript compiles (excluding pre-existing path alias warnings)
 - **Next step:** Task 15.010: Build GovernorDispatch class
 
+------------------------------------------------------------
+
+### [2026-03-22 01:40] DONE — Task 15.010 + 15.011: GovernorDispatch + GovernorMeter
+
+- **Task:** Build Dispatch (routing + swap resolution) and Meter (async usage recording)
+- **Batch:** 15.010-15.011
+- **Action:** Created GovernorDispatch with swap cache (30s TTL), engine resolution, timeout-wrapped execution. Created GovernorMeter with ledger write, envelope counter increment, and alert threshold checks (warn/throttle/block events).
+- **Files touched:** `src/lib/engines/governor/dispatch.ts` (new), `src/lib/engines/governor/meter.ts` (new)
+- **Result:** SUCCESS — TypeScript compiles clean
+- **Next step:** Task 15.012-15.013: Build EngineGovernor singleton + barrel export
+
