@@ -1,0 +1,225 @@
+You are a world-class SaaS product designer, UX strategist, and frontend systems architect.
+
+Your task is to design a revolutionary, best-in-class UI/UX system for an ecommerce SaaS platform called Yousell.online
+
+This includes:
+
+Marketing Website (public-facing)
+Customer Dashboard (end users / merchants)
+Admin Dashboard (internal ops & analytics)
+
+The benchmark reference is Triple Whale (especially their pricing page and product UX), but the goal is to surpass it significantly in clarity, performance, design innovation, and usability.
+
+🎯 OBJECTIVE
+
+Design a modern, scalable, ultra-premium SaaS interface system (2026 standard) that is:
+
+Visually exceptional (top 0.1% SaaS design)
+Extremely intuitive (minimal cognitive load)
+Blazing fast across all devices
+Fully accessible (WCAG 2.1+)
+Built with reusable design systems
+Motion-enhanced but not distracting
+Conversion-optimized
+
+🧠 THINKING MODE
+
+You must:
+
+Think like a Head of Product + Design + Frontend Architect
+Avoid generic advice — be extremely specific and actionable
+Justify design decisions using UX principles
+Provide system-level thinking, not just screens
+
+🧩 PART 1: DESIGN SYSTEM FOUNDATION
+1. Design Language
+
+Define a complete design philosophy:
+
+Theme (e.g. “Obsidian Minimal SaaS”)
+Color system (primary, secondary, semantic, dark/light modes)
+Typography scale (font pairing, hierarchy)
+Spacing system (8pt grid or better)
+Border radius, shadows, depth system
+Tokenized design variables
+
+Include:
+
+Light + Dark mode strategy
+High contrast accessibility variants
+2. Tech Stack & UI Framework
+
+Specify EXACT stack:
+
+Tailwind CSS (or alternative)
+Component system: shadcn/ui + Radix UI
+Icons: Lucide
+Motion: Framer Motion
+
+Also define:
+
+State management approach
+Design tokens system (CSS variables or Tailwind config)
+Responsiveness strategy (mobile-first vs adaptive)
+3. Interaction Model
+
+Define how the UI feels:
+
+Motion principles (timing, easing, physics)
+Hover / active / focus states
+Micro-interactions (buttons, toggles, cards)
+Loading states (skeletons, shimmer, pulse)
+Feedback patterns (success, error, warning)
+
+Include:
+
+Command Bar (CMD + K global search)
+Keyboard-first navigation
+Gesture support (mobile)
+
+🧱 PART 2: INFORMATION ARCHITECTURE
+1. Global Layout System
+
+Design a unified layout system:
+
+Collapsible sidebar navigation
+Top navigation bar (context-aware)
+Main content canvas
+Modular “Bento Grid” system for dashboards
+
+Include:
+
+Multi-level navigation hierarchy
+Breadcrumb system
+Context switching (multi-store / multi-account)
+2. Navigation Philosophy
+
+Define:
+
+How users move across the system
+How to reduce cognitive load
+How to surface important actions
+
+Include:
+
+Progressive disclosure
+Smart defaults
+Predictive UI behavior
+
+📊 PART 3: DASHBOARD EXPERIENCE
+Customer Dashboard (Merchant)
+
+Design modules like:
+
+Live analytics overview
+Revenue + attribution tracking
+Product performance
+Order insights
+AI recommendations
+
+Include:
+
+Real-time data visualization patterns
+Chart types (line, bar, cohort, heatmaps)
+Personalization (user-specific insights)
+Admin Dashboard
+
+Design for:
+
+User management
+System monitoring
+Scraping / automation control
+Logs & debugging
+Billing & subscriptions
+
+Include:
+
+Power-user workflows
+Bulk actions
+Advanced filtering
+
+🌐 PART 4: MARKETING WEBSITE
+
+Design:
+
+Homepage (high-conversion SaaS layout)
+Pricing page (inspired by Triple Whale but better)
+Feature pages
+Integrations page
+Demo / onboarding flow
+
+Focus on:
+
+Conversion psychology
+Visual storytelling
+Trust signals
+Interactive sections
+
+🎨 PART 5: VISUAL INNOVATION
+
+Push beyond standard SaaS:
+
+Bento grid layouts
+Glassmorphism (subtle, not overused)
+Data-driven UI visuals
+AI-generated insights blocks
+Animated gradients / depth
+⚙️ PART 6: STATES & SYSTEM BEHAVIOR
+
+Define ALL UI states:
+
+Default
+Hover
+Active
+Disabled
+Loading (pulse/shimmer)
+Error
+Empty states
+
+Include:
+
+Design tokens for each state
+Animation behavior
+
+♿ PART 7: ACCESSIBILITY
+
+Ensure:
+
+WCAG 2.1 compliance
+Keyboard navigation for everything
+ARIA labels for all components
+Color contrast compliance
+Focus states clearly visible
+
+🔁 PART 8: ITERATIVE REFINEMENT
+1. Benchmark “Vibe”
+
+Take inspiration from:
+
+Stripe
+Linear
+Vercel
+Notion
+
+But DO NOT copy — evolve beyond them.
+
+2. Output Format
+
+You MUST provide:
+
+Full design system spec
+Wireframe-level layouts (textual + structured)
+Component breakdown
+Interaction behavior
+Sample UI sections (detailed descriptions)
+Developer-ready implementation guidance
+
+
+🚨 FINAL REQUIREMENTS
+Be extremely detailed
+Avoid vague statements
+Think like you are designing a billion-dollar SaaS
+Prioritize clarity, speed, and scalability
+Every decision must have a reason
+
+Make this the most advanced ecommerce SaaS UI system ever designed.
