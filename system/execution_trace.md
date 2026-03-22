@@ -1056,3 +1056,14 @@ Engine inventory (all 20):
 - **Result:** SUCCESS
 - **Next step:** Begin Phase 1 implementation — Task G-001: Define Governor type interfaces in `src/lib/engines/governor/types.ts`
 
+------------------------------------------------------------
+
+### [2026-03-22 00:30] DONE — Add Engine Governor tasks to V9 Task Breakdown
+
+- **Task:** Integrate 63 atomic Engine Governor tasks into V9_Engine_Task_Breakdown.md as ENGINE 15
+- **Action:** Added tasks 15.001–15.063 across 5 phases (Foundation, Wiring, Admin Dashboard, AI Automation, Testing). Updated summary table (668→731 tasks, 14→15 engines), task type counts, and footer.
+- **Files touched:**
+  - `docs/v9/V9_Engine_Task_Breakdown.md` (modified — added ENGINE 15 section)
+- **Result:** SUCCESS
+- **Next step:** Begin Phase 1 implementation — Task 15.001: Define Governor type interfaces
+
