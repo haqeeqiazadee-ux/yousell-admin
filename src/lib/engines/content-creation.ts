@@ -35,7 +35,7 @@ export interface ContentRecord {
   created_at?: string;
 }
 
-type ContentType = 'description' | 'social_post' | 'ad_copy' | 'video_script' | 'email';
+type ContentType = 'description' | 'social_post' | 'ad_copy' | 'video_script' | 'email' | 'image' | 'carousel' | 'short_video';
 
 /** Credit costs per content type */
 const CREDIT_COSTS: Record<ContentType, { haiku: number; sonnet: number }> = {
@@ -44,6 +44,9 @@ const CREDIT_COSTS: Record<ContentType, { haiku: number; sonnet: number }> = {
   ad_copy: { haiku: 2, sonnet: 5 },
   video_script: { haiku: 3, sonnet: 8 },
   email: { haiku: 2, sonnet: 5 },
+  image: { haiku: 2, sonnet: 2 },       // Bannerbear generation
+  carousel: { haiku: 5, sonnet: 5 },    // Multi-slide Bannerbear
+  short_video: { haiku: 5, sonnet: 5 }, // Shotstack video rendering
 };
 
 /** Token limits per content type */
@@ -53,6 +56,9 @@ const TOKEN_LIMITS: Record<ContentType, number> = {
   ad_copy: 300,
   video_script: 1000,
   email: 500,
+  image: 100,        // Caption/alt text only
+  carousel: 300,     // Multi-slide captions
+  short_video: 500,  // Video script narration
 };
 
 export class ContentCreationEngine implements Engine {
@@ -207,15 +213,75 @@ export class ContentCreationEngine implements Engine {
         competitorContext,
       });
 
-      // In production: actual Claude API call
-      // const anthropic = new Anthropic();
-      // const response = await anthropic.messages.create({
-      //   model: modelUsed === 'sonnet' ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
-      //   max_tokens: TOKEN_LIMITS[input.contentType],
-      //   system: systemPrompt,
-      //   messages: [{ role: 'user', content: userPrompt }],
-      // });
-      const content = `[AI-generated ${input.contentType} for "${input.productTitle}" on ${input.platform}]`;
+      // Generate content via Claude API (Haiku for bulk, Sonnet for HOT tier)
+      const anthropicKey = process.env.ANTHROPIC_API_KEY;
+      let content: string;
+
+      if (anthropicKey) {
+        const model = modelUsed === 'sonnet' ? 'claude-sonnet-4-5-20250514' : 'claude-haiku-4-5-20251001';
+        const maxTokens = TOKEN_LIMITS[input.contentType] || 400;
+
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': anthropicKey,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model,
+            max_tokens: maxTokens,
+            system: systemPrompt,
+            messages: [{ role: 'user', content: userPrompt }],
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json() as Record<string, unknown>;
+          const textBlock = ((result.content as Array<Record<string, unknown>>)?.[0]);
+          content = (textBlock?.text as string) || `[Generation failed — empty response]`;
+        } else {
+          console.error(`[ContentCreation] Claude API error: ${response.status}`);
+          content = `[Generation failed — API error ${response.status}]`;
+        }
+      } else {
+        // Fallback when ANTHROPIC_API_KEY not set (dev/test)
+        content = `[AI-generated ${input.contentType} for "${input.productTitle}" on ${input.platform}]`;
+      }
+
+      // V9 Tasks 9.18-9.21: Media generation (image/video) when applicable
+      let mediaUrl: string | undefined;
+      try {
+        if (input.contentType === 'image' || input.contentType === 'carousel') {
+          const { isBannerbearConfigured, generateProductImage } = await import('../integrations/bannerbear/client');
+          if (isBannerbearConfigured()) {
+            const templateUid = process.env.BANNERBEAR_DEFAULT_TEMPLATE || '';
+            if (templateUid) {
+              const imageResult = await generateProductImage(templateUid, {
+                title: input.productTitle,
+                price: 0,
+                description: input.productDescription,
+              });
+              mediaUrl = imageResult.imageUrl || imageResult.imageUrlPng;
+              console.log(`[ContentCreation] Bannerbear image queued: ${imageResult.uid}`);
+            }
+          }
+        } else if (input.contentType === 'short_video') {
+          const { isShotstackConfigured, generateProductVideo } = await import('../integrations/shotstack/client');
+          if (isShotstackConfigured()) {
+            const videoResult = await generateProductVideo({
+              title: input.productTitle,
+              price: 0,
+              imageUrls: [], // Would come from product images
+              description: input.productDescription,
+            });
+            console.log(`[ContentCreation] Shotstack video render submitted: ${videoResult.id}`);
+          }
+        }
+      } catch (mediaErr) {
+        console.error('[ContentCreation] Media generation error:', mediaErr);
+        // Non-fatal — text content still available
+      }
 
       // Write content to DB
       const record: ContentRecord = {
@@ -324,6 +390,9 @@ export class ContentCreationEngine implements Engine {
       ad_copy: `You are a performance marketing copywriter. Write ad copy for ${platform} that follows the AIDA framework (Attention, Interest, Desire, Action). Include a hook, key benefits, social proof elements, and a strong CTA.`,
       video_script: `You are a video script writer for ${platform}. Write a script that hooks viewers in the first 3 seconds, demonstrates the product benefit, and ends with a clear CTA. Include visual directions and timing notes.`,
       email: `You are an email marketing specialist. Write a conversion-focused email with a compelling subject line, personalized opening, benefit-driven body, and clear CTA. Keep it scannable with short paragraphs.`,
+      image: `You are a visual content strategist. Write a short, compelling caption and alt text for a product image on ${platform}. Keep it under 50 words.`,
+      carousel: `You are a carousel content creator. Write captions for a 5-slide product carousel on ${platform}. Each slide needs a headline (under 10 words) and supporting text (under 25 words).`,
+      short_video: `You are a short-form video strategist for ${platform}. Write a 30-second video narration script with scene descriptions, on-screen text, and timing notes. Hook in first 3 seconds.`,
     };
     return prompts[contentType] || prompts.description;
   }

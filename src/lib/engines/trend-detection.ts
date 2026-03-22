@@ -21,6 +21,49 @@ interface TrendSignal {
   direction: 'rising' | 'stable' | 'declining';
 }
 
+/** V9 Task 1.066: Trend lifecycle stage classification */
+type TrendLifecycleStage = 'emerging' | 'rising' | 'exploding' | 'saturated';
+
+/**
+ * Classify trend lifecycle stage based on score + velocity.
+ * V9 Tasks 1.066-1.068
+ */
+function classifyLifecycleStage(
+  score: number,
+  growth: number,
+  platformCount: number,
+): TrendLifecycleStage {
+  if (score >= 80 && growth > 0.3) return 'exploding';
+  if (score >= 60 && growth > 0.1) return 'rising';
+  if (score >= 40 && growth <= 0.1 && growth >= -0.1) return 'saturated';
+  return 'emerging';
+}
+
+/**
+ * Calculate cross-platform pre-viral score from multiple signals.
+ * V9 Task 1.065: Aggregate signals from 14 platforms
+ */
+function calculatePreViralScore(signal: TrendSignal): {
+  score: number;
+  confidenceTier: 'LOW' | 'MEDIUM' | 'HIGH';
+} {
+  const baseScore = calculateTrendScore(signal);
+
+  // Cross-platform correlation bonus (V9 Task 1.074-1.075)
+  const platformCount = signal.sources.length;
+  let confidenceTier: 'LOW' | 'MEDIUM' | 'HIGH' = 'LOW';
+  if (platformCount >= 4) confidenceTier = 'HIGH';
+  else if (platformCount >= 2) confidenceTier = 'MEDIUM';
+
+  // Pre-viral threshold check (V9 Task 1.067)
+  const preViralBonus = baseScore >= 70 ? 5 : 0;
+
+  return {
+    score: Math.min(100, baseScore + preViralBonus),
+    confidenceTier,
+  };
+}
+
 /**
  * Detect trends by analyzing:
  * 1. Product tags and categories (frequency + score)
@@ -142,6 +185,9 @@ export async function detectTrends(): Promise<{
       .eq('keyword', trend.keyword)
       .maybeSingle();
 
+    const lifecycleStage = classifyLifecycleStage(trend.trendScore, trend.growth, trend.sources.length);
+    const preViral = calculatePreViralScore(trend);
+
     const row = {
       keyword: trend.keyword,
       trend_score: trend.trendScore,
@@ -150,6 +196,10 @@ export async function detectTrends(): Promise<{
       related_keywords: [],
       source: trend.sources.join(','),
       category: null,
+      lifecycle_stage: lifecycleStage,
+      confidence_tier: preViral.confidenceTier,
+      pre_viral_score: preViral.score,
+      platform_count: trend.sources.length,
     };
 
     if (existing) {
@@ -253,12 +303,13 @@ export class TrendDetectionEngine implements Engine {
    * Run trend detection and emit events for detected trends.
    * Wraps detectTrends with event bus integration.
    */
-  async runDetection(): Promise<{ trendsDetected: number; trendsUpdated: number; errors: string[] }> {
+  async runDetection(): Promise<{ trendsDetected: number; trendsUpdated: number; expired: number; errors: string[] }> {
     this._status = 'running';
     try {
       const result = await detectTrends();
-
       const bus = getEventBus();
+
+      // Emit TREND_DETECTED for new/updated trends
       await bus.emit(
         ENGINE_EVENTS.TREND_DETECTED,
         {
@@ -269,7 +320,40 @@ export class TrendDetectionEngine implements Engine {
         'trend-detection',
       );
 
-      return result;
+      // V9 Tasks 1.078-1.079: Check for expired trends
+      // Trends that dropped from 70+ to below 60 should be marked expired
+      let expired = 0;
+      try {
+        const admin = createAdminClient();
+        const { data: hotTrends } = await admin
+          .from('trend_keywords')
+          .select('id, keyword, trend_score, pre_viral_score')
+          .gte('pre_viral_score', 70);
+
+        if (hotTrends) {
+          for (const trend of hotTrends) {
+            if (trend.trend_score < 60) {
+              // Trend has decayed — mark as expired
+              await admin
+                .from('trend_keywords')
+                .update({ lifecycle_stage: 'expired', trend_direction: 'declining' })
+                .eq('id', trend.id);
+
+              await bus.emit(
+                ENGINE_EVENTS.TREND_DIRECTION_CHANGED,
+                { keyword: trend.keyword, direction: 'expired', previousScore: trend.pre_viral_score, currentScore: trend.trend_score },
+                'trend-detection',
+              );
+
+              expired++;
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[TrendDetection] Error checking expired trends:', err);
+      }
+
+      return { ...result, expired };
     } finally {
       this._status = 'idle';
     }

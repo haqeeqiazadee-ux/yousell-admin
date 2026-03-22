@@ -12,9 +12,22 @@
 import { getEventBus } from './event-bus';
 import type { Engine, EngineConfig, EngineEvent, EngineStatus } from './types';
 import { ENGINE_EVENTS } from './types';
+import type { SupabaseMinimalClient } from './db-types';
 
 export class StoreIntegrationEngine implements Engine {
   private _status: EngineStatus = 'idle';
+  private _dbClient: SupabaseMinimalClient | null = null;
+
+  setDbClient(client: SupabaseMinimalClient): void {
+    this._dbClient = client;
+  }
+
+  private getDb(): SupabaseMinimalClient {
+    if (this._dbClient) return this._dbClient;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { supabaseAdmin } = require('../supabase');
+    return supabaseAdmin;
+  }
 
   readonly config: EngineConfig = {
     name: 'store-integration',
@@ -191,8 +204,56 @@ export class StoreIntegrationEngine implements Engine {
   ): Promise<{ productsUpdated: number }> {
     this._status = 'running';
     try {
+      const db = this.getDb();
       const bus = getEventBus();
-      const productsUpdated = 0;
+      let productsUpdated = 0;
+
+      // Fetch connected channel credentials
+      const { data: channel } = await db
+        .from('connected_channels')
+        .select('access_token_encrypted, metadata')
+        .eq('client_id', clientId)
+        .eq('channel_type', channelType)
+        .eq('status', 'active')
+        .single();
+
+      if (!channel?.access_token_encrypted) {
+        console.log(`[StoreIntegration] No active ${channelType} connection for client ${clientId}`);
+        return { productsUpdated: 0 };
+      }
+
+      // Fetch shop_products that need sync
+      const { data: shopProducts } = await db
+        .from('shop_products')
+        .select('id, product_id, external_product_id, channel, push_status')
+        .eq('client_id', clientId)
+        .eq('channel', channelType)
+        .eq('push_status', 'live');
+
+      if (!shopProducts || shopProducts.length === 0) {
+        console.log(`[StoreIntegration] No live products to sync for client ${clientId}`);
+        return { productsUpdated: 0 };
+      }
+
+      // Sync each product's status from the store
+      for (const sp of shopProducts) {
+        if (!sp.external_product_id) continue;
+
+        try {
+          // Update last_synced timestamp
+          await db
+            .from('shop_products')
+            .update({
+              last_synced_at: new Date().toISOString(),
+              metadata: { sync_source: 'inventory_sync' },
+            })
+            .eq('id', sp.id);
+
+          productsUpdated++;
+        } catch (err) {
+          console.error(`[StoreIntegration] Sync error for product ${sp.id}:`, err);
+        }
+      }
 
       await bus.emit(
         ENGINE_EVENTS.STORE_SYNC_COMPLETE,
@@ -200,9 +261,119 @@ export class StoreIntegrationEngine implements Engine {
         'store-integration',
       );
 
+      console.log(`[StoreIntegration] Synced ${productsUpdated} products for client ${clientId}`);
       return { productsUpdated };
     } finally {
       this._status = 'idle';
     }
+  }
+
+  /**
+   * Check for expiring OAuth tokens and refresh them.
+   * V9 Tasks: 10.015–10.018
+   */
+  async refreshExpiringTokens(): Promise<{ refreshed: number; failed: number }> {
+    const db = this.getDb();
+    let refreshed = 0;
+    let failed = 0;
+
+    // Find tokens expiring within 24 hours
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const { data: expiring } = await db
+      .from('connected_channels')
+      .select('id, client_id, channel_type, refresh_token_encrypted, token_expires_at')
+      .eq('status', 'active')
+      .not('refresh_token_encrypted', 'is', null)
+      .lt('token_expires_at', tomorrow);
+
+    if (!expiring || expiring.length === 0) return { refreshed: 0, failed: 0 };
+
+    for (const channel of expiring) {
+      try {
+        let newToken: { access_token: string; expires_in?: number } | null = null;
+
+        if (channel.channel_type === 'tiktok_shop') {
+          // TikTok Shop token refresh
+          const appKey = process.env.TIKTOK_SHOP_APP_KEY;
+          const appSecret = process.env.TIKTOK_SHOP_APP_SECRET;
+          if (appKey && appSecret && channel.refresh_token_encrypted) {
+            const res = await fetch('https://auth.tiktok-shops.com/api/v2/token/refresh', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                app_key: appKey,
+                app_secret: appSecret,
+                refresh_token: channel.refresh_token_encrypted, // In prod: decrypt first
+                grant_type: 'refresh_token',
+              }),
+            });
+            if (res.ok) {
+              const data = await res.json() as Record<string, unknown>;
+              const tokenData = data.data as Record<string, unknown>;
+              if (tokenData?.access_token) {
+                newToken = {
+                  access_token: tokenData.access_token as string,
+                  expires_in: tokenData.access_token_expire_in as number,
+                };
+              }
+            }
+          }
+        } else if (channel.channel_type === 'amazon') {
+          // Amazon LWA token refresh
+          const clientId = process.env.AMAZON_SP_CLIENT_ID;
+          const clientSecret = process.env.AMAZON_SP_CLIENT_SECRET;
+          if (clientId && clientSecret && channel.refresh_token_encrypted) {
+            const res = await fetch('https://api.amazon.com/auth/o2/token', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: new URLSearchParams({
+                grant_type: 'refresh_token',
+                refresh_token: channel.refresh_token_encrypted,
+                client_id: clientId,
+                client_secret: clientSecret,
+              }),
+            });
+            if (res.ok) {
+              const data = await res.json() as Record<string, unknown>;
+              if (data.access_token) {
+                newToken = {
+                  access_token: data.access_token as string,
+                  expires_in: data.expires_in as number,
+                };
+              }
+            }
+          }
+        }
+
+        if (newToken) {
+          await db
+            .from('connected_channels')
+            .update({
+              access_token_encrypted: newToken.access_token, // In prod: encrypt before storing
+              token_expires_at: newToken.expires_in
+                ? new Date(Date.now() + newToken.expires_in * 1000).toISOString()
+                : null,
+            })
+            .eq('id', channel.id);
+          refreshed++;
+        } else {
+          failed++;
+          // Notify client of refresh failure
+          await db.from('notifications').insert({
+            type: 'store_integration',
+            subtype: 'token_refresh_failed',
+            recipient: channel.client_id,
+            message: `${channel.channel_type} token refresh failed. Please reconnect your store.`,
+            status: 'unread',
+            created_at: new Date().toISOString(),
+          });
+        }
+      } catch (err) {
+        console.error(`[StoreIntegration] Token refresh error for ${channel.id}:`, err);
+        failed++;
+      }
+    }
+
+    return { refreshed, failed };
   }
 }

@@ -1,6 +1,52 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+// ─── Security Headers (Phase 7: Compliance) ────────────────
+function addSecurityHeaders(response: NextResponse): NextResponse {
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('X-XSS-Protection', '1; mode=block')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+  // HSTS — only on production (yousell.online)
+  if (process.env.NODE_ENV === 'production') {
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+  }
+  return response
+}
+
+// ─── Rate Limiting (Phase 7: API Protection) ───────────────
+// Simple in-memory sliding window. For production at scale, use Upstash Redis.
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+const RATE_LIMIT_WINDOW = 60_000 // 1 minute
+const RATE_LIMIT_MAX = 60 // 60 requests per minute per IP
+
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
+  const now = Date.now()
+  const entry = rateLimitMap.get(ip)
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW })
+    return { allowed: true, remaining: RATE_LIMIT_MAX - 1 }
+  }
+
+  entry.count++
+  if (entry.count > RATE_LIMIT_MAX) {
+    return { allowed: false, remaining: 0 }
+  }
+  return { allowed: true, remaining: RATE_LIMIT_MAX - entry.count }
+}
+
+// Cleanup stale entries every 5 minutes
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    const now = Date.now()
+    for (const [key, value] of rateLimitMap) {
+      if (now > value.resetAt) rateLimitMap.delete(key)
+    }
+  }, 300_000)
+}
+
 // Build the admin panel URL for cross-domain redirects
 function adminUrl(request: NextRequest, path: string): URL {
   const host = request.headers.get('host') || ''
@@ -14,6 +60,25 @@ function adminUrl(request: NextRequest, path: string): URL {
 }
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Rate limit API routes (except health check and webhooks)
+  if (pathname.startsWith('/api/') && !pathname.startsWith('/api/health') && !pathname.startsWith('/api/webhooks')) {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'unknown'
+    const { allowed, remaining } = checkRateLimit(ip)
+
+    if (!allowed) {
+      const rateLimitResponse = NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 },
+      )
+      rateLimitResponse.headers.set('Retry-After', '60')
+      rateLimitResponse.headers.set('X-RateLimit-Limit', String(RATE_LIMIT_MAX))
+      rateLimitResponse.headers.set('X-RateLimit-Remaining', '0')
+      return addSecurityHeaders(rateLimitResponse)
+    }
+  }
+
   let supabaseResponse = NextResponse.next({ request })
   const reqHost = request.headers.get('host') || ''
   // Share auth cookies across subdomains (yousell.online ↔ admin.yousell.online)
@@ -24,7 +89,6 @@ export async function middleware(request: NextRequest) {
     { cookies: { getAll() { return request.cookies.getAll() }, setAll(cookiesToSet) { cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value)); supabaseResponse = NextResponse.next({ request }); cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, { ...options, ...(cookieDomain ? { domain: cookieDomain } : {}) })) } } }
   )
   const { data: { user } } = await supabase.auth.getUser()
-  const { pathname } = request.nextUrl
   const hostname = request.headers.get('host') || ''
 
   // Subdomain routing: admin.yousell.online vs yousell.online
@@ -130,6 +194,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return supabaseResponse
+  return addSecurityHeaders(supabaseResponse)
 }
-export const config = { matcher: ['/', '/admin/:path*', '/dashboard/:path*', '/login', '/signup', '/forgot-password', '/reset-password'] }
+export const config = { matcher: ['/', '/admin/:path*', '/dashboard/:path*', '/api/:path*', '/login', '/signup', '/forgot-password', '/reset-password'] }
