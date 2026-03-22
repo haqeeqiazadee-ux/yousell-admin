@@ -97,12 +97,23 @@ Last updated: 2026-03-21 (end of day snapshot)
 - [x] Cron scheduler — hourly BullMQ job for expiry, scheduled workflows, weekly digests
 - [x] Admin dashboard already exists — /admin/automation + /admin/settings automation tab
 
+### Phase 3A: Text Content Engine (COMPLETE — 2026-03-22)
+- [x] Shared content template registry (7 types) + prompt builder + model selection
+- [x] Updated sync + async generation paths to use shared module
+- [x] Batch content generation API (up to 10 items per request)
+- [x] Admin content management page with approval queue
+- [x] Admin content API (list, approve, reject, schedule)
+
+### Phase 6: Reporting & Analytics (COMPLETE — 2026-03-22)
+- [x] Client-facing analytics API (allocations, content, credits, revenue, usage)
+- [x] Product funnel tracking API (6-stage with conversion rates)
+- [x] Admin analytics page already has 8 charts (verified existing)
+- [x] Revenue API already has MRR/ARR/churn/growth (verified existing)
+
 ### Future Platform Build (from execution_plan.md)
-- [ ] Phase 3A: Text Content Engine ← **NEXT PRIORITY**
-- [ ] Phase 3B: Media Content Engine
+- [ ] Phase 3B: Media Content Engine (image/video generation)
 - [ ] Phase 4: Smart Publisher (partially done — distribution.ts built in gap fix)
-- [ ] Phase 6: Reporting & Analytics
-- [ ] Phase 7: Compliance & Launch
+- [ ] Phase 7: Compliance & Launch ← **NEXT PRIORITY**
 
 ------------------------------------------------------------
 
