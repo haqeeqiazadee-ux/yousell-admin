@@ -2768,24 +2768,88 @@ Comprehensive audit of how the single Next.js app serves two domains:
 - Supabase: 41 tables, all migrations applied, Google + Facebook OAuth active
 - DNS: All domains properly configured and verified
 
+### V9 Gap Closure Session (2026-03-22)
+
+5 critical integration gaps identified and closed in V9 engine architecture:
+
+| Gap | Problem | Fix |
+|-----|---------|-----|
+| Apify Actor Wiring | Competitor + Supplier engines had no real API calls | Added real `fetch()` to Apify API with actor IDs, dataset polling, token auth |
+| TikTok + Amazon Push | No job processors for pushing to TikTok Shop or Amazon | Created `push-to-tiktok.ts` (Open API v202309) and `push-to-amazon.ts` (SP-API) |
+| Smart Publisher | Distribution job was a stub with no real platform APIs | Built `distribution.ts` with Meta Graph, TikTok Content Posting, Pinterest Pins, Ayrshare |
+| Reverse Sync | No webhook handling for store-side product changes | Added Shopify webhooks route with HMAC-SHA256 verification for product updates/deletes |
+| Financial Validation | No method to compare projections vs reality | Added `validateModel()` — compares projected vs actual orders, flags >25% drift |
+
+### Phase 2B: TikTok Shop + Amazon OAuth (ALREADY COMPLETE — verified 2026-03-22)
+
+Audit confirmed all 3 channel OAuth flows were already built in Phase 2A:
+- Generic connect route handles Shopify, TikTok Shop, and Amazon
+- Callback route has `exchangeToken()` for all 3 platforms
+- AES-256-GCM encryption for all tokens
+- UI integrations page shows all 3 channels
+- Only requirement: set env vars (TIKTOK_SHOP_APP_KEY, AMAZON_SP_CLIENT_ID, etc.)
+
+### Phase 5: Automation Orchestrator (COMPLETE — 2026-03-22)
+
+Built the automation brain — Engine 15 (automation-orchestrator):
+
+**Engine (`src/lib/engines/automation-orchestrator.ts`):**
+- Event-driven: subscribes to product_discovered, product_scored, content_generated, blueprint_approved, creator_matched
+- Three-tier permission routing: L1 → skip, L2 → queue for approval, L3 → auto-execute
+- Hard guardrail enforcement: daily spend cap, content/upload/outreach volume caps, consecutive error pause
+- Soft limit validation: minimum score, price range, quiet hours, allowed categories
+- Pending action queue with configurable expiry window (default 4 hours)
+- Approve/reject methods for admin to process Level 2 queue
+- Weekly digest generation for client notifications
+
+**Database (`supabase/migrations/030_automation_orchestrator_tables.sql`):**
+- `client_automation_settings` — per-client level config + guardrails + soft limits
+- `automation_pending_actions` — Level 2 approval queue with expiry
+- `automation_daily_usage` — daily counters for guardrail enforcement
+- `automation_action_log` — audit trail for all automated actions
+- All tables have RLS policies for admin + client access
+
+**API Routes:**
+- `GET/PUT /api/admin/automation/settings` — manage client automation levels
+- `GET/POST /api/admin/automation/actions` — approval queue management
+
+**Cron Scheduler (`backend/src/jobs/automation-scheduler.ts`):**
+- Hourly cron (0 * * * *) via BullMQ repeatable jobs
+- Expires stale pending approval actions
+- Runs scheduled discovery scans for Level 3 clients
+- Auto-schedules generated content for Level 3 publishing
+- Generates weekly digest notifications on Mondays
+
+------------------------------------------------------------
+
+## CUMULATIVE PROJECT STATUS (as of 2026-03-22)
+
+### Completed Phases
+| Phase | Name | Date | Key Deliverables |
+|-------|------|------|-----------------|
+| 0 | Engine Architecture Foundation | 2026-03-17 | EventBus, EngineRegistry, Engine interface, 3 engines |
+| B | Backend Alignment | 2026-03-18 | 5 more engines, ENGINE_QUEUE_MAP, 15 job annotations, 10 API routes |
+| C | Frontend Design | 2026-03-18 | Engine API client types, component interfaces, layout contracts |
+| D | Frontend Build | 2026-03-18 | API client, hooks, DataTable, 4 engine components, 8 page wrappers |
+| V9 | V9 Engine Architecture | 2026-03-21 | 12 new engines (20 total), all with DB integration + event handling |
+| 2A | Shopify Connect | 2026-03-21 | GraphQL Admin API, OAuth, encrypted tokens, push/sync jobs, UI |
+| 2B | TikTok Shop + Amazon Connect | 2026-03-22 | Already built in 2A — verified generic OAuth for all 3 channels |
+| V9-Gaps | V9 Gap Closure | 2026-03-22 | 5 gaps: Apify wiring, TikTok/Amazon push, Smart Publisher, reverse sync, financial validation |
+| 5 | Automation Orchestrator | 2026-03-22 | Engine 15, Level 2/3 workflows, approval queue, cron scheduler, 4 DB tables |
+
 ### Remaining Work (in priority order)
-1. Deploy Railway services and verify they start clean
-2. Verify Netlify ↔ Railway backend connectivity
-3. Phase 2A: Shopify Connect (OAuth, store provisioning)
-4. Phase 2B: TikTok Shop Connect
-5. Phase 3A: Text Content Engine
-6. Phase 3B: Media Content Engine
-7. Phase 4: Smart Publisher
-8. Phase 5: Automation Orchestrator
-9. Phase 6: Reporting & Analytics
-10. Phase 7: Compliance & Launch
+1. Phase 3A: Text Content Engine (templates, AI generation pipeline)
+2. Phase 3B: Media Content Engine (image/video generation)
+3. Phase 4: Smart Publisher (already partially done via distribution.ts gap fix)
+4. Phase 6: Reporting & Analytics dashboards
+5. Phase 7: Compliance & Launch prep
 
 ### Key Numbers
-- 20 engines implemented (all with Engine interface)
-- 365 tests passing
-- 41 database tables
+- 21 engines implemented (all with Engine interface)
+- 365+ tests passing
+- 45 database tables (41 original + 4 automation)
 - 80+ Next.js pages
-- 60 API routes (40 admin, 3 auth, 11 dashboard, 4 webhooks, 2 system)
-- 15 BullMQ job processors
+- 64 API routes (40 admin, 3 auth, 11 dashboard, 4 webhooks, 2 system, 4 automation)
+- 18 BullMQ job processors (15 original + push-to-tiktok, push-to-amazon, automation-scheduler)
 - 0 TypeScript errors
 - 0 breaking changes throughout all phases
