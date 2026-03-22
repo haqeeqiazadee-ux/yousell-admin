@@ -23,5 +23,5 @@ export const processInfluencerRefresh = stubProcessor("influencer-refresh");
 export const processSupplierRefresh = stubProcessor("supplier-refresh");
 export const processAffiliateRefresh = stubProcessor("affiliate-refresh");
 export const processAffiliateContentGenerate = stubProcessor("affiliate-content-generate");
-export const processPushToTiktok = stubProcessor("push-to-tiktok");
-export const processPushToAmazon = stubProcessor("push-to-amazon");
+// processPushToTiktok — moved to push-to-tiktok.ts (real implementation)
+// processPushToAmazon — moved to push-to-amazon.ts (real implementation)

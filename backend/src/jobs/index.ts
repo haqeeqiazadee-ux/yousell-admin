@@ -37,8 +37,9 @@ import {
   processTransform, processScoring, processOrderTracking, processFinancialModel, processBlueprint,
   processInfluencerRefresh, processSupplierRefresh,
   processAffiliateRefresh, processAffiliateContentGenerate,
-  processPushToTiktok, processPushToAmazon,
 } from "./stub-workers";
+import { processPushToTiktok } from "./push-to-tiktok";
+import { processPushToAmazon } from "./push-to-amazon";
 import { processPushToShopify } from "./push-to-shopify";
 import { processContentGeneration as processContentQueue } from "./content-generation";
 import { processDistribution } from "./distribution";
