@@ -153,6 +153,21 @@ Single source of truth:
 
 **v8 supersedes ALL prior documents.** If anything conflicts, v8 wins.
 
+### V9 ENGINE TASK BREAKDOWN (MANDATORY REFERENCE)
+
+**Before starting ANY engine-related task, READ:**
+
+    V9_Engine_Task_Breakdown.md            — 668 atomic tasks across 14 engines
+    V9_Gap_Closure_Execution_Plan.md       — 23 test batches (all complete)
+    V9_Inter_Engine_Communication_Breakdown.md — 44 Comm pathways
+
+**V9 Engine Status (as of 2026-03-22):**
+- 24 engines implemented with Engine interface
+- 14 discovery providers (all V9 platforms covered)
+- 23/23 test batches complete (84 new tests)
+- Media generation: Bannerbear (images) + Shotstack (video)
+- Remaining: Ainfluencer API, WooCommerce/BigCommerce/Etsy OAuth, POD fulfillment routing
+
 
 ================================================================
 6. TECHNOLOGY STACK

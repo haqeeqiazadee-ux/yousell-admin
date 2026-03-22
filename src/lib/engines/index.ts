@@ -67,3 +67,7 @@ export { OrderTrackingEngine } from './order-tracking';
 export { AdminCommandCenterEngine } from './admin-command-center';
 export { AffiliateCommissionEngine } from './affiliate-commission';
 export { FulfillmentRecommendationEngine } from './fulfillment-recommendation';
+export { AmazonIntelligenceEngine } from './amazon-intelligence';
+export { ShopifyIntelligenceEngine } from './shopify-intelligence';
+export { PodEngine } from './pod-engine';
+export { AutomationOrchestratorEngine } from './automation-orchestrator';

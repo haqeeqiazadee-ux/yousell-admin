@@ -97,12 +97,43 @@ Last updated: 2026-03-21 (end of day snapshot)
 - [x] Cron scheduler — hourly BullMQ job for expiry, scheduled workflows, weekly digests
 - [x] Admin dashboard already exists — /admin/automation + /admin/settings automation tab
 
-### Future Platform Build (from execution_plan.md)
-- [ ] Phase 3A: Text Content Engine ← **NEXT PRIORITY**
-- [ ] Phase 3B: Media Content Engine
+### Phase 3A: Text Content Engine (COMPLETE — 2026-03-22)
+- [x] Shared content template registry (7 types) + prompt builder + model selection
+- [x] Updated sync + async generation paths to use shared module
+- [x] Batch content generation API (up to 10 items per request)
+- [x] Admin content management page with approval queue
+- [x] Admin content API (list, approve, reject, schedule)
+
+### Phase 6: Reporting & Analytics (COMPLETE — 2026-03-22)
+- [x] Client-facing analytics API (allocations, content, credits, revenue, usage)
+- [x] Product funnel tracking API (6-stage with conversion rates)
+- [x] Admin analytics page already has 8 charts (verified existing)
+- [x] Revenue API already has MRR/ARR/churn/growth (verified existing)
+
+### V9 Gap Closure: Test Coverage (COMPLETE — 2026-03-22)
+- [x] Phase 1: 13/13 individual engine test files (all 14 engines tested)
+- [x] Phase 2: 10/10 inter-engine communication test files (44 Comm pathways)
+- [x] Total: 84 new tests, all passing
+
+### V9 Gap Closure: Missing Engines (COMPLETE — 2026-03-22)
+- [x] Amazon Intelligence engine (Apify BSR scraper + product storage)
+- [x] Shopify Intelligence engine (Apify store scraper + competitor analysis)
+- [x] POD engine (multi-provider: Printful/Printify/Gelato)
+
+### V9 Gap Closure: 14-Platform Discovery (COMPLETE — 2026-03-22)
+- [x] 10 new providers: Instagram, YouTube, Reddit, Twitter, Product Hunt, eBay, TikTok Shop, Etsy, Temu, AliExpress
+- [x] All 14 wired into PLATFORM_SEARCHERS in discovery.ts
+
+### V9: Media Content Generation (COMPLETE — 2026-03-22)
+- [x] Bannerbear API client (image generation, templates, product images)
+- [x] Shotstack API client (video generation, timeline composition, product videos)
+
+### Future Platform Build (from V9_Engine_Task_Breakdown.md)
 - [ ] Phase 4: Smart Publisher (partially done — distribution.ts built in gap fix)
-- [ ] Phase 6: Reporting & Analytics
 - [ ] Phase 7: Compliance & Launch
+- [ ] V9 Remaining: Ainfluencer API integration (Engine 3)
+- [ ] V9 Remaining: WooCommerce/BigCommerce/Etsy OAuth (Engine 10)
+- [ ] V9 Remaining: POD fulfillment order routing (Printful/Printify webhooks)
 
 ------------------------------------------------------------
 

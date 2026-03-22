@@ -2837,19 +2837,61 @@ Built the automation brain — Engine 15 (automation-orchestrator):
 | V9-Gaps | V9 Gap Closure | 2026-03-22 | 5 gaps: Apify wiring, TikTok/Amazon push, Smart Publisher, reverse sync, financial validation |
 | 5 | Automation Orchestrator | 2026-03-22 | Engine 15, Level 2/3 workflows, approval queue, cron scheduler, 4 DB tables |
 
+### Phase 3A: Text Content Engine (COMPLETE — 2026-03-22)
+
+Content generation system upgraded:
+- **Shared template registry** (`src/lib/content/templates.ts`): 7 content types (product_description, social_post, ad_copy, email_sequence, video_script, blog_post, seo_listing) with system prompts, token limits, credit mappings
+- **Prompt builder**: `buildContentPrompt()` with product context enrichment (title, description, price, category, trend stage, score)
+- **Tier-based model selection**: `selectModel()` — HOT products (score >= 80) get Claude Sonnet, else Claude Haiku
+- **Batch generation**: `POST /api/dashboard/content/batch` — up to 10 items, upfront credit validation, partial success handling
+- **Admin content management**: `GET/PATCH /api/admin/content` + `/admin/content` page — stats, filterable table, approve/reject/schedule
+
+### Phase 6: Reporting & Analytics (COMPLETE — 2026-03-22)
+
+Analytics system extended (admin analytics page with 8 charts already existed):
+- **Client analytics API** (`GET /api/dashboard/analytics`): per-client allocation stats, content stats, credit usage, revenue/orders, connected channels, usage tracking
+- **Product funnel API** (`GET /api/admin/analytics/funnel`): 6-stage funnel (discovered → scored → allocated → content → deployed → orders) with conversion rates, platform/tier breakdowns, content production metrics
+- Existing: admin analytics page (8 charts), revenue API (MRR/ARR/churn/growth), financial models API
+
+### V9 Gap Closure: Test Coverage (COMPLETE — 2026-03-22)
+
+All 23 V9 gap closure test batches implemented:
+- **Phase 1 (13 batches):** Individual engine test files — all 14 engines have dedicated tests
+- **Phase 2 (10 batches):** Inter-engine communication tests — 44 Comm pathways verified
+- **84 new tests** added in this session, all passing
+
+### V9: 3 Missing Engine Files (COMPLETE — 2026-03-22)
+
+Built 3 engines that had backend jobs but no Engine interface:
+- `amazon-intelligence.ts`: Apify BSR scraper, product storage, BSR movers analysis
+- `shopify-intelligence.ts`: Apify store scraper, competitor analysis, store grouping
+- `pod-engine.ts`: Multi-provider POD (Printful/Printify/Gelato), discovery, fulfillment sync
+
+### V9: 14-Platform Discovery (COMPLETE — 2026-03-22)
+
+10 new discovery providers added to reach V9 spec's 14-platform target:
+Instagram, YouTube, Reddit, Twitter, Product Hunt, eBay, TikTok Shop, Etsy, Temu, AliExpress
+All wired into PLATFORM_SEARCHERS in discovery.ts.
+
+### V9: Media Content Generation (COMPLETE — 2026-03-22)
+
+Bannerbear (images) and Shotstack (video) API clients built:
+- Bannerbear: template listing, image creation, product image generator
+- Shotstack: timeline composition, render submission, product video generator (30s TikTok format)
+
 ### Remaining Work (in priority order)
-1. Phase 3A: Text Content Engine (templates, AI generation pipeline)
-2. Phase 3B: Media Content Engine (image/video generation)
-3. Phase 4: Smart Publisher (already partially done via distribution.ts gap fix)
-4. Phase 6: Reporting & Analytics dashboards
-5. Phase 7: Compliance & Launch prep
+1. Phase 4: Smart Publisher (partially done — distribution.ts has real APIs)
+2. Phase 7: Compliance & Launch prep
+3. V9 Feature Gaps: Ainfluencer API, WooCommerce/BigCommerce/Etsy OAuth, POD fulfillment routing
 
 ### Key Numbers
-- 21 engines implemented (all with Engine interface)
-- 365+ tests passing
+- 24 engines implemented (all with Engine interface)
+- 450+ tests passing (365 existing + 84 new V9 gap closure)
 - 45 database tables (41 original + 4 automation)
-- 80+ Next.js pages
-- 64 API routes (40 admin, 3 auth, 11 dashboard, 4 webhooks, 2 system, 4 automation)
-- 18 BullMQ job processors (15 original + push-to-tiktok, push-to-amazon, automation-scheduler)
+- 82+ Next.js pages
+- 70 API routes
+- 18 BullMQ job processors
+- 14 discovery providers (all 14 V9 platforms)
+- 2 media generation clients (Bannerbear + Shotstack)
 - 0 TypeScript errors
 - 0 breaking changes throughout all phases

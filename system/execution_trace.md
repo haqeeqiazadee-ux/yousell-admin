@@ -902,3 +902,91 @@ Engine inventory (all 20):
 - **Commit:** 8d4cd56
 - **Next step:** Phase 3A/3B (Content Engine upgrade), Phase 6 (Reporting), or Phase 7 (Compliance)
 
+------------------------------------------------------------
+
+### [2026-03-22 13:00] DONE — Phase 3A: Content Engine Upgrade
+
+- **Task:** Consolidate content templates, add batch generation, admin content management
+- **Batch:** Phase 3A, 3 batches
+- **Action:**
+  1. Created shared `src/lib/content/templates.ts` — 7 content types, prompt builder, tier-based model selection, credit mapping
+  2. Updated `/api/dashboard/content/generate` to use shared module (eliminated duplication)
+  3. Updated `backend/src/jobs/content-generation.ts` with matching templates + model selection
+  4. Created batch generation API: `POST /api/dashboard/content/batch` (up to 10 items, credit validation, partial success)
+  5. Created admin content API: `GET/PATCH /api/admin/content` (list all content, approve/reject/schedule)
+  6. Created admin content page: `/admin/content` (stats cards, filterable table, expandable rows, actions)
+- **Files touched:**
+  - `src/lib/content/templates.ts` (new — 7 templates, prompt builder, model selection)
+  - `src/app/api/dashboard/content/generate/route.ts` (modified — uses shared templates)
+  - `backend/src/jobs/content-generation.ts` (modified — tier-based model, blog_post + seo_listing)
+  - `src/app/api/dashboard/content/batch/route.ts` (new — batch generation)
+  - `src/app/api/admin/content/route.ts` (new — admin content management)
+  - `src/app/admin/content/page.tsx` (new — admin content UI)
+- **Result:** SUCCESS — 0 TypeScript errors
+- **Commits:** b186682, 15480c3, 3c68065
+
+------------------------------------------------------------
+
+### [2026-03-22 14:00] DONE — Phase 6: Reporting & Analytics (Core APIs)
+
+- **Task:** Add client-facing analytics API + product funnel tracking
+- **Batch:** Phase 6, Batch 1
+- **Action:**
+  1. Audited existing analytics: admin has 8 chart types, revenue API, financial models. Gap: no client analytics, no funnel.
+  2. Created client analytics API: `GET /api/dashboard/analytics` — allocation stats, content stats, credit usage, revenue, channels, usage tracking
+  3. Created product funnel API: `GET /api/admin/analytics/funnel` — 6-stage funnel with conversion rates, platform/tier breakdowns, content metrics
+- **Files touched:**
+  - `src/app/api/dashboard/analytics/route.ts` (new — client-facing analytics)
+  - `src/app/api/admin/analytics/funnel/route.ts` (new — product funnel tracking)
+- **Result:** SUCCESS — 0 TypeScript errors
+- **Commit:** 5fe8bfa
+- **Next step:** Phase 7 (Compliance & Launch prep), or more analytics UI enhancements
+
+------------------------------------------------------------
+
+### [2026-03-22 15:00] DONE — V9 Gap Closure: 3 Missing Engines + 23/23 Test Batches
+
+- **Task:** Build 3 missing engine files and complete all 23 V9 gap closure test batches
+- **Action:**
+  1. Created `amazon-intelligence.ts` engine (Apify BSR scraper, product storage, BSR analysis)
+  2. Created `shopify-intelligence.ts` engine (Apify store scraper, competitor analysis, store grouping)
+  3. Created `pod-engine.ts` engine (multi-provider POD: Printful/Printify/Gelato, discovery, fulfillment sync)
+  4. All 3 exported from barrel index
+  5. Created 3 engine test files (Batch 1.11-1.13): 30 tests, all passing
+  6. Created 9 inter-engine test files (Batch 2.2-2.10): 54 tests, all passing
+  7. **Total new tests: 84, total V9 gap closure test batches: 23/23 COMPLETE**
+- **Files touched:**
+  - 3 new engine files + index.ts update
+  - 12 new test files (3 engine + 9 inter-engine)
+- **Result:** SUCCESS — all 84 new tests passing, 0 TypeScript errors
+- **Commits:** 7d60152, c904eb3, 4685c3b
+
+------------------------------------------------------------
+
+### [2026-03-22 16:00] DONE — V9: 14-Platform Discovery Coverage
+
+- **Task:** Add 10 missing discovery providers to reach V9 spec's 14-platform target
+- **Action:** Created 10 new provider modules in `src/lib/providers/`:
+  Instagram (Apify), YouTube (Data API v3), Reddit (Apify), Twitter (Apify),
+  Product Hunt (GraphQL API), eBay (Apify), TikTok Shop (Apify), Etsy (Apify),
+  Temu (Apify), AliExpress (Apify)
+  Wired all into PLATFORM_SEARCHERS map in discovery.ts
+- **Files touched:** 10 new provider files + discovery.ts modified
+- **Result:** SUCCESS — 0 TypeScript errors
+- **Commit:** bb709a4
+
+------------------------------------------------------------
+
+### [2026-03-22 16:30] DONE — V9: Media Content Generation (Bannerbear + Shotstack)
+
+- **Task:** Build image and video generation API clients per V9 Tasks 9.37-9.38
+- **Action:**
+  - Bannerbear client: template listing, image creation with modifications, product image generator
+  - Shotstack client: render submission with multi-track timeline, product video generator (30s TikTok format)
+- **Files touched:**
+  - `src/lib/integrations/bannerbear/client.ts` (new)
+  - `src/lib/integrations/shotstack/client.ts` (new)
+- **Result:** SUCCESS — 0 TypeScript errors
+- **Commit:** ab65167
+- **Next step:** Update system files, then continue with remaining V9 tasks per breakdown file
+

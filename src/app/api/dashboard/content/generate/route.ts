@@ -2,39 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { authenticateClient } from '@/lib/auth/client-api-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { CONTENT_CREDIT_COSTS } from '@/lib/stripe'
-
-// Map content types to credit cost keys
-const CONTENT_TYPE_TO_CREDIT: Record<string, keyof typeof CONTENT_CREDIT_COSTS> = {
-  product_description: 'caption',
-  social_post: 'caption',
-  ad_copy: 'ad',
-  email_sequence: 'email_sequence',
-  video_script: 'short_video',
-  blog_post: 'blog',
-}
-
-const CONTENT_TEMPLATES: Record<string, { systemPrompt: string; maxTokens: number }> = {
-  product_description: {
-    systemPrompt: 'You are an expert e-commerce copywriter. Write a compelling product description that highlights benefits, uses power words, and drives conversions. Keep it under 200 words.',
-    maxTokens: 400,
-  },
-  social_post: {
-    systemPrompt: 'You are a social media marketing expert. Write an engaging social media post that drives clicks and engagement. Include relevant hashtags. Keep it under 280 characters for Twitter compatibility.',
-    maxTokens: 200,
-  },
-  ad_copy: {
-    systemPrompt: 'You are a direct-response advertising copywriter. Write ad copy with a strong hook, clear value proposition, and compelling CTA. Include a headline (under 40 chars) and body (under 125 chars).',
-    maxTokens: 300,
-  },
-  email_sequence: {
-    systemPrompt: 'You are an email marketing specialist. Write a 3-email welcome/launch sequence for a product. Each email should have a subject line and body. Focus on building interest, demonstrating value, and driving purchase.',
-    maxTokens: 1000,
-  },
-  video_script: {
-    systemPrompt: 'You are a short-form video content strategist. Write a 30-60 second video script for TikTok/Reels that hooks viewers in the first 3 seconds, demonstrates the product, and ends with a CTA.',
-    maxTokens: 500,
-  },
-}
+import {
+  CONTENT_TEMPLATES,
+  type ContentType,
+  isValidContentType,
+  getCreditType,
+  buildContentPrompt,
+  selectModel,
+} from '@/lib/content/templates'
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,13 +29,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'productId and contentType are required' }, { status: 400 })
     }
 
-    const template = CONTENT_TEMPLATES[contentType]
-    if (!template) {
+    if (!isValidContentType(contentType)) {
       return NextResponse.json({ error: `Invalid content type. Must be one of: ${Object.keys(CONTENT_TEMPLATES).join(', ')}` }, { status: 400 })
     }
 
+    const template = CONTENT_TEMPLATES[contentType]
+
     // Check content credits (skip for enterprise/unlimited plans)
-    const creditKey = CONTENT_TYPE_TO_CREDIT[contentType] || 'caption'
+    const creditKey = getCreditType(contentType as ContentType) as keyof typeof CONTENT_CREDIT_COSTS
     const creditCost = CONTENT_CREDIT_COSTS[creditKey]
     const isUnlimited = clientCtx.subscription?.plan === 'enterprise'
 
@@ -101,17 +77,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
-    const productContext = [
-      `Product: ${product.title}`,
-      product.description ? `Description: ${product.description}` : null,
-      product.price ? `Price: $${product.price}` : null,
-      product.category ? `Category: ${product.category}` : null,
-      product.source ? `Platform: ${product.source}` : null,
-      product.trend_stage ? `Trend Stage: ${product.trend_stage}` : null,
-      channel ? `Target Channel: ${channel}` : null,
-    ].filter(Boolean).join('\n')
-
-    const prompt = `Generate ${contentType.replace(/_/g, ' ')} for this product:\n\n${productContext}`
+    const prompt = buildContentPrompt(contentType as ContentType, product)
 
     // Insert queue entry as pending
     const { data: queueEntry, error: insertError } = await admin
@@ -149,6 +115,10 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+      // Select model based on product tier (HOT → Sonnet, else → Haiku)
+      const tier = product.final_score != null && product.final_score >= 80 ? 'HOT' : undefined
+      const { model } = selectModel(tier)
+
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -157,7 +127,7 @@ export async function POST(request: NextRequest) {
           'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
+          model,
           max_tokens: template.maxTokens,
           system: template.systemPrompt,
           messages: [{ role: 'user', content: prompt }],
