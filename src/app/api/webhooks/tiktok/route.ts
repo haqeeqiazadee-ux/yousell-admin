@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendOrderStatusEmail } from '@/lib/email-orders'
-import { createHmac } from 'crypto'
+import { createHmac, timingSafeEqual } from 'crypto'
 
 function verifyTikTokSignature(body: string, signature: string | null): boolean {
   const secret = process.env.TIKTOK_WEBHOOK_SECRET
@@ -12,7 +12,11 @@ function verifyTikTokSignature(body: string, signature: string | null): boolean 
   }
   if (!signature) return false
   const expected = createHmac('sha256', secret).update(body).digest('hex')
-  return signature === expected
+  try {
+    return timingSafeEqual(Buffer.from(expected), Buffer.from(signature))
+  } catch {
+    return false
+  }
 }
 
 export async function POST(request: NextRequest) {

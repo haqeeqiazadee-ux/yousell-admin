@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendOrderStatusEmail } from '@/lib/email-orders'
-import { createHmac } from 'crypto'
+import { createHmac, timingSafeEqual } from 'crypto'
 
 function verifyAmazonSignature(body: string, signature: string | null): boolean {
   const secret = process.env.AMAZON_WEBHOOK_SECRET
@@ -11,7 +11,11 @@ function verifyAmazonSignature(body: string, signature: string | null): boolean 
   }
   if (!signature) return false
   const expected = createHmac('sha256', secret).update(body).digest('hex')
-  return signature === expected
+  try {
+    return timingSafeEqual(Buffer.from(expected), Buffer.from(signature))
+  } catch {
+    return false
+  }
 }
 
 // Amazon SP-API sends SQS-style notifications via EventBridge or push
