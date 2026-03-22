@@ -3053,3 +3053,22 @@ resource distribution.
 ## Phase 8: Production Hardening (2026-03-22 — IN PROGRESS)
 
 Goal: Harden platform for production deployment with Redis EventBus, structured logging, monitoring/alerting dashboards, circuit breakers, and deep health checks.
+
+**COMPLETE — All 6 tasks done:**
+
+| # | Task | Key Files |
+|---|------|-----------|
+| PH-1 | Redis EventBus (auto-detects REDIS_URL, in-memory fallback) | `redis-event-bus.ts`, `event-bus.ts` |
+| PH-2 | Structured JSON logger + X-Request-Id middleware | `logger.ts`, `middleware.ts` |
+| PH-3 | Monitoring dashboard (30s auto-refresh, engine health grid) | `/api/admin/monitoring`, `/admin/monitoring` |
+| PH-4 | Alerting system (threshold evaluation, dedup, acknowledge) | `alerting.ts`, `/api/admin/alerts`, migration 032 |
+| PH-5 | Circuit breakers (10 services, 3-state, configurable) | `circuit-breaker.ts` |
+| PH-6 | Deep health checks (?deep=true: Redis, Supabase, backend, breakers) | `/api/health` |
+
+**New env vars:**
+- `REDIS_URL` — enables Redis EventBus (optional, falls back to in-memory)
+- `LOG_LEVEL` — minimum log level: debug/info/warn/error (default: info)
+- `SERVICE_NAME` — service identifier in log entries (default: yousell-admin)
+
+**New DB table:**
+- `system_alerts` — stores threshold-triggered alerts (migration 032)

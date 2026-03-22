@@ -150,13 +150,13 @@ Last updated: 2026-03-21 (end of day snapshot)
 - [x] M2: Fix duplicate periodEnd/periodStart in Stripe webhook
 - [x] L1: Add missing delete()/upsert() to Governor unit test mock chain
 
-### Phase 8: Production Hardening (IN PROGRESS)
-- [ ] PH-1: Redis EventBus — swap in-memory bus → Redis pub/sub
-- [ ] PH-2: Structured logging — JSON logger with levels, request IDs, engine context
-- [ ] PH-3: Monitoring dashboard — admin page with real-time engine health, error rates, latency
-- [ ] PH-4: Alerting API — threshold-based alerts (error spikes, queue backup, budget exhaustion)
-- [ ] PH-5: Circuit breakers — graceful degradation on external API failures
-- [ ] PH-6: Deep health checks — Redis, BullMQ, Supabase, external API reachability
+### Phase 8: Production Hardening (COMPLETE — 2026-03-22)
+- [x] PH-1: Redis EventBus — auto-detects REDIS_URL, in-memory fallback
+- [x] PH-2: Structured logging — JSON logger with levels, request IDs, engine context
+- [x] PH-3: Monitoring dashboard — admin page with 30s auto-refresh, engine health grid
+- [x] PH-4: Alerting API — threshold evaluation, dedup, acknowledge/dismiss
+- [x] PH-5: Circuit breakers — 10 services, 3-state, configurable thresholds
+- [x] PH-6: Deep health checks — Redis, Supabase, backend API, circuit breaker status
 
 ### Remaining (P2 — Nice to Have) — ALL COMPLETE
 - [x] V9 P2: WooCommerce/BigCommerce/Etsy OAuth (Engine 10) — store-oauth.ts + 3 OAuth routes
