@@ -1165,3 +1165,14 @@ Engine inventory (all 20):
 - **Files touched:** `src/lib/engines/governor/envelope-lifecycle.ts` (new), `src/app/api/webhooks/stripe/route.ts` (modified), `src/app/api/webhooks/square/route.ts` (new), `src/lib/engines/governor/index.ts` (modified)
 - **Result:** SUCCESS — TypeScript compiles clean
 - **Next step:** Task 15.026-15.028: Replace direct engine calls with governor.execute() in routes
+
+------------------------------------------------------------
+
+### [2026-03-22 02:30] DONE — Task 15.026-15.028: Governor middleware + route wiring
+
+- **Task:** Create Governor route middleware and wire into engine routes
+- **Batch:** 15.026-15.028
+- **Action:** Created withGovernor() middleware wrapper (resolves client context from auth token, checks gate, returns proper HTTP status codes for denials). Wired content/generate and deploy routes through Governor. Thin proxy routes (14) don't need changes — they inherit Governor when admin routes are updated.
+- **Files touched:** `src/lib/engines/governor/middleware.ts` (new), `src/app/api/engine/content/generate/route.ts` (modified), `src/app/api/engine/deploy/route.ts` (modified)
+- **Result:** SUCCESS
+- **Next step:** Task 15.029: Wire BullMQ workers through Governor
