@@ -34,6 +34,7 @@ import {
 } from '@/lib/engines'
 import type { EngineEvent } from '@/lib/engines'
 import { PRICING_TIERS, CONTENT_CREDIT_COSTS } from '@/lib/stripe'
+import { createMockDbClient } from './helpers/mock-db'
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 1: Config & Lifecycle
@@ -45,6 +46,7 @@ describe('Engine 9 — Config & Lifecycle', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new ContentCreationEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('has correct name, queues, publishes, subscribes', () => {
@@ -81,6 +83,7 @@ describe('Engine 9 — Event Handling', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new ContentCreationEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('handles BLUEPRINT_APPROVED event (deferred per G10)', async () => {
@@ -92,7 +95,7 @@ describe('Engine 9 — Event Handling', () => {
       timestamp: new Date().toISOString(),
     })
     expect(spy).toHaveBeenCalledWith(
-      expect.stringContaining('content generation deferred')
+      expect.stringContaining('content generation eligible')
     )
     spy.mockRestore()
   })
@@ -106,7 +109,7 @@ describe('Engine 9 — Event Handling', () => {
       timestamp: new Date().toISOString(),
     })
     expect(spy).toHaveBeenCalledWith(
-      expect.stringContaining('social content deferred')
+      expect.stringContaining('social media content generation eligible')
     )
     spy.mockRestore()
   })
@@ -122,6 +125,7 @@ describe('Engine 9 — generateContent()', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new ContentCreationEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('returns contentId, content, and creditsCost', async () => {
@@ -204,6 +208,7 @@ describe('Engine 9 — batchGenerate()', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new ContentCreationEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('returns generated, failed, totalCredits', async () => {

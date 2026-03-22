@@ -81,7 +81,7 @@ export class StoreIntegrationEngine implements Engine {
 
   /**
    * Push a product to a client's connected store.
-   * Delegates to the appropriate BullMQ queue (push-to-shopify/tiktok/amazon).
+   * Creates a shop_products record and enqueues a BullMQ job to the correct platform worker.
    * V9 Tasks: 10.010–10.025
    */
   async pushProduct(
@@ -97,20 +97,61 @@ export class StoreIntegrationEngine implements Engine {
   ): Promise<{
     shopProductId: string;
     storeUrl: string;
+    status: string;
   }> {
     this._status = 'running';
     try {
       const bus = getEventBus();
-      const shopProductId = `shop_${platform}_${productId}_${Date.now()}`;
-      const storeUrl = '';
+
+      // Map platform to the channel_type used in connected_channels
+      const channelType = platform === 'tiktok-shop' ? 'tiktok-shop' : platform;
+
+      // Map platform to the backend push queue endpoint
+      const queueEndpoints: Record<string, string> = {
+        'shopify': 'shopify/push',
+        'tiktok-shop': 'tiktok/push',
+        'amazon': 'amazon/push',
+      };
+
+      const backendUrl = process.env.RAILWAY_BACKEND_URL || process.env.BACKEND_URL || '';
+      const backendSecret = process.env.RAILWAY_API_SECRET || '';
+      const endpoint = queueEndpoints[platform];
+
+      if (!backendUrl || !endpoint) {
+        console.warn(`[StoreIntegration] Cannot queue push — backend URL or endpoint missing for ${platform}`);
+        return { shopProductId: '', storeUrl: '', status: 'error' };
+      }
+
+      // Enqueue the push job via the backend API
+      const response = await fetch(`${backendUrl}/api/${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(backendSecret ? { 'Authorization': `Bearer ${backendSecret}` } : {}),
+        },
+        body: JSON.stringify({
+          product_id: productId,
+          client_id: clientId,
+          channel_type: channelType,
+          product_data: productData,
+        }),
+        signal: AbortSignal.timeout(15000),
+      });
+
+      const result = await response.json() as Record<string, unknown>;
+      const shopProductId = (result.shop_product_id as string) || `shop_${platform}_${productId}_${Date.now()}`;
+      const status = response.ok ? 'queued' : 'error';
 
       await bus.emit(
         ENGINE_EVENTS.PRODUCT_PUSHED,
-        { productId, shopProductId, platform, storeUrl, clientId, productData },
+        { productId, shopProductId, platform, storeUrl: '', clientId, status },
         'store-integration',
       );
 
-      return { shopProductId, storeUrl };
+      return { shopProductId, storeUrl: '', status };
+    } catch (err) {
+      console.error(`[StoreIntegration] Push failed for ${platform}:`, err);
+      return { shopProductId: '', storeUrl: '', status: 'error' };
     } finally {
       this._status = 'idle';
     }

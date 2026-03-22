@@ -32,6 +32,7 @@ import {
   ENGINE_EVENTS,
 } from '@/lib/engines'
 import type { EngineEvent } from '@/lib/engines'
+import { createMockDbClient } from './helpers/mock-db'
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 1: Config & Lifecycle
@@ -43,6 +44,7 @@ describe('Engine 7 — Config & Lifecycle', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new LaunchBlueprintEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('has correct name, queues, publishes, subscribes', () => {
@@ -84,18 +86,19 @@ describe('Engine 7 — Event Handling', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new LaunchBlueprintEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
-  it('handles FINANCIAL_MODEL_GENERATED event (deferred per G10)', async () => {
+  it('handles FINANCIAL_MODEL_GENERATED event', async () => {
     const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
     await engine.handleEvent({
       type: ENGINE_EVENTS.FINANCIAL_MODEL_GENERATED,
-      payload: { productId: 'prod-001' },
+      payload: { productId: 'prod-001', roiPercent: 100, projectedRevenue: 12000, projectedCost: 6000, projectedProfit: 6000, paybackDays: 8 },
       source: 'financial-model',
       timestamp: new Date().toISOString(),
     })
     expect(spy).toHaveBeenCalledWith(
-      expect.stringContaining('blueprint generation deferred')
+      expect.stringContaining('blueprint generation eligible')
     )
     spy.mockRestore()
   })
@@ -111,6 +114,7 @@ describe('Engine 7 — generateBlueprint()', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new LaunchBlueprintEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('returns blueprintId, steps, estimatedLaunchDays, phases', async () => {
@@ -124,7 +128,8 @@ describe('Engine 7 — generateBlueprint()', () => {
 
     expect(result.blueprintId).toContain('bp_prod-001')
     expect(result.steps).toBeGreaterThan(0)
-    expect(result.estimatedLaunchDays).toBe(14)
+    // HOT tier compresses timeline: each phase loses 1 day (min 1)
+    expect(result.estimatedLaunchDays).toBe(9)
     expect(result.phases).toEqual([
       'Supplier Lock', 'Store Setup', 'Content Creation', 'Ad Launch', 'Influencer Outreach',
     ])
@@ -148,8 +153,8 @@ describe('Engine 7 — generateBlueprint()', () => {
     expect(received).toHaveLength(1)
     expect(received[0].payload).toMatchObject({
       productId: 'prod-001',
-      steps: 15,
-      estimatedLaunchDays: 14,
+      steps: 16,
+      estimatedLaunchDays: 9,
     })
     expect(received[0].source).toBe('launch-blueprint')
   })
@@ -172,6 +177,7 @@ describe('Engine 7 — approveBlueprint()', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new LaunchBlueprintEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('emits BLUEPRINT_APPROVED event with admin details', async () => {

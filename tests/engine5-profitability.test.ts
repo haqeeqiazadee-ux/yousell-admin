@@ -42,6 +42,7 @@ import {
   ProfitabilityEngine,
 } from '@/lib/engines'
 import type { EngineEvent } from '@/lib/engines'
+import { createMockDbClient } from './helpers/mock-db'
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 1: ProfitabilityEngine Config & Lifecycle
@@ -53,6 +54,7 @@ describe('Engine 5 — Config & Lifecycle', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new ProfitabilityEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   /* Task 5.001: Subscribes to PRODUCT_SCORED, SUPPLIER_FOUND, COMPETITOR_DETECTED */
@@ -95,6 +97,7 @@ describe('Engine 5 — Margin Calculation', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new ProfitabilityEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   /* Task 5.010: margin = sellingPrice - (unitCost + shipping + platformFee + adCost) */
@@ -165,6 +168,7 @@ describe('Engine 5 — Break-Even Calculation', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new ProfitabilityEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   /* Task 5.015: breakEvenUnits = ceil(100 / margin) */
@@ -206,6 +210,7 @@ describe('Engine 5 — Recommended Price', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new ProfitabilityEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   /* Task 5.020: recommendedPrice = totalCost / (1 - 0.35) for 35% margin target */
@@ -234,6 +239,7 @@ describe('Engine 5 — Event Emission', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new ProfitabilityEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   /* Task 5.030: Emits PROFITABILITY_CALCULATED on every calculation */
@@ -318,6 +324,7 @@ describe('Engine 5 — Event Handling', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new ProfitabilityEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('logs SUPPLIER_FOUND but defers recalc per G10', async () => {
@@ -328,7 +335,7 @@ describe('Engine 5 — Event Handling', () => {
       source: 'supplier-discovery',
       timestamp: new Date().toISOString(),
     })
-    expect(spy).toHaveBeenCalledWith(expect.stringContaining('Supplier found'))
+    expect(spy).toHaveBeenCalledWith(expect.stringContaining('recalc eligible'))
     spy.mockRestore()
   })
 
@@ -340,7 +347,7 @@ describe('Engine 5 — Event Handling', () => {
       source: 'competitor-intelligence',
       timestamp: new Date().toISOString(),
     })
-    expect(spy).toHaveBeenCalledWith(expect.stringContaining('Competitor detected'))
+    expect(spy).toHaveBeenCalledWith(expect.stringContaining('pricing adjustment eligible'))
     spy.mockRestore()
   })
 

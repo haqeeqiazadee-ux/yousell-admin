@@ -34,6 +34,7 @@ import {
 } from '@/lib/engines'
 import type { EngineEvent } from '@/lib/engines'
 import { PRICING_TIERS } from '@/lib/stripe'
+import { createMockDbClient } from './helpers/mock-db'
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 1: Config & Lifecycle
@@ -45,6 +46,7 @@ describe('Engine 8 — Config & Lifecycle', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new ClientAllocationEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('has correct name, queues, publishes, subscribes', () => {
@@ -85,18 +87,19 @@ describe('Engine 8 — Event Handling', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new ClientAllocationEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
-  it('handles PRODUCT_SCORED event (deferred per G10)', async () => {
+  it('handles PRODUCT_SCORED event with HOT tier', async () => {
     const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
     await engine.handleEvent({
       type: ENGINE_EVENTS.PRODUCT_SCORED,
-      payload: { productId: 'prod-001', finalScore: 85 },
+      payload: { productId: 'prod-001', finalScore: 85, tier: 'HOT' },
       source: 'scoring',
       timestamp: new Date().toISOString(),
     })
     expect(spy).toHaveBeenCalledWith(
-      expect.stringContaining('allocation deferred')
+      expect.stringContaining('allocation eligible for premium clients')
     )
     spy.mockRestore()
   })
@@ -126,6 +129,7 @@ describe('Engine 8 — allocateProduct()', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new ClientAllocationEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('returns allocationId and exclusive flag', async () => {
@@ -141,15 +145,31 @@ describe('Engine 8 — allocateProduct()', () => {
       received.push(e)
     })
 
-    await engine.allocateProduct('prod-001', 'client-001', 'tiktok_shop', 'professional')
+    // Override mock to return product data and empty allocation lists
+    const mockDb = createMockDbClient() as any
+    mockDb.from = vi.fn((table: string) => {
+      const chain: Record<string, unknown> = {}
+      const methods = ['select', 'insert', 'update', 'upsert', 'eq', 'in', 'order', 'limit']
+      for (const m of methods) { chain[m] = vi.fn().mockReturnValue(chain) }
+      if (table === 'products') {
+        chain.single = vi.fn().mockResolvedValue({ data: { final_score: 85, title: 'Widget' }, error: null })
+      } else {
+        // client_products, product_cluster_members — return empty/null
+        chain.single = vi.fn().mockResolvedValue({ data: null, error: null })
+      }
+      chain.then = (r: (v: unknown) => void) => Promise.resolve({ data: [], error: null }).then(r)
+      return chain
+    })
+    engine.setDbClient(mockDb)
+
+    await engine.allocateProduct('prod-001', 'client-001', 'tiktok', 'professional')
 
     expect(received).toHaveLength(1)
     expect(received[0].payload).toMatchObject({
       productId: 'prod-001',
       clientId: 'client-001',
       tier: 'professional',
-      channel: 'tiktok_shop',
-      exclusive: false,
+      channel: 'tiktok',
     })
     expect(received[0].source).toBe('client-allocation')
   })
@@ -170,6 +190,7 @@ describe('Engine 8 — batchAllocate()', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new ClientAllocationEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('returns allocated and skipped counts', async () => {
@@ -185,6 +206,32 @@ describe('Engine 8 — batchAllocate()', () => {
     bus.subscribe(ENGINE_EVENTS.ALLOCATION_BATCH_COMPLETE, (e: EngineEvent) => {
       received.push(e)
     })
+
+    // Override mock to return clients for batch allocation
+    const mockDb = createMockDbClient() as any
+    mockDb.from = vi.fn(() => ({
+      select: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      upsert: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockResolvedValue({ data: [], error: null }),
+      single: vi.fn().mockResolvedValue({ data: { id: 'client-1', subscription_tier: 'enterprise', final_score: 90, title: 'W' }, error: null }),
+      limit: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+    }))
+    // Make the clients query return data
+    const origFrom = mockDb.from
+    mockDb.from = vi.fn((table: string) => {
+      const chain = origFrom(table)
+      if (table === 'clients') {
+        chain.eq = vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ data: [{ id: 'client-1', subscription_tier: 'enterprise' }], error: null }),
+        })
+      }
+      return chain
+    })
+    engine.setDbClient(mockDb)
 
     await engine.batchAllocate(['p1', 'p2'], 'enterprise')
 

@@ -34,6 +34,7 @@ import {
   ENGINE_EVENTS,
 } from '@/lib/engines'
 import type { EngineEvent } from '@/lib/engines'
+import { createMockDbClient } from './helpers/mock-db'
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 1: Config & Lifecycle
@@ -45,6 +46,7 @@ describe('Engine 11 — Config & Lifecycle', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new OrderTrackingEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('has correct name, queues, publishes, subscribes', () => {
@@ -81,6 +83,7 @@ describe('Engine 11 — Event Handling', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new OrderTrackingEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('handles STORE_SYNC_COMPLETE event', async () => {
@@ -108,6 +111,7 @@ describe('Engine 11 — processOrder()', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new OrderTrackingEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('returns tracked=true', async () => {
@@ -165,6 +169,7 @@ describe('Engine 11 — markFulfilled()', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new OrderTrackingEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('emits ORDER_FULFILLED event with tracking details', async () => {
@@ -196,6 +201,7 @@ describe('Engine 11 — sendTrackingEmail()', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new OrderTrackingEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('returns sent status', async () => {

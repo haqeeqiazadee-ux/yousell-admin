@@ -788,3 +788,42 @@ Engine inventory (all 20):
 **Tests:** 717/717 passing (25 for this engine), 0 TypeScript errors
 
 ------------------------------------------------------------
+
+------------------------------------------------------------
+
+### [2026-03-22 09:00] DONE — V9 Engine Completion: All 10 engines upgraded to v2.0.0
+
+- **Task:** Complete all V9 engine implementations with DB integration, event handling, and API routes
+- **Batch:** V9-ENGINES.1–V9-ENGINES.7
+- **Action:**
+  1. **Batch 1:** Competitor Intelligence, Supplier Discovery, Profitability engines — DB writes, Apify configs, verification scoring
+  2. **Batch 2:** Financial Modelling, Launch Blueprint, Client Allocation — scenario projections, 5-phase blueprints, tier-based allocation
+  3. **Batch 3:** Fulfillment Recommendation, Admin Command Center, Affiliate Commission — decision tree, deployment pipeline, dual-stream commissions
+  4. **Batch 4:** Order Tracking, Content Creation — full order lifecycle, enrichment-aware AI content
+  5. **Batch 5:** 7 engine-namespaced API routes (4 proxies + 3 new endpoints)
+  6. **Batch 6:** Shared db-types.ts + mock-db helper, engine type refactor
+  7. **Batch 7:** Test assertion updates for new log messages and return types
+- **Files touched:**
+  - Modified: 11 engine files (src/lib/engines/*.ts), 12 test files
+  - Created: src/lib/engines/db-types.ts, tests/helpers/mock-db.ts
+  - Created: 7 API route files (src/app/api/engine/*)
+- **Result:** SUCCESS — all engines v2.0.0
+- **Next step:** Verify all tests pass, push to remote
+- **Commits:** 7ee0df1, 0095009, 4613977, 87345e6, 198657b, 655afde, 3378fb2
+
+### V9 ENGINE COMPLETION SUMMARY
+
+| Engine | Version | Key Additions |
+|--------|---------|---------------|
+| Competitor Intelligence | 2.0.0 | DB writes, processScrapedCompetitors(), getCompetitorPricingSummary() |
+| Supplier Discovery | 2.0.0 | processScrapedSuppliers(), verification scoring (5-metric), getCheapestSupplier() |
+| Profitability | 2.0.0 | DB writes to profitability_models, platform fee rates (6), autoCalculateFromSuppliers() |
+| Financial Modelling | 2.0.0 | 3-scenario projections, commission cost integration, influencer ROI DB write |
+| Launch Blueprint | 2.0.0 | 5 phases × 16 tasks, tier-aware compression, blueprint approval gate |
+| Client Allocation | 2.0.0 | Tier limits (starter→enterprise), exclusivity, cluster diversification |
+| Fulfillment Recommendation | 2.0.0 | Decision tree with tracked factors, autoRecommendFromData(), admin override |
+| Admin Command Center | 2.0.0 | Deployment pipeline, batch deploy, getDashboardData() aggregation |
+| Affiliate Commission | 2.0.0 | Dual-stream rates, duplicate detection, monthly payout with holdback |
+| Order Tracking | 2.0.0 | Full lifecycle, carrier tracking URLs, email queue, getProductOrders() |
+| Content Creation | 2.0.0 | Enrichment reads (trends, creators, competitors), tier-based model, prompts |
+

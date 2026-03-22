@@ -55,25 +55,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to schedule content' }, { status: 500 })
     }
 
-    // Try to enqueue distribution job (backend may not be available)
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001'
+    // Enqueue distribution job via Railway backend
+    const backendUrl = process.env.RAILWAY_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:4000'
+    const backendSecret = process.env.RAILWAY_API_SECRET || process.env.BACKEND_API_KEY || ''
     try {
-      await fetch(`${backendUrl}/api/content/distribute`, {
+      const distRes = await fetch(`${backendUrl}/api/content/distribute`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.BACKEND_API_KEY || ''}`,
+          ...(backendSecret ? { Authorization: `Bearer ${backendSecret}` } : {}),
         },
         body: JSON.stringify({
           content_id,
-          channels: channels || ['default'],
+          channels: channels || ['ayrshare'],
           scheduled_at,
           client_id: clientCtx.clientId,
         }),
-        signal: AbortSignal.timeout(5000),
+        signal: AbortSignal.timeout(10000),
       })
-    } catch {
-      // Backend not reachable — content stays scheduled for manual distribution
+
+      if (!distRes.ok) {
+        console.warn(`[content/schedule] Backend distribution queue failed: ${distRes.status}`)
+      }
+    } catch (err) {
+      console.warn(`[content/schedule] Backend not reachable — content stays scheduled for manual distribution:`, err instanceof Error ? err.message : err)
     }
 
     return NextResponse.json({ content: updated })

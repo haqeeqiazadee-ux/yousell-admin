@@ -143,8 +143,195 @@ export async function processDistribution(job: Job<DistributionJobData>) {
         break
       }
 
+      case 'meta':
+      case 'facebook':
+      case 'instagram': {
+        // Direct Meta Graph API posting (fallback when Ayrshare not configured)
+        const enabled = process.env.META_PUBLISHING_ENABLED === 'true'
+        const pageToken = process.env.META_PAGE_ACCESS_TOKEN
+        const pageId = process.env.META_PAGE_ID
+        const igAccountId = process.env.META_IG_ACCOUNT_ID
+
+        if (!enabled || !pageToken) {
+          results[channel] = 'disabled'
+          console.log(`[distribution] Meta ${channel} disabled — set META_PUBLISHING_ENABLED=true`)
+          break
+        }
+
+        try {
+          if (channel === 'instagram' && igAccountId) {
+            // Instagram Content Publishing API (requires business account)
+            // Step 1: Create media container
+            const imageUrl = (content.metadata as Record<string, unknown>)?.image_url as string
+            const createRes = await fetch(
+              `https://graph.facebook.com/v19.0/${igAccountId}/media`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  caption: content.generated_content,
+                  image_url: imageUrl || undefined,
+                  access_token: pageToken,
+                }),
+                signal: AbortSignal.timeout(30000),
+              },
+            )
+            const createData = await createRes.json() as Record<string, unknown>
+
+            if (createData.id) {
+              // Step 2: Publish the container
+              const publishRes = await fetch(
+                `https://graph.facebook.com/v19.0/${igAccountId}/media_publish`,
+                {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    creation_id: createData.id,
+                    access_token: pageToken,
+                  }),
+                  signal: AbortSignal.timeout(30000),
+                },
+              )
+              results[channel] = publishRes.ok ? 'published' : `failed: ${publishRes.status}`
+            } else {
+              results[channel] = `failed: ${createData.error?.message || 'container creation failed'}`
+            }
+          } else if (pageId) {
+            // Facebook Page post
+            const postRes = await fetch(
+              `https://graph.facebook.com/v19.0/${pageId}/feed`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  message: content.generated_content,
+                  access_token: pageToken,
+                }),
+                signal: AbortSignal.timeout(30000),
+              },
+            )
+            results[channel] = postRes.ok ? 'published' : `failed: ${postRes.status}`
+          } else {
+            results[channel] = 'no_page_id'
+          }
+        } catch (err) {
+          results[channel] = `error: ${err instanceof Error ? err.message : 'unknown'}`
+        }
+        break
+      }
+
+      case 'tiktok': {
+        // TikTok Content Posting API
+        // https://developers.tiktok.com/doc/content-posting-api-get-started
+        const enabled = process.env.TIKTOK_CONTENT_ENABLED === 'true'
+        if (!enabled) {
+          results[channel] = 'disabled'
+          console.log(`[distribution] TikTok content posting disabled`)
+          break
+        }
+
+        // Fetch TikTok creator credentials
+        const { data: tiktokConn } = await supabase
+          .from('connected_channels')
+          .select('access_token_encrypted, metadata')
+          .eq('client_id', client_id)
+          .eq('channel_type', 'tiktok-creator')
+          .single()
+
+        if (!tiktokConn?.access_token_encrypted) {
+          results[channel] = 'no_connection'
+          break
+        }
+
+        try {
+          const { createDecipheriv } = await import('crypto')
+          const hex = process.env.ENCRYPTION_KEY
+          if (!hex || hex.length !== 64) throw new Error('ENCRYPTION_KEY not configured')
+          const key = Buffer.from(hex, 'hex')
+          const packed = Buffer.from(tiktokConn.access_token_encrypted, 'base64')
+          const iv = packed.subarray(0, 12)
+          const authTag = packed.subarray(packed.length - 16)
+          const ciphertext = packed.subarray(12, packed.length - 16)
+          const decipher = createDecipheriv('aes-256-gcm', key, iv)
+          decipher.setAuthTag(authTag)
+          const tiktokToken = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8')
+
+          // TikTok Content Posting API — create a text post or photo post
+          const postRes = await fetch('https://open.tiktokapis.com/v2/post/publish/content/init/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${tiktokToken}`,
+            },
+            body: JSON.stringify({
+              post_info: {
+                title: (content.content_type as string)?.replace(/_/g, ' ') || 'New Content',
+                description: content.generated_content?.slice(0, 2200),
+                privacy_level: 'PUBLIC_TO_EVERYONE',
+                disable_comment: false,
+              },
+              source_info: {
+                source: 'PULL_FROM_URL',
+                video_url: (content.metadata as Record<string, unknown>)?.video_url || undefined,
+              },
+            }),
+            signal: AbortSignal.timeout(30000),
+          })
+
+          if (postRes.ok) {
+            const postData = await postRes.json() as Record<string, unknown>
+            results[channel] = (postData.error?.code === 'ok' || !postData.error) ? 'published' : `failed: ${postData.error?.message}`
+          } else {
+            results[channel] = `failed: ${postRes.status}`
+          }
+        } catch (err) {
+          results[channel] = `error: ${err instanceof Error ? err.message : 'unknown'}`
+        }
+        break
+      }
+
+      case 'pinterest': {
+        // Pinterest API v5 — Create Pin
+        const enabled = process.env.PINTEREST_ENABLED === 'true'
+        const pinterestToken = process.env.PINTEREST_ACCESS_TOKEN
+        if (!enabled || !pinterestToken) {
+          results[channel] = 'disabled'
+          console.log(`[distribution] Pinterest disabled — set PINTEREST_ENABLED=true`)
+          break
+        }
+
+        try {
+          const boardId = process.env.PINTEREST_BOARD_ID || ''
+          const imageUrl = (content.metadata as Record<string, unknown>)?.image_url as string
+
+          const pinRes = await fetch('https://api.pinterest.com/v5/pins', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${pinterestToken}`,
+            },
+            body: JSON.stringify({
+              title: (content.content_type as string)?.replace(/_/g, ' ') || 'New Content',
+              description: content.generated_content?.slice(0, 500),
+              board_id: boardId,
+              media_source: imageUrl
+                ? { source_type: 'image_url', url: imageUrl }
+                : undefined,
+              link: (content.metadata as Record<string, unknown>)?.product_url || undefined,
+            }),
+            signal: AbortSignal.timeout(30000),
+          })
+
+          results[channel] = pinRes.ok ? 'published' : `failed: ${pinRes.status}`
+        } catch (err) {
+          results[channel] = `error: ${err instanceof Error ? err.message : 'unknown'}`
+        }
+        break
+      }
+
       default:
-        results[channel] = 'scheduled'
+        results[channel] = 'unsupported'
+        console.log(`[distribution] Unknown channel: ${channel}`)
     }
   }
 

@@ -32,6 +32,7 @@ import {
   FulfillmentRecommendationEngine,
 } from '@/lib/engines'
 import type { EngineEvent } from '@/lib/engines'
+import { createMockDbClient } from './helpers/mock-db'
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 1: Config & Lifecycle
@@ -43,6 +44,7 @@ describe('FulfillmentRecommendation — Config & Lifecycle', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new FulfillmentRecommendationEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('has correct config', () => {
@@ -78,6 +80,7 @@ describe('FulfillmentRecommendation — Physical Products', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new FulfillmentRecommendationEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   /* Task 14.06: Low margin or low price → DROPSHIP */
@@ -157,6 +160,7 @@ describe('FulfillmentRecommendation — Other Product Types', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new FulfillmentRecommendationEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   /* Task 14.09: Custom apparel → POD */
@@ -239,6 +243,7 @@ describe('FulfillmentRecommendation — Platform Overrides', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new FulfillmentRecommendationEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   /* Task 14.12: TikTok Shop requires US shipping → PENDING_REVIEW if no supplier */
@@ -280,6 +285,7 @@ describe('FulfillmentRecommendation — Comparison Table', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new FulfillmentRecommendationEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   /* Task 14.19: Always includes 5 fulfillment type comparisons */
@@ -329,6 +335,7 @@ describe('FulfillmentRecommendation — Admin Override', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new FulfillmentRecommendationEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   /* Task 14.25: Admin override emits FULFILLMENT_OVERRIDDEN */
@@ -358,6 +365,7 @@ describe('FulfillmentRecommendation — Event Emission', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new FulfillmentRecommendationEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('emits FULFILLMENT_RECOMMENDED on recommend()', async () => {
@@ -405,6 +413,7 @@ describe('FulfillmentRecommendation — Event Handling', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new FulfillmentRecommendationEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('handles SUPPLIER_FOUND event', async () => {
@@ -415,7 +424,7 @@ describe('FulfillmentRecommendation — Event Handling', () => {
       source: 'supplier-discovery',
       timestamp: new Date().toISOString(),
     })
-    expect(spy).toHaveBeenCalledWith(expect.stringContaining('re-evaluation deferred'))
+    expect(spy).toHaveBeenCalledWith(expect.stringContaining('re-evaluation eligible'))
     spy.mockRestore()
   })
 
@@ -427,7 +436,7 @@ describe('FulfillmentRecommendation — Event Handling', () => {
       source: 'profitability',
       timestamp: new Date().toISOString(),
     })
-    expect(spy).toHaveBeenCalledWith(expect.stringContaining('re-evaluation deferred'))
+    expect(spy).toHaveBeenCalledWith(expect.stringContaining('re-evaluation eligible'))
     spy.mockRestore()
   })
 })

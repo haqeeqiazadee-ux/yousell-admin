@@ -36,6 +36,7 @@ import {
   FinancialModellingEngine,
 } from '@/lib/engines'
 import type { EngineEvent } from '@/lib/engines'
+import { createMockDbClient } from './helpers/mock-db'
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 1: Config & Lifecycle
@@ -47,6 +48,7 @@ describe('Engine 6 — Config & Lifecycle', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new FinancialModellingEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('has correct name, queues, publishes, subscribes', () => {
@@ -79,7 +81,7 @@ describe('Engine 6 — Config & Lifecycle', () => {
       source: 'profitability',
       timestamp: new Date().toISOString(),
     })
-    expect(spy).toHaveBeenCalledWith(expect.stringContaining('model generation deferred'))
+    expect(spy).toHaveBeenCalledWith(expect.stringContaining('model generation eligible'))
     spy.mockRestore()
   })
 })
@@ -94,6 +96,7 @@ describe('Engine 6 — Financial Model Generation', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new FinancialModellingEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   /* Task 6.005: Revenue = sellingPrice * monthlyUnits * months */
@@ -169,7 +172,7 @@ describe('Engine 6 — Financial Model Generation', () => {
     expect(result.paybackDays).toBe(8)
   })
 
-  it('returns Infinity payback when unprofitable', async () => {
+  it('returns -1 payback when unprofitable', async () => {
     const result = await engine.generateModel('prod-loss', {
       sellingPrice: 10,
       unitCost: 15,
@@ -179,7 +182,7 @@ describe('Engine 6 — Financial Model Generation', () => {
       months: 3,
     })
     // Revenue = 300, COGS = 450, AdSpend = 3000 → loss
-    expect(result.paybackDays).toBe(Infinity)
+    expect(result.paybackDays).toBe(-1)
   })
 
   it('handles zero total cost gracefully', async () => {
@@ -206,6 +209,7 @@ describe('Engine 6 — Influencer ROI', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new FinancialModellingEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   /* Task 6.031: Influencer ROI = (profit / influencerCost) * 100 */
@@ -230,12 +234,12 @@ describe('Engine 6 — Influencer ROI', () => {
     expect(result.breakEvenConversions).toBe(20)
   })
 
-  it('returns Infinity break-even when no margin', async () => {
+  it('returns -1 break-even when no margin', async () => {
     const result = await engine.projectInfluencerRoi(
       'prod-001', 500, 50, 15, 15,
     )
-    // marginPerUnit = 0 → Infinity
-    expect(result.breakEvenConversions).toBe(Infinity)
+    // marginPerUnit = 0 → -1
+    expect(result.breakEvenConversions).toBe(-1)
   })
 
   it('handles zero influencer cost', async () => {
@@ -256,6 +260,7 @@ describe('Engine 6 — Event Emission', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new FinancialModellingEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('emits FINANCIAL_MODEL_GENERATED on generateModel', async () => {

@@ -562,6 +562,136 @@ app.get('/api/ads', requireAdmin, async (req, res) => {
   }
 });
 
+// ── Content Distribution ─────────────────────────────────
+
+const distributionQueue = new Queue(QUEUES.DISTRIBUTION_QUEUE, { connection });
+const pushToShopifyQueue = new Queue(QUEUES.PUSH_TO_SHOPIFY, { connection });
+const pushToTiktokQueue = new Queue(QUEUES.PUSH_TO_TIKTOK, { connection });
+const pushToAmazonQueue = new Queue(QUEUES.PUSH_TO_AMAZON, { connection });
+
+app.post('/api/content/distribute', async (req, res) => {
+  try {
+    const { content_id, channels, scheduled_at, client_id } = req.body;
+    if (!content_id || !client_id) {
+      return res.status(400).json({ error: 'content_id and client_id are required' });
+    }
+    const job = await distributionQueue.add('distribution', {
+      content_id,
+      channels: channels || ['ayrshare'],
+      scheduled_at,
+      client_id,
+    }, {
+      delay: scheduled_at ? Math.max(0, new Date(scheduled_at).getTime() - Date.now()) : 0,
+    });
+    res.json({ jobId: job.id, status: 'queued', queue: 'distribution-queue' });
+  } catch (error) {
+    console.error('Failed to queue distribution:', sanitizeError(error));
+    res.status(500).json({ error: 'Failed to queue distribution' });
+  }
+});
+
+// ── Store Push Endpoints ─────────────────────────────────
+
+app.post('/api/shopify/push', async (req, res) => {
+  try {
+    const { product_id, client_id } = req.body;
+    if (!product_id || !client_id) {
+      return res.status(400).json({ error: 'product_id and client_id required' });
+    }
+
+    // Create shop_products record
+    const { data: shopProduct, error } = await supabase
+      .from('shop_products')
+      .insert({
+        product_id,
+        client_id,
+        channel_type: 'shopify',
+        push_status: 'pending',
+      })
+      .select('id')
+      .single();
+
+    if (error) throw error;
+
+    const job = await pushToShopifyQueue.add('push-to-shopify', {
+      product_id,
+      client_id,
+      shop_product_id: shopProduct.id,
+    });
+
+    res.json({ jobId: job.id, shop_product_id: shopProduct.id, status: 'queued' });
+  } catch (error) {
+    console.error('Failed to queue Shopify push:', sanitizeError(error));
+    res.status(500).json({ error: 'Failed to queue Shopify push' });
+  }
+});
+
+app.post('/api/tiktok/push', async (req, res) => {
+  try {
+    const { product_id, client_id } = req.body;
+    if (!product_id || !client_id) {
+      return res.status(400).json({ error: 'product_id and client_id required' });
+    }
+
+    const { data: shopProduct, error } = await supabase
+      .from('shop_products')
+      .insert({
+        product_id,
+        client_id,
+        channel_type: 'tiktok-shop',
+        push_status: 'pending',
+      })
+      .select('id')
+      .single();
+
+    if (error) throw error;
+
+    const job = await pushToTiktokQueue.add('push-to-tiktok', {
+      product_id,
+      client_id,
+      shop_product_id: shopProduct.id,
+    });
+
+    res.json({ jobId: job.id, shop_product_id: shopProduct.id, status: 'queued' });
+  } catch (error) {
+    console.error('Failed to queue TikTok push:', sanitizeError(error));
+    res.status(500).json({ error: 'Failed to queue TikTok push' });
+  }
+});
+
+app.post('/api/amazon/push', async (req, res) => {
+  try {
+    const { product_id, client_id } = req.body;
+    if (!product_id || !client_id) {
+      return res.status(400).json({ error: 'product_id and client_id required' });
+    }
+
+    const { data: shopProduct, error } = await supabase
+      .from('shop_products')
+      .insert({
+        product_id,
+        client_id,
+        channel_type: 'amazon',
+        push_status: 'pending',
+      })
+      .select('id')
+      .single();
+
+    if (error) throw error;
+
+    const job = await pushToAmazonQueue.add('push-to-amazon', {
+      product_id,
+      client_id,
+      shop_product_id: shopProduct.id,
+    });
+
+    res.json({ jobId: job.id, shop_product_id: shopProduct.id, status: 'queued' });
+  } catch (error) {
+    console.error('Failed to queue Amazon push:', sanitizeError(error));
+    res.status(500).json({ error: 'Failed to queue Amazon push' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Backend server running on port ${PORT}`);
 });

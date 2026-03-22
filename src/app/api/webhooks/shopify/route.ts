@@ -25,6 +25,141 @@ export async function POST(request: NextRequest) {
   const admin = createAdminClient()
 
   try {
+    // ── Product reverse sync: Shopify → YOUSELL ──
+    if (topic === 'products/update' || topic === 'products/create') {
+      const shopifyGid = `gid://shopify/Product/${payload.id}`
+      const variant = payload.variants?.[0]
+
+      // Find the shop_products record that matches this Shopify product
+      const { data: shopProducts } = await admin
+        .from('shop_products')
+        .select('id, product_id, client_id, push_status')
+        .or(`external_product_id.eq.${shopifyGid},external_product_id.eq.${payload.id}`)
+
+      if (shopProducts && shopProducts.length > 0) {
+        for (const sp of shopProducts) {
+          // Update shop_products with latest Shopify data
+          await admin
+            .from('shop_products')
+            .update({
+              last_synced_at: new Date().toISOString(),
+              sync_error: null,
+              metadata: {
+                shopify_title: payload.title,
+                shopify_status: payload.status,
+                shopify_price: variant?.price,
+                shopify_inventory: variant?.inventory_quantity,
+                shopify_updated_at: payload.updated_at,
+              },
+            })
+            .eq('id', sp.id)
+
+          // Sync price back to YOUSELL products table if changed
+          if (variant?.price && sp.product_id) {
+            const newPrice = parseFloat(variant.price)
+            const { data: product } = await admin
+              .from('products')
+              .select('price')
+              .eq('id', sp.product_id)
+              .single()
+
+            if (product && Math.abs((product.price || 0) - newPrice) > 0.01) {
+              await admin
+                .from('products')
+                .update({
+                  price: newPrice,
+                  metadata: {
+                    shopify_synced_price: newPrice,
+                    shopify_synced_at: new Date().toISOString(),
+                  },
+                })
+                .eq('id', sp.product_id)
+
+              console.log(`[Shopify Webhook] Price synced for product ${sp.product_id}: $${product.price} → $${newPrice}`)
+            }
+          }
+
+          // If Shopify product is archived/draft, update push_status
+          if (payload.status === 'archived' || payload.status === 'draft') {
+            await admin
+              .from('shop_products')
+              .update({ push_status: payload.status === 'archived' ? 'removed' : 'draft' })
+              .eq('id', sp.id)
+          }
+        }
+
+        console.log(`[Shopify Webhook] Reverse-synced ${shopProducts.length} product(s) from ${shopDomain}`)
+      }
+
+      return NextResponse.json({ received: true })
+    }
+
+    if (topic === 'products/delete') {
+      const shopifyGid = `gid://shopify/Product/${payload.id}`
+
+      const { data: shopProducts } = await admin
+        .from('shop_products')
+        .select('id, product_id')
+        .or(`external_product_id.eq.${shopifyGid},external_product_id.eq.${payload.id}`)
+
+      if (shopProducts && shopProducts.length > 0) {
+        await admin
+          .from('shop_products')
+          .update({
+            push_status: 'removed',
+            sync_error: 'Product deleted from Shopify',
+            last_synced_at: new Date().toISOString(),
+          })
+          .in('id', shopProducts.map(sp => sp.id))
+
+        console.log(`[Shopify Webhook] Marked ${shopProducts.length} product(s) as removed (deleted from Shopify)`)
+      }
+
+      return NextResponse.json({ received: true })
+    }
+
+    if (topic === 'inventory_levels/update') {
+      // Inventory level update — sync stock quantity back
+      const inventoryItemId = payload.inventory_item_id
+      const available = payload.available
+
+      if (inventoryItemId != null && available != null) {
+        // Find shop_products via Shopify inventory item metadata
+        // The inventory_item_id maps to a variant, which maps to a product
+        const { data: shopProducts } = await admin
+          .from('shop_products')
+          .select('id, product_id, metadata')
+          .not('metadata', 'is', null)
+
+        // Filter for products that track this inventory item
+        const matching = (shopProducts || []).filter(sp => {
+          const meta = sp.metadata as Record<string, unknown>
+          return meta?.shopify_inventory_item_id === inventoryItemId
+        })
+
+        for (const sp of matching) {
+          await admin
+            .from('shop_products')
+            .update({
+              metadata: {
+                ...(sp.metadata as Record<string, unknown>),
+                shopify_inventory: available,
+                shopify_inventory_synced_at: new Date().toISOString(),
+              },
+              last_synced_at: new Date().toISOString(),
+            })
+            .eq('id', sp.id)
+        }
+
+        if (matching.length > 0) {
+          console.log(`[Shopify Webhook] Inventory synced: item=${inventoryItemId}, available=${available}`)
+        }
+      }
+
+      return NextResponse.json({ received: true })
+    }
+
+    // ── Order handling ──
     if (topic === 'orders/create' || topic === 'orders/updated') {
       // Find client by connected channel
       const { data: channel } = await admin
