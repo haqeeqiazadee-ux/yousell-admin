@@ -1122,3 +1122,14 @@ Engine inventory (all 20):
 - **Result:** SUCCESS — TypeScript compiles clean
 - **Next step:** Task 15.012-15.013: Build EngineGovernor singleton + barrel export
 
+------------------------------------------------------------
+
+### [2026-03-22 01:50] DONE — Task 15.012-15.013: EngineGovernor singleton + barrel export
+
+- **Task:** Build the EngineGovernor singleton orchestrator and barrel export
+- **Batch:** 15.012-15.013
+- **Action:** Created EngineGovernor class with full Gate→Dispatch→Meter pipeline, super admin bypass (still metered for audit), cost manifest lookup, singleton pattern. Created barrel index.ts exporting all types, classes, and GOVERNOR_EVENTS.
+- **Files touched:** `src/lib/engines/governor/governor.ts` (new), `src/lib/engines/governor/index.ts` (new)
+- **Result:** SUCCESS — TypeScript compiles clean
+- **Next step:** Task 15.014-15.021: Add cost manifests to all 24 engines
+
