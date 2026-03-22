@@ -1133,3 +1133,13 @@ Engine inventory (all 20):
 - **Result:** SUCCESS — TypeScript compiles clean
 - **Next step:** Task 15.014-15.021: Add cost manifests to all 24 engines
 
+------------------------------------------------------------
+
+### [2026-03-22 02:00] DONE — Task 15.014-15.021: Cost manifests for all engines
+
+- **Task:** Add cost manifests for all 24 engines
+- **Batch:** 15.014-15.021
+- **Action:** Created centralized cost-manifests.ts with real USD costs for 23 engines (automation-orchestrator excluded — not in EngineName type). Updated Governor singleton to check centralized manifests as fallback. Updated barrel export.
+- **Files touched:** `src/lib/engines/governor/cost-manifests.ts` (new), `src/lib/engines/governor/governor.ts` (modified), `src/lib/engines/governor/index.ts` (modified)
+- **Result:** SUCCESS — TypeScript compiles clean
+- **Next step:** Task 15.022: Seed plan_engine_allowances from PRICING_TIERS

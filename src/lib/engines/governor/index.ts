@@ -12,6 +12,9 @@ export { GovernorGate } from './gate';
 export { GovernorDispatch } from './dispatch';
 export { GovernorMeter } from './meter';
 
+// Cost manifests
+export { ENGINE_COST_MANIFESTS, getEngineCostManifest, getOperationCost } from './cost-manifests';
+
 // Types
 export type {
   PlanId,

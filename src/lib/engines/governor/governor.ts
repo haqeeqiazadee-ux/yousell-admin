@@ -17,8 +17,8 @@ import type {
   GovernorExecuteContext,
   GovernorResponse,
   EngineOperationCost,
-  EngineCostManifest,
 } from './types';
+import { ENGINE_COST_MANIFESTS } from './cost-manifests';
 
 export class EngineGovernor {
   private gate: GovernorGate;
@@ -150,16 +150,23 @@ export class EngineGovernor {
   }
 
   /**
-   * Look up the cost of a specific operation from the engine's cost manifest.
+   * Look up the cost of a specific operation.
+   * Checks engine's own costManifest first, then centralized registry.
    */
   private lookupOperationCost(
     engineName: EngineName,
     operation: string
   ): EngineOperationCost | undefined {
+    // Try engine's own manifest first
     const registry = getEngineRegistry();
     const engine = registry.get(engineName);
-    const manifest: EngineCostManifest | undefined = engine?.costManifest;
-    return manifest?.operations.find((op) => op.operation === operation);
+    const engineManifest = engine?.costManifest;
+    const fromEngine = engineManifest?.operations.find((op) => op.operation === operation);
+    if (fromEngine) return fromEngine;
+
+    // Fall back to centralized cost manifests
+    const centralManifest = ENGINE_COST_MANIFESTS[engineName];
+    return centralManifest?.operations.find((op) => op.operation === operation);
   }
 
   /**
