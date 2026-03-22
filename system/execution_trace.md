@@ -1303,3 +1303,40 @@ Engine inventory (all 20):
 - **Files touched:** tasks/todo.md (updated)
 - **Result:** IN PROGRESS
 - **Next step:** PH-1: Redis EventBus upgrade
+
+------------------------------------------------------------
+
+### [2026-03-22 21:00] DONE — Phase 8: Production Hardening (ALL 6 TASKS COMPLETE)
+
+- **Task:** Harden platform for production deployment
+- **Batch:** PH-1 through PH-6
+- **Action:**
+  1. **PH-1 (Redis EventBus):** Created RedisEventBus class using ioredis pub/sub. getEventBus() auto-detects REDIS_URL. Zero engine code changes — same API.
+  2. **PH-2 (Structured Logging):** Created JSON Logger with levels, child contexts, async timing. Added X-Request-Id (UUID) to middleware for all requests.
+  3. **PH-3 (Monitoring Dashboard):** Created /api/admin/monitoring API + /admin/monitoring page with 30s auto-refresh, engine health table, error feed, budget alerts. Added nav link.
+  4. **PH-4 (Alerting):** Created alerting engine with configurable thresholds. /api/admin/alerts with evaluate/acknowledge/dismiss. Migration 032 for system_alerts table.
+  5. **PH-5 (Circuit Breakers):** Created 3-state circuit breaker (CLOSED/OPEN/HALF_OPEN) with registry. Pre-registered 10 external services with tuned thresholds.
+  6. **PH-6 (Deep Health):** Upgraded /api/health with ?deep=true — checks Supabase, Redis, backend API, env vars, circuit breaker states. Fast liveness by default.
+- **Files touched:**
+  - Created: `src/lib/engines/redis-event-bus.ts`, `src/lib/logger.ts`, `src/lib/alerting.ts`, `src/lib/circuit-breaker.ts`, `src/app/api/admin/monitoring/route.ts`, `src/app/admin/monitoring/page.tsx`, `src/app/api/admin/alerts/route.ts`, `supabase/migrations/032_system_alerts.sql`
+  - Modified: `src/lib/engines/event-bus.ts`, `src/middleware.ts`, `src/app/api/health/route.ts`, `src/components/admin-sidebar.tsx`, `package.json`
+- **Result:** SUCCESS — Phase 8 COMPLETE
+- **Commits:** ce4b126, 25a5f1d, 5538bce, d95036b, 58b2a03, 57a5e65
+- **Next step:** Wire circuit breakers + logger into engines
+
+------------------------------------------------------------
+
+### [2026-03-22 22:00] DONE — Circuit Breaker + Logger Wiring (5 batches, 14 files)
+
+- **Task:** Wire circuit breakers and structured logger into all engines/clients with external API calls
+- **Batch:** PH-WIRE-1 through PH-WIRE-5
+- **Action:**
+  1. Bannerbear, Shotstack, Shopify clients — breakers + logging
+  2. Content-creation (Claude API), TikTok discovery, Amazon intelligence — breakers + logging
+  3. Email (Resend), creator-matching (Ainfluencer), ad-intelligence (Meta) — breakers + logging
+  4. Supplier discovery (3 Apify actors), Shopify intelligence, store-oauth — breakers + logging
+  5. Competitor intelligence (4 Apify actors), store-integration (token refreshes) — breakers + logging
+- **Files touched:** 14 files (3 clients + 9 engines + email.ts + store-oauth.ts)
+- **Result:** SUCCESS — All external API calls protected by circuit breakers + structured JSON logging
+- **Commits:** 4b530f7, 82cf1f5, 6f343bd, 18698cc, a8d976a
+- **Next step:** All infrastructure complete. Ready for UI/dashboard work.

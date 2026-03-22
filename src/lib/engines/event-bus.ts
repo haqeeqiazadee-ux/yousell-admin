@@ -2,13 +2,14 @@
  * YOUSELL Engine Event Bus — Central Pub/Sub
  *
  * Singleton event bus for inter-engine communication.
- * In-memory implementation — can be upgraded to Redis Pub/Sub later.
+ * Uses Redis pub/sub when REDIS_URL is configured, falls back to in-memory.
  *
  * Features:
  * - Type-safe event emission and subscription
  * - Event history buffer (last 100 events) for debugging
  * - Wildcard subscriptions (e.g. 'discovery.*')
  * - Error isolation — one handler failure doesn't break others
+ * - Cross-process delivery via Redis pub/sub (when available)
  *
  * @see src/lib/engines/types.ts for event type definitions
  */
@@ -28,17 +29,22 @@ interface Subscription {
   source?: EngineName;
 }
 
-class EventBus {
+/**
+ * Common interface for both in-memory and Redis EventBus implementations.
+ */
+export interface IEventBus {
+  subscribe(pattern: string, handler: EventHandler, source?: EngineName): () => void;
+  emit<T = unknown>(type: string | EngineEventType, payload: T, source: EngineName, correlationId?: string): Promise<void>;
+  getHistory(pattern?: string): EngineEvent[];
+  clearSubscriptions(): void;
+  clearHistory(): void;
+  readonly subscriberCount: number;
+}
+
+class EventBus implements IEventBus {
   private subscriptions: Subscription[] = [];
   private history: EngineEvent[] = [];
 
-  /**
-   * Subscribe to events matching a pattern.
-   * Supports exact match ('discovery.scan_complete') or
-   * wildcard ('discovery.*', '*').
-   *
-   * Returns an unsubscribe function.
-   */
   subscribe(pattern: string, handler: EventHandler, source?: EngineName): () => void {
     const sub: Subscription = { pattern, handler, source };
     this.subscriptions.push(sub);
@@ -48,10 +54,6 @@ class EventBus {
     };
   }
 
-  /**
-   * Emit an event to all matching subscribers.
-   * Errors in individual handlers are caught and logged — never propagated.
-   */
   async emit<T = unknown>(
     type: string | EngineEventType,
     payload: T,
@@ -66,16 +68,13 @@ class EventBus {
       correlationId,
     };
 
-    // Buffer for debugging
     this.history.push(event as EngineEvent);
     if (this.history.length > EVENT_HISTORY_SIZE) {
       this.history.shift();
     }
 
-    // Find matching subscriptions
     const matching = this.subscriptions.filter((sub) => this.matches(sub.pattern, type));
 
-    // Execute handlers — isolated error handling
     await Promise.allSettled(
       matching.map(async (sub) => {
         try {
@@ -90,37 +89,22 @@ class EventBus {
     );
   }
 
-  /**
-   * Get recent event history for debugging.
-   * Optionally filter by event type pattern.
-   */
   getHistory(pattern?: string): EngineEvent[] {
     if (!pattern) return [...this.history];
     return this.history.filter((e) => this.matches(pattern, e.type));
   }
 
-  /**
-   * Clear all subscriptions. Used in tests and shutdown.
-   */
   clearSubscriptions(): void {
     this.subscriptions = [];
   }
 
-  /**
-   * Clear event history. Used in tests.
-   */
   clearHistory(): void {
     this.history = [];
   }
 
-  /**
-   * Get current subscription count. Used for diagnostics.
-   */
   get subscriberCount(): number {
     return this.subscriptions.length;
   }
-
-  // ─── Private ────────────────────────────────────────────
 
   private matches(pattern: string, eventType: string): boolean {
     if (pattern === '*') return true;
@@ -135,13 +119,41 @@ class EventBus {
 
 // ─── Singleton ────────────────────────────────────────────
 
-let instance: EventBus | null = null;
+let instance: IEventBus | null = null;
+let redisInitPromise: Promise<void> | null = null;
 
-export function getEventBus(): EventBus {
-  if (!instance) {
+/**
+ * Get the singleton EventBus instance.
+ * Automatically uses Redis pub/sub when REDIS_URL is set.
+ * Falls back to in-memory for local dev or when Redis is unavailable.
+ */
+export function getEventBus(): IEventBus {
+  if (instance) return instance;
+
+  const redisUrl = process.env.REDIS_URL;
+  if (redisUrl) {
+    // Dynamic import to avoid bundling ioredis in client builds
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { RedisEventBus } = require('./redis-event-bus');
+    const redisBus = new RedisEventBus(redisUrl);
+    instance = redisBus as IEventBus;
+    // Connect async — bus works locally until connected
+    redisInitPromise = redisBus.connect().catch((err: Error) => {
+      console.error('[EventBus] Redis connection failed, using local delivery only:', err.message);
+    });
+  } else {
     instance = new EventBus();
   }
-  return instance;
+  return instance!;
+}
+
+/**
+ * Wait for Redis connection to complete (if applicable).
+ * Call this during app startup to ensure Redis is ready.
+ */
+export async function waitForEventBus(): Promise<void> {
+  getEventBus(); // Ensure instance is created
+  if (redisInitPromise) await redisInitPromise;
 }
 
 /**
@@ -153,6 +165,8 @@ export function resetEventBus(): void {
     instance.clearHistory();
   }
   instance = null;
+  redisInitPromise = null;
 }
 
 export { EventBus };
+export type { Subscription };

@@ -2,7 +2,8 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // ─── Security Headers (Phase 7: Compliance) ────────────────
-function addSecurityHeaders(response: NextResponse): NextResponse {
+function addSecurityHeaders(response: NextResponse, requestId?: string): NextResponse {
+  if (requestId) response.headers.set('X-Request-Id', requestId)
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('X-XSS-Protection', '1; mode=block')
@@ -62,6 +63,9 @@ function adminUrl(request: NextRequest, path: string): URL {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // ─── Request ID (Phase 8: Production Hardening) ───────────
+  const requestId = request.headers.get('x-request-id') || crypto.randomUUID()
+
   // Rate limit API routes (except health check and webhooks)
   if (pathname.startsWith('/api/') && !pathname.startsWith('/api/health') && !pathname.startsWith('/api/webhooks')) {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'unknown'
@@ -75,7 +79,7 @@ export async function middleware(request: NextRequest) {
       rateLimitResponse.headers.set('Retry-After', '60')
       rateLimitResponse.headers.set('X-RateLimit-Limit', String(RATE_LIMIT_MAX))
       rateLimitResponse.headers.set('X-RateLimit-Remaining', '0')
-      return addSecurityHeaders(rateLimitResponse)
+      return addSecurityHeaders(rateLimitResponse, requestId)
     }
   }
 
@@ -194,6 +198,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return addSecurityHeaders(supabaseResponse)
+  return addSecurityHeaders(supabaseResponse, requestId)
 }
 export const config = { matcher: ['/', '/admin/:path*', '/dashboard/:path*', '/api/:path*', '/login', '/signup', '/forgot-password', '/reset-password'] }

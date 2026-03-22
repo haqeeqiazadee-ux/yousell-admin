@@ -11,10 +11,14 @@
  * @engine shopify-intelligence
  */
 
+import { getCircuitBreaker } from '@/lib/circuit-breaker';
+import { engineLogger } from '@/lib/logger';
 import { getEventBus } from './event-bus';
 import type { Engine, EngineConfig, EngineStatus } from './types';
 import { ENGINE_EVENTS } from './types';
 import type { SupabaseMinimalClient } from './db-types';
+
+const log = engineLogger('shopify-intelligence');
 
 export interface ShopifyStore {
   domain: string;
@@ -91,18 +95,24 @@ export class ShopifyIntelligenceEngine implements Engine {
     const apifyToken = process.env.APIFY_API_TOKEN;
 
     if (!apifyToken) {
-      console.log('[ShopifyIntelligence] APIFY_API_TOKEN not set — returning empty');
+      log.warn('APIFY_API_TOKEN not set — returning empty');
       return { niche, storesFound: 0, productsStored: 0, stores: [] };
     }
 
     const actorId = 'clearpath~shop-by-shopify-product-scraper';
-    const runRes = await fetch(`https://api.apify.com/v2/acts/${actorId}/runs`, {
+    const apifyBreaker = getCircuitBreaker('apify');
+    log.info('Starting Shopify store scan', { niche, limit });
+
+    const runRes = await apifyBreaker.execute(() => fetch(`https://api.apify.com/v2/acts/${actorId}/runs`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apifyToken}` },
       body: JSON.stringify({ searchQuery: niche, maxProducts: limit * 3 }),
-    });
+    }));
 
-    if (!runRes.ok) throw new Error(`Apify run failed: ${runRes.status}`);
+    if (!runRes.ok) {
+      log.error('Apify run failed', { status: runRes.status });
+      throw new Error(`Apify run failed: ${runRes.status}`);
+    }
     const runData = await runRes.json() as Record<string, unknown>;
     const runId = (runData.data as Record<string, unknown>)?.id as string;
 

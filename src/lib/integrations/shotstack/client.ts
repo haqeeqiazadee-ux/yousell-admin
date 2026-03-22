@@ -9,9 +9,14 @@
  * @see https://shotstack.io/docs/guide/
  */
 
+import { getCircuitBreaker } from '@/lib/circuit-breaker';
+import { engineLogger } from '@/lib/logger';
+
 const API_KEY = () => process.env.SHOTSTACK_API_KEY || '';
 const ENV = () => process.env.SHOTSTACK_ENV || 'stage'; // 'stage' or 'v1'
 const BASE_URL = () => `https://api.shotstack.io/${ENV()}`;
+const log = engineLogger('shotstack');
+const breaker = () => getCircuitBreaker('shotstack');
 
 export interface ShotstackClip {
   asset: {
@@ -64,29 +69,36 @@ export async function submitRender(request: ShotstackRenderRequest): Promise<Sho
   const key = API_KEY();
   if (!key) throw new Error('SHOTSTACK_API_KEY not configured');
 
-  const res = await fetch(`${BASE_URL()}/render`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': key,
-    },
-    body: JSON.stringify(request),
-    signal: AbortSignal.timeout(15000),
+  return breaker().execute(async () => {
+    log.info('Submitting render', { format: request.output.format, resolution: request.output.resolution });
+
+    const res = await fetch(`${BASE_URL()}/render`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+      },
+      body: JSON.stringify(request),
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      log.error('Render submission failed', { status: res.status, error: errText });
+      throw new Error(`Shotstack render failed: ${res.status} ${errText}`);
+    }
+
+    const data = await res.json() as Record<string, unknown>;
+    const response = data.response as Record<string, unknown>;
+    const id = (response?.id as string) || '';
+
+    log.info('Render submitted', { renderId: id });
+    return {
+      id,
+      status: 'queued',
+      createdAt: new Date().toISOString(),
+    };
   });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Shotstack render failed: ${res.status} ${errText}`);
-  }
-
-  const data = await res.json() as Record<string, unknown>;
-  const response = data.response as Record<string, unknown>;
-
-  return {
-    id: (response?.id as string) || '',
-    status: 'queued',
-    createdAt: new Date().toISOString(),
-  };
 }
 
 /**
@@ -96,21 +108,26 @@ export async function getRenderStatus(renderId: string): Promise<ShotstackRender
   const key = API_KEY();
   if (!key) throw new Error('SHOTSTACK_API_KEY not configured');
 
-  const res = await fetch(`${BASE_URL()}/render/${renderId}`, {
-    headers: { 'x-api-key': key },
-    signal: AbortSignal.timeout(10000),
+  return breaker().execute(async () => {
+    const res = await fetch(`${BASE_URL()}/render/${renderId}`, {
+      headers: { 'x-api-key': key },
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!res.ok) {
+      log.error('Status check failed', { renderId, status: res.status });
+      throw new Error(`Shotstack status check failed: ${res.status}`);
+    }
+    const data = await res.json() as Record<string, unknown>;
+    const response = data.response as Record<string, unknown>;
+
+    return {
+      id: (response?.id as string) || renderId,
+      status: (response?.status as 'queued' | 'rendering' | 'done' | 'failed') || 'queued',
+      url: (response?.url as string) || undefined,
+      createdAt: (response?.created as string) || '',
+    };
   });
-
-  if (!res.ok) throw new Error(`Shotstack status check failed: ${res.status}`);
-  const data = await res.json() as Record<string, unknown>;
-  const response = data.response as Record<string, unknown>;
-
-  return {
-    id: (response?.id as string) || renderId,
-    status: (response?.status as 'queued' | 'rendering' | 'done' | 'failed') || 'queued',
-    url: (response?.url as string) || undefined,
-    createdAt: (response?.created as string) || '',
-  };
 }
 
 /**
@@ -184,6 +201,8 @@ export async function generateProductVideo(
     { clips: [titleClip, priceClip, ctaClip] }, // Overlay track
     { clips: imageClips.length > 0 ? imageClips : [{ asset: { type: 'title' as const, text: product.title, style: 'future' }, start: 0, length: duration }] }, // Background track
   ];
+
+  log.info('Generating product video', { title: product.title, images: imageCount, duration });
 
   return submitRender({
     timeline: {

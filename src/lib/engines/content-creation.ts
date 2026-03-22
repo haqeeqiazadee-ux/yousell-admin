@@ -13,6 +13,8 @@
  */
 
 import { getEventBus } from './event-bus';
+import { getCircuitBreaker } from '@/lib/circuit-breaker';
+import { engineLogger } from '@/lib/logger';
 import type {
   Engine, EngineConfig, EngineEvent, EngineStatus,
 } from './types';
@@ -216,33 +218,47 @@ export class ContentCreationEngine implements Engine {
       // Generate content via Claude API (Haiku for bulk, Sonnet for HOT tier)
       const anthropicKey = process.env.ANTHROPIC_API_KEY;
       let content: string;
+      const log = engineLogger('content-engine');
 
       if (anthropicKey) {
         const model = modelUsed === 'sonnet' ? 'claude-sonnet-4-5-20250514' : 'claude-haiku-4-5-20251001';
         const maxTokens = TOKEN_LIMITS[input.contentType] || 400;
+        const claudeBreaker = getCircuitBreaker('claude-api');
 
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': anthropicKey,
-            'anthropic-version': '2023-06-01',
-          },
-          body: JSON.stringify({
-            model,
-            max_tokens: maxTokens,
-            system: systemPrompt,
-            messages: [{ role: 'user', content: userPrompt }],
-          }),
-        });
+        try {
+          content = await claudeBreaker.execute(async () => {
+            log.info('Generating content via Claude', { model, contentType: input.contentType, product: input.productTitle });
 
-        if (response.ok) {
-          const result = await response.json() as Record<string, unknown>;
-          const textBlock = ((result.content as Array<Record<string, unknown>>)?.[0]);
-          content = (textBlock?.text as string) || `[Generation failed — empty response]`;
-        } else {
-          console.error(`[ContentCreation] Claude API error: ${response.status}`);
-          content = `[Generation failed — API error ${response.status}]`;
+            const response = await fetch('https://api.anthropic.com/v1/messages', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': anthropicKey,
+                'anthropic-version': '2023-06-01',
+              },
+              body: JSON.stringify({
+                model,
+                max_tokens: maxTokens,
+                system: systemPrompt,
+                messages: [{ role: 'user', content: userPrompt }],
+              }),
+            });
+
+            if (!response.ok) {
+              log.error('Claude API error', { status: response.status, contentType: input.contentType });
+              throw new Error(`Claude API error: ${response.status}`);
+            }
+
+            const result = await response.json() as Record<string, unknown>;
+            const textBlock = ((result.content as Array<Record<string, unknown>>)?.[0]);
+            const text = (textBlock?.text as string) || '';
+            if (!text) throw new Error('Empty response from Claude');
+            log.info('Content generated', { contentType: input.contentType, length: text.length });
+            return text;
+          });
+        } catch (err) {
+          log.error('Content generation failed', { error: err, contentType: input.contentType });
+          content = `[Generation failed — ${err instanceof Error ? err.message : 'unknown error'}]`;
         }
       } else {
         // Fallback when ANTHROPIC_API_KEY not set (dev/test)

@@ -8,9 +8,13 @@
  */
 
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getCircuitBreaker } from '@/lib/circuit-breaker';
+import { engineLogger } from '@/lib/logger';
 import { getEventBus } from './event-bus';
 import type { Engine, EngineConfig, EngineEvent, EngineStatus } from './types';
 import { ENGINE_EVENTS } from './types';
+
+const log = engineLogger('tiktok-discovery');
 
 // ─── Internal Types ─────────────────────────────────────────
 
@@ -170,10 +174,12 @@ export async function discoverTikTokVideos(
     return { videosFound: 0, videosStored: 0, hashtagsAnalyzed: 0, errors: ['APIFY_API_TOKEN not configured'] };
   }
 
-  // Step 1: Call Apify TikTok Scraper
+  // Step 1: Call Apify TikTok Scraper (with circuit breaker)
   let rawItems: ApifyItem[] = [];
+  const apifyBreaker = getCircuitBreaker('apify');
   try {
-    const res = await fetch(
+    log.info('Starting TikTok discovery', { query, limit });
+    const res = await apifyBreaker.execute(() => fetch(
       `https://api.apify.com/v2/acts/clockworks~tiktok-scraper/run-sync-get-dataset-items?token=${token}`,
       {
         method: 'POST',
@@ -185,9 +191,10 @@ export async function discoverTikTokVideos(
         }),
         signal: AbortSignal.timeout(90000),
       }
-    );
+    ));
 
     if (!res.ok) {
+      log.error('Apify TikTok scraper failed', { status: res.status, statusText: res.statusText });
       errors.push(`Apify returned ${res.status}: ${res.statusText}`);
       return { videosFound: 0, videosStored: 0, hashtagsAnalyzed: 0, errors };
     }

@@ -9,6 +9,8 @@
  * @engine supplier-discovery
  */
 
+import { getCircuitBreaker } from '@/lib/circuit-breaker';
+import { engineLogger } from '@/lib/logger';
 import { getEventBus } from './event-bus';
 import type {
   Engine, EngineConfig, EngineEvent, EngineStatus,
@@ -16,6 +18,8 @@ import type {
 } from './types';
 import { ENGINE_EVENTS } from './types';
 import type { SupabaseMinimalClient } from './db-types';
+
+const log = engineLogger('supplier-discovery');
 
 /** Supplier record shape for DB writes */
 export interface SupplierRecord {
@@ -221,10 +225,12 @@ export class SupplierDiscoveryEngine implements Engine {
 
         const existingUrls = new Set((existing || []).map((r: { supplier_url: string }) => r.supplier_url));
 
-        // Call Apify actor for this platform
+        // Call Apify actor for this platform (with circuit breaker)
         if (token) {
           try {
-            const res = await fetch(
+            log.info('Searching suppliers via Apify', { platform, keyword, actorId: config.actorId });
+            const apifyBreaker = getCircuitBreaker('apify');
+            const res = await apifyBreaker.execute(() => fetch(
               `https://api.apify.com/v2/acts/${config.actorId}/run-sync-get-dataset-items?token=${token}`,
               {
                 method: 'POST',
@@ -232,10 +238,10 @@ export class SupplierDiscoveryEngine implements Engine {
                 body: JSON.stringify(config.buildBody(keyword, config.maxResults)),
                 signal: AbortSignal.timeout(90000),
               },
-            );
+            ));
 
             if (!res.ok) {
-              console.error(`[SupplierDiscovery] Apify ${platform} error: ${res.status} ${res.statusText}`);
+              log.error('Apify supplier search failed', { platform, status: res.status, statusText: res.statusText });
               continue;
             }
 
@@ -246,7 +252,7 @@ export class SupplierDiscoveryEngine implements Engine {
               .map((item: Record<string, unknown>) => config.mapItem(item))
               .filter((r): r is NonNullable<typeof r> => r !== null && !!r.supplierUrl);
 
-            console.log(`[SupplierDiscovery] ${platform}: ${items.length} raw → ${mapped.length} mapped`);
+            log.info('Supplier search results', { platform, raw: items.length, mapped: mapped.length });
 
             // Filter out existing, then process via the standard pipeline
             const newSuppliers = mapped.filter(r => !existingUrls.has(r.supplierUrl));

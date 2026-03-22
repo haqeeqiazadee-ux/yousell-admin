@@ -9,11 +9,15 @@
  * @engine competitor-intelligence
  */
 
+import { getCircuitBreaker } from '@/lib/circuit-breaker';
+import { engineLogger } from '@/lib/logger';
 import { getEventBus } from './event-bus';
 import type {
   Engine, EngineConfig, EngineEvent, EngineStatus,
   ProductDiscoveredPayload, ProductScoredPayload,
 } from './types';
+
+const log = engineLogger('competitor-intelligence');
 import { ENGINE_EVENTS } from './types';
 import type { SupabaseMinimalClient } from './db-types';
 
@@ -223,9 +227,10 @@ export class CompetitorIntelligenceEngine implements Engine {
         // Call Apify actor for this platform
         let scraped: CompetitorRecord[] = [];
         if (token) {
-          console.log(`[CompetitorIntelligence] Scanning ${platform} for "${keyword}" (actor: ${config.actorId})`);
+          log.info('Scanning competitors via Apify', { platform, keyword, actorId: config.actorId });
           try {
-            const res = await fetch(
+            const apifyBreaker = getCircuitBreaker('apify');
+            const res = await apifyBreaker.execute(() => fetch(
               `https://api.apify.com/v2/acts/${config.actorId}/run-sync-get-dataset-items?token=${token}`,
               {
                 method: 'POST',
@@ -233,10 +238,10 @@ export class CompetitorIntelligenceEngine implements Engine {
                 body: JSON.stringify(config.buildBody(keyword, config.maxResults)),
                 signal: AbortSignal.timeout(90000),
               },
-            );
+            ));
 
             if (!res.ok) {
-              console.error(`[CompetitorIntelligence] Apify ${platform} error: ${res.status} ${res.statusText}`);
+              log.error('Apify competitor scan failed', { platform, status: res.status });
             } else {
               const items = await res.json();
               if (Array.isArray(items)) {
