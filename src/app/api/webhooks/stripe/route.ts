@@ -194,7 +194,6 @@ export async function POST(request: NextRequest) {
         }
 
         // Governor: Renewal — reset envelope on period change
-        const periodEnd = (subscription as unknown as Record<string, unknown>).current_period_end as number | undefined
         if (periodEnd && subscription.status === 'active') {
           const { data: subRecord } = await supabase
             .from('subscriptions')
@@ -203,7 +202,6 @@ export async function POST(request: NextRequest) {
             .single()
 
           if (subRecord?.client_id && subRecord.plan) {
-            const periodStart = (subscription as unknown as Record<string, unknown>).current_period_start as number | undefined
             if (periodStart) {
               await renewBudgetEnvelope(
                 subRecord.client_id,
