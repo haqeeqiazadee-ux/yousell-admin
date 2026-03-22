@@ -9,10 +9,14 @@
  * @engine store-integration
  */
 
+import { getCircuitBreaker } from '@/lib/circuit-breaker';
+import { engineLogger } from '@/lib/logger';
 import { getEventBus } from './event-bus';
 import type { Engine, EngineConfig, EngineEvent, EngineStatus } from './types';
 import { ENGINE_EVENTS } from './types';
 import type { SupabaseMinimalClient } from './db-types';
+
+const log = engineLogger('store-integration');
 
 export class StoreIntegrationEngine implements Engine {
   private _status: EngineStatus = 'idle';
@@ -131,11 +135,12 @@ export class StoreIntegrationEngine implements Engine {
       const endpoint = queueEndpoints[platform];
 
       if (!backendUrl || !endpoint) {
-        console.warn(`[StoreIntegration] Cannot queue push — backend URL or endpoint missing for ${platform}`);
+        log.warn('Cannot queue push — backend URL or endpoint missing', { platform });
         return { shopProductId: '', storeUrl: '', status: 'error' };
       }
 
       // Enqueue the push job via the backend API
+      log.info('Queueing product push', { platform, productId, clientId });
       const response = await fetch(`${backendUrl}/api/${endpoint}`, {
         method: 'POST',
         headers: {
@@ -297,7 +302,8 @@ export class StoreIntegrationEngine implements Engine {
           const appKey = process.env.TIKTOK_SHOP_APP_KEY;
           const appSecret = process.env.TIKTOK_SHOP_APP_SECRET;
           if (appKey && appSecret && channel.refresh_token_encrypted) {
-            const res = await fetch('https://auth.tiktok-shops.com/api/v2/token/refresh', {
+            log.info('Refreshing TikTok Shop token', { channelId: channel.id });
+            const res = await getCircuitBreaker('tiktok-api').execute(() => fetch('https://auth.tiktok-shops.com/api/v2/token/refresh', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -306,7 +312,7 @@ export class StoreIntegrationEngine implements Engine {
                 refresh_token: channel.refresh_token_encrypted, // In prod: decrypt first
                 grant_type: 'refresh_token',
               }),
-            });
+            }));
             if (res.ok) {
               const data = await res.json() as Record<string, unknown>;
               const tokenData = data.data as Record<string, unknown>;
@@ -323,7 +329,8 @@ export class StoreIntegrationEngine implements Engine {
           const clientId = process.env.AMAZON_SP_CLIENT_ID;
           const clientSecret = process.env.AMAZON_SP_CLIENT_SECRET;
           if (clientId && clientSecret && channel.refresh_token_encrypted) {
-            const res = await fetch('https://api.amazon.com/auth/o2/token', {
+            log.info('Refreshing Amazon LWA token', { channelId: channel.id });
+            const res = await getCircuitBreaker('amazon-api').execute(() => fetch('https://api.amazon.com/auth/o2/token', {
               method: 'POST',
               headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
               body: new URLSearchParams({
@@ -332,7 +339,7 @@ export class StoreIntegrationEngine implements Engine {
                 client_id: clientId,
                 client_secret: clientSecret,
               }),
-            });
+            }));
             if (res.ok) {
               const data = await res.json() as Record<string, unknown>;
               if (data.access_token) {
