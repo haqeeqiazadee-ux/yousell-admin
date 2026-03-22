@@ -7,7 +7,12 @@
  * @engine store-integration
  */
 
+import { getCircuitBreaker } from '@/lib/circuit-breaker'
+import { engineLogger } from '@/lib/logger'
+
 const SHOPIFY_API_VERSION = '2025-01'
+const log = engineLogger('shopify-api')
+const breaker = () => getCircuitBreaker('shopify-api')
 
 export interface ShopifyClientConfig {
   shopDomain: string
@@ -45,33 +50,51 @@ export async function shopifyGraphQL<T = Record<string, unknown>>(
 ): Promise<ShopifyGraphQLResponse<T>> {
   const url = `https://${config.shopDomain}/admin/api/${SHOPIFY_API_VERSION}/graphql.json`
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Shopify-Access-Token': config.accessToken,
-    },
-    body: JSON.stringify({ query, variables }),
-    signal: AbortSignal.timeout(30000),
+  return breaker().execute(async () => {
+    log.debug('GraphQL request', { shop: config.shopDomain, queryLength: query.length })
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Shopify-Access-Token': config.accessToken,
+      },
+      body: JSON.stringify({ query, variables }),
+      signal: AbortSignal.timeout(30000),
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      log.error('Shopify API error', { shop: config.shopDomain, status: response.status, error: text })
+      throw new ShopifyAPIError(
+        `Shopify API ${response.status}: ${text}`,
+        response.status,
+      )
+    }
+
+    const result = await response.json() as ShopifyGraphQLResponse<T>
+
+    // Check for user errors in the response
+    if (result.errors && result.errors.length > 0) {
+      const messages = result.errors.map(e => e.message).join('; ')
+      log.error('GraphQL errors', { shop: config.shopDomain, errors: messages })
+      throw new ShopifyAPIError(`GraphQL errors: ${messages}`, 422)
+    }
+
+    // Log throttle status for monitoring
+    if (result.extensions?.cost) {
+      const { currentlyAvailable, maximumAvailable } = result.extensions.cost.throttleStatus
+      if (currentlyAvailable < maximumAvailable * 0.2) {
+        log.warn('Shopify API throttle warning', {
+          shop: config.shopDomain,
+          available: currentlyAvailable,
+          max: maximumAvailable,
+        })
+      }
+    }
+
+    return result
   })
-
-  if (!response.ok) {
-    const text = await response.text()
-    throw new ShopifyAPIError(
-      `Shopify API ${response.status}: ${text}`,
-      response.status,
-    )
-  }
-
-  const result = await response.json() as ShopifyGraphQLResponse<T>
-
-  // Check for user errors in the response
-  if (result.errors && result.errors.length > 0) {
-    const messages = result.errors.map(e => e.message).join('; ')
-    throw new ShopifyAPIError(`GraphQL errors: ${messages}`, 422)
-  }
-
-  return result
 }
 
 /**
@@ -98,6 +121,13 @@ export async function shopifyGraphQLWithRetry<T = Record<string, unknown>>(
           throw err
         }
       }
+
+      log.warn('Shopify request failed, retrying', {
+        shop: config.shopDomain,
+        attempt: attempt + 1,
+        maxRetries,
+        error: lastError.message,
+      })
 
       // Wait before retry: 1s, 2s, 4s
       if (attempt < maxRetries - 1) {

@@ -9,8 +9,13 @@
  * @see https://developers.bannerbear.com/
  */
 
+import { getCircuitBreaker } from '@/lib/circuit-breaker';
+import { engineLogger } from '@/lib/logger';
+
 const API_KEY = () => process.env.BANNERBEAR_API_KEY || '';
 const BASE_URL = 'https://api.bannerbear.com/v2';
+const log = engineLogger('bannerbear');
+const breaker = () => getCircuitBreaker('bannerbear');
 
 export interface BannerbearTemplate {
   uid: string;
@@ -54,21 +59,27 @@ export async function listTemplates(): Promise<BannerbearTemplate[]> {
   const key = API_KEY();
   if (!key) return [];
 
-  const res = await fetch(`${BASE_URL}/templates`, {
-    headers: { Authorization: `Bearer ${key}` },
-    signal: AbortSignal.timeout(10000),
-  });
+  return breaker().executeWithFallback(async () => {
+    const res = await fetch(`${BASE_URL}/templates`, {
+      headers: { Authorization: `Bearer ${key}` },
+      signal: AbortSignal.timeout(10000),
+    });
 
-  if (!res.ok) return [];
-  const data = await res.json() as Array<Record<string, unknown>>;
+    if (!res.ok) {
+      log.warn('Failed to list templates', { status: res.status });
+      return [];
+    }
+    const data = await res.json() as Array<Record<string, unknown>>;
 
-  return data.map(t => ({
-    uid: (t.uid as string) || '',
-    name: (t.name as string) || '',
-    width: (t.width as number) || 0,
-    height: (t.height as number) || 0,
-    tags: (t.tags as string[]) || [],
-  }));
+    log.info('Templates listed', { count: data.length });
+    return data.map(t => ({
+      uid: (t.uid as string) || '',
+      name: (t.name as string) || '',
+      width: (t.width as number) || 0,
+      height: (t.height as number) || 0,
+      tags: (t.tags as string[]) || [],
+    }));
+  }, []);
 }
 
 /**
@@ -79,34 +90,40 @@ export async function createImage(request: BannerbearImageRequest): Promise<Bann
   const key = API_KEY();
   if (!key) throw new Error('BANNERBEAR_API_KEY not configured');
 
-  const res = await fetch(`${BASE_URL}/images`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${key}`,
-    },
-    body: JSON.stringify({
-      template: request.templateUid,
-      modifications: request.modifications,
-      webhook_url: request.webhookUrl,
-      metadata: request.metadata,
-    }),
-    signal: AbortSignal.timeout(15000),
+  return breaker().execute(async () => {
+    log.info('Creating image', { template: request.templateUid });
+
+    const res = await fetch(`${BASE_URL}/images`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        template: request.templateUid,
+        modifications: request.modifications,
+        webhook_url: request.webhookUrl,
+        metadata: request.metadata,
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      log.error('Image creation failed', { status: res.status, error: errText });
+      throw new Error(`Bannerbear image creation failed: ${res.status} ${errText}`);
+    }
+
+    const data = await res.json() as Record<string, unknown>;
+    log.info('Image created', { uid: data.uid, status: data.status });
+    return {
+      uid: (data.uid as string) || '',
+      status: (data.status as 'pending' | 'completed' | 'failed') || 'pending',
+      imageUrl: (data.image_url as string) || undefined,
+      imageUrlPng: (data.image_url_png as string) || undefined,
+      createdAt: (data.created_at as string) || new Date().toISOString(),
+    };
   });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Bannerbear image creation failed: ${res.status} ${errText}`);
-  }
-
-  const data = await res.json() as Record<string, unknown>;
-  return {
-    uid: (data.uid as string) || '',
-    status: (data.status as 'pending' | 'completed' | 'failed') || 'pending',
-    imageUrl: (data.image_url as string) || undefined,
-    imageUrlPng: (data.image_url_png as string) || undefined,
-    createdAt: (data.created_at as string) || new Date().toISOString(),
-  };
 }
 
 /**
@@ -116,21 +133,26 @@ export async function getImage(uid: string): Promise<BannerbearImage> {
   const key = API_KEY();
   if (!key) throw new Error('BANNERBEAR_API_KEY not configured');
 
-  const res = await fetch(`${BASE_URL}/images/${uid}`, {
-    headers: { Authorization: `Bearer ${key}` },
-    signal: AbortSignal.timeout(10000),
+  return breaker().execute(async () => {
+    const res = await fetch(`${BASE_URL}/images/${uid}`, {
+      headers: { Authorization: `Bearer ${key}` },
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!res.ok) {
+      log.error('Image fetch failed', { uid, status: res.status });
+      throw new Error(`Bannerbear image fetch failed: ${res.status}`);
+    }
+    const data = await res.json() as Record<string, unknown>;
+
+    return {
+      uid: (data.uid as string) || '',
+      status: (data.status as 'pending' | 'completed' | 'failed') || 'pending',
+      imageUrl: (data.image_url as string) || undefined,
+      imageUrlPng: (data.image_url_png as string) || undefined,
+      createdAt: (data.created_at as string) || '',
+    };
   });
-
-  if (!res.ok) throw new Error(`Bannerbear image fetch failed: ${res.status}`);
-  const data = await res.json() as Record<string, unknown>;
-
-  return {
-    uid: (data.uid as string) || '',
-    status: (data.status as 'pending' | 'completed' | 'failed') || 'pending',
-    imageUrl: (data.image_url as string) || undefined,
-    imageUrlPng: (data.image_url_png as string) || undefined,
-    createdAt: (data.created_at as string) || '',
-  };
 }
 
 /**
