@@ -77,6 +77,13 @@ export interface Engine {
   /** Engine configuration (name, version, deps, queues, events) */
   readonly config: EngineConfig;
 
+  /**
+   * Cost manifest declaring real USD cost per operation.
+   * Governor reads this to calculate budgets and enforce caps.
+   * Optional during migration — required for Governor-gated engines.
+   */
+  readonly costManifest?: import('./governor/types').EngineCostManifest;
+
   /** Current engine status */
   status(): EngineStatus;
 

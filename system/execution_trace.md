@@ -1078,3 +1078,14 @@ Engine inventory (all 20):
 - **Result:** SUCCESS — TypeScript compiles clean
 - **Next step:** Task 15.002: Add costManifest to Engine interface in types.ts
 
+------------------------------------------------------------
+
+### [2026-03-22 01:10] DONE — Task 15.002: Add costManifest to Engine interface
+
+- **Task:** Add optional costManifest property to Engine interface
+- **Batch:** 15.002
+- **Action:** Added `readonly costManifest?: EngineCostManifest` to the Engine interface with inline import from governor/types. Made optional for backward compatibility during migration.
+- **Files touched:** `src/lib/engines/types.ts` (modified)
+- **Result:** SUCCESS — TypeScript compiles clean, no breaking changes to existing engines
+- **Next step:** Task 15.003–15.008: Database migrations (6 new tables)
+
