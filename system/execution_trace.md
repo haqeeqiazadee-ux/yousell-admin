@@ -1067,3 +1067,14 @@ Engine inventory (all 20):
 - **Result:** SUCCESS
 - **Next step:** Begin Phase 1 implementation — Task 15.001: Define Governor type interfaces
 
+------------------------------------------------------------
+
+### [2026-03-22 01:00] DONE — Task 15.001: Governor type interfaces
+
+- **Task:** Define all Governor type interfaces
+- **Batch:** 15.001
+- **Action:** Created `src/lib/engines/governor/types.ts` with all Governor types from architecture spec: CostManifest, BudgetEnvelope, GateResult, DispatchContext, UsageLedgerEntry, GovernorResponse, EngineSwapEntry, GovernorAIDecision, GovernorOverride, plus GOVERNOR_EVENTS constants
+- **Files touched:** `src/lib/engines/governor/types.ts` (new)
+- **Result:** SUCCESS — TypeScript compiles clean
+- **Next step:** Task 15.002: Add costManifest to Engine interface in types.ts
+
