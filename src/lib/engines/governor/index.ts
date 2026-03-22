@@ -15,6 +15,14 @@ export { GovernorMeter } from './meter';
 // Cost manifests
 export { ENGINE_COST_MANIFESTS, getEngineCostManifest, getOperationCost } from './cost-manifests';
 
+// Plan allowances
+export {
+  PLAN_ALLOWANCE_TEMPLATES,
+  buildEngineAllowances,
+  getPlanGlobalCostCap,
+  getPlanContentCredits,
+} from './plan-allowances';
+
 // Types
 export type {
   PlanId,

@@ -1143,3 +1143,14 @@ Engine inventory (all 20):
 - **Files touched:** `src/lib/engines/governor/cost-manifests.ts` (new), `src/lib/engines/governor/governor.ts` (modified), `src/lib/engines/governor/index.ts` (modified)
 - **Result:** SUCCESS — TypeScript compiles clean
 - **Next step:** Task 15.022: Seed plan_engine_allowances from PRICING_TIERS
+
+------------------------------------------------------------
+
+### [2026-03-22 02:10] DONE — Task 15.022: Plan engine allowance templates
+
+- **Task:** Create plan-to-engine allowance mapping from PRICING_TIERS
+- **Batch:** 15.022
+- **Action:** Created plan-allowances.ts with PLAN_ALLOWANCE_TEMPLATES for all 4 tiers (Starter: 5 engines/$5, Growth: 8 engines/$15, Professional: 15 engines/$40, Enterprise: all 24 engines/$100). Helper functions: buildEngineAllowances(), getPlanGlobalCostCap(), getPlanContentCredits().
+- **Files touched:** `src/lib/engines/governor/plan-allowances.ts` (new), `src/lib/engines/governor/index.ts` (modified)
+- **Result:** SUCCESS — TypeScript compiles clean. Phase 1 Foundation COMPLETE.
+- **Next step:** Phase 2 — Task 15.023-15.025: Wire Stripe webhooks → Budget Envelope lifecycle

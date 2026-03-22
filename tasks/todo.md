@@ -155,8 +155,8 @@ Last updated: 2026-03-21 (end of day snapshot)
 - [x] 15.010: Build GovernorDispatch class
 - [x] 15.011: Build GovernorMeter class
 - [x] 15.012–15.013: Build EngineGovernor singleton + barrel export
-- [ ] 15.014–15.021: Add cost manifests to all 24 engines
-- [ ] 15.022: Seed plan_engine_allowances from PRICING_TIERS
+- [x] 15.014–15.021: Add cost manifests to all 24 engines
+- [x] 15.022: Seed plan_engine_allowances from PRICING_TIERS
 
 ### Engine Governor — Phase 2: Wiring
 - [ ] 15.023–15.025: Wire Stripe webhooks → Budget Envelope lifecycle
