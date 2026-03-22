@@ -84,3 +84,7 @@ Last updated: 2026-03-21
 ### Lesson 5 — Single deployment serving multiple domains (2026-03-21)
 **Trigger:** yousell.online and admin.yousell.online both served from single Netlify deployment.
 **Rule:** When a single deployment serves multiple domains, middleware is the routing layer. Always test both hostname paths. Auth cookies must use parent domain (`.yousell.online`) for cross-subdomain SSO. Safari ITP may block this — monitor.
+
+### Lesson 6 — Split large writes into ≤150-line chunks to avoid timeouts (2026-03-22)
+**Trigger:** Writing large architecture documents (900+ lines) in a single tool call risks timeout and context loss.
+**Rule:** Never write a full document in one tool call. Create the file with a header first, then append sections one at a time (≤150 lines per Edit/Write call). For docs >200 lines, outline all sections first, then write each as a separate tool call. This is now codified as CLAUDE.md guardrails G21-G24.
