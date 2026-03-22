@@ -798,7 +798,8 @@
 | 12 | Admin Command Center | 32 |
 | 13 | Affiliate Commission Engine | 41 |
 | 14 | Fulfillment Recommendation Engine | 34 |
-| **TOTAL** | **All 14 Engines** | **668** |
+| 15 | Engine Governor (Head Engine) | 63 |
+| **TOTAL** | **All 15 Engines** | **731** |
 
 ## Breakdown by Task Type
 
@@ -820,7 +821,7 @@
 
 ## Key Findings
 
-1. **668 total atomic tasks** identified across all 14 engines
+1. **731 total atomic tasks** identified across all 15 engines (668 original + 63 Engine Governor)
 2. **60 inferred tasks** (9%) — these are tasks that MUST exist for the engine to function but are not explicitly documented in V9. These are the primary candidates for Phase 2 gap analysis.
 3. **DATA OPERATION and DECISION LOGIC** dominate (56.5% combined) — the platform is heavily intelligence-driven
 4. **Trend Scout Agent** has the most tasks (90) — consistent with it being "the most differentiating module" per V9
@@ -844,6 +845,98 @@ The 60 "INFERRED — NOT DOCUMENTED" tasks represent functionality that logicall
 
 ---
 
-**END OF PHASE 1 TASK INVENTORY**
+## ENGINE 15: ENGINE GOVERNOR (HEAD ENGINE)
 
-*This document contains 668 atomic executable tasks across 14 engines, extracted from YouSell_Platform_Technical_Specification_v9.md and cross-referenced against the Use Case Diagram and V8 specification. Phase 2 will use this inventory to identify gaps, missing functionalities, and incomplete implementations.*
+> **Architecture Reference:** `docs/v9/V9_Engine_Governor_Architecture.md`
+> **Purpose:** Centralized orchestrator that gates, dispatches, meters, and AI-optimizes all 24 engine operations based on client subscription tiers and real infrastructure costs.
+> **Added:** 2026-03-22
+
+### Phase 1: Foundation
+
+| Task # | Task Description | Task Type | Trigger | Input | Output | Dependencies | Source |
+|--------|-----------------|-----------|---------|-------|--------|--------------|--------|
+| 15.001 | Define Governor type interfaces: EngineCostManifest, EngineOperationCost, ClientBudgetEnvelope, EngineAllowance, GateResult, UsageLedgerEntry, GovernorResponse, EngineSwapEntry, GovernorOverride, GovernorAIDecision | DATA OPERATION | Implementation start | V9_Engine_Governor_Architecture.md Section 2-7 | `src/lib/engines/governor/types.ts` with all interfaces | Engine types.ts (EngineName) | NEW |
+| 15.002 | Add `costManifest` readonly property to Engine interface | DATA OPERATION | 15.001 complete | Engine interface in types.ts | Engine interface extended with `costManifest: EngineCostManifest` | Engine interface (types.ts) | NEW |
+| 15.003 | Create database migration: `engine_cost_manifests` table for engine-declared operation costs | DATA OPERATION | Schema design complete | Governor Architecture Section 8 | Migration file with table, indexes, unique constraints | Supabase migrations | NEW |
+| 15.004 | Create database migration: `plan_engine_allowances` table for per-plan engine quotas/caps | DATA OPERATION | Schema design complete | Governor Architecture Section 8 | Migration file with tier-engine allowance templates | Supabase migrations | NEW |
+| 15.005 | Create database migration: `engine_budget_envelopes` table for per-client billing-period budgets | DATA OPERATION | Schema design complete | Governor Architecture Section 8 | Migration file with client budget envelope storage | Supabase migrations, clients table | NEW |
+| 15.006 | Create database migration: `engine_usage_ledger` table (append-only usage tracking) | DATA OPERATION | Schema design complete | Governor Architecture Section 8 | Migration file with ledger table + performance indexes | Supabase migrations | NEW |
+| 15.007 | Create database migration: `engine_swaps`, `governor_ai_decisions`, `governor_overrides` tables | DATA OPERATION | Schema design complete | Governor Architecture Section 8 | Migration file with swap table, AI decision log, override table | Supabase migrations | NEW |
+| 15.008 | Create database migration: ALTER `engine_toggles` to add custom_max_operations, custom_max_cost_usd, priority_level, automation_level_override columns | DATA OPERATION | Schema design complete | Governor Architecture Section 8.2 | ALTER TABLE migration | Supabase migrations, engine_toggles table | NEW |
+| 15.009 | Build GovernorGate class: check tier access, engine toggle, operation quota, cost budget, engine health, throttle zone | DECISION LOGIC | Engine call received | clientId, engineName, operation | GateResult { allowed, reason, code, suggestion } | Budget envelope, engine_toggles, plan_engine_allowances | NEW |
+| 15.010 | Build GovernorDispatch class: resolve engine swaps, get engine from registry, execute with timeout, attach cost metadata | SYSTEM-AUTOMATED | Gate passes | engineName, operation, params, context | EngineOperationResult with cost + duration metadata | EngineRegistry, engine_swaps table | NEW |
+| 15.011 | Build GovernorMeter class: write usage ledger, update budget envelope counters, check alert thresholds, emit events | SYSTEM-AUTOMATED | Engine execution complete (async) | UsageLedgerEntry | Ledger row written, envelope updated, alerts emitted if threshold crossed | engine_usage_ledger, engine_budget_envelopes, EventBus | NEW |
+| 15.012 | Build EngineGovernor singleton: orchestrate Gate→Dispatch→Meter pipeline, super admin bypass, correlation IDs | SYSTEM-AUTOMATED | Any engine operation request | clientId, engineName, operation, params, context | GovernorResponse { success, data, denied, reason, correlationId } | GovernorGate, GovernorDispatch, GovernorMeter | NEW |
+| 15.013 | Build Governor barrel export index.ts | DATA OPERATION | 15.012 complete | All governor modules | `src/lib/engines/governor/index.ts` re-exporting all classes/types | Governor modules | NEW |
+| 15.014 | Add cost manifest to discovery engine: scan (quick $0.10, full $0.50), with Apify + Claude Haiku breakdown | DATA OPERATION | 15.002 complete | Discovery engine, real API pricing | costManifest property on DiscoveryEngine class | Discovery engine, EngineCostManifest type | NEW |
+| 15.015 | Add cost manifest to tiktok-discovery engine: scan ($0.12), with Apify TikTok actor breakdown | DATA OPERATION | 15.002 complete | TikTok discovery engine, Apify pricing | costManifest property on TikTokDiscoveryEngine class | TikTok discovery engine | NEW |
+| 15.016 | Add cost manifest to scoring engine: score_single ($0.001), score_batch ($0.05) | DATA OPERATION | 15.002 complete | Scoring engine, compute cost estimates | costManifest property on ScoringEngine class | Scoring engine | NEW |
+| 15.017 | Add cost manifest to content-engine: generate per type (caption $0.01, image $0.08, video $0.25) with Bannerbear/Shotstack/Claude breakdown | DATA OPERATION | 15.002 complete | Content engine, Bannerbear/Shotstack/Claude pricing | costManifest property on ContentCreationEngine class | Content engine | NEW |
+| 15.018 | Add cost manifest to competitor-intelligence engine: analyze ($0.15) with Apify + Claude breakdown | DATA OPERATION | 15.002 complete | Competitor engine, API pricing | costManifest property on CompetitorIntelligenceEngine | Competitor engine | NEW |
+| 15.019 | Add cost manifest to supplier-discovery engine: search ($0.12) with Apify + Claude breakdown | DATA OPERATION | 15.002 complete | Supplier engine, API pricing | costManifest property on SupplierDiscoveryEngine | Supplier engine | NEW |
+| 15.020 | Add cost manifest to store-integration engine: push_product ($0.01), sync_inventory ($0.02) | DATA OPERATION | 15.002 complete | Store engine, platform API costs | costManifest property on StoreIntegrationEngine | Store engine | NEW |
+| 15.021 | Add cost manifests to remaining 17 engines (clustering, trend-detection, creator-matching, opportunity-feed, ad-intelligence, amazon-intelligence, shopify-intelligence, order-tracking, launch-blueprint, financial-model, pod-engine, affiliate-engine, admin-command-center, profitability, client-allocation, fulfillment-recommendation, automation-orchestrator) | DATA OPERATION | 15.002 complete | All engine files, infrastructure pricing | costManifest property on each engine class | All 17 engine files | NEW |
+| 15.022 | Seed plan_engine_allowances table from PRICING_TIERS constant: map starter/growth/professional/enterprise to per-engine ops + cost caps | DATA OPERATION | 15.004 complete | PRICING_TIERS from stripe.ts, Governor Architecture Section 3.2 | Seed migration inserting tier-engine allowance rows | plan_engine_allowances table, stripe.ts | NEW |
+
+### Phase 2: Wiring (Integrate Governor Into Existing Flows)
+
+| Task # | Task Description | Task Type | Trigger | Input | Output | Dependencies | Source |
+|--------|-----------------|-----------|---------|-------|--------|--------------|--------|
+| 15.023 | Wire Stripe webhook (checkout.session.completed) → create initial Budget Envelope for new subscriber | SYSTEM-AUTOMATED | Stripe webhook fires on new subscription | Stripe event payload (customer_id, plan) | New row in engine_budget_envelopes with tier-appropriate allowances | Stripe webhook route, plan_engine_allowances | NEW |
+| 15.024 | Wire Stripe webhook (customer.subscription.updated) → recalculate Budget Envelope on upgrade/downgrade with pro-rata | SYSTEM-AUTOMATED | Stripe webhook fires on plan change | Stripe event payload (old plan, new plan, period info) | Budget envelope updated with new allowances, pro-rated remaining | Stripe webhook route, engine_budget_envelopes | NEW |
+| 15.025 | Wire Stripe webhook (invoice.payment_succeeded on renewal) → archive old envelope + create fresh envelope for new period | SYSTEM-AUTOMATED | Stripe webhook fires on period renewal | Stripe event payload (period_start, period_end) | Old envelope archived, new envelope created with reset counters | Stripe webhook route, engine_budget_envelopes | NEW |
+| 15.026 | Replace direct engine calls in /api/engine/discovery/* routes with governor.execute() | SYSTEM-AUTOMATED | API request to discovery endpoints | Existing route params + auth context | Route calls governor.execute('discovery', operation, params) instead of direct function | Governor singleton, discovery routes | NEW |
+| 15.027 | Replace direct engine calls in /api/engine/content/* and /api/engine/store/* routes with governor.execute() | SYSTEM-AUTOMATED | API request to content/store endpoints | Existing route params + auth context | Routes call governor.execute() instead of direct functions | Governor singleton, content + store routes | NEW |
+| 15.028 | Replace direct engine calls in remaining /api/engine/* routes (scoring, competitor, supplier, etc.) with governor.execute() | SYSTEM-AUTOMATED | API request to any engine endpoint | Existing route params + auth context | All engine routes go through Governor | Governor singleton, all engine routes | NEW |
+| 15.029 | Wire BullMQ background workers to call governor.execute() instead of direct engine functions | SYSTEM-AUTOMATED | BullMQ job dequeued | Job payload with clientId, engineName, operation | Workers route through Governor for metering + gating | Governor singleton, backend worker files | NEW |
+| 15.030 | Replace middleware.ts global rate limiter with Governor-aware per-plan rate limiting | SYSTEM-AUTOMATED | Any authenticated API request | Request with auth context (clientId, plan) | Rate limits applied per-plan instead of global 60/min | Governor, middleware.ts | NEW |
+| 15.031 | Add Governor health status to /api/health endpoint: engine fleet status, active envelope count, ledger size | DATA OPERATION | Health check request | Governor state | JSON with governor_status, engine_count, active_envelopes, ledger_entries_today | Governor, health route | NEW |
+| 15.032 | Wire EventBus to emit governor.* events: governor.gate_denied, governor.usage_recorded, governor.alert_triggered, governor.override_activated | SYSTEM-AUTOMATED | Governor lifecycle events | Governor internal state changes | Events emitted on EventBus for dashboards and logging | Governor, EventBus | NEW |
+
+### Phase 3: Admin Dashboard (Governor Control Panel)
+
+| Task # | Task Description | Task Type | Trigger | Input | Output | Dependencies | Source |
+|--------|-----------------|-----------|---------|-------|--------|--------------|--------|
+| 15.033 | Build GET /api/admin/governor API: return fleet overview (all engines with status, health, load, cost, utilization per engine) | API CALL | Admin opens Governor dashboard | Admin auth context | JSON: engine list with status, health, operations_count, cost_usd, utilization_percent | Governor singleton, EngineRegistry | NEW |
+| 15.034 | Build GET /api/admin/governor/clients API: return all client budget envelopes with usage summaries, filterable by tier | API CALL | Admin views client budgets | Admin auth, optional tier filter | JSON: client list with plan, global_spend, per_engine utilization bars | engine_budget_envelopes table | NEW |
+| 15.035 | Build PATCH /api/admin/governor/clients/:id API: adjust individual client quota override, cost cap, priority, automation level | API CALL | Admin modifies client settings | Admin auth, clientId, fields to update | Updated engine_toggles row with custom overrides | engine_toggles table | NEW |
+| 15.036 | Build GET/POST /api/admin/governor/swaps API: list active swaps (GET), create new engine swap (POST) with validation that target implements same operations | API CALL | Admin manages engine swaps | Admin auth, swap params (source, target, reason, expiry) | Swap created/listed from engine_swaps table | engine_swaps table, EngineRegistry | NEW |
+| 15.037 | Build DELETE /api/admin/governor/swaps/:id API: deactivate (revert) an engine swap | API CALL | Admin reverts a swap | Admin auth, swap ID | Swap row set active=false, engine routes back to original | engine_swaps table | NEW |
+| 15.038 | Build GET/POST /api/admin/governor/overrides API: list overrides (GET), create super_admin override (POST) with mandatory reason + expiry | API CALL | Super admin manages overrides | Super admin auth, override params | Override created/listed from governor_overrides table | governor_overrides table, super_admin role check | NEW |
+| 15.039 | Build GET /api/admin/governor/decisions API: return AI decision feed with pagination, filterable by type/level/status | API CALL | Admin views AI decisions | Admin auth, optional filters | Paginated list of GovernorAIDecision entries | governor_ai_decisions table | NEW |
+| 15.040 | Build PATCH /api/admin/governor/decisions/:id API: approve or revert an AI decision | API CALL | Admin approves/reverts AI action | Admin auth, decision ID, action (approve/revert) | Decision updated: approved_by set, or reverted with state rollback | governor_ai_decisions table | NEW |
+| 15.041 | Build GET /api/dashboard/usage API: return client's own usage summary (per-engine ops, costs, quota remaining, next reset date) | API CALL | Client views their usage | Client auth context | JSON: per_engine { used, max, percent }, global { spent, cap }, period { start, end } | engine_budget_envelopes for authenticated client | NEW |
+| 15.042 | Build GET /api/admin/governor/analytics API: cost analytics (total platform cost, per-engine trends, top clients, external API breakdown, forecast) | API CALL | Admin views cost analytics | Admin auth, date range params | JSON: total_cost, per_engine_costs[], top_clients[], external_api_breakdown, forecast | engine_usage_ledger aggregate queries | NEW |
+| 15.043 | Build Governor dashboard page: fleet overview grid with engine cards (status, health, cost, utilization) | USER-TRIGGERED | Admin navigates to /admin/governor | Admin session | React page with engine grid, color-coded status cards, real-time data | GET /api/admin/governor | NEW |
+| 15.044 | Build Engine Swap Manager UI component: source/target dropdowns, reason input, expiry selector, active swaps list with revert buttons | USER-TRIGGERED | Admin clicks "Swap Engines" | Admin session | React component with swap form + active swaps table | /api/admin/governor/swaps endpoints | NEW |
+| 15.045 | Build Client Budget Panel UI component: client list with utilization bars, inline edit for quota/cap overrides, tier filter | USER-TRIGGERED | Admin clicks "Client Budgets" | Admin session | React component with client table + inline edit | /api/admin/governor/clients endpoints | NEW |
+
+### Phase 4: AI Automation (Governor Brain)
+
+| Task # | Task Description | Task Type | Trigger | Input | Output | Dependencies | Source |
+|--------|-----------------|-----------|---------|-------|--------|--------------|--------|
+| 15.046 | Build GovernorAIOptimizer core: observe (collect usage/cost/health data), analyze (detect patterns/anomalies), decide (generate recommendations) | DECISION LOGIC | Scheduled (every 1h) or on-demand by admin | Usage ledger data, budget envelopes, engine health | GovernorAIDecision entries written to governor_ai_decisions table | engine_usage_ledger, engine_budget_envelopes, EngineRegistry health | NEW |
+| 15.047 | Implement L1 Advisory mode: AI analyzes patterns and generates suggestions displayed in admin dashboard, no auto-apply | DECISION LOGIC | AI cycle runs (hourly) | Usage patterns, cost trends | Suggestions written with applied=false, visible in decisions feed | GovernorAIOptimizer, governor_ai_decisions | NEW |
+| 15.048 | Implement resource redistribution logic: detect underused engine quota + overused engine quota on same client → suggest/apply reallocation within global cap | DECISION LOGIC | AI detects utilization imbalance | Per-engine utilization percentages per client | Reallocation suggestion: move X ops from engine A to engine B | Budget envelopes, plan_engine_allowances | NEW |
+| 15.049 | Implement cost anomaly detection: flag engines where cost-per-operation deviates >2x from declared manifest cost | DECISION LOGIC | AI cycle runs | Usage ledger (actual costs), cost manifests (declared costs) | Anomaly alert with engine name, expected vs actual cost, affected period | engine_usage_ledger, engine_cost_manifests | NEW |
+| 15.050 | Implement client spike detection: flag clients with >3x normal hourly usage rate | DECISION LOGIC | AI cycle runs or real-time meter trigger | Hourly usage rate vs 30-day average | Spike alert, optional auto-throttle at L2+ | engine_usage_ledger rolling averages | NEW |
+| 15.051 | Implement L2 Assisted mode: auto-apply low-risk optimizations (redistributions where confidence >0.8), generate daily digest for admin | DECISION LOGIC | AI cycle runs, confidence threshold met | AI decisions with confidence scores | Auto-applied decisions + daily email/dashboard digest | GovernorAIOptimizer, Resend email API | NEW |
+| 15.052 | Implement L3 Autonomous mode: full AI management of resource distribution, health routing, throttling — admin gets weekly reports | DECISION LOGIC | AI cycle runs continuously | All Governor data | Fully automated resource management with audit trail | GovernorAIOptimizer, all Governor tables | NEW |
+| 15.053 | Implement engine health routing: if engine fails health check, Governor AI routes to fallback mode (cached data, degraded operation, or alternate engine via swap) | DECISION LOGIC | Engine healthCheck() returns false | Engine health status, swap table | Traffic routed away from unhealthy engine, alert emitted | EngineRegistry health, engine_swaps | NEW |
+| 15.054 | Build AI Decision Feed UI component: real-time feed with approve/dismiss buttons (L1), revert buttons (L2/L3), filter by type/level | USER-TRIGGERED | Admin views AI decisions panel | Admin session | React component with decision cards, action buttons, filters | /api/admin/governor/decisions endpoints | NEW |
+
+### Phase 5: Testing
+
+| Task # | Task Description | Task Type | Trigger | Input | Output | Dependencies | Source |
+|--------|-----------------|-----------|---------|-------|--------|--------------|--------|
+| 15.055 | Unit tests for GovernorGate: test tier check, quota check, budget check, health check, throttle zone, deny reasons | SYSTEM-AUTOMATED | Test suite run | Mock data for each gate check scenario | All gate scenarios pass: allow when valid, deny with correct code when invalid | GovernorGate class | NEW |
+| 15.056 | Unit tests for GovernorDispatch: test engine resolution, swap table lookup, timeout handling, error isolation | SYSTEM-AUTOMATED | Test suite run | Mock engines, swap entries | Dispatch routes correctly, swaps work, timeouts caught | GovernorDispatch class | NEW |
+| 15.057 | Unit tests for GovernorMeter: test ledger writes, envelope updates, threshold crossing, alert emission | SYSTEM-AUTOMATED | Test suite run | Mock usage entries at various thresholds | Ledger written, counters updated, alerts fire at 80/95/100% | GovernorMeter class | NEW |
+| 15.058 | Integration test: full Governor pipeline (gate→dispatch→meter) end-to-end with mock engine | SYSTEM-AUTOMATED | Test suite run | Client request with valid auth + quota | Request passes gate, dispatches to engine, records usage in ledger | Full Governor singleton | NEW |
+| 15.059 | Integration test: Stripe webhook → Budget Envelope creation → operation → metering lifecycle | SYSTEM-AUTOMATED | Test suite run | Simulated Stripe checkout event | Envelope created, operation succeeds, usage tracked, quota decremented | Stripe webhook handler, Governor | NEW |
+| 15.060 | Integration test: quota exhaustion → gate denial → client gets upgrade CTA | SYSTEM-AUTOMATED | Test suite run | Client at 100% quota makes request | Gate denies with QUOTA_EXCEEDED, response includes upgrade suggestion | GovernorGate, budget envelope at limit | NEW |
+| 15.061 | Integration test: engine swap → dispatch routes to replacement → revert restores original | SYSTEM-AUTOMATED | Test suite run | Admin creates swap, client makes request, admin reverts | Request routes to swapped engine, then back to original after revert | GovernorDispatch, engine_swaps | NEW |
+| 15.062 | Integration test: AI optimizer generates L1 suggestion → admin approves → change applied | SYSTEM-AUTOMATED | Test suite run | Usage data triggering reallocation suggestion | Decision created, admin approves, envelope updated | GovernorAIOptimizer, governor_ai_decisions | NEW |
+| 15.063 | Integration test: super admin override bypasses all gates, usage still metered | SYSTEM-AUTOMATED | Test suite run | Super admin request with active override | Gate bypassed, engine executes, usage recorded with override flag | Governor override system | NEW |
+
+*This document contains 731 atomic executable tasks across 15 engines (668 original across 14 engines + 63 Engine Governor tasks), extracted from YouSell_Platform_Technical_Specification_v9.md and V9_Engine_Governor_Architecture.md, cross-referenced against the Use Case Diagram and V8 specification. Phase 2 will use this inventory to identify gaps, missing functionalities, and incomplete implementations.*
