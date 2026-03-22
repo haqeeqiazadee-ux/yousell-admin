@@ -170,15 +170,15 @@ Last updated: 2026-03-21 (end of day snapshot)
 - [x] 15.044: Build Engine Swap Manager UI
 - [x] 15.045: Build Client Budget Panel UI
 
-### Engine Governor — Phase 4: AI Automation
-- [ ] 15.046–15.047: AI Optimizer core + L1 Advisory mode
-- [ ] 15.048–15.050: Resource redistribution, anomaly detection, spike detection
-- [ ] 15.051–15.053: L2 Assisted mode, L3 Autonomous mode, health routing
-- [ ] 15.054: AI Decision Feed UI
+### Engine Governor — Phase 4: AI Automation (COMPLETE)
+- [x] 15.046–15.047: AI Optimizer core + L1 Advisory mode
+- [x] 15.048–15.050: Resource redistribution, anomaly detection, spike detection
+- [x] 15.051–15.053: L2 Assisted mode, L3 Autonomous mode, health routing
+- [x] 15.054: AI Decision Feed UI
 
-### Engine Governor — Phase 5: Testing
-- [ ] 15.055–15.057: Unit tests (Gate, Dispatch, Meter)
-- [ ] 15.058–15.063: Integration tests (pipeline, Stripe lifecycle, swaps, AI, overrides)
+### Engine Governor — Phase 5: Testing (COMPLETE)
+- [x] 15.055–15.057: Unit tests (Gate, Dispatch, Meter) — 20 passing
+- [x] 15.058–15.063: Integration tests (pipeline, lifecycle, swaps, AI, overrides) — 13 passing
 
 ------------------------------------------------------------
 

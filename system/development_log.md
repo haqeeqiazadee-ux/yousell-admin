@@ -2971,3 +2971,65 @@ resource distribution.
 **Total V9 tasks updated:** 668 → 731 across 15 engines.
 
 **CLAUDE.md Updated:** Added G21-G24 guardrails for chunked writing to prevent timeouts.
+
+------------------------------------------------------------
+
+### Engine Governor Implementation — COMPLETE (2026-03-22)
+
+**All 63 tasks (15.001–15.063) implemented across 5 phases.**
+
+**Phase 1 — Foundation (9 tasks):**
+- Governor type interfaces (types.ts)
+- costManifest added to Engine interface
+- Migration 031: 7 new tables + ALTER engine_toggles + RLS
+- GovernorGate (9 sequential checks, fail-closed)
+- GovernorDispatch (swap cache, timeout-wrapped execution)
+- GovernorMeter (async ledger + alert events)
+- EngineGovernor singleton
+- Cost manifests for 23 engines with real USD pricing
+- Plan allowances for 4 tiers (Starter → Enterprise)
+
+**Phase 2 — Wiring (4 tasks):**
+- Square webhook (NEW) + Stripe webhook (extended) → envelope lifecycle
+- withGovernor() route middleware for gate checks
+- withGovernorJob() BullMQ wrapper
+- Health endpoint + EventBus events
+
+**Phase 3 — Admin Dashboard (4 tasks):**
+- 6 API endpoints: fleet, clients, swaps, overrides, decisions, analytics
+- Governor dashboard page (4-panel: fleet, budgets, AI decisions, cost analytics)
+- Engine Swap Manager page
+- Client Budget Panel page
+
+**Phase 4 — AI Automation (4 tasks):**
+- GovernorAIOptimizer (4 analyzers: reallocation, anomaly, spike, scaling)
+- L0 Off / L1 Advisory / L2 Assisted / L3 Autonomous modes
+- AI Decision Feed page with approve/dismiss/revert
+
+**Phase 5 — Testing (2 tasks):**
+- 20 unit tests (Gate, Dispatch, Meter, Cost Manifests, Plan Allowances, Events)
+- 13 integration tests (Pipeline, Lifecycle, Swaps, AI Optimizer, Exports)
+- All 33/33 passing
+
+**Files Created (26 total):**
+- 10 in `src/lib/engines/governor/` (types, gate, dispatch, meter, governor, index, cost-manifests, plan-allowances, envelope-lifecycle, ai-optimizer, middleware)
+- 1 migration in `supabase/migrations/`
+- 1 BullMQ wrapper in `backend/src/lib/`
+- 1 Square webhook route
+- 7 API routes under `/api/admin/governor/` and `/api/engine/governor/`
+- 4 admin pages under `/admin/governor/`
+- 2 test files
+
+### Key Numbers (as of 2026-03-22)
+- 25 engines implemented (24 original + Governor)
+- 148+ tests across 33 files (all passing)
+- 31 database migrations (52 tables)
+- 21 admin pages + 9 client pages + 5 root pages
+- 95 API routes
+- 31 BullMQ job processors
+- 14 discovery providers (all 14 V9 platforms)
+- 48 UI components
+- 2 media generation clients (Bannerbear + Shotstack)
+- 39 environment variables documented
+- 0 stubs or placeholder implementations
+- 0 breaking changes throughout all phases
