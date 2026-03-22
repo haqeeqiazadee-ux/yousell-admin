@@ -1,0 +1,42 @@
+/**
+ * YOUSELL Engine Governor — Barrel Export
+ *
+ * @see docs/v9/V9_Engine_Governor_Architecture.md
+ */
+
+// Core singleton
+export { EngineGovernor, getGovernor, resetGovernor } from './governor';
+
+// Pipeline stages
+export { GovernorGate } from './gate';
+export { GovernorDispatch } from './dispatch';
+export { GovernorMeter } from './meter';
+
+// Types
+export type {
+  PlanId,
+  CostTier,
+  AutomationLevel,
+  ExternalCostBreakdown,
+  EngineOperationCost,
+  EngineCostManifest,
+  EngineAllowance,
+  BudgetAlertThresholds,
+  ClientBudgetEnvelope,
+  GateDenialCode,
+  GateResult,
+  DispatchContext,
+  EngineOperationResult,
+  UsageLedgerEntry,
+  GovernorExecuteContext,
+  GovernorResponse,
+  EngineSwapEntry,
+  AIDecisionType,
+  GovernorAIDecision,
+  OverrideType,
+  GovernorOverride,
+  GovernorEventType,
+} from './types';
+
+// Event constants
+export { GOVERNOR_EVENTS } from './types';

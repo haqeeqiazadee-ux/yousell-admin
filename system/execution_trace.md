@@ -1067,3 +1067,69 @@ Engine inventory (all 20):
 - **Result:** SUCCESS
 - **Next step:** Begin Phase 1 implementation — Task 15.001: Define Governor type interfaces
 
+------------------------------------------------------------
+
+### [2026-03-22 01:00] DONE — Task 15.001: Governor type interfaces
+
+- **Task:** Define all Governor type interfaces
+- **Batch:** 15.001
+- **Action:** Created `src/lib/engines/governor/types.ts` with all Governor types from architecture spec: CostManifest, BudgetEnvelope, GateResult, DispatchContext, UsageLedgerEntry, GovernorResponse, EngineSwapEntry, GovernorAIDecision, GovernorOverride, plus GOVERNOR_EVENTS constants
+- **Files touched:** `src/lib/engines/governor/types.ts` (new)
+- **Result:** SUCCESS — TypeScript compiles clean
+- **Next step:** Task 15.002: Add costManifest to Engine interface in types.ts
+
+------------------------------------------------------------
+
+### [2026-03-22 01:10] DONE — Task 15.002: Add costManifest to Engine interface
+
+- **Task:** Add optional costManifest property to Engine interface
+- **Batch:** 15.002
+- **Action:** Added `readonly costManifest?: EngineCostManifest` to the Engine interface with inline import from governor/types. Made optional for backward compatibility during migration.
+- **Files touched:** `src/lib/engines/types.ts` (modified)
+- **Result:** SUCCESS — TypeScript compiles clean, no breaking changes to existing engines
+- **Next step:** Task 15.003–15.008: Database migrations (6 new tables)
+
+------------------------------------------------------------
+
+### [2026-03-22 01:20] DONE — Task 15.003–15.008: Governor database migrations
+
+- **Task:** Create 6 new tables + ALTER engine_toggles for Governor system
+- **Batch:** 15.003-15.008
+- **Action:** Created migration 031 with: engine_cost_manifests, plan_engine_allowances, engine_budget_envelopes, engine_usage_ledger, engine_swaps, governor_ai_decisions, governor_overrides tables + ALTER engine_toggles (4 new columns) + RLS policies for all tables + indexes on usage_ledger
+- **Files touched:** `supabase/migrations/031_engine_governor_tables.sql` (new)
+- **Result:** SUCCESS — all idempotent (IF NOT EXISTS), RLS enforced
+- **Next step:** Task 15.009: Build GovernorGate class
+
+------------------------------------------------------------
+
+### [2026-03-22 01:30] DONE — Task 15.009: GovernorGate class
+
+- **Task:** Build GovernorGate pre-dispatch checker
+- **Batch:** 15.009
+- **Action:** Created GovernorGate with 9 sequential checks: active override → envelope exists → plan access → engine toggle → quota → cost budget → global cap → health → throttle zone. Fail-closed design, essential-ops whitelist for throttle mode.
+- **Files touched:** `src/lib/engines/governor/gate.ts` (new)
+- **Result:** SUCCESS — TypeScript compiles (excluding pre-existing path alias warnings)
+- **Next step:** Task 15.010: Build GovernorDispatch class
+
+------------------------------------------------------------
+
+### [2026-03-22 01:40] DONE — Task 15.010 + 15.011: GovernorDispatch + GovernorMeter
+
+- **Task:** Build Dispatch (routing + swap resolution) and Meter (async usage recording)
+- **Batch:** 15.010-15.011
+- **Action:** Created GovernorDispatch with swap cache (30s TTL), engine resolution, timeout-wrapped execution. Created GovernorMeter with ledger write, envelope counter increment, and alert threshold checks (warn/throttle/block events).
+- **Files touched:** `src/lib/engines/governor/dispatch.ts` (new), `src/lib/engines/governor/meter.ts` (new)
+- **Result:** SUCCESS — TypeScript compiles clean
+- **Next step:** Task 15.012-15.013: Build EngineGovernor singleton + barrel export
+
+------------------------------------------------------------
+
+### [2026-03-22 01:50] DONE — Task 15.012-15.013: EngineGovernor singleton + barrel export
+
+- **Task:** Build the EngineGovernor singleton orchestrator and barrel export
+- **Batch:** 15.012-15.013
+- **Action:** Created EngineGovernor class with full Gate→Dispatch→Meter pipeline, super admin bypass (still metered for audit), cost manifest lookup, singleton pattern. Created barrel index.ts exporting all types, classes, and GOVERNOR_EVENTS.
+- **Files touched:** `src/lib/engines/governor/governor.ts` (new), `src/lib/engines/governor/index.ts` (new)
+- **Result:** SUCCESS — TypeScript compiles clean
+- **Next step:** Task 15.014-15.021: Add cost manifests to all 24 engines
+
