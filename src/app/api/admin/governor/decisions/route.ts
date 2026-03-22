@@ -6,9 +6,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { requireAdmin } from '@/lib/auth/roles';
 
 export async function GET(request: NextRequest) {
   try {
+    await requireAdmin();
     const supabase = createAdminClient();
     const { searchParams } = request.nextUrl;
     const type = searchParams.get('type');
@@ -39,6 +41,9 @@ export async function GET(request: NextRequest) {
       applied: decisions.filter(d => d.applied).length,
     });
   } catch (error) {
+    if (error instanceof Error && (error.message === 'Unauthorized' || error.message.startsWith('Forbidden'))) {
+      return NextResponse.json({ error: error.message }, { status: error.message === 'Unauthorized' ? 401 : 403 });
+    }
     console.error('[Governor Decisions API] Error:', error);
     return NextResponse.json({ error: 'Failed to load decisions' }, { status: 500 });
   }
@@ -46,6 +51,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    await requireAdmin();
     const supabase = createAdminClient();
     const body = await request.json();
     const { action, decisionId, approvedBy } = body;
@@ -94,6 +100,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
     }
   } catch (error) {
+    if (error instanceof Error && (error.message === 'Unauthorized' || error.message.startsWith('Forbidden'))) {
+      return NextResponse.json({ error: error.message }, { status: error.message === 'Unauthorized' ? 401 : 403 });
+    }
     console.error('[Governor Decisions API] Error:', error);
     return NextResponse.json({ error: 'Failed to process decision' }, { status: 500 });
   }

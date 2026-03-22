@@ -34,8 +34,11 @@ export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get('x-printful-signature');
 
-  const webhookSecret = process.env.PRINTFUL_WEBHOOK_SECRET;
-  if (webhookSecret && !verifyPrintfulSignature(body, signature)) {
+  if (!process.env.PRINTFUL_WEBHOOK_SECRET) {
+    console.error('[Printful] PRINTFUL_WEBHOOK_SECRET not configured — rejecting request');
+    return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 });
+  }
+  if (!verifyPrintfulSignature(body, signature)) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
 

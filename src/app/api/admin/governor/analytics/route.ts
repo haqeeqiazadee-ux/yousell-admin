@@ -5,9 +5,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { requireAdmin } from '@/lib/auth/roles';
 
 export async function GET(request: NextRequest) {
   try {
+    await requireAdmin();
     const supabase = createAdminClient();
     const { searchParams } = request.nextUrl;
     const days = parseInt(searchParams.get('days') || '30');
@@ -82,6 +84,9 @@ export async function GET(request: NextRequest) {
       dailyTrend,
     });
   } catch (error) {
+    if (error instanceof Error && (error.message === 'Unauthorized' || error.message.startsWith('Forbidden'))) {
+      return NextResponse.json({ error: error.message }, { status: error.message === 'Unauthorized' ? 401 : 403 });
+    }
     console.error('[Governor Analytics API] Error:', error);
     return NextResponse.json({ error: 'Failed to load analytics' }, { status: 500 });
   }
