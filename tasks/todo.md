@@ -158,11 +158,11 @@ Last updated: 2026-03-21 (end of day snapshot)
 - [x] 15.014–15.021: Add cost manifests to all 24 engines
 - [x] 15.022: Seed plan_engine_allowances from PRICING_TIERS
 
-### Engine Governor — Phase 2: Wiring
-- [ ] 15.023–15.025: Wire Stripe webhooks → Budget Envelope lifecycle
-- [ ] 15.026–15.028: Replace direct engine calls with governor.execute() in all routes
-- [ ] 15.029: Wire BullMQ workers through Governor
-- [ ] 15.030–15.032: Middleware, health endpoint, EventBus events
+### Engine Governor — Phase 2: Wiring (COMPLETE)
+- [x] 15.023–15.025: Wire Square + Stripe webhooks → Budget Envelope lifecycle
+- [x] 15.026–15.028: Governor middleware + route wiring (content/generate, deploy)
+- [x] 15.029: Wire BullMQ workers through Governor (withGovernorJob wrapper)
+- [x] 15.030–15.032: Health endpoint, barrel export, EventBus events
 
 ### Engine Governor — Phase 3: Admin Dashboard
 - [ ] 15.033–15.042: Build 10 Governor API endpoints (fleet, clients, swaps, overrides, decisions, analytics)
