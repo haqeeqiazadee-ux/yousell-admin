@@ -33,6 +33,7 @@ import {
   ENGINE_EVENTS,
 } from '@/lib/engines'
 import type { EngineEvent } from '@/lib/engines'
+import { createMockDbClient } from './helpers/mock-db'
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 1: Config & Lifecycle
@@ -44,6 +45,7 @@ describe('Engine 13 — Config & Lifecycle', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new AffiliateCommissionEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('has correct name, queues, publishes, subscribes', () => {
@@ -80,18 +82,19 @@ describe('Engine 13 — Event Handling', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new AffiliateCommissionEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('handles ORDER_RECEIVED event (deferred per G10)', async () => {
     const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
     await engine.handleEvent({
       type: ENGINE_EVENTS.ORDER_RECEIVED,
-      payload: { orderId: 'ord-001' },
+      payload: { orderId: 'ord-001', revenue: 100 },
       source: 'order-tracking',
       timestamp: new Date().toISOString(),
     })
     expect(spy).toHaveBeenCalledWith(
-      expect.stringContaining('commission calculation deferred')
+      expect.stringContaining('commission calculation eligible')
     )
     spy.mockRestore()
   })
@@ -105,7 +108,7 @@ describe('Engine 13 — Event Handling', () => {
       timestamp: new Date().toISOString(),
     })
     expect(spy).toHaveBeenCalledWith(
-      expect.stringContaining('payout eligible')
+      expect.stringContaining('commission confirmation eligible')
     )
     spy.mockRestore()
   })
@@ -121,6 +124,7 @@ describe('Engine 13 — recordCommission()', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new AffiliateCommissionEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('calculates commission amount correctly', async () => {
@@ -186,14 +190,15 @@ describe('Engine 13 — calculatePayout()', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new AffiliateCommissionEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('returns totalCommissions, payoutAmount, holdbackRate', async () => {
     const result = await engine.calculatePayout('aff-001', '2026-03')
-    expect(result).toHaveProperty('totalCommissions')
-    expect(result).toHaveProperty('payoutAmount')
-    expect(result).toHaveProperty('holdbackRate')
-    expect(result.holdbackRate).toBe(0.1) // 10% holdback
+    expect(result).toHaveProperty('total_commissions')
+    expect(result).toHaveProperty('payout_amount')
+    expect(result).toHaveProperty('holdback_rate')
+    expect(result.holdback_rate).toBe(0.1) // 10% holdback
   })
 
   it('emits PAYOUT_CALCULATED event', async () => {

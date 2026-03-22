@@ -32,6 +32,7 @@ import {
   ENGINE_EVENTS,
 } from '@/lib/engines'
 import type { EngineEvent } from '@/lib/engines'
+import { createMockDbClient } from './helpers/mock-db'
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 1: Config & Lifecycle
@@ -43,6 +44,7 @@ describe('Engine 4 — Config & Lifecycle', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new SupplierDiscoveryEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('has correct name, queues, publishes, subscribes', () => {
@@ -85,6 +87,7 @@ describe('Engine 4 — Event Handling', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new SupplierDiscoveryEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('handles PRODUCT_SCORED event (deferred per G10)', async () => {
@@ -96,7 +99,7 @@ describe('Engine 4 — Event Handling', () => {
       timestamp: new Date().toISOString(),
     })
     expect(spy).toHaveBeenCalledWith(
-      expect.stringContaining('supplier search deferred')
+      expect.stringContaining('supplier search eligible')
     )
     spy.mockRestore()
   })
@@ -112,6 +115,7 @@ describe('Engine 4 — discoverSuppliers()', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new SupplierDiscoveryEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('returns suppliersFound count', async () => {
@@ -184,6 +188,7 @@ describe('Engine 4 — verifySupplier()', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new SupplierDiscoveryEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('returns verified status and score', async () => {
@@ -200,6 +205,23 @@ describe('Engine 4 — verifySupplier()', () => {
     bus.subscribe(ENGINE_EVENTS.SUPPLIER_VERIFIED, (e: EngineEvent) => {
       received.push(e)
     })
+
+    // Override mock to return supplier data so verification proceeds
+    const mockDb = createMockDbClient() as any
+    const origFrom = mockDb.from.bind(mockDb)
+    mockDb.from = vi.fn((table: string) => {
+      if (table === 'product_suppliers') {
+        const supplierData = { id: 'sup-001', years_active: 3, rating: 4.5, response_rate: 90, on_time_delivery: 95, dispute_rate: 1 }
+        const chainMock: Record<string, unknown> = {}
+        chainMock.select = vi.fn().mockReturnValue(chainMock)
+        chainMock.eq = vi.fn().mockReturnValue(chainMock)
+        chainMock.update = vi.fn().mockReturnValue(chainMock)
+        chainMock.single = vi.fn().mockResolvedValue({ data: supplierData, error: null })
+        return chainMock
+      }
+      return origFrom(table)
+    })
+    engine.setDbClient(mockDb)
 
     await engine.verifySupplier('sup-001', 'prod-001')
 

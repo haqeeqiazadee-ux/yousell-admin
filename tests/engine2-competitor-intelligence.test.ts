@@ -32,6 +32,7 @@ import {
   ENGINE_EVENTS,
 } from '@/lib/engines'
 import type { EngineEvent } from '@/lib/engines'
+import { createMockDbClient } from './helpers/mock-db'
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 1: Config & Lifecycle
@@ -43,6 +44,7 @@ describe('Engine 2 — Config & Lifecycle', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new CompetitorIntelligenceEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('has correct name, queues, publishes, subscribes', () => {
@@ -85,6 +87,7 @@ describe('Engine 2 — Event Handling', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new CompetitorIntelligenceEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('handles PRODUCT_DISCOVERED event (deferred per G10)', async () => {
@@ -110,7 +113,7 @@ describe('Engine 2 — Event Handling', () => {
       timestamp: new Date().toISOString(),
     })
     expect(spy).toHaveBeenCalledWith(
-      expect.stringContaining('competitor refresh deferred')
+      expect.stringContaining('competitor deep-scan eligible')
     )
     spy.mockRestore()
   })
@@ -126,6 +129,7 @@ describe('Engine 2 — scanCompetitors()', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new CompetitorIntelligenceEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('returns competitorsFound count', async () => {
@@ -170,6 +174,7 @@ describe('Engine 2 — detectAdActivity()', () => {
   beforeEach(() => {
     resetEventBus()
     engine = new CompetitorIntelligenceEngine()
+    engine.setDbClient(createMockDbClient() as any)
   })
 
   it('returns hasAds and adSpendEstimate', async () => {

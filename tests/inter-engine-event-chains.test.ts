@@ -52,6 +52,7 @@ import {
   OpportunityFeedEngine,
 } from '@/lib/engines'
 import type { EngineEvent } from '@/lib/engines'
+import { createMockDbClient } from './helpers/mock-db'
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 1: Core Pipeline Chain
@@ -64,31 +65,37 @@ describe('Inter-Engine: Core Pipeline Chain', () => {
 
   it('PRODUCT_SCORED → Profitability subscribes', () => {
     const profitability = new ProfitabilityEngine()
+    profitability.setDbClient(createMockDbClient() as any)
     expect(profitability.config.subscribes).toContain(ENGINE_EVENTS.PRODUCT_SCORED)
   })
 
   it('PROFITABILITY_CALCULATED → Financial Modelling subscribes', () => {
     const financial = new FinancialModellingEngine()
+    financial.setDbClient(createMockDbClient() as any)
     expect(financial.config.subscribes).toContain(ENGINE_EVENTS.PROFITABILITY_CALCULATED)
   })
 
   it('SUPPLIER_FOUND → Profitability subscribes for cost recalc', () => {
     const profitability = new ProfitabilityEngine()
+    profitability.setDbClient(createMockDbClient() as any)
     expect(profitability.config.subscribes).toContain(ENGINE_EVENTS.SUPPLIER_FOUND)
   })
 
   it('SUPPLIER_FOUND → Financial Modelling subscribes for model update', () => {
     const financial = new FinancialModellingEngine()
+    financial.setDbClient(createMockDbClient() as any)
     expect(financial.config.subscribes).toContain(ENGINE_EVENTS.SUPPLIER_FOUND)
   })
 
   it('COMPETITOR_DETECTED → Profitability subscribes for pricing adjustment', () => {
     const profitability = new ProfitabilityEngine()
+    profitability.setDbClient(createMockDbClient() as any)
     expect(profitability.config.subscribes).toContain(ENGINE_EVENTS.COMPETITOR_DETECTED)
   })
 
   it('COMPETITOR_DETECTED → Financial Modelling subscribes', () => {
     const financial = new FinancialModellingEngine()
+    financial.setDbClient(createMockDbClient() as any)
     expect(financial.config.subscribes).toContain(ENGINE_EVENTS.COMPETITOR_DETECTED)
   })
 
@@ -107,6 +114,7 @@ describe('Inter-Engine: Core Pipeline Chain', () => {
     expect(events).toContain('scored')
 
     const profitability = new ProfitabilityEngine()
+    profitability.setDbClient(createMockDbClient() as any)
     await profitability.calculateProfitability('prod-chain', {
       sellingPrice: 40, unitCost: 15, shippingCost: 5,
       platformFeeRate: 0.10, adCostPerUnit: 3, platform: 'shopify',
@@ -114,6 +122,7 @@ describe('Inter-Engine: Core Pipeline Chain', () => {
     expect(events).toContain('profitability')
 
     const financial = new FinancialModellingEngine()
+    financial.setDbClient(createMockDbClient() as any)
     await financial.generateModel('prod-chain', {
       sellingPrice: 40, unitCost: 15, monthlyAdBudget: 500,
       estimatedCpa: 10, estimatedMonthlyUnits: 100, months: 3,
@@ -135,6 +144,7 @@ describe('Inter-Engine: Blueprint Approval Gate', () => {
 
   it('Content Creation subscribes to BLUEPRINT_APPROVED', () => {
     const content = new ContentCreationEngine()
+    content.setDbClient(createMockDbClient() as any)
     expect(content.config.subscribes).toContain(ENGINE_EVENTS.BLUEPRINT_APPROVED)
   })
 
@@ -145,6 +155,7 @@ describe('Inter-Engine: Blueprint Approval Gate', () => {
 
   it('Launch Blueprint publishes BLUEPRINT_GENERATED and BLUEPRINT_APPROVED', () => {
     const blueprint = new LaunchBlueprintEngine()
+    blueprint.setDbClient(createMockDbClient() as any)
     expect(blueprint.config.publishes).toContain(ENGINE_EVENTS.BLUEPRINT_GENERATED)
     expect(blueprint.config.publishes).toContain(ENGINE_EVENTS.BLUEPRINT_APPROVED)
   })
@@ -182,13 +193,16 @@ describe('Inter-Engine: Supplier → Profitability Feedback', () => {
 
   it('Supplier Discovery publishes SUPPLIER_FOUND', () => {
     const supplier = new SupplierDiscoveryEngine()
+    supplier.setDbClient(createMockDbClient() as any)
     expect(supplier.config.publishes).toContain(ENGINE_EVENTS.SUPPLIER_FOUND)
     expect(supplier.config.publishes).toContain(ENGINE_EVENTS.SUPPLIER_VERIFIED)
   })
 
   it('Profitability and Financial Modelling both consume SUPPLIER_FOUND', () => {
     const profitability = new ProfitabilityEngine()
+    profitability.setDbClient(createMockDbClient() as any)
     const financial = new FinancialModellingEngine()
+    financial.setDbClient(createMockDbClient() as any)
     expect(profitability.config.subscribes).toContain(ENGINE_EVENTS.SUPPLIER_FOUND)
     expect(financial.config.subscribes).toContain(ENGINE_EVENTS.SUPPLIER_FOUND)
   })
@@ -223,6 +237,7 @@ describe('Inter-Engine: Fulfillment → Profitability Feedback', () => {
 
   it('Fulfillment Recommendation publishes FULFILLMENT_RECOMMENDED', () => {
     const fulfillment = new FulfillmentRecommendationEngine()
+    fulfillment.setDbClient(createMockDbClient() as any)
     expect(fulfillment.config.publishes).toContain(ENGINE_EVENTS.FULFILLMENT_RECOMMENDED)
   })
 
@@ -254,6 +269,7 @@ describe('Inter-Engine: Affiliate → Financial Modelling', () => {
 
   it('Affiliate Commission publishes COMMISSION_RECORDED', () => {
     const affiliate = new AffiliateCommissionEngine()
+    affiliate.setDbClient(createMockDbClient() as any)
     expect(affiliate.config.publishes).toContain(ENGINE_EVENTS.COMMISSION_RECORDED)
   })
 
@@ -274,6 +290,7 @@ describe('Inter-Engine: Affiliate → Financial Modelling', () => {
 describe('Inter-Engine: Admin CC as Hub Consumer', () => {
   it('Admin CC subscribes to key pipeline events', () => {
     const admin = new AdminCommandCenterEngine()
+    admin.setDbClient(createMockDbClient() as any)
     expect(admin.config.subscribes).toContain(ENGINE_EVENTS.PRODUCT_SCORED)
     expect(admin.config.subscribes).toContain(ENGINE_EVENTS.BLUEPRINT_GENERATED)
     expect(admin.config.subscribes).toContain(ENGINE_EVENTS.ORDER_RECEIVED)
@@ -281,6 +298,7 @@ describe('Inter-Engine: Admin CC as Hub Consumer', () => {
 
   it('Admin CC publishes deployment events', () => {
     const admin = new AdminCommandCenterEngine()
+    admin.setDbClient(createMockDbClient() as any)
     expect(admin.config.publishes).toContain(ENGINE_EVENTS.ADMIN_PRODUCT_DEPLOYED)
     expect(admin.config.publishes).toContain(ENGINE_EVENTS.ADMIN_BATCH_DEPLOY_COMPLETE)
   })
@@ -293,11 +311,13 @@ describe('Inter-Engine: Admin CC as Hub Consumer', () => {
 describe('Inter-Engine: Content Creation Consumers', () => {
   it('Content Creation subscribes to PRODUCT_ALLOCATED', () => {
     const content = new ContentCreationEngine()
+    content.setDbClient(createMockDbClient() as any)
     expect(content.config.subscribes).toContain(ENGINE_EVENTS.PRODUCT_ALLOCATED)
   })
 
   it('Content Creation subscribes to PRODUCT_PUSHED', () => {
     const content = new ContentCreationEngine()
+    content.setDbClient(createMockDbClient() as any)
     expect(content.config.subscribes).toContain(ENGINE_EVENTS.PRODUCT_PUSHED)
   })
 
