@@ -31,6 +31,9 @@ export {
   getPlanContentCredits,
 } from './plan-allowances';
 
+// AI Optimizer
+export { GovernorAIOptimizer, getAIOptimizer } from './ai-optimizer';
+
 // Route middleware
 export { withGovernor } from './middleware';
 
