@@ -465,6 +465,7 @@ Claude must verify these **before every code change**:
 | `tasks/todo.md` | Task planning and progress | Continuously |
 | `tasks/lessons.md` | Patterns and lessons from corrections | After every correction |
 | `tasks/execution_plan.md` | Step-by-step implementation plan | On plan changes |
+| `system/final_step_logs.md` | Last actions before session end — quick recovery | After each session |
 | `docs/v9/V9_Engine_Task_Breakdown.md` | 668 atomic tasks across 14 engines | Reference only |
 | `docs/v9/V9_Inter_Engine_Checklist.md` | Inter-engine completion checklist | Reference only |
 | `docs/content_publishing_shop_integration_strategy.md` | Content & shop integration | On strategy changes |

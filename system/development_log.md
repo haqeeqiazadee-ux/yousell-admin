@@ -3033,3 +3033,23 @@ resource distribution.
 - 39 environment variables documented
 - 0 stubs or placeholder implementations
 - 0 breaking changes throughout all phases
+
+------------------------------------------------------------
+
+## QA Fixes (2026-03-22)
+
+### Security Fixes
+- **Governor admin APIs:** Added `requireAdmin()` auth guard to all 10 handlers (6 GET + 4 POST) across 6 routes (fleet, clients, swaps, overrides, decisions, analytics). Previously accessible without authentication despite using service-role Supabase client.
+- **Printful webhook:** Changed from fail-open to fail-closed. When `PRINTFUL_WEBHOOK_SECRET` is not configured, requests are rejected with 503 instead of silently accepted.
+- **Printify webhook:** Same fail-closed fix as Printful.
+
+### Bug Fixes
+- **Sidebar nav:** Added Governor link (Shield icon) to admin sidebar `managementNav` section.
+- **Stripe webhook:** Removed duplicate `periodEnd`/`periodStart` variable declarations in `customer.subscription.updated` handler.
+- **Test mocks:** Added missing `delete()` and `upsert()` methods to Governor unit test mock chain.
+
+------------------------------------------------------------
+
+## Phase 8: Production Hardening (2026-03-22 — IN PROGRESS)
+
+Goal: Harden platform for production deployment with Redis EventBus, structured logging, monitoring/alerting dashboards, circuit breakers, and deep health checks.
