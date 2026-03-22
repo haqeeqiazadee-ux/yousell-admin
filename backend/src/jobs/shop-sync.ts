@@ -76,9 +76,9 @@ export async function processShopSync(job: Job<ShopSyncData>) {
   // Fetch products to sync
   let query = supabase
     .from('shop_products')
-    .select('id, external_product_id, push_status')
+    .select('id, product_id, external_product_id, push_status')
     .eq('client_id', client_id)
-    .eq('channel', channel_type)
+    .eq('channel_type', channel_type)
     .in('push_status', ['live', 'pushing'])
 
   if (shop_product_id) {
@@ -140,6 +140,9 @@ export async function processShopSync(job: Job<ShopSyncData>) {
             })
             .eq('id', prod.id)
         } else {
+          const variant = shopifyProduct.variants?.nodes?.[0]
+          const shopifyPrice = variant ? parseFloat(variant.price) : null
+
           await supabase
             .from('shop_products')
             .update({
@@ -148,11 +151,37 @@ export async function processShopSync(job: Job<ShopSyncData>) {
               sync_error: null,
               metadata: {
                 shopify_status: shopifyProduct.status,
+                shopify_price: shopifyPrice,
+                shopify_inventory: variant?.inventoryQuantity,
                 online_store_url: shopifyProduct.onlineStoreUrl,
                 variants: shopifyProduct.variants?.nodes,
               },
             })
             .eq('id', prod.id)
+
+          // Reverse-sync price to YOUSELL products table
+          if (shopifyPrice && prod.product_id) {
+            const { data: yousellProduct } = await supabase
+              .from('products')
+              .select('price')
+              .eq('id', prod.product_id)
+              .single()
+
+            if (yousellProduct && Math.abs((yousellProduct.price || 0) - shopifyPrice) > 0.01) {
+              await supabase
+                .from('products')
+                .update({
+                  price: shopifyPrice,
+                  metadata: {
+                    shopify_synced_price: shopifyPrice,
+                    shopify_synced_at: new Date().toISOString(),
+                  },
+                })
+                .eq('id', prod.product_id)
+
+              console.log(`[shop-sync] Price reverse-synced: product=${prod.product_id}, $${yousellProduct.price} → $${shopifyPrice}`)
+            }
+          }
         }
 
         synced++
