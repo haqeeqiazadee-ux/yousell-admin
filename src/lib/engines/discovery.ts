@@ -13,24 +13,45 @@ import { searchTikTokProducts } from '@/lib/providers/tiktok';
 import { searchAmazonProducts } from '@/lib/providers/amazon';
 import { searchShopifyProducts } from '@/lib/providers/shopify';
 import { searchPinterestProducts } from '@/lib/providers/pinterest';
+import { searchInstagramProducts } from '@/lib/providers/instagram';
+import { searchYouTubeProducts } from '@/lib/providers/youtube';
+import { searchRedditProducts } from '@/lib/providers/reddit';
+import { searchTwitterProducts } from '@/lib/providers/twitter';
+import { searchProductHuntProducts } from '@/lib/providers/producthunt';
+import { searchEbayProducts } from '@/lib/providers/ebay';
+import { searchTikTokShopProducts } from '@/lib/providers/tiktokshop';
+import { searchEtsyProducts } from '@/lib/providers/etsy';
+import { searchTemuProducts } from '@/lib/providers/temu';
+import { searchAliExpressProducts } from '@/lib/providers/aliexpress';
 import { calculateFinalScore, getStageFromViralScore } from '@/lib/scoring/composite';
 import type { ProductResult } from '@/lib/providers/types';
 import { getEventBus } from './event-bus';
 import type { Engine, EngineConfig, EngineEvent, EngineStatus } from './types';
 import { ENGINE_EVENTS } from './types';
 
-type Platform = 'tiktok' | 'amazon' | 'shopify' | 'pinterest' | 'digital' | 'ai_affiliate' | 'physical_affiliate';
+type Platform = 'tiktok' | 'amazon' | 'shopify' | 'pinterest' | 'digital' | 'ai_affiliate' | 'physical_affiliate'
+  | 'instagram' | 'youtube' | 'reddit' | 'twitter' | 'producthunt' | 'ebay' | 'tiktok_shop' | 'etsy' | 'temu' | 'aliexpress';
 
-// Map of platform → search function
+// Map of platform → search function (V9: 14 platforms per spec Section 2.2)
 const PLATFORM_SEARCHERS: Partial<Record<Platform, (q: string) => Promise<ProductResult[]>>> = {
   tiktok: searchTikTokProducts,
   amazon: searchAmazonProducts,
   shopify: searchShopifyProducts,
   pinterest: searchPinterestProducts,
+  instagram: searchInstagramProducts,
+  youtube: searchYouTubeProducts,
+  reddit: searchRedditProducts,
+  twitter: searchTwitterProducts,
+  producthunt: searchProductHuntProducts,
+  ebay: searchEbayProducts,
+  tiktok_shop: searchTikTokShopProducts,
+  etsy: searchEtsyProducts,
+  temu: searchTemuProducts,
+  aliexpress: searchAliExpressProducts,
 };
 
 // Default search queries per platform when no query specified
-const DEFAULT_QUERIES: Record<Platform, string[]> = {
+const DEFAULT_QUERIES: Record<string, string[]> = {
   tiktok: ['trending products', 'viral gadgets', 'tiktok made me buy it'],
   amazon: ['best sellers', 'trending products 2026', 'most wished for'],
   shopify: ['trending store products', 'best selling online'],
@@ -38,6 +59,16 @@ const DEFAULT_QUERIES: Record<Platform, string[]> = {
   digital: ['digital products', 'online templates'],
   ai_affiliate: ['AI tools', 'AI software'],
   physical_affiliate: ['best affiliate products', 'top selling products'],
+  instagram: ['trending products', 'viral products'],
+  youtube: ['best product reviews', 'trending gadgets'],
+  reddit: ['best products reddit', 'trending buys'],
+  twitter: ['viral products', 'trending products'],
+  producthunt: ['trending', 'new tools'],
+  ebay: ['trending products', 'best sellers'],
+  tiktok_shop: ['trending tiktok shop', 'viral products'],
+  etsy: ['trending handmade', 'best selling etsy'],
+  temu: ['trending products', 'best sellers'],
+  aliexpress: ['best sellers', 'trending products'],
 };
 
 interface DiscoveryResult {
