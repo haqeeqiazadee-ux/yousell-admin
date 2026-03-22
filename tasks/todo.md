@@ -158,6 +158,11 @@ Last updated: 2026-03-21 (end of day snapshot)
 - [x] PH-5: Circuit breakers — 10 services, 3-state, configurable thresholds
 - [x] PH-6: Deep health checks — Redis, Supabase, backend API, circuit breaker status
 
+### Phase 8B: Infrastructure Wiring (COMPLETE — 2026-03-22)
+- [x] Run migration 032 (system_alerts) on Supabase — applied successfully
+- [x] Wire circuit breakers into 14 files (Bannerbear, Shotstack, Shopify, content-creation, tiktok-discovery, amazon-intelligence, email, creator-matching, ad-intelligence, supplier-discovery, shopify-intelligence, store-oauth, competitor-intelligence, store-integration)
+- [x] Wire structured logger into all 14 files with engineLogger() and operation-specific metadata
+
 ### Remaining (P2 — Nice to Have) — ALL COMPLETE
 - [x] V9 P2: WooCommerce/BigCommerce/Etsy OAuth (Engine 10) — store-oauth.ts + 3 OAuth routes
 - [x] V9 P2: POD fulfillment order routing (Printful/Printify webhooks) — 2 webhook routes
