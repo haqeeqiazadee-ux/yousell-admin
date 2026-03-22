@@ -11,9 +11,13 @@
  */
 
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getCircuitBreaker } from '@/lib/circuit-breaker';
+import { engineLogger } from '@/lib/logger';
 import { getEventBus } from './event-bus';
 import type { Engine, EngineConfig, EngineEvent, EngineStatus } from './types';
 import { ENGINE_EVENTS } from './types';
+
+const log = engineLogger('creator-matching');
 
 /** V9 Task 3.040: Influencer pricing benchmarks by tier */
 const PRICING_BENCHMARKS: Record<string, { min: number; max: number }> = {
@@ -41,7 +45,8 @@ async function discoverViaAinfluencer(query: string, platform: string = 'tiktok'
   if (!apiKey) return [];
 
   try {
-    const res = await fetch('https://api.ainfluencer.com/v1/influencers/search', {
+    log.info('Searching influencers via Ainfluencer', { query, platform });
+    const res = await getCircuitBreaker('apify').execute(() => fetch('https://api.ainfluencer.com/v1/influencers/search', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -56,10 +61,10 @@ async function discoverViaAinfluencer(query: string, platform: string = 'tiktok'
         limit: 50,
       }),
       signal: AbortSignal.timeout(15000),
-    });
+    }));
 
     if (!res.ok) {
-      console.error(`[CreatorMatching] Ainfluencer API error: ${res.status}`);
+      log.error('Ainfluencer API error', { status: res.status });
       return [];
     }
 
