@@ -1100,3 +1100,14 @@ Engine inventory (all 20):
 - **Result:** SUCCESS — all idempotent (IF NOT EXISTS), RLS enforced
 - **Next step:** Task 15.009: Build GovernorGate class
 
+------------------------------------------------------------
+
+### [2026-03-22 01:30] DONE — Task 15.009: GovernorGate class
+
+- **Task:** Build GovernorGate pre-dispatch checker
+- **Batch:** 15.009
+- **Action:** Created GovernorGate with 9 sequential checks: active override → envelope exists → plan access → engine toggle → quota → cost budget → global cap → health → throttle zone. Fail-closed design, essential-ops whitelist for throttle mode.
+- **Files touched:** `src/lib/engines/governor/gate.ts` (new)
+- **Result:** SUCCESS — TypeScript compiles (excluding pre-existing path alias warnings)
+- **Next step:** Task 15.010: Build GovernorDispatch class
+
