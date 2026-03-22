@@ -128,12 +128,24 @@ Last updated: 2026-03-21 (end of day snapshot)
 - [x] Bannerbear API client (image generation, templates, product images)
 - [x] Shotstack API client (video generation, timeline composition, product videos)
 
-### Future Platform Build (from V9_Engine_Task_Breakdown.md)
-- [ ] Phase 4: Smart Publisher (partially done — distribution.ts built in gap fix)
-- [ ] Phase 7: Compliance & Launch
-- [ ] V9 Remaining: Ainfluencer API integration (Engine 3)
-- [ ] V9 Remaining: WooCommerce/BigCommerce/Etsy OAuth (Engine 10)
-- [ ] V9 Remaining: POD fulfillment order routing (Printful/Printify webhooks)
+### Phase 7: Compliance & Launch (COMPLETE — 2026-03-22)
+- [x] Rate limiting middleware (60 req/min/IP, sliding window)
+- [x] Security headers (X-Content-Type-Options, X-Frame-Options, HSTS, etc.)
+- [x] Global error boundary (error.tsx) + 404 page (not-found.tsx)
+- [x] Public health endpoint (GET /api/health)
+- [x] Webhook HMAC fixes (Amazon + TikTok → timingSafeEqual)
+
+### V9 P0/P1 Fixes (COMPLETE — 2026-03-22)
+- [x] Engine 9: Claude API calls activated (was returning placeholder)
+- [x] Engine 10: Real syncInventory() + token refresh
+- [x] Engine 1: Trend lifecycle classification + pre-viral scoring + expired detection
+- [x] Engine 3: Ainfluencer API + audience demographics scoring + pricing benchmarks
+- [x] Engine 9: Bannerbear/Shotstack wired into content engine
+
+### Remaining (P2 — Nice to Have)
+- [ ] V9 P2: WooCommerce/BigCommerce/Etsy OAuth (Engine 10)
+- [ ] V9 P2: POD fulfillment order routing (Printful/Printify webhooks)
+- [ ] V9 P2: Smart Schedule (AI-optimal posting time)
 
 ------------------------------------------------------------
 

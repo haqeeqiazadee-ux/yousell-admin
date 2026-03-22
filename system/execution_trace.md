@@ -1022,3 +1022,25 @@ Engine inventory (all 20):
 - **Commits:** 2013b08, 18f49ae
 - **Next step:** Remaining P2 items or Phase 7 compliance
 
+------------------------------------------------------------
+
+### [2026-03-22 19:00] DONE — Phase 7: Compliance & Launch Hardening
+
+- **Task:** Close all launch blockers identified in compliance audit
+- **Action:**
+  1. **Rate limiting:** In-memory sliding window (60 req/min/IP) on all API routes
+  2. **Security headers:** 6 headers on all responses (X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Referrer-Policy, Permissions-Policy, HSTS)
+  3. **Error handling:** Global error boundary (error.tsx) + 404 page (not-found.tsx)
+  4. **Health check:** Public GET /api/health with DB connectivity + env checks
+  5. **Webhook HMAC:** Fixed Amazon + TikTok to use timingSafeEqual (was === string comparison)
+- **Files touched:**
+  - `src/middleware.ts` (modified — +security headers, +rate limiter, +API matcher)
+  - `src/app/error.tsx` (new)
+  - `src/app/not-found.tsx` (new)
+  - `src/app/api/health/route.ts` (new)
+  - `src/app/api/webhooks/amazon/route.ts` (modified — timingSafeEqual)
+  - `src/app/api/webhooks/tiktok/route.ts` (modified — timingSafeEqual)
+- **Result:** SUCCESS — all 5 launch blockers resolved
+- **Commit:** 50bd9a9
+- **Next step:** All phases complete. Platform launch-ready.
+
