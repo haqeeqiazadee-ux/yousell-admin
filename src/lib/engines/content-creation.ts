@@ -4,21 +4,63 @@
  * AI-generated marketing content: product descriptions, social posts,
  * ad copy, video scripts, email campaigns. Uses Claude Haiku for bulk
  * and Sonnet for premium content per G12.
+ * Reads trend signals for keywords, creator matches for style.
+ * Writes to content_queue and content_credits tables.
  *
  * V9 Tasks: 9.001–9.055
+ * Comm #: 5.009, 6.005, 7.006, 14.006–14.009
  * @engine content-engine
  */
 
 import { getEventBus } from './event-bus';
-import type { Engine, EngineConfig, EngineEvent, EngineStatus } from './types';
+import type {
+  Engine, EngineConfig, EngineEvent, EngineStatus,
+} from './types';
 import { ENGINE_EVENTS } from './types';
+
+/** Content record */
+export interface ContentRecord {
+  id?: string;
+  product_id: string;
+  content_id: string;
+  content_type: ContentType;
+  platform: string;
+  content: string;
+  status: 'draft' | 'approved' | 'published' | 'archived';
+  credits_cost: number;
+  model_used: 'haiku' | 'sonnet';
+  word_count: number;
+  metadata?: Record<string, unknown>;
+  created_at?: string;
+}
+
+type ContentType = 'description' | 'social_post' | 'ad_copy' | 'video_script' | 'email';
+
+/** Credit costs per content type */
+const CREDIT_COSTS: Record<ContentType, { haiku: number; sonnet: number }> = {
+  description: { haiku: 1, sonnet: 3 },
+  social_post: { haiku: 1, sonnet: 2 },
+  ad_copy: { haiku: 2, sonnet: 5 },
+  video_script: { haiku: 3, sonnet: 8 },
+  email: { haiku: 2, sonnet: 5 },
+};
+
+/** Token limits per content type */
+const TOKEN_LIMITS: Record<ContentType, number> = {
+  description: 500,
+  social_post: 200,
+  ad_copy: 300,
+  video_script: 1000,
+  email: 500,
+};
 
 export class ContentCreationEngine implements Engine {
   private _status: EngineStatus = 'idle';
+  private _dbClient: SupabaseMinimalClient | null = null;
 
   readonly config: EngineConfig = {
     name: 'content-engine',
-    version: '1.0.0',
+    version: '2.0.0',
     dependencies: [],
     queues: ['content-generation', 'content-batch'],
     publishes: [
@@ -31,6 +73,17 @@ export class ContentCreationEngine implements Engine {
       ENGINE_EVENTS.PRODUCT_PUSHED,
     ],
   };
+
+  setDbClient(client: SupabaseMinimalClient): void {
+    this._dbClient = client;
+  }
+
+  private getDb(): SupabaseMinimalClient {
+    if (this._dbClient) return this._dbClient;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { supabaseAdmin } = require('../supabase');
+    return supabaseAdmin;
+  }
 
   status(): EngineStatus {
     return this._status;
@@ -50,10 +103,13 @@ export class ContentCreationEngine implements Engine {
 
   async handleEvent(event: EngineEvent): Promise<void> {
     if (event.type === ENGINE_EVENTS.BLUEPRINT_APPROVED) {
-      console.log(`[ContentCreation] Blueprint approved, content generation deferred per G10`);
+      console.log(`[ContentCreation] Blueprint approved, content generation eligible for launch content`);
+    }
+    if (event.type === ENGINE_EVENTS.PRODUCT_ALLOCATED) {
+      console.log(`[ContentCreation] Product allocated to client, client-facing content generation eligible`);
     }
     if (event.type === ENGINE_EVENTS.PRODUCT_PUSHED) {
-      console.log(`[ContentCreation] Product pushed to store, social content deferred per G10`);
+      console.log(`[ContentCreation] Product pushed to store, social media content generation eligible`);
     }
   }
 
@@ -63,28 +119,136 @@ export class ContentCreationEngine implements Engine {
 
   /**
    * Generate content for a product on a specific platform.
+   * Reads enrichment data from trend_signals and creator_product_matches.
+   * Writes to content_queue table. Deducts credits.
    * V9 Tasks: 9.005–9.035
    */
   async generateContent(
     productId: string,
     input: {
-      contentType: 'description' | 'social_post' | 'ad_copy' | 'video_script' | 'email';
+      contentType: ContentType;
       platform: string;
       productTitle: string;
       productDescription: string;
       tier: string;
+      clientId?: string;
     },
   ): Promise<{
     contentId: string;
     content: string;
     creditsCost: number;
+    modelUsed: 'haiku' | 'sonnet';
   }> {
     this._status = 'running';
     try {
       const bus = getEventBus();
-      // Placeholder: In production, calls Claude Haiku (bulk) or Sonnet (premium) API
+      const db = this.getDb();
+
+      // Determine model: Sonnet for HOT products (premium), Haiku for rest (G12)
+      const modelUsed: 'haiku' | 'sonnet' = input.tier === 'HOT' ? 'sonnet' : 'haiku';
+      const creditsCost = CREDIT_COSTS[input.contentType]?.[modelUsed] || 2;
       const contentId = `cnt_${productId}_${input.contentType}_${Date.now()}`;
-      const creditsCost = input.tier === 'HOT' ? 5 : 2; // Premium content for HOT products
+
+      // Comm #5.009: Read trending keywords for SEO optimization
+      let trendingKeywords: string[] = [];
+      try {
+        const { data: trends } = await db
+          .from('trend_signals')
+          .select('keyword, score')
+          .order('score', { ascending: false })
+          .limit(5);
+        trendingKeywords = (trends || []).map((t: { keyword: string }) => t.keyword);
+      } catch {
+        // Non-critical enrichment
+      }
+
+      // Comm #6.005: Read creator match data for content style hints
+      let creatorContext = '';
+      try {
+        const { data: creators } = await db
+          .from('creator_product_matches')
+          .select('platform, match_score')
+          .eq('product_id', productId)
+          .order('match_score', { ascending: false })
+          .limit(3);
+        if (creators && creators.length > 0) {
+          creatorContext = `Top matched creators on: ${creators.map((c: { platform: string }) => c.platform).join(', ')}`;
+        }
+      } catch {
+        // Non-critical
+      }
+
+      // Comm #14.006–14.009: Read competitor data for USP differentiation
+      let competitorContext = '';
+      try {
+        const { data: competitors } = await db
+          .from('competitor_products')
+          .select('store_name, price')
+          .eq('product_id', productId)
+          .limit(3);
+        if (competitors && competitors.length > 0) {
+          const avgCompPrice = competitors.reduce((s: number, c: { price: number }) => s + c.price, 0) / competitors.length;
+          competitorContext = `Competitor avg price: $${avgCompPrice.toFixed(2)}`;
+        }
+      } catch {
+        // Non-critical
+      }
+
+      // Build AI prompt (in production: calls Claude API)
+      const systemPrompt = this.buildSystemPrompt(input.contentType, input.platform);
+      const userPrompt = this.buildUserPrompt({
+        productTitle: input.productTitle,
+        productDescription: input.productDescription,
+        contentType: input.contentType,
+        platform: input.platform,
+        trendingKeywords,
+        creatorContext,
+        competitorContext,
+      });
+
+      // In production: actual Claude API call
+      // const anthropic = new Anthropic();
+      // const response = await anthropic.messages.create({
+      //   model: modelUsed === 'sonnet' ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
+      //   max_tokens: TOKEN_LIMITS[input.contentType],
+      //   system: systemPrompt,
+      //   messages: [{ role: 'user', content: userPrompt }],
+      // });
+      const content = `[AI-generated ${input.contentType} for "${input.productTitle}" on ${input.platform}]`;
+
+      // Write content to DB
+      const record: ContentRecord = {
+        product_id: productId,
+        content_id: contentId,
+        content_type: input.contentType,
+        platform: input.platform,
+        content,
+        status: 'draft',
+        credits_cost: creditsCost,
+        model_used: modelUsed,
+        word_count: content.split(' ').length,
+        metadata: {
+          systemPrompt,
+          trendingKeywords,
+          creatorContext,
+          competitorContext,
+        },
+        created_at: new Date().toISOString(),
+      };
+
+      await db
+        .from('content_queue')
+        .insert(record);
+
+      // Deduct credits if client-generated
+      if (input.clientId) {
+        await db
+          .from('content_credits')
+          .update({
+            credits_used: creditsCost, // In production: increment via RPC
+          })
+          .eq('client_id', input.clientId);
+      }
 
       await bus.emit(
         ENGINE_EVENTS.CONTENT_GENERATED,
@@ -98,11 +262,7 @@ export class ContentCreationEngine implements Engine {
         'content-engine',
       );
 
-      return {
-        contentId,
-        content: '', // Placeholder: actual AI-generated content
-        creditsCost,
-      };
+      return { contentId, content, creditsCost, modelUsed };
     } finally {
       this._status = 'idle';
     }
@@ -113,15 +273,34 @@ export class ContentCreationEngine implements Engine {
    * V9 Tasks: 9.036–9.050
    */
   async batchGenerate(
-    requests: Array<{ productId: string; contentType: string; platform: string }>,
-  ): Promise<{ generated: number; failed: number; totalCredits: number }> {
+    requests: Array<{
+      productId: string;
+      contentType: ContentType;
+      platform: string;
+      productTitle: string;
+      productDescription: string;
+      tier: string;
+    }>,
+  ): Promise<{ generated: number; failed: number; totalCredits: number; contentIds: string[] }> {
     this._status = 'running';
     try {
       const bus = getEventBus();
-      // Placeholder: In production, queues batch jobs via BullMQ
-      const generated = 0;
-      const failed = 0;
-      const totalCredits = 0;
+      let generated = 0;
+      let failed = 0;
+      let totalCredits = 0;
+      const contentIds: string[] = [];
+
+      for (const request of requests) {
+        try {
+          const result = await this.generateContent(request.productId, request);
+          generated++;
+          totalCredits += result.creditsCost;
+          contentIds.push(result.contentId);
+        } catch (err) {
+          console.error(`[ContentCreation] Failed to generate ${request.contentType} for ${request.productId}:`, err);
+          failed++;
+        }
+      }
 
       await bus.emit(
         ENGINE_EVENTS.CONTENT_BATCH_COMPLETE,
@@ -129,9 +308,60 @@ export class ContentCreationEngine implements Engine {
         'content-engine',
       );
 
-      return { generated, failed, totalCredits };
+      return { generated, failed, totalCredits, contentIds };
     } finally {
       this._status = 'idle';
     }
   }
+
+  // ─── Private Helpers ────────────────────────────────────
+
+  private buildSystemPrompt(contentType: ContentType, platform: string): string {
+    const prompts: Record<ContentType, string> = {
+      description: `You are a conversion-focused product copywriter. Write compelling product descriptions for ${platform} that highlight benefits, use sensory language, and include a clear call-to-action. Keep it concise and scannable.`,
+      social_post: `You are a viral social media content creator for ${platform}. Write engaging posts that stop the scroll, use trending formats, include relevant hashtags, and drive clicks. Match the platform's native content style.`,
+      ad_copy: `You are a performance marketing copywriter. Write ad copy for ${platform} that follows the AIDA framework (Attention, Interest, Desire, Action). Include a hook, key benefits, social proof elements, and a strong CTA.`,
+      video_script: `You are a video script writer for ${platform}. Write a script that hooks viewers in the first 3 seconds, demonstrates the product benefit, and ends with a clear CTA. Include visual directions and timing notes.`,
+      email: `You are an email marketing specialist. Write a conversion-focused email with a compelling subject line, personalized opening, benefit-driven body, and clear CTA. Keep it scannable with short paragraphs.`,
+    };
+    return prompts[contentType] || prompts.description;
+  }
+
+  private buildUserPrompt(input: {
+    productTitle: string;
+    productDescription: string;
+    contentType: ContentType;
+    platform: string;
+    trendingKeywords: string[];
+    creatorContext: string;
+    competitorContext: string;
+  }): string {
+    let prompt = `Create a ${input.contentType} for "${input.productTitle}" on ${input.platform}.\n\n`;
+    prompt += `Product: ${input.productDescription}\n\n`;
+    if (input.trendingKeywords.length > 0) {
+      prompt += `Trending keywords to incorporate: ${input.trendingKeywords.join(', ')}\n`;
+    }
+    if (input.creatorContext) {
+      prompt += `Creator context: ${input.creatorContext}\n`;
+    }
+    if (input.competitorContext) {
+      prompt += `Competitive context: ${input.competitorContext}\n`;
+    }
+    return prompt;
+  }
+}
+
+// Minimal type for Supabase client
+interface SupabaseMinimalClient {
+  from(table: string): {
+    select(columns?: string): unknown;
+    insert(data: unknown): unknown;
+    update(data: unknown): unknown;
+    upsert(data: unknown, options?: unknown): unknown;
+    eq(column: string, value: unknown): unknown;
+    order(column: string, options?: unknown): unknown;
+    limit(count: number): unknown;
+    single(): unknown;
+    [key: string]: unknown;
+  };
 }
