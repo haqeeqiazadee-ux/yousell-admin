@@ -234,6 +234,10 @@ POD products use same model with POD-specific modifiers.
 | G18 | No placeholder/stub implementations marked as "done" |
 | G19 | Max 3 files changed per micro-batch |
 | G20 | Every batch must be independently committable |
+| G21 | **Split large docs/writes into ≤150-line chunks** — never write a full doc in one tool call. Write section-by-section to avoid timeouts. |
+| G22 | **Max single Write/Edit output: 150 lines** — if content exceeds this, split into multiple sequential writes (append pattern). |
+| G23 | **Prefer append-to-file over monolithic write** — for docs >100 lines, create file with header first, then append sections one at a time. |
+| G24 | **Timeout prevention: plan before write** — for any file >200 lines, outline all sections first, then write each section as a separate tool call. |
 
 
 ================================================================
