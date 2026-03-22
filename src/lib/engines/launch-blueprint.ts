@@ -17,6 +17,7 @@ import type {
   FinancialModelPayload,
 } from './types';
 import { ENGINE_EVENTS } from './types';
+import type { SupabaseMinimalClient } from './db-types';
 
 /** Blueprint stored in DB */
 export interface Blueprint {
@@ -342,17 +343,3 @@ export class LaunchBlueprintEngine implements Engine {
   }
 }
 
-// Minimal type for Supabase client
-interface SupabaseMinimalClient {
-  from(table: string): {
-    select(columns?: string): unknown;
-    insert(data: unknown): unknown;
-    update(data: unknown): unknown;
-    upsert(data: unknown, options?: unknown): unknown;
-    eq(column: string, value: unknown): unknown;
-    order(column: string, options?: unknown): unknown;
-    limit(count: number): unknown;
-    single(): unknown;
-    [key: string]: unknown;
-  };
-}

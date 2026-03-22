@@ -15,6 +15,7 @@ import type {
   ProductDiscoveredPayload, ProductScoredPayload,
 } from './types';
 import { ENGINE_EVENTS } from './types';
+import type { SupabaseMinimalClient } from './db-types';
 
 /** Competitor record shape for DB writes */
 export interface CompetitorRecord {
@@ -405,16 +406,3 @@ export class CompetitorIntelligenceEngine implements Engine {
   }
 }
 
-// Minimal type for Supabase client to avoid hard import dependency
-interface SupabaseMinimalClient {
-  from(table: string): {
-    select(columns?: string): unknown;
-    insert(data: unknown): unknown;
-    update(data: unknown): unknown;
-    upsert(data: unknown, options?: unknown): unknown;
-    delete(): unknown;
-    eq(column: string, value: unknown): unknown;
-    single(): unknown;
-    [key: string]: unknown;
-  };
-}
