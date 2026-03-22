@@ -37,12 +37,77 @@ export interface SupplierRecord {
   metadata?: Record<string, unknown>;
 }
 
-/** Platform-specific supplier search config */
-const SUPPLIER_PLATFORMS: Record<string, { actorId: string; maxResults: number }> = {
-  aliexpress: { actorId: 'apify/aliexpress-scraper', maxResults: 15 },
-  alibaba: { actorId: 'apify/alibaba-scraper', maxResults: 10 },
-  '1688': { actorId: 'apify/1688-scraper', maxResults: 10 },
-  cjdropshipping: { actorId: 'custom/cj-scraper', maxResults: 10 },
+/** Platform-specific supplier search config — real Apify actor IDs */
+const SUPPLIER_PLATFORMS: Record<string, {
+  actorId: string;
+  maxResults: number;
+  buildBody: (keyword: string, max: number) => Record<string, unknown>;
+  mapItem: (item: Record<string, unknown>) => {
+    supplierName: string;
+    supplierUrl: string;
+    unitCost: number;
+    moq: number;
+    shippingCost?: number;
+    shipDaysMin?: number;
+    shipDaysMax?: number;
+    rating?: number;
+    yearsActive?: number;
+    responseRate?: number;
+    onTimeDelivery?: number;
+    disputeRate?: number;
+  } | null;
+}> = {
+  aliexpress: {
+    actorId: 'epctex~aliexpress-scraper',
+    maxResults: 15,
+    buildBody: (keyword, max) => ({ search: keyword, maxItems: max }),
+    mapItem: (item) => ({
+      supplierName: (item.storeName as string) || (item.seller as string) || 'AliExpress Seller',
+      supplierUrl: (item.url as string) || (item.productUrl as string) || '',
+      unitCost: parseFloat(String(item.price || item.salePrice || 0)) || 0,
+      moq: parseInt(String(item.minOrder || item.moq || 1), 10),
+      shippingCost: parseFloat(String(item.shippingPrice || item.shippingCost || 0)) || 0,
+      shipDaysMin: parseInt(String(item.deliveryDaysMin || item.shippingDaysMin || 7), 10),
+      shipDaysMax: parseInt(String(item.deliveryDaysMax || item.shippingDaysMax || 21), 10),
+      rating: parseFloat(String(item.rating || item.storeRating || 0)) || 0,
+      yearsActive: parseInt(String(item.storeAge || item.yearsActive || 0), 10),
+    }),
+  },
+  alibaba: {
+    actorId: 'epctex~alibaba-scraper',
+    maxResults: 10,
+    buildBody: (keyword, max) => ({ search: keyword, maxItems: max }),
+    mapItem: (item) => ({
+      supplierName: (item.companyName as string) || (item.supplier as string) || (item.title as string) || 'Unknown',
+      supplierUrl: (item.url as string) || (item.contactUrl as string) || '',
+      unitCost: parseFloat(String(item.price || item.unitPrice || 0)) || 0,
+      moq: parseInt(String(item.moq || item.minOrder || 1), 10),
+      shippingCost: parseFloat(String(item.shippingCost || 0)) || 0,
+      shipDaysMin: parseInt(String(item.leadTime || 7), 10),
+      shipDaysMax: parseInt(String(item.leadTime || 14), 10) + 7,
+      rating: parseFloat(String(item.rating || 0)) || 0,
+      yearsActive: parseInt(String(item.yearsActive || item.experience || 0), 10),
+      responseRate: parseFloat(String(item.responseRate || 0)) || 0,
+      onTimeDelivery: parseFloat(String(item.onTimeDelivery || 0)) || 0,
+      disputeRate: parseFloat(String(item.disputeRate || 0)) || 0,
+    }),
+  },
+  '1688': {
+    actorId: 'epctex~alibaba-scraper',
+    maxResults: 10,
+    buildBody: (keyword, max) => ({ search: keyword, maxItems: max, marketplace: '1688' }),
+    mapItem: (item) => ({
+      supplierName: (item.companyName as string) || (item.supplier as string) || 'Unknown',
+      supplierUrl: (item.url as string) || '',
+      unitCost: parseFloat(String(item.price || item.unitPrice || 0)) || 0,
+      moq: parseInt(String(item.moq || item.minOrder || 1), 10),
+      shippingCost: 0,
+      shipDaysMin: 10,
+      shipDaysMax: 25,
+      rating: parseFloat(String(item.rating || 0)) || 0,
+      yearsActive: parseInt(String(item.yearsActive || 0), 10),
+    }),
+  },
 };
 
 /** Verification scoring weights */
@@ -136,6 +201,11 @@ export class SupplierDiscoveryEngine implements Engine {
       const db = this.getDb();
       const allRecords: SupplierRecord[] = [];
 
+      const token = process.env.APIFY_API_TOKEN;
+      if (!token) {
+        console.warn('[SupplierDiscovery] APIFY_API_TOKEN not set — skipping live scan');
+      }
+
       for (const platform of platforms) {
         const config = SUPPLIER_PLATFORMS[platform];
         if (!config) continue;
@@ -151,12 +221,65 @@ export class SupplierDiscoveryEngine implements Engine {
 
         const existingUrls = new Set((existing || []).map((r: { supplier_url: string }) => r.supplier_url));
 
-        // In production: Apify actor call here
-        // const results = await callApifyActor(config.actorId, { keyword, maxResults: config.maxResults });
-        // Process and filter results, then upsert
+        // Call Apify actor for this platform
+        if (token) {
+          try {
+            const res = await fetch(
+              `https://api.apify.com/v2/acts/${config.actorId}/run-sync-get-dataset-items?token=${token}`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config.buildBody(keyword, config.maxResults)),
+                signal: AbortSignal.timeout(90000),
+              },
+            );
 
-        // Infrastructure is ready for when Apify results come in via processScrapedSuppliers()
-        console.log(`[SupplierDiscovery] ${platform}: ${existingUrls.size} existing suppliers, awaiting scrape results`);
+            if (!res.ok) {
+              console.error(`[SupplierDiscovery] Apify ${platform} error: ${res.status} ${res.statusText}`);
+              continue;
+            }
+
+            const items = await res.json();
+            if (!Array.isArray(items)) continue;
+
+            const mapped = items
+              .map((item: Record<string, unknown>) => config.mapItem(item))
+              .filter((r): r is NonNullable<typeof r> => r !== null && !!r.supplierUrl);
+
+            console.log(`[SupplierDiscovery] ${platform}: ${items.length} raw → ${mapped.length} mapped`);
+
+            // Filter out existing, then process via the standard pipeline
+            const newSuppliers = mapped.filter(r => !existingUrls.has(r.supplierUrl));
+            if (newSuppliers.length > 0) {
+              const result = await this.processScrapedSuppliers(productId, platform, newSuppliers);
+              console.log(`[SupplierDiscovery] ${platform}: inserted ${result.inserted}, updated ${result.updated}`);
+            }
+
+            // Build records for return value
+            for (const s of mapped) {
+              const fulfillmentType: 'dropship' | 'wholesale' | 'mixed' =
+                s.moq <= 1 ? 'dropship' : s.moq <= 50 ? 'mixed' : 'wholesale';
+              allRecords.push({
+                product_id: productId,
+                supplier_name: s.supplierName,
+                supplier_url: s.supplierUrl,
+                platform,
+                unit_cost: s.unitCost,
+                moq: s.moq,
+                shipping_cost: s.shippingCost || 0,
+                ship_days_min: s.shipDaysMin || 7,
+                ship_days_max: s.shipDaysMax || 21,
+                rating: s.rating || 0,
+                years_active: s.yearsActive || 0,
+                verified: false,
+                verification_score: 0,
+                fulfillment_type: fulfillmentType,
+              });
+            }
+          } catch (err) {
+            console.error(`[SupplierDiscovery] Apify ${platform} fetch failed:`, err);
+          }
+        }
       }
 
       await bus.emit(

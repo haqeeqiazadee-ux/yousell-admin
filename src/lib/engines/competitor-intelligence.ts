@@ -35,12 +35,81 @@ export interface CompetitorRecord {
   metadata?: Record<string, unknown>;
 }
 
-/** Platform-specific scraping config */
-const PLATFORM_CONFIGS: Record<string, { actorId: string; maxResults: number }> = {
-  shopify: { actorId: 'apify/shopify-scraper', maxResults: 20 },
-  amazon: { actorId: 'apify/amazon-product-scraper', maxResults: 20 },
-  tiktok: { actorId: 'apify/tiktok-shop-scraper', maxResults: 15 },
-  etsy: { actorId: 'apify/etsy-scraper', maxResults: 15 },
+/** Platform-specific scraping config — real Apify actor IDs */
+const PLATFORM_CONFIGS: Record<string, {
+  actorId: string;
+  maxResults: number;
+  buildBody: (keyword: string, max: number) => Record<string, unknown>;
+  mapItem: (item: Record<string, unknown>) => Omit<CompetitorRecord, 'product_id'> | null;
+}> = {
+  shopify: {
+    actorId: 'clearpath~shop-by-shopify-product-scraper',
+    maxResults: 20,
+    buildBody: (keyword, max) => ({ query: keyword, maxResults: max }),
+    mapItem: (item) => ({
+      store_name: (item.vendor as string) || (item.title as string) || 'Unknown',
+      store_url: (item.url as string) || '',
+      platform: 'shopify',
+      price: typeof item.price === 'number' ? item.price : parseFloat(String(item.price || 0)) || 0,
+      estimated_monthly_revenue: 0,
+      has_ads: false,
+      ad_spend_estimate: 0,
+      review_count: 0,
+      rating: 0,
+      metadata: { vendor: item.vendor, productType: item.productType, onSale: item.onSale },
+    }),
+  },
+  amazon: {
+    actorId: 'junglee~amazon-bestsellers-scraper',
+    maxResults: 20,
+    buildBody: (keyword, max) => ({ keyword, maxItems: max, country: 'US' }),
+    mapItem: (item) => ({
+      store_name: (item.brand as string) || (item.seller as string) || 'Amazon Seller',
+      store_url: (item.url as string) || `https://amazon.com/dp/${item.asin || ''}`,
+      platform: 'amazon',
+      price: parseFloat(String(item.price || 0)) || 0,
+      estimated_monthly_revenue: 0,
+      has_ads: !!(item.sponsoredListing || item.isSponsored),
+      ad_spend_estimate: 0,
+      review_count: parseInt(String(item.reviewsCount || item.ratingsTotal || 0), 10),
+      rating: parseFloat(String(item.rating || item.stars || 0)) || 0,
+      metadata: { asin: item.asin, bsr: item.salesVolume || item.bestSellersRank, isPrime: item.isPrime },
+    }),
+  },
+  tiktok: {
+    actorId: 'clockworks~tiktok-scraper',
+    maxResults: 15,
+    buildBody: (keyword, max) => ({ searchQueries: [keyword], resultsPerPage: max, searchSection: 'shop' }),
+    mapItem: (item) => ({
+      store_name: (item.authorMeta as Record<string, unknown>)?.name as string || (item.shopName as string) || 'TikTok Shop',
+      store_url: (item.webVideoUrl as string) || (item.shopUrl as string) || '',
+      platform: 'tiktok',
+      price: parseFloat(String(item.price || 0)) || 0,
+      estimated_monthly_revenue: 0,
+      has_ads: false,
+      ad_spend_estimate: 0,
+      review_count: parseInt(String(item.commentCount || 0), 10),
+      rating: 0,
+      metadata: { likes: item.diggCount, shares: item.shareCount, views: item.playCount },
+    }),
+  },
+  etsy: {
+    actorId: 'epctex~etsy-scraper',
+    maxResults: 15,
+    buildBody: (keyword, max) => ({ search: keyword, maxItems: max }),
+    mapItem: (item) => ({
+      store_name: (item.shopName as string) || (item.seller as string) || 'Etsy Seller',
+      store_url: (item.url as string) || '',
+      platform: 'etsy',
+      price: parseFloat(String(item.price || 0)) || 0,
+      estimated_monthly_revenue: 0,
+      has_ads: !!(item.isAd),
+      ad_spend_estimate: 0,
+      review_count: parseInt(String(item.numReviews || item.reviewCount || 0), 10),
+      rating: parseFloat(String(item.rating || item.starRating || 0)) || 0,
+      metadata: { favorites: item.numFavorers, sales: item.sales },
+    }),
+  },
 };
 
 export class CompetitorIntelligenceEngine implements Engine {
@@ -133,6 +202,11 @@ export class CompetitorIntelligenceEngine implements Engine {
       const db = this.getDb();
       const records: CompetitorRecord[] = [];
 
+      const token = process.env.APIFY_API_TOKEN;
+      if (!token) {
+        console.warn('[CompetitorIntelligence] APIFY_API_TOKEN not set — skipping live scan');
+      }
+
       for (const platform of platforms) {
         const config = PLATFORM_CONFIGS[platform];
         if (!config) continue;
@@ -146,17 +220,44 @@ export class CompetitorIntelligenceEngine implements Engine {
 
         const existingUrls = new Set((existing || []).map((r: { store_url: string }) => r.store_url));
 
-        // In production: Apify actor call would go here
-        // const apifyResult = await callApifyActor(config.actorId, { keyword, maxResults: config.maxResults });
-        // For now, we prepare the infrastructure and process any results from manual scan triggers
+        // Call Apify actor for this platform
+        let scraped: CompetitorRecord[] = [];
+        if (token) {
+          console.log(`[CompetitorIntelligence] Scanning ${platform} for "${keyword}" (actor: ${config.actorId})`);
+          try {
+            const res = await fetch(
+              `https://api.apify.com/v2/acts/${config.actorId}/run-sync-get-dataset-items?token=${token}`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config.buildBody(keyword, config.maxResults)),
+                signal: AbortSignal.timeout(90000),
+              },
+            );
 
-        // Emit per-platform scan progress
-        console.log(`[CompetitorIntelligence] Scanning ${platform} for "${keyword}" (actor: ${config.actorId}, max: ${config.maxResults})`);
+            if (!res.ok) {
+              console.error(`[CompetitorIntelligence] Apify ${platform} error: ${res.status} ${res.statusText}`);
+            } else {
+              const items = await res.json();
+              if (Array.isArray(items)) {
+                scraped = items
+                  .map((item: Record<string, unknown>) => {
+                    const mapped = config.mapItem(item);
+                    if (!mapped || !mapped.store_url) return null;
+                    return { ...mapped, product_id: productId } as CompetitorRecord;
+                  })
+                  .filter((r): r is CompetitorRecord => r !== null);
+                console.log(`[CompetitorIntelligence] ${platform}: ${items.length} raw → ${scraped.length} mapped`);
+              }
+            }
+          } catch (err) {
+            console.error(`[CompetitorIntelligence] Apify ${platform} fetch failed:`, err);
+          }
+        }
 
         // Filter out already-known competitors
-        const newRecords = records.filter(r => r.platform === platform && !existingUrls.has(r.store_url));
+        const newRecords = scraped.filter(r => !existingUrls.has(r.store_url));
         if (newRecords.length > 0) {
-          // Upsert new competitors to DB
           const { error } = await db
             .from('competitor_products')
             .upsert(
@@ -182,7 +283,6 @@ export class CompetitorIntelligenceEngine implements Engine {
             console.error(`[CompetitorIntelligence] DB upsert error for ${platform}:`, error.message);
           }
 
-          // Emit COMPETITOR_DETECTED for each new competitor
           for (const rec of newRecords) {
             await bus.emit(
               ENGINE_EVENTS.COMPETITOR_DETECTED,
@@ -197,6 +297,8 @@ export class CompetitorIntelligenceEngine implements Engine {
             );
           }
         }
+
+        records.push(...newRecords);
       }
 
       // Emit batch completion
