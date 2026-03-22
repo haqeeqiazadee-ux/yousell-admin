@@ -1176,3 +1176,14 @@ Engine inventory (all 20):
 - **Files touched:** `src/lib/engines/governor/middleware.ts` (new), `src/app/api/engine/content/generate/route.ts` (modified), `src/app/api/engine/deploy/route.ts` (modified)
 - **Result:** SUCCESS
 - **Next step:** Task 15.029: Wire BullMQ workers through Governor
+
+------------------------------------------------------------
+
+### [2026-03-22 02:40] DONE — Task 15.029-15.032: BullMQ wrapper + health endpoint + barrel
+
+- **Task:** Wire BullMQ workers through Governor, add health endpoint
+- **Batch:** 15.029-15.032
+- **Action:** Created withGovernorJob() wrapper for BullMQ processors (simplified gate check + usage metering, fail-open for background jobs). Created /api/engine/governor health endpoint checking all 6 Governor tables. Updated barrel export.
+- **Files touched:** `backend/src/lib/governor-job-wrapper.ts` (new), `src/app/api/engine/governor/route.ts` (new), `src/lib/engines/governor/index.ts` (modified)
+- **Result:** SUCCESS — Phase 2 Wiring COMPLETE
+- **Next step:** Phase 3 — Task 15.033-15.042: Build Governor API endpoints

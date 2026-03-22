@@ -31,6 +31,9 @@ export {
   getPlanContentCredits,
 } from './plan-allowances';
 
+// Route middleware
+export { withGovernor } from './middleware';
+
 // Types
 export type {
   PlanId,
