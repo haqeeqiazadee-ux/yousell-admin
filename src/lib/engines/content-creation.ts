@@ -207,15 +207,41 @@ export class ContentCreationEngine implements Engine {
         competitorContext,
       });
 
-      // In production: actual Claude API call
-      // const anthropic = new Anthropic();
-      // const response = await anthropic.messages.create({
-      //   model: modelUsed === 'sonnet' ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
-      //   max_tokens: TOKEN_LIMITS[input.contentType],
-      //   system: systemPrompt,
-      //   messages: [{ role: 'user', content: userPrompt }],
-      // });
-      const content = `[AI-generated ${input.contentType} for "${input.productTitle}" on ${input.platform}]`;
+      // Generate content via Claude API (Haiku for bulk, Sonnet for HOT tier)
+      const anthropicKey = process.env.ANTHROPIC_API_KEY;
+      let content: string;
+
+      if (anthropicKey) {
+        const model = modelUsed === 'sonnet' ? 'claude-sonnet-4-5-20250514' : 'claude-haiku-4-5-20251001';
+        const maxTokens = TOKEN_LIMITS[input.contentType] || 400;
+
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': anthropicKey,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model,
+            max_tokens: maxTokens,
+            system: systemPrompt,
+            messages: [{ role: 'user', content: userPrompt }],
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json() as Record<string, unknown>;
+          const textBlock = ((result.content as Array<Record<string, unknown>>)?.[0]);
+          content = (textBlock?.text as string) || `[Generation failed — empty response]`;
+        } else {
+          console.error(`[ContentCreation] Claude API error: ${response.status}`);
+          content = `[Generation failed — API error ${response.status}]`;
+        }
+      } else {
+        // Fallback when ANTHROPIC_API_KEY not set (dev/test)
+        content = `[AI-generated ${input.contentType} for "${input.productTitle}" on ${input.platform}]`;
+      }
 
       // Write content to DB
       const record: ContentRecord = {
