@@ -314,5 +314,162 @@ export class FinancialModellingEngine implements Engine {
 
     return data || null;
   }
+
+  /**
+   * Validate a financial model against real order data.
+   * Reads actual revenue/quantity from the orders table and compares
+   * against the projected model. Returns accuracy metrics and flags
+   * models that are significantly off.
+   *
+   * V9 Tasks: 6.041–6.044
+   * Comm #17.006: OrderTracking → FinancialModelling revenue validation
+   */
+  async validateModel(
+    productId: string,
+  ): Promise<{
+    hasModel: boolean;
+    hasOrders: boolean;
+    projected: { revenue: number; units: number; months: number } | null;
+    actual: { revenue: number; units: number; daysSinceLaunch: number } | null;
+    accuracy: {
+      revenueAccuracy: number;   // 1.0 = perfect, <1 = under-performed, >1 = over-performed
+      unitAccuracy: number;
+      monthlyRevenueProjected: number;
+      monthlyRevenueActual: number;
+      variance: number;          // Absolute % difference
+      verdict: 'on_track' | 'under_performing' | 'over_performing' | 'no_data';
+    };
+  }> {
+    const db = this.getDb();
+
+    // Fetch the moderate scenario model
+    const model = await this.getBestModel(productId);
+    if (!model) {
+      return {
+        hasModel: false,
+        hasOrders: false,
+        projected: null,
+        actual: null,
+        accuracy: {
+          revenueAccuracy: 0,
+          unitAccuracy: 0,
+          monthlyRevenueProjected: 0,
+          monthlyRevenueActual: 0,
+          variance: 0,
+          verdict: 'no_data',
+        },
+      };
+    }
+
+    // Fetch real order data from the orders table
+    const { data: orders } = await db
+      .from('orders')
+      .select('total_amount, quantity, created_at')
+      .eq('product_id', productId)
+      .not('status', 'eq', 'cancelled');
+
+    const allOrders = orders || [];
+    const totalRevenue = allOrders.reduce(
+      (sum: number, o: { total_amount: number }) => sum + (o.total_amount || 0), 0,
+    );
+    const totalUnits = allOrders.reduce(
+      (sum: number, o: { quantity: number }) => sum + (o.quantity || 0), 0,
+    );
+
+    if (allOrders.length === 0) {
+      return {
+        hasModel: true,
+        hasOrders: false,
+        projected: {
+          revenue: model.projected_revenue,
+          units: model.estimated_monthly_units * model.months,
+          months: model.months,
+        },
+        actual: null,
+        accuracy: {
+          revenueAccuracy: 0,
+          unitAccuracy: 0,
+          monthlyRevenueProjected: model.projected_revenue / Math.max(model.months, 1),
+          monthlyRevenueActual: 0,
+          variance: 100,
+          verdict: 'no_data',
+        },
+      };
+    }
+
+    // Calculate days since first order (proxy for launch date)
+    const firstOrderDate = allOrders
+      .map((o: { created_at: string }) => new Date(o.created_at).getTime())
+      .sort((a: number, b: number) => a - b)[0];
+    const daysSinceLaunch = Math.max(1, Math.ceil((Date.now() - firstOrderDate) / (1000 * 60 * 60 * 24)));
+    const monthsActive = daysSinceLaunch / 30;
+
+    // Normalize to monthly rate for fair comparison
+    const monthlyRevenueProjected = model.projected_revenue / Math.max(model.months, 1);
+    const monthlyRevenueActual = totalRevenue / Math.max(monthsActive, 0.1);
+    const monthlyUnitsProjected = model.estimated_monthly_units;
+    const monthlyUnitsActual = totalUnits / Math.max(monthsActive, 0.1);
+
+    const revenueAccuracy = monthlyRevenueProjected > 0
+      ? monthlyRevenueActual / monthlyRevenueProjected
+      : 0;
+    const unitAccuracy = monthlyUnitsProjected > 0
+      ? monthlyUnitsActual / monthlyUnitsProjected
+      : 0;
+    const variance = Math.abs(1 - revenueAccuracy) * 100;
+
+    let verdict: 'on_track' | 'under_performing' | 'over_performing' | 'no_data';
+    if (revenueAccuracy >= 0.8 && revenueAccuracy <= 1.2) {
+      verdict = 'on_track';
+    } else if (revenueAccuracy < 0.8) {
+      verdict = 'under_performing';
+    } else {
+      verdict = 'over_performing';
+    }
+
+    // Update the model with validation data
+    await db
+      .from('financial_models')
+      .update({
+        metadata: {
+          ...(model.metadata || {}),
+          validation: {
+            validatedAt: new Date().toISOString(),
+            actualRevenue: totalRevenue,
+            actualUnits: totalUnits,
+            daysSinceLaunch,
+            revenueAccuracy: Math.round(revenueAccuracy * 100) / 100,
+            unitAccuracy: Math.round(unitAccuracy * 100) / 100,
+            verdict,
+          },
+        },
+        updated_at: new Date().toISOString(),
+      })
+      .eq('product_id', productId)
+      .eq('scenario', 'moderate');
+
+    return {
+      hasModel: true,
+      hasOrders: true,
+      projected: {
+        revenue: model.projected_revenue,
+        units: model.estimated_monthly_units * model.months,
+        months: model.months,
+      },
+      actual: {
+        revenue: totalRevenue,
+        units: totalUnits,
+        daysSinceLaunch,
+      },
+      accuracy: {
+        revenueAccuracy: Math.round(revenueAccuracy * 100) / 100,
+        unitAccuracy: Math.round(unitAccuracy * 100) / 100,
+        monthlyRevenueProjected: Math.round(monthlyRevenueProjected * 100) / 100,
+        monthlyRevenueActual: Math.round(monthlyRevenueActual * 100) / 100,
+        variance: Math.round(variance * 100) / 100,
+        verdict,
+      },
+    };
+  }
 }
 
