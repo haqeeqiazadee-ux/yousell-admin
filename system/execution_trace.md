@@ -1322,4 +1322,21 @@ Engine inventory (all 20):
   - Modified: `src/lib/engines/event-bus.ts`, `src/middleware.ts`, `src/app/api/health/route.ts`, `src/components/admin-sidebar.tsx`, `package.json`
 - **Result:** SUCCESS — Phase 8 COMPLETE
 - **Commits:** ce4b126, 25a5f1d, 5538bce, d95036b, 58b2a03, 57a5e65
-- **Next step:** All phases complete (0-8). Platform production-ready.
+- **Next step:** Wire circuit breakers + logger into engines
+
+------------------------------------------------------------
+
+### [2026-03-22 22:00] DONE — Circuit Breaker + Logger Wiring (5 batches, 14 files)
+
+- **Task:** Wire circuit breakers and structured logger into all engines/clients with external API calls
+- **Batch:** PH-WIRE-1 through PH-WIRE-5
+- **Action:**
+  1. Bannerbear, Shotstack, Shopify clients — breakers + logging
+  2. Content-creation (Claude API), TikTok discovery, Amazon intelligence — breakers + logging
+  3. Email (Resend), creator-matching (Ainfluencer), ad-intelligence (Meta) — breakers + logging
+  4. Supplier discovery (3 Apify actors), Shopify intelligence, store-oauth — breakers + logging
+  5. Competitor intelligence (4 Apify actors), store-integration (token refreshes) — breakers + logging
+- **Files touched:** 14 files (3 clients + 9 engines + email.ts + store-oauth.ts)
+- **Result:** SUCCESS — All external API calls protected by circuit breakers + structured JSON logging
+- **Commits:** 4b530f7, 82cf1f5, 6f343bd, 18698cc, a8d976a
+- **Next step:** All infrastructure complete. Ready for UI/dashboard work.
