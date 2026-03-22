@@ -2853,17 +2853,45 @@ Analytics system extended (admin analytics page with 8 charts already existed):
 - **Product funnel API** (`GET /api/admin/analytics/funnel`): 6-stage funnel (discovered → scored → allocated → content → deployed → orders) with conversion rates, platform/tier breakdowns, content production metrics
 - Existing: admin analytics page (8 charts), revenue API (MRR/ARR/churn/growth), financial models API
 
+### V9 Gap Closure: Test Coverage (COMPLETE — 2026-03-22)
+
+All 23 V9 gap closure test batches implemented:
+- **Phase 1 (13 batches):** Individual engine test files — all 14 engines have dedicated tests
+- **Phase 2 (10 batches):** Inter-engine communication tests — 44 Comm pathways verified
+- **84 new tests** added in this session, all passing
+
+### V9: 3 Missing Engine Files (COMPLETE — 2026-03-22)
+
+Built 3 engines that had backend jobs but no Engine interface:
+- `amazon-intelligence.ts`: Apify BSR scraper, product storage, BSR movers analysis
+- `shopify-intelligence.ts`: Apify store scraper, competitor analysis, store grouping
+- `pod-engine.ts`: Multi-provider POD (Printful/Printify/Gelato), discovery, fulfillment sync
+
+### V9: 14-Platform Discovery (COMPLETE — 2026-03-22)
+
+10 new discovery providers added to reach V9 spec's 14-platform target:
+Instagram, YouTube, Reddit, Twitter, Product Hunt, eBay, TikTok Shop, Etsy, Temu, AliExpress
+All wired into PLATFORM_SEARCHERS in discovery.ts.
+
+### V9: Media Content Generation (COMPLETE — 2026-03-22)
+
+Bannerbear (images) and Shotstack (video) API clients built:
+- Bannerbear: template listing, image creation, product image generator
+- Shotstack: timeline composition, render submission, product video generator (30s TikTok format)
+
 ### Remaining Work (in priority order)
-1. Phase 3B: Media Content Engine (image/video generation)
-2. Phase 4: Smart Publisher (already partially done via distribution.ts gap fix)
-3. Phase 7: Compliance & Launch prep
+1. Phase 4: Smart Publisher (partially done — distribution.ts has real APIs)
+2. Phase 7: Compliance & Launch prep
+3. V9 Feature Gaps: Ainfluencer API, WooCommerce/BigCommerce/Etsy OAuth, POD fulfillment routing
 
 ### Key Numbers
-- 21 engines implemented (all with Engine interface)
-- 365+ tests passing
+- 24 engines implemented (all with Engine interface)
+- 450+ tests passing (365 existing + 84 new V9 gap closure)
 - 45 database tables (41 original + 4 automation)
-- 82+ Next.js pages (80 original + admin content + admin automation settings/actions)
-- 70 API routes (+6: batch content, admin content, client analytics, funnel analytics, automation settings, automation actions)
+- 82+ Next.js pages
+- 70 API routes
 - 18 BullMQ job processors
+- 14 discovery providers (all 14 V9 platforms)
+- 2 media generation clients (Bannerbear + Shotstack)
 - 0 TypeScript errors
 - 0 breaking changes throughout all phases

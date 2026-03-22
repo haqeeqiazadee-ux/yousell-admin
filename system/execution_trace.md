@@ -942,3 +942,51 @@ Engine inventory (all 20):
 - **Commit:** 5fe8bfa
 - **Next step:** Phase 7 (Compliance & Launch prep), or more analytics UI enhancements
 
+------------------------------------------------------------
+
+### [2026-03-22 15:00] DONE — V9 Gap Closure: 3 Missing Engines + 23/23 Test Batches
+
+- **Task:** Build 3 missing engine files and complete all 23 V9 gap closure test batches
+- **Action:**
+  1. Created `amazon-intelligence.ts` engine (Apify BSR scraper, product storage, BSR analysis)
+  2. Created `shopify-intelligence.ts` engine (Apify store scraper, competitor analysis, store grouping)
+  3. Created `pod-engine.ts` engine (multi-provider POD: Printful/Printify/Gelato, discovery, fulfillment sync)
+  4. All 3 exported from barrel index
+  5. Created 3 engine test files (Batch 1.11-1.13): 30 tests, all passing
+  6. Created 9 inter-engine test files (Batch 2.2-2.10): 54 tests, all passing
+  7. **Total new tests: 84, total V9 gap closure test batches: 23/23 COMPLETE**
+- **Files touched:**
+  - 3 new engine files + index.ts update
+  - 12 new test files (3 engine + 9 inter-engine)
+- **Result:** SUCCESS — all 84 new tests passing, 0 TypeScript errors
+- **Commits:** 7d60152, c904eb3, 4685c3b
+
+------------------------------------------------------------
+
+### [2026-03-22 16:00] DONE — V9: 14-Platform Discovery Coverage
+
+- **Task:** Add 10 missing discovery providers to reach V9 spec's 14-platform target
+- **Action:** Created 10 new provider modules in `src/lib/providers/`:
+  Instagram (Apify), YouTube (Data API v3), Reddit (Apify), Twitter (Apify),
+  Product Hunt (GraphQL API), eBay (Apify), TikTok Shop (Apify), Etsy (Apify),
+  Temu (Apify), AliExpress (Apify)
+  Wired all into PLATFORM_SEARCHERS map in discovery.ts
+- **Files touched:** 10 new provider files + discovery.ts modified
+- **Result:** SUCCESS — 0 TypeScript errors
+- **Commit:** bb709a4
+
+------------------------------------------------------------
+
+### [2026-03-22 16:30] DONE — V9: Media Content Generation (Bannerbear + Shotstack)
+
+- **Task:** Build image and video generation API clients per V9 Tasks 9.37-9.38
+- **Action:**
+  - Bannerbear client: template listing, image creation with modifications, product image generator
+  - Shotstack client: render submission with multi-track timeline, product video generator (30s TikTok format)
+- **Files touched:**
+  - `src/lib/integrations/bannerbear/client.ts` (new)
+  - `src/lib/integrations/shotstack/client.ts` (new)
+- **Result:** SUCCESS — 0 TypeScript errors
+- **Commit:** ab65167
+- **Next step:** Update system files, then continue with remaining V9 tasks per breakdown file
+
