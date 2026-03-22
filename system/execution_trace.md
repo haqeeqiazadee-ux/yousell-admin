@@ -1154,3 +1154,14 @@ Engine inventory (all 20):
 - **Files touched:** `src/lib/engines/governor/plan-allowances.ts` (new), `src/lib/engines/governor/index.ts` (modified)
 - **Result:** SUCCESS — TypeScript compiles clean. Phase 1 Foundation COMPLETE.
 - **Next step:** Phase 2 — Task 15.023-15.025: Wire Stripe webhooks → Budget Envelope lifecycle
+
+------------------------------------------------------------
+
+### [2026-03-22 02:20] DONE — Task 15.023-15.025: Wire payment webhooks → Budget Envelope lifecycle
+
+- **Task:** Wire Stripe + Square webhooks to Governor envelope lifecycle
+- **Batch:** 15.023-15.025
+- **Action:** Created shared envelope-lifecycle.ts (create/update/archive/renew). Wired into existing Stripe webhook (checkout → create, subscription.updated → update/renew, subscription.deleted → archive). Created new Square webhook route with HMAC signature verification, plan mapping, and full envelope lifecycle integration (subscription.created/updated/canceled, invoice.payment_made). Updated barrel export.
+- **Files touched:** `src/lib/engines/governor/envelope-lifecycle.ts` (new), `src/app/api/webhooks/stripe/route.ts` (modified), `src/app/api/webhooks/square/route.ts` (new), `src/lib/engines/governor/index.ts` (modified)
+- **Result:** SUCCESS — TypeScript compiles clean
+- **Next step:** Task 15.026-15.028: Replace direct engine calls with governor.execute() in routes

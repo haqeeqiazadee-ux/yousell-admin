@@ -15,6 +15,14 @@ export { GovernorMeter } from './meter';
 // Cost manifests
 export { ENGINE_COST_MANIFESTS, getEngineCostManifest, getOperationCost } from './cost-manifests';
 
+// Envelope lifecycle
+export {
+  createBudgetEnvelope,
+  updateBudgetEnvelope,
+  archiveBudgetEnvelope,
+  renewBudgetEnvelope,
+} from './envelope-lifecycle';
+
 // Plan allowances
 export {
   PLAN_ALLOWANCE_TEMPLATES,
