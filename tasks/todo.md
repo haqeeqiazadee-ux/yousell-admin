@@ -148,13 +148,13 @@ Last updated: 2026-03-21 (end of day snapshot)
 - [ ] V9 P2: Smart Schedule (AI-optimal posting time)
 
 ### Engine Governor (ENGINE 15) — Phase 1: Foundation
-- [ ] 15.001: Define Governor type interfaces (governor/types.ts)
-- [ ] 15.002: Add costManifest to Engine interface (types.ts)
-- [ ] 15.003–15.008: Database migrations (6 new tables + ALTER engine_toggles)
-- [ ] 15.009: Build GovernorGate class
-- [ ] 15.010: Build GovernorDispatch class
-- [ ] 15.011: Build GovernorMeter class
-- [ ] 15.012–15.013: Build EngineGovernor singleton + barrel export
+- [x] 15.001: Define Governor type interfaces (governor/types.ts)
+- [x] 15.002: Add costManifest to Engine interface (types.ts)
+- [x] 15.003–15.008: Database migrations (7 new tables + ALTER engine_toggles)
+- [x] 15.009: Build GovernorGate class
+- [x] 15.010: Build GovernorDispatch class
+- [x] 15.011: Build GovernorMeter class
+- [x] 15.012–15.013: Build EngineGovernor singleton + barrel export
 - [ ] 15.014–15.021: Add cost manifests to all 24 engines
 - [ ] 15.022: Seed plan_engine_allowances from PRICING_TIERS
 
