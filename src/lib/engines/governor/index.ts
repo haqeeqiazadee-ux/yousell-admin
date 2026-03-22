@@ -12,6 +12,28 @@ export { GovernorGate } from './gate';
 export { GovernorDispatch } from './dispatch';
 export { GovernorMeter } from './meter';
 
+// Cost manifests
+export { ENGINE_COST_MANIFESTS, getEngineCostManifest, getOperationCost } from './cost-manifests';
+
+// Envelope lifecycle
+export {
+  createBudgetEnvelope,
+  updateBudgetEnvelope,
+  archiveBudgetEnvelope,
+  renewBudgetEnvelope,
+} from './envelope-lifecycle';
+
+// Plan allowances
+export {
+  PLAN_ALLOWANCE_TEMPLATES,
+  buildEngineAllowances,
+  getPlanGlobalCostCap,
+  getPlanContentCredits,
+} from './plan-allowances';
+
+// Route middleware
+export { withGovernor } from './middleware';
+
 // Types
 export type {
   PlanId,

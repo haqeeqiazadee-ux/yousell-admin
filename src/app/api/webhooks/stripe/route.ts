@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
 import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
+import {
+  createBudgetEnvelope,
+  updateBudgetEnvelope,
+  archiveBudgetEnvelope,
+  renewBudgetEnvelope,
+} from '@/lib/engines/governor/envelope-lifecycle'
+import type { PlanId } from '@/lib/engines/governor/types'
 
 // Use service role client for webhook processing (no user context)
 function getServiceClient() {
@@ -60,6 +67,15 @@ export async function POST(request: NextRequest) {
         }, { onConflict: 'client_id' })
 
         console.log(`[Stripe Webhook] Subscription created for client ${clientId}, plan: ${planId}`)
+
+        // Governor: Create budget envelope for new subscription
+        const validPlans: PlanId[] = ['starter', 'growth', 'professional', 'enterprise']
+        if (validPlans.includes(planId as PlanId)) {
+          const periodStart = new Date()
+          const periodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          await createBudgetEnvelope(clientId, planId as PlanId, periodStart, periodEnd)
+            .catch(err => console.error('[Stripe Webhook] Envelope creation error:', err))
+        }
 
         // Affiliate commission tracking
         const referralCode = session.metadata?.referral_code
@@ -167,6 +183,35 @@ export async function POST(request: NextRequest) {
               .from('clients')
               .update({ default_product_limit: planLimits[updatedPlan] || 3 })
               .eq('id', subRecord.client_id)
+
+            // Governor: Update budget envelope for plan change
+            const validPlans: PlanId[] = ['starter', 'growth', 'professional', 'enterprise']
+            if (validPlans.includes(updatedPlan as PlanId)) {
+              await updateBudgetEnvelope(subRecord.client_id, updatedPlan as PlanId)
+                .catch(err => console.error('[Stripe Webhook] Envelope update error:', err))
+            }
+          }
+        }
+
+        // Governor: Renewal — reset envelope on period change
+        const periodEnd = (subscription as unknown as Record<string, unknown>).current_period_end as number | undefined
+        if (periodEnd && subscription.status === 'active') {
+          const { data: subRecord } = await supabase
+            .from('subscriptions')
+            .select('client_id, plan')
+            .eq('stripe_subscription_id', subscription.id)
+            .single()
+
+          if (subRecord?.client_id && subRecord.plan) {
+            const periodStart = (subscription as unknown as Record<string, unknown>).current_period_start as number | undefined
+            if (periodStart) {
+              await renewBudgetEnvelope(
+                subRecord.client_id,
+                subRecord.plan as PlanId,
+                new Date(periodStart * 1000),
+                new Date(periodEnd * 1000)
+              ).catch(err => console.error('[Stripe Webhook] Envelope renewal error:', err))
+            }
           }
         }
 
@@ -180,6 +225,18 @@ export async function POST(request: NextRequest) {
           .from('subscriptions')
           .update({ status: 'cancelled' })
           .eq('stripe_subscription_id', subscription.id)
+
+        // Governor: Archive budget envelope on cancellation
+        const { data: cancelledSub } = await supabase
+          .from('subscriptions')
+          .select('client_id')
+          .eq('stripe_subscription_id', subscription.id)
+          .single()
+
+        if (cancelledSub?.client_id) {
+          await archiveBudgetEnvelope(cancelledSub.client_id)
+            .catch(err => console.error('[Stripe Webhook] Envelope archive error:', err))
+        }
 
         console.log(`[Stripe Webhook] Subscription ${subscription.id} cancelled`)
         break

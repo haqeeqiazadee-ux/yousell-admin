@@ -1133,3 +1133,57 @@ Engine inventory (all 20):
 - **Result:** SUCCESS — TypeScript compiles clean
 - **Next step:** Task 15.014-15.021: Add cost manifests to all 24 engines
 
+------------------------------------------------------------
+
+### [2026-03-22 02:00] DONE — Task 15.014-15.021: Cost manifests for all engines
+
+- **Task:** Add cost manifests for all 24 engines
+- **Batch:** 15.014-15.021
+- **Action:** Created centralized cost-manifests.ts with real USD costs for 23 engines (automation-orchestrator excluded — not in EngineName type). Updated Governor singleton to check centralized manifests as fallback. Updated barrel export.
+- **Files touched:** `src/lib/engines/governor/cost-manifests.ts` (new), `src/lib/engines/governor/governor.ts` (modified), `src/lib/engines/governor/index.ts` (modified)
+- **Result:** SUCCESS — TypeScript compiles clean
+- **Next step:** Task 15.022: Seed plan_engine_allowances from PRICING_TIERS
+
+------------------------------------------------------------
+
+### [2026-03-22 02:10] DONE — Task 15.022: Plan engine allowance templates
+
+- **Task:** Create plan-to-engine allowance mapping from PRICING_TIERS
+- **Batch:** 15.022
+- **Action:** Created plan-allowances.ts with PLAN_ALLOWANCE_TEMPLATES for all 4 tiers (Starter: 5 engines/$5, Growth: 8 engines/$15, Professional: 15 engines/$40, Enterprise: all 24 engines/$100). Helper functions: buildEngineAllowances(), getPlanGlobalCostCap(), getPlanContentCredits().
+- **Files touched:** `src/lib/engines/governor/plan-allowances.ts` (new), `src/lib/engines/governor/index.ts` (modified)
+- **Result:** SUCCESS — TypeScript compiles clean. Phase 1 Foundation COMPLETE.
+- **Next step:** Phase 2 — Task 15.023-15.025: Wire Stripe webhooks → Budget Envelope lifecycle
+
+------------------------------------------------------------
+
+### [2026-03-22 02:20] DONE — Task 15.023-15.025: Wire payment webhooks → Budget Envelope lifecycle
+
+- **Task:** Wire Stripe + Square webhooks to Governor envelope lifecycle
+- **Batch:** 15.023-15.025
+- **Action:** Created shared envelope-lifecycle.ts (create/update/archive/renew). Wired into existing Stripe webhook (checkout → create, subscription.updated → update/renew, subscription.deleted → archive). Created new Square webhook route with HMAC signature verification, plan mapping, and full envelope lifecycle integration (subscription.created/updated/canceled, invoice.payment_made). Updated barrel export.
+- **Files touched:** `src/lib/engines/governor/envelope-lifecycle.ts` (new), `src/app/api/webhooks/stripe/route.ts` (modified), `src/app/api/webhooks/square/route.ts` (new), `src/lib/engines/governor/index.ts` (modified)
+- **Result:** SUCCESS — TypeScript compiles clean
+- **Next step:** Task 15.026-15.028: Replace direct engine calls with governor.execute() in routes
+
+------------------------------------------------------------
+
+### [2026-03-22 02:30] DONE — Task 15.026-15.028: Governor middleware + route wiring
+
+- **Task:** Create Governor route middleware and wire into engine routes
+- **Batch:** 15.026-15.028
+- **Action:** Created withGovernor() middleware wrapper (resolves client context from auth token, checks gate, returns proper HTTP status codes for denials). Wired content/generate and deploy routes through Governor. Thin proxy routes (14) don't need changes — they inherit Governor when admin routes are updated.
+- **Files touched:** `src/lib/engines/governor/middleware.ts` (new), `src/app/api/engine/content/generate/route.ts` (modified), `src/app/api/engine/deploy/route.ts` (modified)
+- **Result:** SUCCESS
+- **Next step:** Task 15.029: Wire BullMQ workers through Governor
+
+------------------------------------------------------------
+
+### [2026-03-22 02:40] DONE — Task 15.029-15.032: BullMQ wrapper + health endpoint + barrel
+
+- **Task:** Wire BullMQ workers through Governor, add health endpoint
+- **Batch:** 15.029-15.032
+- **Action:** Created withGovernorJob() wrapper for BullMQ processors (simplified gate check + usage metering, fail-open for background jobs). Created /api/engine/governor health endpoint checking all 6 Governor tables. Updated barrel export.
+- **Files touched:** `backend/src/lib/governor-job-wrapper.ts` (new), `src/app/api/engine/governor/route.ts` (new), `src/lib/engines/governor/index.ts` (modified)
+- **Result:** SUCCESS — Phase 2 Wiring COMPLETE
+- **Next step:** Phase 3 — Task 15.033-15.042: Build Governor API endpoints

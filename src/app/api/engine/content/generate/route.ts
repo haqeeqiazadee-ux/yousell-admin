@@ -3,20 +3,16 @@
  * @engine content-engine
  *
  * Generates AI content for a product. Calls ContentCreationEngine.
+ * Gated by Governor — checks plan access, quota, and budget.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { withGovernor } from '@/lib/engines/governor/middleware';
 
-export async function POST(request: NextRequest) {
+const handler = async (request: NextRequest) => {
   try {
     const supabase = createAdminClient();
-
-    // Verify admin auth
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const body = await request.json();
     const { productId, contentType, platform } = body;
@@ -74,4 +70,6 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+};
+
+export const POST = withGovernor('content-engine', 'generate_caption', handler);
