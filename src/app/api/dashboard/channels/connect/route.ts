@@ -49,11 +49,12 @@ export async function POST(request: NextRequest) {
       }, { status: 422 })
     }
 
-    // Generate state token for CSRF protection
+    // Generate state token for CSRF protection (includes shopDomain for Shopify token exchange)
     const state = Buffer.from(JSON.stringify({
       clientId: client.clientId,
       channelType,
       timestamp: Date.now(),
+      ...(channelType === 'shopify' && shopDomain ? { shopDomain: shopDomain.replace(/^https?:\/\//, '').replace(/\/$/, '') } : {}),
     })).toString('base64url')
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.headers.get('origin') || ''

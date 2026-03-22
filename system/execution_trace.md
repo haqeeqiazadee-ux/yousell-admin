@@ -705,3 +705,86 @@ Engine inventory (all 20):
 - **Payment:** Decided to use Square instead of Stripe (see env_registry.md)
 
 ------------------------------------------------------------
+
+### [2026-03-21 23:00] DONE — Session End Checkpoint
+
+- **Task:** Save session state for future resumption
+- **Batch:** CHECKPOINT-1
+- **Action:** Verified all system files are current. Attempted Netlify deploy via MCP but failed (zip upload timeout — repo too large). Manual deploy needed via Netlify dashboard or GitHub merge to main.
+- **Files touched:** system/execution_trace.md
+- **Result:** SUCCESS — all state saved
+- **Next step:** Resume from here. Priority order:
+  1. Deploy to Railway — verify all 3 services start clean
+  2. Trigger Netlify redeploy (dashboard → Trigger Deploy, or merge branch to main)
+  3. Verify Netlify ↔ Railway connectivity (frontend → backend API calls)
+  4. Phase 2A: Shopify Connect
+- **Commit:** pending
+
+**IMPORTANT NOTE FOR NEXT SESSION:**
+- Netlify MCP deploy fails for this repo (too large for zip upload). Use Netlify dashboard "Trigger Deploy" button or merge to main branch for auto-deploy.
+- All code is pushed to branch `claude/review-v9-engine-architecture-Adznr`.
+
+------------------------------------------------------------
+
+### [2026-03-21 23:30] DONE — Phase 2A: Shopify Connect (COMPLETE)
+
+- **Task:** Implement Phase 2A Shopify Connect — OAuth, GraphQL, token encryption, push API, UI, tests
+- **Batch:** 2A.1–2A.8
+- **Action:**
+  1. **2A.1:** Created AES-256-GCM crypto utility (`src/lib/crypto.ts`) — encrypt/decrypt/isEncrypted functions
+  2. **2A.2:** Created Shopify GraphQL Admin API client (`src/lib/integrations/shopify/client.ts`) — 2025-01 API version, retry logic, error handling
+  3. **2A.2:** Created `productSet` mutation wrapper (`src/lib/integrations/shopify/products.ts`) — create/update/delete/get, toShopifyProduct mapper
+  4. **2A.3:** Updated OAuth callback to encrypt tokens with AES-256-GCM before DB storage
+  5. **2A.3:** Updated OAuth connect route to pass shopDomain in state for proper Shopify token exchange
+  6. **2A.3:** Upgraded push-to-shopify job from deprecated REST API to GraphQL `productSet` mutation
+  7. **2A.4:** Created shop-sync worker (`backend/src/jobs/shop-sync.ts`) — syncs product status from Shopify
+  8. **2A.4:** Created `POST /api/dashboard/shop/push` — single product push API
+  9. **2A.4:** Created `POST /api/dashboard/shop/push-batch` — batch push API (max 25 products)
+  10. **2A.5:** Created PushProductModal component — push single product to connected stores
+  11. **2A.5:** Created BatchPushModal component — batch push selected products
+  12. **2A.5:** Created ConnectionHub component — compact/full view of connected stores
+  13. **2A.6:** Upgraded StoreIntegrationEngine to v2.0.0 — real queue refs, event subscriptions
+  14. **2A.7:** Added 7 new tests (crypto, GraphQL client, product mapping), updated 3 existing tests
+  15. **2A.8:** Verified: 717/717 tests passing, 0 TypeScript errors in src/
+- **Files touched:**
+  - Created: `src/lib/crypto.ts`, `src/lib/integrations/shopify/client.ts`, `src/lib/integrations/shopify/products.ts`, `backend/src/jobs/shop-sync.ts`, `src/app/api/dashboard/shop/push/route.ts`, `src/app/api/dashboard/shop/push-batch/route.ts`, `src/components/shop-connect/push-product-modal.tsx`, `src/components/shop-connect/batch-push-modal.tsx`, `src/components/shop-connect/connection-hub.tsx`
+  - Modified: `src/app/api/auth/oauth/callback/route.ts`, `src/app/api/dashboard/channels/connect/route.ts`, `backend/src/jobs/push-to-shopify.ts`, `backend/src/jobs/types.ts`, `src/lib/engines/store-integration.ts`, `tests/engine10-store-integration.test.ts`
+- **Result:** SUCCESS — Phase 2A complete
+- **Next step:** Phase 2B: TikTok Shop Connect
+- **Commits:** ac716dc, 6523dcc, b308f3a, a22e9b4, fcec98b
+
+### PHASE 2A SHOPIFY CONNECT — IMPLEMENTATION SUMMARY
+
+**Status: COMPLETE**
+
+| Component | Status | File(s) |
+|-----------|--------|---------|
+| AES-256-GCM encryption | ✅ | src/lib/crypto.ts |
+| Shopify GraphQL client | ✅ | src/lib/integrations/shopify/client.ts |
+| productSet mutation | ✅ | src/lib/integrations/shopify/products.ts |
+| OAuth token encryption | ✅ | src/app/api/auth/oauth/callback/route.ts |
+| OAuth state (shopDomain) | ✅ | src/app/api/dashboard/channels/connect/route.ts |
+| Push-to-Shopify (GraphQL) | ✅ | backend/src/jobs/push-to-shopify.ts |
+| Shop-sync worker | ✅ | backend/src/jobs/shop-sync.ts |
+| Single push API | ✅ | src/app/api/dashboard/shop/push/route.ts |
+| Batch push API | ✅ | src/app/api/dashboard/shop/push-batch/route.ts |
+| Push product modal | ✅ | src/components/shop-connect/push-product-modal.tsx |
+| Batch push modal | ✅ | src/components/shop-connect/batch-push-modal.tsx |
+| Connection hub | ✅ | src/components/shop-connect/connection-hub.tsx |
+| Store-integration engine | ✅ v2.0.0 | src/lib/engines/store-integration.ts |
+| Integration tests | ✅ 25/25 | tests/engine10-store-integration.test.ts |
+
+**Pre-existing (not changed):**
+- Shopify OAuth flow (connect/disconnect) — already existed
+- Shopify order webhook handler — already existed
+- connected_channels table (migration 009) — already existed
+- shop_products table (migration 025) — already existed
+- Dashboard integrations page — already existed with full UI
+
+**New env vars required for production:**
+- `ENCRYPTION_KEY` — 64-char hex string (32 bytes) for AES-256-GCM token encryption
+  Generate with: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+
+**Tests:** 717/717 passing (25 for this engine), 0 TypeScript errors
+
+------------------------------------------------------------

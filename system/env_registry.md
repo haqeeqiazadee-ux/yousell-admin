@@ -3,7 +3,7 @@
 > **Single source of truth** for all API keys, secrets, and config vars.
 > Every key listed here, with which services need it, current status, and actual values where known.
 >
-> **Last updated:** 2026-03-21
+> **Last updated:** 2026-03-22
 >
 > **Rule:** When a key changes, update THIS file first, then push to all listed services.
 
@@ -53,6 +53,7 @@
 | `RESEND_API_KEY` | ✅ | `re_i9WTCRkp_Nre75uDEfwyLukGHTvWxA99a` | ✅ | ✅ | ✅ |
 | `REDIS_URL` | ✅ | Internal: `redis://default:iPFk...@redis.railway.internal:6379` / Public: `redis://default:iPFk...@centerbeam.proxy.rlwy.net:21015` | ✅ (public) | ✅ (internal) | ✅ (public) |
 | `RAPIDAPI_KEY` | ✅ | `0e1280d8b3...2967` | ✅ | ✅ | ✅ |
+| `ENCRYPTION_KEY` | ✅ | 64-char hex (32 bytes AES-256-GCM) — for Shopify token encryption | ✅ | ✅ | ✅ |
 
 ---
 
@@ -263,7 +264,7 @@ All critical vars are now synced across Netlify (both projects), Railway (backen
 2. **Google OAuth** — Google Console → Supabase Auth Providers
 3. **Meta OAuth** — Meta Developer → Supabase Auth Providers
 4. **Delete dead Stripe code** — `src/lib/stripe.ts`, `src/app/api/webhooks/stripe/route.ts`
-5. **Shopify Partner app** — When Phase 2A starts
+5. **Shopify Partner app** — ⚠️ Phase 2A complete, create app in Shopify Partners to get `SHOPIFY_CLIENT_ID` / `SHOPIFY_CLIENT_SECRET`
 6. **TikTok Developer app** — When Phase 2B starts
 7. **Verify Resend domain DNS** — GoDaddy SPF/DKIM/DMARC records
 

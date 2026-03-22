@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { encryptToken } from '@/lib/crypto'
 
 // Exchange authorization code for tokens per channel type
-async function exchangeToken(channelType: string, code: string, redirectUri: string): Promise<{
+async function exchangeToken(channelType: string, code: string, redirectUri: string, stateData?: Record<string, unknown>): Promise<{
   accessToken: string
   refreshToken?: string
   expiresAt?: string
@@ -14,17 +15,24 @@ async function exchangeToken(channelType: string, code: string, redirectUri: str
     const clientSecret = process.env.SHOPIFY_CLIENT_SECRET
     if (!clientId || !clientSecret) throw new Error('Shopify OAuth not configured')
 
-    // Shopify token exchange requires the shop domain from the state
-    const res = await fetch(`https://shop.myshopify.com/admin/oauth/access_token`, {
+    // Shopify token exchange requires the shop domain from the state/query
+    const shopDomain = (stateData?.shopDomain as string) || ''
+    if (!shopDomain) throw new Error('Shop domain missing from OAuth state')
+
+    const res = await fetch(`https://${shopDomain}/admin/oauth/access_token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ client_id: clientId, client_secret: clientSecret, code }),
     })
+    if (!res.ok) {
+      const errText = await res.text()
+      throw new Error(`Shopify token exchange failed (${res.status}): ${errText}`)
+    }
     const data = await res.json()
     return {
       accessToken: data.access_token,
-      shopName: data.scope,
-      metadata: { scope: data.scope },
+      shopName: shopDomain,
+      metadata: { shop_domain: shopDomain, scope: data.scope },
     }
   }
 
@@ -107,9 +115,9 @@ export async function GET(request: NextRequest) {
     }
 
     const redirectUri = `${baseUrl}/api/auth/oauth/callback`
-    const tokens = await exchangeToken(channelType, code, redirectUri)
+    const tokens = await exchangeToken(channelType, code, redirectUri, stateData)
 
-    // Store encrypted tokens in connected_channels
+    // Encrypt tokens before storing
     const admin = createAdminClient()
 
     await admin
@@ -118,8 +126,8 @@ export async function GET(request: NextRequest) {
         client_id: clientId,
         channel_type: channelType,
         channel_name: tokens.shopName || channelType,
-        access_token_encrypted: tokens.accessToken,
-        refresh_token_encrypted: tokens.refreshToken || null,
+        access_token_encrypted: encryptToken(tokens.accessToken),
+        refresh_token_encrypted: tokens.refreshToken ? encryptToken(tokens.refreshToken) : null,
         token_expires_at: tokens.expiresAt || null,
         scopes: [],
         metadata: tokens.metadata || {},
