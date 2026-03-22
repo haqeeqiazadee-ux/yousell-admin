@@ -827,3 +827,78 @@ Engine inventory (all 20):
 | Order Tracking | 2.0.0 | Full lifecycle, carrier tracking URLs, email queue, getProductOrders() |
 | Content Creation | 2.0.0 | Enrichment reads (trends, creators, competitors), tier-based model, prompts |
 
+------------------------------------------------------------
+
+### [2026-03-22 10:00] DONE — V9 Gap Analysis: 5 Critical Integration Gaps Closed
+
+- **Task:** Close 5 gaps identified in V9 engine review — real API wiring, missing job processors, financial validation
+- **Action:**
+  1. **Gap 1 — Apify Actor Wiring:** Competitor Intelligence + Supplier Discovery engines now make real `fetch()` calls to Apify API with actor IDs, API tokens, dataset polling
+  2. **Gap 2 — TikTok + Amazon Push:** New job processors `push-to-tiktok.ts` (TikTok Shop Open API v202309) and `push-to-amazon.ts` (SP-API Listings 2021-08-01 + Feeds 2021-06-30)
+  3. **Gap 3 — Smart Publisher:** New `distribution.ts` job — direct API calls to Meta Graph API, TikTok Content Posting API, Pinterest Pins API + Ayrshare fallback
+  4. **Gap 4 — Reverse Sync:** Shopify webhooks route for products/update + products/delete + inventory level changes, HMAC-SHA256 signature verification
+  5. **Gap 5 — Financial Validation:** `validateModel()` method in Financial Modelling engine — compares projections vs actual orders, computes variance, flags >25% drift
+- **Files touched:** 8 files modified/created across `src/lib/engines/`, `backend/src/jobs/`, `src/app/api/webhooks/`
+- **Result:** SUCCESS — all gaps verified with `npx tsc --noEmit`
+- **Next step:** Phase 2B (TikTok Shop OAuth) + Phase 5 (Automation Orchestrator)
+- **Commits:** Multiple commits on `claude/review-v9-engine-architecture-Adznr`
+
+------------------------------------------------------------
+
+### [2026-03-22 11:00] DONE — Phase 2B Audit: TikTok Shop + Amazon OAuth Already Complete
+
+- **Task:** Implement TikTok Shop and Amazon OAuth connect flows
+- **Action:** Audited existing code — discovered all 3 channel types (Shopify, TikTok Shop, Amazon) are ALREADY fully implemented:
+  - Connect route: `src/app/api/dashboard/channels/connect/route.ts` — generic for all 3
+  - Callback route: `src/app/api/auth/oauth/callback/route.ts` — has `exchangeToken()` for all 3
+  - TikTok: `https://auth.tiktok-shops.com/api/v2/token/get` with app_key/app_secret
+  - Amazon: `https://api.amazon.com/auth/o2/token` with SP-API LWA flow
+  - Encryption: AES-256-GCM via `src/lib/crypto.ts`
+  - UI: Integrations page already shows all 3 channels
+- **Files touched:** (read-only audit — no changes needed)
+- **Result:** SUCCESS — Phase 2B was already complete
+- **Next step:** Phase 5 — Automation Orchestrator
+
+------------------------------------------------------------
+
+### [2026-03-22 11:30] DONE — Phase 5: Automation Orchestrator Engine Built
+
+- **Task:** Build the Automation Orchestrator — the brain of Level 2/3 auto-pilot mode
+- **Batch:** Phase 5, Batch 1 of 2
+- **Action:** Created `automation-orchestrator.ts` (Engine 15) + DB migration + API routes
+  - Event-driven: subscribes to 5 key events (product discovered, scored, content generated, blueprint approved, creator matched)
+  - Permission routing: Level 1 → skip, Level 2 → queue for approval, Level 3 → auto-execute
+  - Guardrail enforcement: daily spend caps, volume limits, consecutive error pause
+  - Soft limit validation: minimum score, price range, quiet hours, allowed categories
+  - Pending action queue with configurable expiry window
+  - Weekly digest generation for client notifications
+  - API routes: GET/PUT settings, GET/POST approval queue
+- **Files touched:**
+  - `src/lib/engines/automation-orchestrator.ts` (new — 690 lines)
+  - `supabase/migrations/030_automation_orchestrator_tables.sql` (new — 4 tables)
+  - `src/app/api/admin/automation/settings/route.ts` (new)
+  - `src/app/api/admin/automation/actions/route.ts` (new)
+- **Result:** SUCCESS — 0 TypeScript errors
+- **Commit:** e59bf15
+
+------------------------------------------------------------
+
+### [2026-03-22 12:00] DONE — Phase 5: Automation Cron Scheduler
+
+- **Task:** Add hourly cron scheduler for automation workflows
+- **Batch:** Phase 5, Batch 2 of 2
+- **Action:** Created `automation-scheduler.ts` backend job + registered in BullMQ
+  - Hourly cron (0 * * * *) via BullMQ repeatable jobs
+  - Expires stale pending approval actions past their window
+  - Runs scheduled discovery scans for Level 3 clients (once per day)
+  - Auto-schedules generated content for Level 3 publishing clients
+  - Generates weekly digest notifications on Mondays at 9am
+  - Registered AUTOMATION_ORCHESTRATOR queue in types.ts
+- **Files touched:**
+  - `backend/src/jobs/automation-scheduler.ts` (new)
+  - `backend/src/jobs/index.ts` (modified — worker + cron registration)
+  - `backend/src/jobs/types.ts` (modified — new queue constant)
+- **Result:** SUCCESS
+- **Commit:** 8d4cd56
+- **Next step:** Phase 3A/3B (Content Engine upgrade), Phase 6 (Reporting), or Phase 7 (Compliance)
+

@@ -78,12 +78,29 @@ Last updated: 2026-03-21 (end of day snapshot)
 - [x] Store-integration engine v2.0.0
 - [x] 25 integration tests (7 new + 18 updated)
 
+### V9 Gap Closure (COMPLETE — 2026-03-22)
+- [x] Gap 1: Apify actor wiring — real fetch() in competitor + supplier engines
+- [x] Gap 2: TikTok + Amazon push — new job processors with real platform APIs
+- [x] Gap 3: Smart Publisher — distribution.ts with Meta, TikTok, Pinterest, Ayrshare
+- [x] Gap 4: Reverse Sync — Shopify webhooks for product updates/deletes + inventory
+- [x] Gap 5: Financial Validation — validateModel() comparing projections vs actuals
+
+### Phase 2B: TikTok Shop + Amazon Connect (ALREADY COMPLETE — verified 2026-03-22)
+- [x] TikTok Shop OAuth connect/callback/token exchange — already built in Phase 2A
+- [x] Amazon SP-API OAuth connect/callback/LWA token exchange — already built in Phase 2A
+- [x] All 3 channels shown in integrations UI — already built
+
+### Phase 5: Automation Orchestrator (COMPLETE — 2026-03-22)
+- [x] Automation Orchestrator Engine (Engine 15) — event-driven Level 1/2/3 routing
+- [x] DB migration 030 — 4 tables (settings, pending_actions, daily_usage, action_log)
+- [x] API routes — /api/admin/automation/settings + /api/admin/automation/actions
+- [x] Cron scheduler — hourly BullMQ job for expiry, scheduled workflows, weekly digests
+- [x] Admin dashboard already exists — /admin/automation + /admin/settings automation tab
+
 ### Future Platform Build (from execution_plan.md)
-- [ ] Phase 2B: TikTok Shop Connect ← **NEXT PRIORITY**
-- [ ] Phase 3A: Text Content Engine
+- [ ] Phase 3A: Text Content Engine ← **NEXT PRIORITY**
 - [ ] Phase 3B: Media Content Engine
-- [ ] Phase 4: Smart Publisher
-- [ ] Phase 5: Automation Orchestrator
+- [ ] Phase 4: Smart Publisher (partially done — distribution.ts built in gap fix)
 - [ ] Phase 6: Reporting & Analytics
 - [ ] Phase 7: Compliance & Launch
 

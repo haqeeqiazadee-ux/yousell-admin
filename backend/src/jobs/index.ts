@@ -41,6 +41,7 @@ import {
 import { processPushToTiktok } from "./push-to-tiktok";
 import { processPushToAmazon } from "./push-to-amazon";
 import { processPushToShopify } from "./push-to-shopify";
+import { processAutomationScheduler } from "./automation-scheduler";
 import { processContentGeneration as processContentQueue } from "./content-generation";
 import { processDistribution } from "./distribution";
 import { processAffiliateCommission as processAffiliateCommissionTrack } from "./affiliate-commission";
@@ -235,6 +236,20 @@ logEvents(pushToTiktokWorker, "push-to-tiktok");
 
 export const pushToAmazonWorker = new Worker(QUEUES.PUSH_TO_AMAZON, processPushToAmazon, { ...defaultOpts, concurrency: 1 });
 logEvents(pushToAmazonWorker, "push-to-amazon");
+
+// ── Automation Orchestrator (cron-triggered) ─────────────
+
+export const automationSchedulerWorker = new Worker(QUEUES.AUTOMATION_ORCHESTRATOR, processAutomationScheduler, { ...defaultOpts, concurrency: 1 });
+logEvents(automationSchedulerWorker, "automation-orchestrator");
+
+// Register repeatable cron: run every hour to expire stale actions + execute scheduled workflows
+import { Queue } from "bullmq";
+const automationQueue = new Queue(QUEUES.AUTOMATION_ORCHESTRATOR, { connection });
+automationQueue.add('automation-tick', { type: 'tick' }, {
+  repeat: { pattern: '0 * * * *' },  // Every hour on the hour
+  removeOnComplete: 100,
+  removeOnFail: 50,
+}).catch(err => console.error('[automation-orchestrator] Failed to register cron:', err));
 
 console.log(
   "Job workers started:",

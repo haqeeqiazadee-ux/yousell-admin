@@ -45,6 +45,7 @@ export const QUEUES = {
   PUSH_TO_TIKTOK: "push-to-tiktok",
   PUSH_TO_AMAZON: "push-to-amazon",
   SHOP_SYNC: "shop-sync",
+  AUTOMATION_ORCHESTRATOR: "automation-orchestrator",
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
