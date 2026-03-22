@@ -164,11 +164,11 @@ Last updated: 2026-03-21 (end of day snapshot)
 - [x] 15.029: Wire BullMQ workers through Governor (withGovernorJob wrapper)
 - [x] 15.030–15.032: Health endpoint, barrel export, EventBus events
 
-### Engine Governor — Phase 3: Admin Dashboard
-- [ ] 15.033–15.042: Build 10 Governor API endpoints (fleet, clients, swaps, overrides, decisions, analytics)
-- [ ] 15.043: Build Governor dashboard page
-- [ ] 15.044: Build Engine Swap Manager UI
-- [ ] 15.045: Build Client Budget Panel UI
+### Engine Governor — Phase 3: Admin Dashboard (COMPLETE)
+- [x] 15.033–15.042: Build 6 Governor API endpoints (fleet, clients, swaps, overrides, decisions, analytics)
+- [x] 15.043: Build Governor dashboard page
+- [x] 15.044: Build Engine Swap Manager UI
+- [x] 15.045: Build Client Budget Panel UI
 
 ### Engine Governor — Phase 4: AI Automation
 - [ ] 15.046–15.047: AI Optimizer core + L1 Advisory mode
