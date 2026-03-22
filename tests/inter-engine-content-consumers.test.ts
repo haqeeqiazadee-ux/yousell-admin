@@ -45,7 +45,7 @@ describe('Inter-Engine: Content Creation Consumers', () => {
   })
 
   // Comm 5.009: Content reads trend_signals for keyword enrichment
-  it('reads trend_signals for trending keywords (Comm 5.009)', async () => {
+  it('TC-5.009: reads trend_signals for trending keywords (Comm 5.009)', async () => {
     const db = createMockDbClient()
     engine.setDbClient(db as any)
 
@@ -55,13 +55,13 @@ describe('Inter-Engine: Content Creation Consumers', () => {
   })
 
   // Comm 6.005: Content reads creator_product_matches for style insights
-  it('has access to creator matching data for content style (Comm 6.005)', () => {
+  it('TC-6.005: has access to creator matching data for content style (Comm 6.005)', () => {
     // Content engine subscribes to events that carry creator data
     expect(engine.config.subscribes.length).toBeGreaterThan(0)
   })
 
   // Comm 7.006: Content reads competitor ad data for differentiation
-  it('can generate content with competitive differentiation (Comm 7.006)', async () => {
+  it('TC-7.006: can generate content with competitive differentiation (Comm 7.006)', async () => {
     const db = createMockDbClient()
     engine.setDbClient(db as any)
 
@@ -71,7 +71,7 @@ describe('Inter-Engine: Content Creation Consumers', () => {
   })
 
   // Comm 8.010: Content reads competitor_products for USP
-  it('enriches content with competitor product context (Comm 8.010)', async () => {
+  it('TC-8.010: enriches content with competitor product context (Comm 8.010)', async () => {
     const db = createMockDbClient()
     engine.setDbClient(db as any)
 
@@ -80,14 +80,14 @@ describe('Inter-Engine: Content Creation Consumers', () => {
   })
 
   // Comm 14.006: Content reads fulfillment data for logistics context
-  it('can incorporate fulfillment context into content (Comm 14.006)', () => {
+  it('TC-14.006: can incorporate fulfillment context into content (Comm 14.006)', () => {
     // Verify engine subscribes to relevant events
     expect(engine.config.name).toBe('content-engine')
     expect(engine.config.version).toBe('2.0.0')
   })
 
   // Verify engine reads from multiple upstream tables
-  it('accesses multiple upstream data sources for enrichment', async () => {
+  it('TC-14.007: accesses multiple upstream data sources for enrichment', async () => {
     const db = createMockDbClient()
     engine.setDbClient(db as any)
 
@@ -97,7 +97,7 @@ describe('Inter-Engine: Content Creation Consumers', () => {
   })
 
   // Verify batch generation uses enrichment
-  it('batch generation accesses enrichment data for each product', async () => {
+  it('TC-14.008: batch generation accesses enrichment data for each product', async () => {
     const db = createMockDbClient()
     engine.setDbClient(db as any)
 
@@ -106,7 +106,7 @@ describe('Inter-Engine: Content Creation Consumers', () => {
   })
 
   // Verify content types map to different enrichment paths
-  it('uses different enrichment paths per content type', () => {
+  it('TC-14.009: uses different enrichment paths per content type', () => {
     const types = ['social_post', 'ad_copy', 'product_description', 'email_sequence', 'video_script']
     for (const type of types) {
       expect(typeof type).toBe('string')

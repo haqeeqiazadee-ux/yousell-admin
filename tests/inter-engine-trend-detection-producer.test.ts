@@ -43,7 +43,7 @@ describe('Inter-Engine: Trend Detection Producer', () => {
   })
 
   // Comm 1.009: HOT trend triggers Discovery scan
-  it('emits TREND_DETECTED event for Discovery to consume (Comm 1.009)', async () => {
+  it('TC-5.007: emits TREND_DETECTED event for Discovery to consume (Comm 1.009)', async () => {
     const bus = getEventBus()
     const events: unknown[] = []
     bus.subscribe(ENGINE_EVENTS.TREND_DETECTED, (e) => events.push(e))
@@ -60,7 +60,7 @@ describe('Inter-Engine: Trend Detection Producer', () => {
   })
 
   // Direction change event
-  it('emits TREND_DIRECTION_CHANGED for downstream consumers', async () => {
+  it('TC-5.008: emits TREND_DIRECTION_CHANGED for downstream consumers', async () => {
     const bus = getEventBus()
     const events: unknown[] = []
     bus.subscribe(ENGINE_EVENTS.TREND_DIRECTION_CHANGED, (e) => events.push(e))
@@ -73,7 +73,7 @@ describe('Inter-Engine: Trend Detection Producer', () => {
     expect(events.length).toBe(1)
   })
 
-  it('publishes both trend events', () => {
+  it('TC-5.006: publishes both trend events', () => {
     expect(engine.config.publishes).toContain(ENGINE_EVENTS.TREND_DETECTED)
     expect(engine.config.publishes).toContain(ENGINE_EVENTS.TREND_DIRECTION_CHANGED)
   })

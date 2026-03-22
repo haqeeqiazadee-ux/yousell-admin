@@ -312,8 +312,8 @@
 | L2 | Multi-Engine Pipeline | `inter-engine-L2-pipeline.test.ts` | Covered by `inter-engine-event-chains.test.ts` + `inter-engine-remaining-gaps.test.ts` | ✅ COVERED |
 | L3 | Fan-Out Broadcast | `inter-engine-L3-fanout.test.ts` | Covered by `inter-engine-scoring-producer.test.ts` (tests fan-out to 8 subscribers) | ✅ COVERED |
 | L4 | Database Dependency | `inter-engine-L4-database.test.ts` | Covered across multiple test files (content-consumers, admin-cc, allocation, etc.) | ✅ COVERED |
-| L5 | Queue Dispatch | `inter-engine-L5-queue.test.ts` | ⚠️ PARTIAL — Queue chains tested in engine tests but no dedicated L5 file | ⚠️ PARTIAL |
-| L6 | End-to-End Workflow | `inter-engine-L6-workflow.test.ts` | ⚠️ PARTIAL — Event chains test covers multi-step but not full lifecycle | ⚠️ PARTIAL |
+| L5 | Queue Dispatch | `inter-engine-L5-queue.test.ts` | ✅ Dedicated file: 12 tests (TC-Q-DISC-*, TC-Q-ADMIN-*, TC-Q-01–05) | ✅ COMPLETE |
+| L6 | End-to-End Workflow | `inter-engine-L6-workflow.test.ts` | ✅ Dedicated file: 14 tests covering all 5 V9 workflows (TC-WF1–WF5) | ✅ COMPLETE |
 | L7 | Error & Resilience | `inter-engine-L7-resilience.test.ts` | Covered by `engine-system.test.ts` (error isolation, concurrent events) | ✅ COVERED |
 
 ### Gap Closure Execution Plan Status
@@ -363,13 +363,12 @@ All 148 inter-engine communication pathways from V9_Inter_Engine_Communication_B
 - **Total new tests this session:** 84+
 - **Total project tests:** 450+
 
-### Remaining Test Gaps (Non-Critical)
+### Remaining Test Gaps
 
-| Gap | Description | Priority |
-|-----|-------------|----------|
-| L5 dedicated file | Queue dispatch tests in a single focused file | P2 |
-| L6 dedicated file | Full end-to-end workflow tests (Scenario 1-5 from breakdown) | P2 |
-| TC naming convention | Tests use descriptive names instead of TC-X.XXX IDs | P3 (cosmetic) |
+**NONE** — All gaps closed as of 2026-03-22:
+- ✅ L5 dedicated file created: `inter-engine-L5-queue.test.ts` (12 tests)
+- ✅ L6 dedicated file created: `inter-engine-L6-workflow.test.ts` (14 tests covering all 5 workflows)
+- ✅ TC-X.XXX naming convention aligned across all 13 inter-engine test files
 
 ### Architectural Patterns Verified
 

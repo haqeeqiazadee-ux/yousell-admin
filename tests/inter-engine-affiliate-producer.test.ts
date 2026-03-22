@@ -45,17 +45,17 @@ describe('Inter-Engine: Affiliate Commission Producer', () => {
   })
 
   // Comm 18.004: Financial Modelling reads commission data
-  it('publishes COMMISSION_RECORDED for Financial Modelling (Comm 18.004)', () => {
+  it('TC-18.004: publishes COMMISSION_RECORDED for Financial Modelling (Comm 18.004)', () => {
     expect(engine.config.publishes).toContain(ENGINE_EVENTS.COMMISSION_RECORDED)
   })
 
   // Comm 18.006: Profitability reads for margin deduction
-  it('publishes PAYOUT_CALCULATED for Profitability (Comm 18.006)', () => {
+  it('TC-18.006: publishes PAYOUT_CALCULATED for Profitability (Comm 18.006)', () => {
     expect(engine.config.publishes).toContain(ENGINE_EVENTS.PAYOUT_CALCULATED)
   })
 
   // Commission event delivery
-  it('commission_recorded event is receivable by downstream engines', async () => {
+  it('TC-18.004a: commission_recorded event is receivable by downstream engines', async () => {
     const bus = getEventBus()
     const events: unknown[] = []
     bus.subscribe(ENGINE_EVENTS.COMMISSION_RECORDED, (e) => events.push(e))

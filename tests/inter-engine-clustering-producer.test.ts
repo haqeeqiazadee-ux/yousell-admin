@@ -43,20 +43,20 @@ describe('Inter-Engine: Clustering Producer', () => {
     engine = new ClusteringEngine()
   })
 
-  it('publishes CLUSTER_UPDATED and CLUSTERS_REBUILT events (Comm 4.004-4.006)', () => {
+  it('TC-4.002: publishes CLUSTER_UPDATED and CLUSTERS_REBUILT events (Comm 4.004-4.006)', () => {
     expect(engine.config.publishes).toContain(ENGINE_EVENTS.CLUSTER_UPDATED)
     expect(engine.config.publishes).toContain(ENGINE_EVENTS.CLUSTERS_REBUILT)
   })
 
-  it('subscribes to PRODUCT_SCORED for re-clustering', () => {
+  it('TC-4.001: subscribes to PRODUCT_SCORED for re-clustering', () => {
     expect(engine.config.subscribes).toContain(ENGINE_EVENTS.PRODUCT_SCORED)
   })
 
-  it('has runClustering method for product_clusters writes', () => {
+  it('TC-4.004: has runClustering method for product_clusters writes', () => {
     expect(typeof engine.runClustering).toBe('function')
   })
 
-  it('CLUSTER_UPDATED event is receivable by downstream engines', async () => {
+  it('TC-4.003a: CLUSTER_UPDATED event is receivable by downstream engines', async () => {
     const bus = getEventBus()
     const events: unknown[] = []
     bus.subscribe(ENGINE_EVENTS.CLUSTER_UPDATED, (e) => events.push(e))
@@ -65,7 +65,7 @@ describe('Inter-Engine: Clustering Producer', () => {
     expect(events.length).toBe(1)
   })
 
-  it('CLUSTERS_REBUILT event is receivable on full rebuild', async () => {
+  it('TC-4.002a: CLUSTERS_REBUILT event is receivable on full rebuild', async () => {
     const bus = getEventBus()
     const events: unknown[] = []
     bus.subscribe(ENGINE_EVENTS.CLUSTERS_REBUILT, (e) => events.push(e))
