@@ -35,7 +35,7 @@ export interface ContentRecord {
   created_at?: string;
 }
 
-type ContentType = 'description' | 'social_post' | 'ad_copy' | 'video_script' | 'email';
+type ContentType = 'description' | 'social_post' | 'ad_copy' | 'video_script' | 'email' | 'image' | 'carousel' | 'short_video';
 
 /** Credit costs per content type */
 const CREDIT_COSTS: Record<ContentType, { haiku: number; sonnet: number }> = {
@@ -44,6 +44,9 @@ const CREDIT_COSTS: Record<ContentType, { haiku: number; sonnet: number }> = {
   ad_copy: { haiku: 2, sonnet: 5 },
   video_script: { haiku: 3, sonnet: 8 },
   email: { haiku: 2, sonnet: 5 },
+  image: { haiku: 2, sonnet: 2 },       // Bannerbear generation
+  carousel: { haiku: 5, sonnet: 5 },    // Multi-slide Bannerbear
+  short_video: { haiku: 5, sonnet: 5 }, // Shotstack video rendering
 };
 
 /** Token limits per content type */
@@ -53,6 +56,9 @@ const TOKEN_LIMITS: Record<ContentType, number> = {
   ad_copy: 300,
   video_script: 1000,
   email: 500,
+  image: 100,        // Caption/alt text only
+  carousel: 300,     // Multi-slide captions
+  short_video: 500,  // Video script narration
 };
 
 export class ContentCreationEngine implements Engine {
@@ -243,6 +249,40 @@ export class ContentCreationEngine implements Engine {
         content = `[AI-generated ${input.contentType} for "${input.productTitle}" on ${input.platform}]`;
       }
 
+      // V9 Tasks 9.18-9.21: Media generation (image/video) when applicable
+      let mediaUrl: string | undefined;
+      try {
+        if (input.contentType === 'image' || input.contentType === 'carousel') {
+          const { isBannerbearConfigured, generateProductImage } = await import('../integrations/bannerbear/client');
+          if (isBannerbearConfigured()) {
+            const templateUid = process.env.BANNERBEAR_DEFAULT_TEMPLATE || '';
+            if (templateUid) {
+              const imageResult = await generateProductImage(templateUid, {
+                title: input.productTitle,
+                price: 0,
+                description: input.productDescription,
+              });
+              mediaUrl = imageResult.imageUrl || imageResult.imageUrlPng;
+              console.log(`[ContentCreation] Bannerbear image queued: ${imageResult.uid}`);
+            }
+          }
+        } else if (input.contentType === 'short_video') {
+          const { isShotstackConfigured, generateProductVideo } = await import('../integrations/shotstack/client');
+          if (isShotstackConfigured()) {
+            const videoResult = await generateProductVideo({
+              title: input.productTitle,
+              price: 0,
+              imageUrls: [], // Would come from product images
+              description: input.productDescription,
+            });
+            console.log(`[ContentCreation] Shotstack video render submitted: ${videoResult.id}`);
+          }
+        }
+      } catch (mediaErr) {
+        console.error('[ContentCreation] Media generation error:', mediaErr);
+        // Non-fatal — text content still available
+      }
+
       // Write content to DB
       const record: ContentRecord = {
         product_id: productId,
@@ -350,6 +390,9 @@ export class ContentCreationEngine implements Engine {
       ad_copy: `You are a performance marketing copywriter. Write ad copy for ${platform} that follows the AIDA framework (Attention, Interest, Desire, Action). Include a hook, key benefits, social proof elements, and a strong CTA.`,
       video_script: `You are a video script writer for ${platform}. Write a script that hooks viewers in the first 3 seconds, demonstrates the product benefit, and ends with a clear CTA. Include visual directions and timing notes.`,
       email: `You are an email marketing specialist. Write a conversion-focused email with a compelling subject line, personalized opening, benefit-driven body, and clear CTA. Keep it scannable with short paragraphs.`,
+      image: `You are a visual content strategist. Write a short, compelling caption and alt text for a product image on ${platform}. Keep it under 50 words.`,
+      carousel: `You are a carousel content creator. Write captions for a 5-slide product carousel on ${platform}. Each slide needs a headline (under 10 words) and supporting text (under 25 words).`,
+      short_video: `You are a short-form video strategist for ${platform}. Write a 30-second video narration script with scene descriptions, on-screen text, and timing notes. Hook in first 3 seconds.`,
     };
     return prompts[contentType] || prompts.description;
   }
