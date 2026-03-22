@@ -1089,3 +1089,14 @@ Engine inventory (all 20):
 - **Result:** SUCCESS — TypeScript compiles clean, no breaking changes to existing engines
 - **Next step:** Task 15.003–15.008: Database migrations (6 new tables)
 
+------------------------------------------------------------
+
+### [2026-03-22 01:20] DONE — Task 15.003–15.008: Governor database migrations
+
+- **Task:** Create 6 new tables + ALTER engine_toggles for Governor system
+- **Batch:** 15.003-15.008
+- **Action:** Created migration 031 with: engine_cost_manifests, plan_engine_allowances, engine_budget_envelopes, engine_usage_ledger, engine_swaps, governor_ai_decisions, governor_overrides tables + ALTER engine_toggles (4 new columns) + RLS policies for all tables + indexes on usage_ledger
+- **Files touched:** `supabase/migrations/031_engine_governor_tables.sql` (new)
+- **Result:** SUCCESS — all idempotent (IF NOT EXISTS), RLS enforced
+- **Next step:** Task 15.009: Build GovernorGate class
+
