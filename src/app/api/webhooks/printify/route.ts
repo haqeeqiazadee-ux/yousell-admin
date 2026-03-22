@@ -32,8 +32,11 @@ export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get('x-printify-signature');
 
-  const webhookSecret = process.env.PRINTIFY_WEBHOOK_SECRET;
-  if (webhookSecret && !verifyPrintifySignature(body, signature)) {
+  if (!process.env.PRINTIFY_WEBHOOK_SECRET) {
+    console.error('[Printify] PRINTIFY_WEBHOOK_SECRET not configured — rejecting request');
+    return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 });
+  }
+  if (!verifyPrintifySignature(body, signature)) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
 

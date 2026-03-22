@@ -6,9 +6,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { requireAdmin } from '@/lib/auth/roles';
 
 export async function GET() {
   try {
+    await requireAdmin();
     const supabase = createAdminClient();
 
     const { data, error } = await supabase
@@ -27,6 +29,9 @@ export async function GET() {
 
     return NextResponse.json({ active, expired, totalActive: active.length });
   } catch (error) {
+    if (error instanceof Error && (error.message === 'Unauthorized' || error.message.startsWith('Forbidden'))) {
+      return NextResponse.json({ error: error.message }, { status: error.message === 'Unauthorized' ? 401 : 403 });
+    }
     console.error('[Governor Overrides API] Error:', error);
     return NextResponse.json({ error: 'Failed to load overrides' }, { status: 500 });
   }
@@ -34,6 +39,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    await requireAdmin();
     const supabase = createAdminClient();
     const body = await request.json();
     const { action, overrideType, reason, createdBy, targetClientId, targetEngine, durationMinutes, overrideId } = body;
@@ -97,6 +103,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
     }
   } catch (error) {
+    if (error instanceof Error && (error.message === 'Unauthorized' || error.message.startsWith('Forbidden'))) {
+      return NextResponse.json({ error: error.message }, { status: error.message === 'Unauthorized' ? 401 : 403 });
+    }
     console.error('[Governor Overrides API] Error:', error);
     return NextResponse.json({ error: 'Failed to process override' }, { status: 500 });
   }

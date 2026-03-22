@@ -7,9 +7,11 @@
 
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { requireAdmin } from '@/lib/auth/roles';
 
 export async function GET() {
   try {
+    await requireAdmin();
     const supabase = createAdminClient();
 
     // Get usage stats per engine (current period)
@@ -85,6 +87,9 @@ export async function GET() {
       period: { start: thirtyDaysAgo, end: new Date().toISOString() },
     });
   } catch (error) {
+    if (error instanceof Error && (error.message === 'Unauthorized' || error.message.startsWith('Forbidden'))) {
+      return NextResponse.json({ error: error.message }, { status: error.message === 'Unauthorized' ? 401 : 403 });
+    }
     console.error('[Governor Fleet API] Error:', error);
     return NextResponse.json({ error: 'Failed to load fleet data' }, { status: 500 });
   }
