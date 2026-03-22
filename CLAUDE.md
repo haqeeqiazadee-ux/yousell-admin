@@ -166,7 +166,9 @@ Single source of truth:
 - 14 discovery providers (all V9 platforms covered)
 - 23/23 test batches complete (84 new tests)
 - Media generation: Bannerbear (images) + Shotstack (video)
-- Remaining: Ainfluencer API, WooCommerce/BigCommerce/Etsy OAuth, POD fulfillment routing
+- P0 fixes complete: Claude API activated, syncInventory functional, trend lifecycle, Ainfluencer API
+- P1 fixes complete: Bannerbear/Shotstack wired into content engine, token refresh added
+- Remaining P2: WooCommerce/BigCommerce/Etsy OAuth, POD fulfillment order routing
 
 
 ================================================================

@@ -990,3 +990,35 @@ Engine inventory (all 20):
 - **Commit:** ab65167
 - **Next step:** Update system files, then continue with remaining V9 tasks per breakdown file
 
+------------------------------------------------------------
+
+### [2026-03-22 17:00] DONE — P0 Fixes: 3 Critical V9 Engine Gaps Closed
+
+- **Task:** Fix P0 gaps identified in V9 task breakdown cross-reference
+- **Action:**
+  1. **Engine 9 (Content):** Activated Claude API calls — was returning placeholder `[AI-generated ...]`. Now calls Haiku/Sonnet via fetch(), falls back only when ANTHROPIC_API_KEY not set (V9 Tasks 9.14-9.15)
+  2. **Engine 10 (Store Integration):** Replaced hardcoded `syncInventory() → 0` with real DB queries against connected_channels + shop_products. Added `refreshExpiringTokens()` for TikTok/Amazon OAuth auto-refresh (V9 Tasks 10.015-10.040)
+  3. **Engine 1 (Trend Detection):** Added lifecycle classification (emerging/rising/exploding/saturated), pre-viral scoring with confidence tiers (LOW/MEDIUM/HIGH), expired trend detection (70+ → <60 decay). (V9 Tasks 1.065-1.079)
+- **Files touched:**
+  - `src/lib/engines/content-creation.ts` (modified)
+  - `src/lib/engines/store-integration.ts` (modified — +setDbClient, +syncInventory, +refreshExpiringTokens)
+  - `src/lib/engines/trend-detection.ts` (modified — +lifecycle, +pre-viral, +expired)
+- **Result:** SUCCESS — 0 TypeScript errors in engine files
+- **Commits:** 79ebec1, b3f4c27
+- **Next step:** P0 Engine 3 (Ainfluencer API + compatibility scoring), then P1 items
+
+------------------------------------------------------------
+
+### [2026-03-22 18:00] DONE — P0 Engine 3 + P1 Media Wiring
+
+- **Task:** Fix remaining P0/P1 gaps from V9 cross-reference
+- **Action:**
+  1. **Engine 3 (Creator Matching):** Added Ainfluencer API integration (search by keyword, platform, follower range), audience demographics scoring, pricing benchmarks by tier (V9 Tasks 3.005-3.040)
+  2. **Engine 9 (Content Creation):** Wired Bannerbear (image/carousel) + Shotstack (short_video) into generateContent(). Added 3 new content types with prompts, credit costs, token limits (V9 Tasks 9.18-9.21)
+- **Files touched:**
+  - `src/lib/engines/creator-matching.ts` (modified — +Ainfluencer API, +demographics scoring, +pricing benchmarks)
+  - `src/lib/engines/content-creation.ts` (modified — +media generation wiring, +3 content types)
+- **Result:** SUCCESS — 0 TypeScript errors
+- **Commits:** 2013b08, 18f49ae
+- **Next step:** Remaining P2 items or Phase 7 compliance
+
