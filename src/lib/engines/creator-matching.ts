@@ -1,6 +1,10 @@
 /**
  * Creator Matching Engine — Pairs products with influencers based on
- * niche alignment, engagement quality, and price range fit.
+ * niche alignment, engagement quality, audience demographics, and price range fit.
+ *
+ * V9 Tasks 3.001–3.061: Creator discovery + matching + outreach
+ * Primary provider: Ainfluencer API (when configured)
+ * Fallback: Apify Instagram scraper, DB influencers table
  *
  * Engine wrapper added in Phase B — provides lifecycle management and
  * event bus integration. Original runCreatorMatching() export preserved.
@@ -10,6 +14,100 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { getEventBus } from './event-bus';
 import type { Engine, EngineConfig, EngineEvent, EngineStatus } from './types';
 import { ENGINE_EVENTS } from './types';
+
+/** V9 Task 3.040: Influencer pricing benchmarks by tier */
+const PRICING_BENCHMARKS: Record<string, { min: number; max: number }> = {
+  nano: { min: 50, max: 200 },       // 1K-10K followers
+  micro: { min: 200, max: 2000 },    // 10K-100K followers
+  mid: { min: 2000, max: 20000 },    // 100K-1M followers
+  macro: { min: 20000, max: 100000 },// 1M+ followers
+};
+
+/**
+ * Discover influencers via Ainfluencer API.
+ * V9 Tasks 3.005-3.018: Primary API integration
+ * Falls back to empty array when not configured.
+ */
+async function discoverViaAinfluencer(query: string, platform: string = 'tiktok'): Promise<Array<{
+  id: string;
+  username: string;
+  platform: string;
+  followers: number;
+  engagement_rate: number;
+  niche: string;
+  audienceDemographics?: { ageRange?: string; gender?: string; topCountries?: string[] };
+}>> {
+  const apiKey = process.env.AINFLUENCER_API_KEY;
+  if (!apiKey) return [];
+
+  try {
+    const res = await fetch('https://api.ainfluencer.com/v1/influencers/search', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        keyword: query,
+        platform,
+        minFollowers: 1000,
+        maxFollowers: 1000000,
+        minEngagement: 1.5,
+        limit: 50,
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!res.ok) {
+      console.error(`[CreatorMatching] Ainfluencer API error: ${res.status}`);
+      return [];
+    }
+
+    const data = await res.json() as Record<string, unknown>;
+    const influencers = (data.data || data.results || []) as Array<Record<string, unknown>>;
+
+    return influencers.map(inf => ({
+      id: (inf.id as string) || '',
+      username: (inf.username as string) || (inf.handle as string) || '',
+      platform: (inf.platform as string) || platform,
+      followers: (inf.followers as number) || (inf.followerCount as number) || 0,
+      engagement_rate: (inf.engagementRate as number) || (inf.engagement_rate as number) || 0,
+      niche: (inf.niche as string) || (inf.category as string) || '',
+      audienceDemographics: {
+        ageRange: (inf.audienceAge as string) || undefined,
+        gender: (inf.audienceGender as string) || undefined,
+        topCountries: (inf.audienceCountries as string[]) || undefined,
+      },
+    }));
+  } catch (err) {
+    console.error('[CreatorMatching] Ainfluencer API error:', err);
+    return [];
+  }
+}
+
+/**
+ * Calculate audience demographics match score.
+ * V9 Task 3.032: 5 sub-scores including audience overlap
+ */
+function calculateAudienceDemographicsScore(
+  demographics?: { ageRange?: string; gender?: string; topCountries?: string[] },
+): number {
+  if (!demographics) return 50; // Neutral when no data
+
+  let score = 50;
+
+  // US audience bonus (primary market)
+  if (demographics.topCountries?.includes('US') || demographics.topCountries?.includes('United States')) {
+    score += 20;
+  }
+
+  // 18-34 age range bonus (highest purchase intent)
+  if (demographics.ageRange?.includes('18-24') || demographics.ageRange?.includes('25-34')) {
+    score += 15;
+  }
+
+  return Math.min(100, score);
+}
 
 interface ProductForMatching {
   id: string;
