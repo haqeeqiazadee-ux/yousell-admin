@@ -1230,3 +1230,25 @@ Engine inventory (all 20):
   - `tests/engine15-governor-integration.test.ts` (new)
 - **Result:** SUCCESS — 33/33 tests passing. ENGINE 15 GOVERNOR FULLY COMPLETE.
 - **Next step:** All Governor tasks complete (15.001–15.063). Check remaining P2 tasks.
+
+------------------------------------------------------------
+
+### [2026-03-22 03:30] DONE — V9 P2 Tasks: OAuth, POD Webhooks, Smart Schedule
+
+- **Task:** Complete all remaining P2 engine tasks
+- **Batch:** V9-P2
+- **Action:**
+  1. WooCommerce/BigCommerce/Etsy OAuth: Created store-oauth.ts (AES-256-GCM token encryption, OAuth configs, token exchange). 3 OAuth routes: WooCommerce (REST API keys), BigCommerce (standard OAuth2), Etsy (OAuth2 PKCE).
+  2. POD fulfillment: Printful webhook (shipped/created/updated/failed) + Printify webhook (shipping-update/created/cancelled/sent-to-production). Both with HMAC verification.
+  3. Smart Schedule: Engagement pattern analysis for 5 platforms, personalized recommendations from 20+ posts, industry defaults. API endpoint.
+- **Files touched:**
+  - `src/lib/engines/store-oauth.ts` (new)
+  - `src/app/api/auth/oauth/woocommerce/route.ts` (new)
+  - `src/app/api/auth/oauth/bigcommerce/route.ts` (new)
+  - `src/app/api/auth/oauth/etsy/route.ts` (new)
+  - `src/app/api/webhooks/printful/route.ts` (new)
+  - `src/app/api/webhooks/printify/route.ts` (new)
+  - `src/lib/engines/smart-schedule.ts` (new)
+  - `src/app/api/engine/schedule/route.ts` (new)
+- **Result:** SUCCESS — ALL V9 ENGINE TASKS COMPLETE. 0 remaining.
+- **Next step:** All engine-related tasks finished. Platform feature-complete.

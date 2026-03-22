@@ -142,10 +142,10 @@ Last updated: 2026-03-21 (end of day snapshot)
 - [x] Engine 3: Ainfluencer API + audience demographics scoring + pricing benchmarks
 - [x] Engine 9: Bannerbear/Shotstack wired into content engine
 
-### Remaining (P2 — Nice to Have)
-- [ ] V9 P2: WooCommerce/BigCommerce/Etsy OAuth (Engine 10)
-- [ ] V9 P2: POD fulfillment order routing (Printful/Printify webhooks)
-- [ ] V9 P2: Smart Schedule (AI-optimal posting time)
+### Remaining (P2 — Nice to Have) — ALL COMPLETE
+- [x] V9 P2: WooCommerce/BigCommerce/Etsy OAuth (Engine 10) — store-oauth.ts + 3 OAuth routes
+- [x] V9 P2: POD fulfillment order routing (Printful/Printify webhooks) — 2 webhook routes
+- [x] V9 P2: Smart Schedule (AI-optimal posting time) — smart-schedule.ts + API
 
 ### Engine Governor (ENGINE 15) — Phase 1: Foundation
 - [x] 15.001: Define Governor type interfaces (governor/types.ts)
