@@ -2938,3 +2938,36 @@ Ready to proceed with:
 - 37 environment variables documented
 - 0 stubs or placeholder implementations
 - 0 breaking changes throughout all phases
+
+------------------------------------------------------------
+
+### Engine Governor Architecture (2026-03-22)
+
+**What:** Designed the Engine Governor ("Head Engine") — a centralized orchestrator
+that sits between all client requests and the 24 engines. Controls access based
+on subscription tiers, meters real infrastructure costs, and uses AI to optimize
+resource distribution.
+
+**Key Design Decisions:**
+- Governor has 3 pipeline stages: Gate → Dispatch → Meter
+- Every engine declares a Cost Manifest (real USD per operation with API breakdowns)
+- Clients get Budget Envelopes (per-billing-period containers with per-engine quotas)
+- 4 AI automation levels: Off, Advisory (L1), Assisted (L2), Autonomous (L3)
+- Admin can hot-swap engine implementations via swap table
+- Super admin has time-limited override bypass (1h max for full bypass)
+- 6 new database tables: cost_manifests, plan_engine_allowances, budget_envelopes, usage_ledger, engine_swaps, governor_ai_decisions, governor_overrides
+
+**Files Created:**
+- `docs/v9/V9_Engine_Governor_Architecture.md` — Full architecture (9 sections, ~900 lines)
+- `docs/v9/V9_Engine_Task_Breakdown.md` — Added ENGINE 15 with 63 atomic tasks (15.001–15.063)
+
+**Task Breakdown:** 63 tasks across 5 phases:
+- Phase 1 (Foundation): 22 tasks — types, migrations, Gate/Dispatch/Meter, cost manifests
+- Phase 2 (Wiring): 10 tasks — Stripe webhooks, route rewiring, middleware
+- Phase 3 (Admin Dashboard): 13 tasks — APIs + UI (fleet, swaps, budgets, decisions)
+- Phase 4 (AI Automation): 9 tasks — L1/L2/L3, anomaly detection, health routing
+- Phase 5 (Testing): 9 tasks — unit + integration tests
+
+**Total V9 tasks updated:** 668 → 731 across 15 engines.
+
+**CLAUDE.md Updated:** Added G21-G24 guardrails for chunked writing to prevent timeouts.

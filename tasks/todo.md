@@ -147,6 +147,39 @@ Last updated: 2026-03-21 (end of day snapshot)
 - [ ] V9 P2: POD fulfillment order routing (Printful/Printify webhooks)
 - [ ] V9 P2: Smart Schedule (AI-optimal posting time)
 
+### Engine Governor (ENGINE 15) — Phase 1: Foundation
+- [ ] 15.001: Define Governor type interfaces (governor/types.ts)
+- [ ] 15.002: Add costManifest to Engine interface (types.ts)
+- [ ] 15.003–15.008: Database migrations (6 new tables + ALTER engine_toggles)
+- [ ] 15.009: Build GovernorGate class
+- [ ] 15.010: Build GovernorDispatch class
+- [ ] 15.011: Build GovernorMeter class
+- [ ] 15.012–15.013: Build EngineGovernor singleton + barrel export
+- [ ] 15.014–15.021: Add cost manifests to all 24 engines
+- [ ] 15.022: Seed plan_engine_allowances from PRICING_TIERS
+
+### Engine Governor — Phase 2: Wiring
+- [ ] 15.023–15.025: Wire Stripe webhooks → Budget Envelope lifecycle
+- [ ] 15.026–15.028: Replace direct engine calls with governor.execute() in all routes
+- [ ] 15.029: Wire BullMQ workers through Governor
+- [ ] 15.030–15.032: Middleware, health endpoint, EventBus events
+
+### Engine Governor — Phase 3: Admin Dashboard
+- [ ] 15.033–15.042: Build 10 Governor API endpoints (fleet, clients, swaps, overrides, decisions, analytics)
+- [ ] 15.043: Build Governor dashboard page
+- [ ] 15.044: Build Engine Swap Manager UI
+- [ ] 15.045: Build Client Budget Panel UI
+
+### Engine Governor — Phase 4: AI Automation
+- [ ] 15.046–15.047: AI Optimizer core + L1 Advisory mode
+- [ ] 15.048–15.050: Resource redistribution, anomaly detection, spike detection
+- [ ] 15.051–15.053: L2 Assisted mode, L3 Autonomous mode, health routing
+- [ ] 15.054: AI Decision Feed UI
+
+### Engine Governor — Phase 5: Testing
+- [ ] 15.055–15.057: Unit tests (Gate, Dispatch, Meter)
+- [ ] 15.058–15.063: Integration tests (pipeline, Stripe lifecycle, swaps, AI, overrides)
+
 ------------------------------------------------------------
 
 ## Completed
