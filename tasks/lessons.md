@@ -88,3 +88,11 @@ Last updated: 2026-03-21
 ### Lesson 6 — Split large writes into ≤150-line chunks to avoid timeouts (2026-03-22)
 **Trigger:** Writing large architecture documents (900+ lines) in a single tool call risks timeout and context loss.
 **Rule:** Never write a full document in one tool call. Create the file with a header first, then append sections one at a time (≤150 lines per Edit/Write call). For docs >200 lines, outline all sections first, then write each as a separate tool call. This is now codified as CLAUDE.md guardrails G21-G24.
+
+### Lesson 7 — Webhook signature verification must fail-closed (2026-03-22)
+**Trigger:** QA review found Printful/Printify webhooks accepted all requests when secret env var was missing.
+**Rule:** Never gate signature verification on the secret being configured (`if (secret && !verify(...))`). Always reject if the secret is missing — return 503 "Webhook not configured". Fail-closed, never fail-open.
+
+### Lesson 8 — Admin API routes need auth guards even behind /admin/ path (2026-03-22)
+**Trigger:** 6 Governor admin API routes had no `requireAdmin()` — fully accessible to unauthenticated users.
+**Rule:** Every route under `/api/admin/` MUST call `requireAdmin()` as the first line in the try block. Middleware path matching is not sufficient — defense in depth requires per-handler auth checks.

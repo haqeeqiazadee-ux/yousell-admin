@@ -142,6 +142,22 @@ Last updated: 2026-03-21 (end of day snapshot)
 - [x] Engine 3: Ainfluencer API + audience demographics scoring + pricing benchmarks
 - [x] Engine 9: Bannerbear/Shotstack wired into content engine
 
+### QA Fixes (COMPLETE — 2026-03-22)
+- [x] C1: Add requireAdmin() to all 6 Governor admin API routes (10 handlers)
+- [x] H1: Fix Printful webhook fail-open → fail-closed
+- [x] H2: Fix Printify webhook fail-open → fail-closed
+- [x] M1: Add Governor link to admin sidebar nav
+- [x] M2: Fix duplicate periodEnd/periodStart in Stripe webhook
+- [x] L1: Add missing delete()/upsert() to Governor unit test mock chain
+
+### Phase 8: Production Hardening (IN PROGRESS)
+- [ ] PH-1: Redis EventBus — swap in-memory bus → Redis pub/sub
+- [ ] PH-2: Structured logging — JSON logger with levels, request IDs, engine context
+- [ ] PH-3: Monitoring dashboard — admin page with real-time engine health, error rates, latency
+- [ ] PH-4: Alerting API — threshold-based alerts (error spikes, queue backup, budget exhaustion)
+- [ ] PH-5: Circuit breakers — graceful degradation on external API failures
+- [ ] PH-6: Deep health checks — Redis, BullMQ, Supabase, external API reachability
+
 ### Remaining (P2 — Nice to Have) — ALL COMPLETE
 - [x] V9 P2: WooCommerce/BigCommerce/Etsy OAuth (Engine 10) — store-oauth.ts + 3 OAuth routes
 - [x] V9 P2: POD fulfillment order routing (Printful/Printify webhooks) — 2 webhook routes

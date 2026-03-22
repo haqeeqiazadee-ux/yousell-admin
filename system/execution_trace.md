@@ -1252,3 +1252,54 @@ Engine inventory (all 20):
   - `src/app/api/engine/schedule/route.ts` (new)
 - **Result:** SUCCESS — ALL V9 ENGINE TASKS COMPLETE. 0 remaining.
 - **Next step:** All engine-related tasks finished. Platform feature-complete.
+
+------------------------------------------------------------
+
+### [2026-03-22 20:00] DONE — QA Blocker Fixes (C1, H1, H2)
+
+- **Task:** Fix 3 QA blockers from architecture review
+- **Batch:** QA-BLOCKERS
+- **Action:**
+  1. **C1 (CRITICAL):** Added `requireAdmin()` to all 10 handlers (6 GET + 4 POST) across 6 Governor admin API routes. Auth errors return 401/403.
+  2. **H1 (HIGH):** Printful webhook changed from fail-open to fail-closed — rejects with 503 when secret not configured.
+  3. **H2 (HIGH):** Printify webhook same fail-closed fix.
+- **Files touched:**
+  - `src/app/api/admin/governor/fleet/route.ts` (modified)
+  - `src/app/api/admin/governor/clients/route.ts` (modified)
+  - `src/app/api/admin/governor/swaps/route.ts` (modified)
+  - `src/app/api/admin/governor/overrides/route.ts` (modified)
+  - `src/app/api/admin/governor/decisions/route.ts` (modified)
+  - `src/app/api/admin/governor/analytics/route.ts` (modified)
+  - `src/app/api/webhooks/printful/route.ts` (modified)
+  - `src/app/api/webhooks/printify/route.ts` (modified)
+- **Result:** SUCCESS
+- **Commit:** aa8c8d8
+
+------------------------------------------------------------
+
+### [2026-03-22 20:15] DONE — QA Remaining Fixes (M1, M2, L1)
+
+- **Task:** Fix 3 remaining Medium/Low QA issues
+- **Batch:** QA-REMAINING
+- **Action:**
+  1. **M1:** Added Governor link (Shield icon) to admin sidebar `managementNav`.
+  2. **M2:** Removed duplicate `periodEnd`/`periodStart` declarations in Stripe webhook — reuses variables from top of case block.
+  3. **L1:** Added missing `delete()` and `upsert()` to Governor unit test mock chain.
+- **Files touched:**
+  - `src/components/admin-sidebar.tsx` (modified)
+  - `src/app/api/webhooks/stripe/route.ts` (modified)
+  - `tests/engine15-governor-unit.test.ts` (modified)
+- **Result:** SUCCESS
+- **Commit:** 802e454
+- **Next step:** Production hardening — Redis EventBus, structured logging, monitoring, circuit breakers
+
+------------------------------------------------------------
+
+### [2026-03-22 20:30] START — Phase 8: Production Hardening
+
+- **Task:** Harden platform for production: Redis EventBus, structured logging, monitoring dashboard, alerting, circuit breakers, deep health checks
+- **Batch:** PH-PLAN
+- **Action:** Planning 6 sub-tasks across ~15-20 micro-batches
+- **Files touched:** tasks/todo.md (updated)
+- **Result:** IN PROGRESS
+- **Next step:** PH-1: Redis EventBus upgrade
