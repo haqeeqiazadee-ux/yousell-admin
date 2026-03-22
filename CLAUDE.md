@@ -125,12 +125,12 @@ yousell-admin/
 │   ├── YouSell_Platform_Technical_Specification_v8.md — Master architecture (THE BIBLE)
 │   ├── content_publishing_shop_integration_strategy.md
 │   ├── USE_CASE_DIAGRAM.md
-│   └── MARKET_RESEARCH_LOG_SESSION3.md
+│   ├── MARKET_RESEARCH_LOG_SESSION3.md
+│   └── v9/                               — V9 engine docs (task breakdown, checklists, test strategy)
 ├── tasks/
 │   ├── todo.md                           — Task planning and progress
 │   ├── lessons.md                        — Mistake patterns (review every session)
-│   ├── execution_plan.md                 — Step-by-step implementation plan
-│   └── phase0_execution_prompt.md        — Phase 0 micro-batch plan
+│   └── execution_plan.md                 — Step-by-step implementation plan
 ├── archive/                              — Deprecated files (reference only)
 ├── src/
 │   ├── app/                              — Next.js App Router pages & API routes
@@ -157,9 +157,11 @@ Single source of truth:
 
 **Before starting ANY engine-related task, READ:**
 
-    V9_Engine_Task_Breakdown.md            — 668 atomic tasks across 14 engines
-    V9_Gap_Closure_Execution_Plan.md       — 23 test batches (all complete)
-    V9_Inter_Engine_Communication_Breakdown.md — 44 Comm pathways
+    docs/v9/V9_Engine_Task_Breakdown.md            — 668 atomic tasks across 14 engines
+    docs/v9/V9_Gap_Closure_Execution_Plan.md       — 23 test batches (all complete)
+    docs/v9/V9_Inter_Engine_Communication_Breakdown.md — 44 Comm pathways
+    docs/v9/V9_Inter_Engine_Checklist.md             — Completion checklist (all gaps closed)
+    docs/v9/V9_Inter_Engine_Communication_Test_Strategy.md — Test strategy
 
 **V9 Engine Status (as of 2026-03-22):**
 - 24 engines implemented with Engine interface
@@ -459,7 +461,8 @@ Claude must verify these **before every code change**:
 | `tasks/todo.md` | Task planning and progress | Continuously |
 | `tasks/lessons.md` | Patterns and lessons from corrections | After every correction |
 | `tasks/execution_plan.md` | Step-by-step implementation plan | On plan changes |
-| `tasks/phase0_execution_prompt.md` | Phase 0 micro-batch plan | On phase plan changes |
+| `docs/v9/V9_Engine_Task_Breakdown.md` | 668 atomic tasks across 14 engines | Reference only |
+| `docs/v9/V9_Inter_Engine_Checklist.md` | Inter-engine completion checklist | Reference only |
 | `docs/content_publishing_shop_integration_strategy.md` | Content & shop integration | On strategy changes |
 | `docs/USE_CASE_DIAGRAM.md` | Use case diagrams and data flows | On flow changes |
 | `docs/MARKET_RESEARCH_LOG_SESSION3.md` | Market research (80+ sources) | On new research |
