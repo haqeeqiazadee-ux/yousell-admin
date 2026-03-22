@@ -3053,3 +3053,66 @@ resource distribution.
 ## Phase 8: Production Hardening (2026-03-22 — IN PROGRESS)
 
 Goal: Harden platform for production deployment with Redis EventBus, structured logging, monitoring/alerting dashboards, circuit breakers, and deep health checks.
+
+**COMPLETE — All 6 tasks done:**
+
+| # | Task | Key Files |
+|---|------|-----------|
+| PH-1 | Redis EventBus (auto-detects REDIS_URL, in-memory fallback) | `redis-event-bus.ts`, `event-bus.ts` |
+| PH-2 | Structured JSON logger + X-Request-Id middleware | `logger.ts`, `middleware.ts` |
+| PH-3 | Monitoring dashboard (30s auto-refresh, engine health grid) | `/api/admin/monitoring`, `/admin/monitoring` |
+| PH-4 | Alerting system (threshold evaluation, dedup, acknowledge) | `alerting.ts`, `/api/admin/alerts`, migration 032 |
+| PH-5 | Circuit breakers (10 services, 3-state, configurable) | `circuit-breaker.ts` |
+| PH-6 | Deep health checks (?deep=true: Redis, Supabase, backend, breakers) | `/api/health` |
+
+**New env vars:**
+- `REDIS_URL` — enables Redis EventBus (optional, falls back to in-memory)
+- `LOG_LEVEL` — minimum log level: debug/info/warn/error (default: info)
+- `SERVICE_NAME` — service identifier in log entries (default: yousell-admin)
+
+**New DB table:**
+- `system_alerts` — stores threshold-triggered alerts (migration 032, applied to Supabase)
+
+------------------------------------------------------------
+
+## Phase 8B: Circuit Breaker + Logger Wiring (2026-03-22)
+
+Wired the circuit breaker and structured logger infrastructure (created in Phase 8) into all 14 files that make external API calls. Previously the infrastructure existed but nothing used it.
+
+**5 micro-batches across 14 files:**
+
+| Batch | Files | Breakers Used |
+|-------|-------|---------------|
+| 1 | Bannerbear client, Shotstack client, Shopify GraphQL client | `bannerbear`, `shotstack`, `shopify-api` |
+| 2 | content-creation, tiktok-discovery, amazon-intelligence | `claude-api`, `apify` |
+| 3 | email.ts, creator-matching, ad-intelligence | `resend`, `apify` |
+| 4 | supplier-discovery, shopify-intelligence, store-oauth | `apify` + logger |
+| 5 | competitor-intelligence, store-integration | `apify`, `tiktok-api`, `amazon-api` |
+
+**Circuit breaker coverage (8 of 10 pre-registered breakers now active):**
+- `apify` — TikTok, Amazon, Shopify, supplier, competitor, ad, influencer scraping
+- `claude-api` — content generation
+- `bannerbear` — image generation
+- `shotstack` — video generation
+- `shopify-api` — Shopify GraphQL mutations
+- `resend` — email alerts
+- `tiktok-api` — TikTok Shop token refresh
+- `amazon-api` — Amazon LWA token refresh
+- `stripe` — (pre-registered, wired at webhook level)
+- `supabase` — (pre-registered, used via health checks)
+
+**Structured logger coverage:** All 14 files use `engineLogger()` with operation-specific metadata (query, platform, status, durations, error context).
+
+### Key Numbers (as of 2026-03-22)
+- 25 engines implemented (24 original + Governor)
+- 148+ tests across 33 files (all passing)
+- 32 database migrations (53 tables)
+- 22 admin pages + 9 client pages + 5 root pages
+- 97 API routes
+- 31 BullMQ job processors
+- 14 discovery providers (all 14 V9 platforms)
+- 48 UI components
+- 8 circuit breakers active across 14 files
+- 14 files with structured JSON logging
+- 0 stubs or placeholder implementations
+- 0 breaking changes throughout all phases

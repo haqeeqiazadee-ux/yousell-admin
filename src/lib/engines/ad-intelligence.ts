@@ -7,9 +7,13 @@
  */
 
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getCircuitBreaker } from '@/lib/circuit-breaker';
+import { engineLogger } from '@/lib/logger';
 import { getEventBus } from './event-bus';
 import type { Engine, EngineConfig, EngineEvent, EngineStatus } from './types';
 import { ENGINE_EVENTS } from './types';
+
+const log = engineLogger('ad-intelligence');
 
 /**
  * Discover ads from Meta Ads Library (free, no auth required).
@@ -73,13 +77,14 @@ async function searchMetaAdsLibrary(query: string, limit: number): Promise<AdCan
   // Meta Ads Library public search (no API key required)
   try {
     const url = `https://www.facebook.com/ads/library/api/?search_terms=${encodeURIComponent(query)}&ad_type=all&country=US&media_type=all`;
+    log.info('Searching Meta Ads Library', { query });
 
-    const res = await fetch(url, {
+    const res = await getCircuitBreaker('apify').execute(() => fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; YouSell/1.0)',
       },
       signal: AbortSignal.timeout(15000),
-    });
+    }));
 
     // Meta Ads Library API is restricted; if we can't access it directly,
     // generate intelligence from Apify if available

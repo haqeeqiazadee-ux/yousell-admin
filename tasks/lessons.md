@@ -96,3 +96,11 @@ Last updated: 2026-03-21
 ### Lesson 8 — Admin API routes need auth guards even behind /admin/ path (2026-03-22)
 **Trigger:** 6 Governor admin API routes had no `requireAdmin()` — fully accessible to unauthenticated users.
 **Rule:** Every route under `/api/admin/` MUST call `requireAdmin()` as the first line in the try block. Middleware path matching is not sufficient — defense in depth requires per-handler auth checks.
+
+### Lesson 9 — Infrastructure must be wired, not just created (2026-03-22)
+**Trigger:** Circuit breakers and structured logger were created as standalone modules but no engine actually imported or used them. They were "available" but doing nothing.
+**Rule:** After creating infrastructure (circuit breakers, loggers, event buses, caches), immediately wire them into the actual callsites in the same session. Infrastructure without integration is dead code. Always verify at least one consumer exists before marking infrastructure as "done".
+
+### Lesson 10 — Use breaker.execute() wrapping the fetch, not the whole function (2026-03-22)
+**Trigger:** When wiring circuit breakers, the temptation is to wrap entire engine methods. But only the external HTTP call should be inside `execute()` — DB writes, event emissions, and response parsing should be outside.
+**Rule:** Circuit breaker `execute()` should wrap the smallest possible unit — typically just the `fetch()` call. Everything else (logging, DB writes, event bus emissions) stays outside the breaker so failures are correctly attributed to the external service, not internal logic.

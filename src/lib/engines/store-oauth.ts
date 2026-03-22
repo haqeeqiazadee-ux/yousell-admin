@@ -9,6 +9,9 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
+import { engineLogger } from '@/lib/logger';
+
+const log = engineLogger('store-oauth');
 
 function getServiceClient() {
   return createClient(
@@ -111,6 +114,8 @@ export async function exchangeCodeForToken(
     body.code_verifier = codeVerifier;
   }
 
+  log.info('Exchanging OAuth code for token', { provider: config.tokenUrl.includes('bigcommerce') ? 'bigcommerce' : config.tokenUrl.includes('etsy') ? 'etsy' : 'woocommerce' });
+
   const response = await fetch(config.tokenUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -119,6 +124,7 @@ export async function exchangeCodeForToken(
 
   if (!response.ok) {
     const text = await response.text();
+    log.error('Token exchange failed', { status: response.status, error: text });
     throw new Error(`Token exchange failed: ${response.status} — ${text}`);
   }
 

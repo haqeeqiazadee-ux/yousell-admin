@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Activity,
   LayoutDashboard,
   Package,
   TrendingUp,
@@ -91,6 +92,7 @@ const managementNav: NavItem[] = [
   { title: "Clients", href: "/admin/clients", icon: Users, iconColor: "text-emerald-600", iconBg: "bg-emerald-50" },
   { title: "Allocate Products", href: "/admin/allocate", icon: Package, iconColor: "text-violet-600", iconBg: "bg-violet-50" },
   { title: "Governor", href: "/admin/governor", icon: Shield, iconColor: "text-red-600", iconBg: "bg-red-50" },
+  { title: "Monitoring", href: "/admin/monitoring", icon: Activity, iconColor: "text-cyan-600", iconBg: "bg-cyan-50" },
   { title: "Automation", href: "/admin/automation", icon: Sparkles, iconColor: "text-amber-600", iconBg: "bg-amber-50", badge: "NEW" },
   { title: "Notifications", href: "/admin/notifications", icon: Bell, iconColor: "text-blue-600", iconBg: "bg-blue-50" },
   { title: "Import CSV", href: "/admin/import", icon: FileText, iconColor: "text-gray-600", iconBg: "bg-gray-100" },

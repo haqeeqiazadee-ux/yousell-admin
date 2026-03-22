@@ -12,9 +12,13 @@
  */
 
 import { getEventBus } from './event-bus';
+import { getCircuitBreaker } from '@/lib/circuit-breaker';
+import { engineLogger } from '@/lib/logger';
 import type { Engine, EngineConfig, EngineStatus } from './types';
 import { ENGINE_EVENTS } from './types';
 import type { SupabaseMinimalClient } from './db-types';
+
+const log = engineLogger('amazon-intelligence');
 
 export interface AmazonProduct {
   asin: string;
@@ -95,19 +99,25 @@ export class AmazonIntelligenceEngine implements Engine {
     const apifyToken = process.env.APIFY_API_TOKEN;
 
     if (!apifyToken) {
-      console.log('[AmazonIntelligence] APIFY_API_TOKEN not set — returning empty');
+      log.warn('APIFY_API_TOKEN not set — returning empty');
       return { query, productsFound: 0, productsStored: 0, topProducts: [] };
     }
 
-    // Call Apify Amazon BSR scraper
+    // Call Apify Amazon BSR scraper (with circuit breaker)
     const actorId = 'junglee~amazon-bestsellers-scraper';
-    const runRes = await fetch(`https://api.apify.com/v2/acts/${actorId}/runs`, {
+    const apifyBreaker = getCircuitBreaker('apify');
+    log.info('Starting Amazon BSR scan', { query, limit });
+
+    const runRes = await apifyBreaker.execute(() => fetch(`https://api.apify.com/v2/acts/${actorId}/runs`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apifyToken}` },
       body: JSON.stringify({ keyword: query, maxItems: limit, country: 'US' }),
-    });
+    }));
 
-    if (!runRes.ok) throw new Error(`Apify run failed: ${runRes.status}`);
+    if (!runRes.ok) {
+      log.error('Apify run failed', { status: runRes.status });
+      throw new Error(`Apify run failed: ${runRes.status}`);
+    }
     const runData = await runRes.json() as Record<string, unknown>;
     const runId = (runData.data as Record<string, unknown>)?.id as string;
 
