@@ -49,7 +49,7 @@ describe('Inter-Engine: Scoring → Downstream Consumers', () => {
   })
 
   /* Comm #3.003: Scoring emits PRODUCT_SCORED → Competitor Intelligence subscribes */
-  it('Competitor Intelligence receives PRODUCT_SCORED events', async () => {
+  it('TC-3.003a: Competitor Intelligence receives PRODUCT_SCORED events', async () => {
     const bus = getEventBus()
     const competitor = new CompetitorIntelligenceEngine()
     const received: EngineEvent[] = []
@@ -71,7 +71,7 @@ describe('Inter-Engine: Scoring → Downstream Consumers', () => {
   })
 
   /* Comm #3.005: Scoring emits PRODUCT_SCORED → Profitability subscribes */
-  it('Profitability Engine receives PRODUCT_SCORED events', async () => {
+  it('TC-3.005a: Profitability Engine receives PRODUCT_SCORED events', async () => {
     const bus = getEventBus()
     const profitability = new ProfitabilityEngine()
     const received: EngineEvent[] = []
@@ -89,7 +89,7 @@ describe('Inter-Engine: Scoring → Downstream Consumers', () => {
   })
 
   /* Comm #6.001: Scoring → Creator Matching via PRODUCT_SCORED */
-  it('Creator Matching receives PRODUCT_SCORED events', async () => {
+  it('TC-6.001a: Creator Matching receives PRODUCT_SCORED events', async () => {
     const bus = getEventBus()
     const creatorMatching = new CreatorMatchingEngine()
     const received: EngineEvent[] = []
@@ -109,19 +109,19 @@ describe('Inter-Engine: Scoring → Downstream Consumers', () => {
   })
 
   /* Comm #8.002: Scoring → Client Allocation via PRODUCT_SCORED */
-  it('Client Allocation receives PRODUCT_SCORED events', () => {
+  it('TC-8.002a: Client Allocation receives PRODUCT_SCORED events', () => {
     const allocation = new ClientAllocationEngine()
     expect(allocation.config.subscribes).toContain(ENGINE_EVENTS.PRODUCT_SCORED)
   })
 
   /* Comm #10.001: Scoring → Fulfillment Recommendation via PRODUCT_SCORED */
-  it('Fulfillment Recommendation receives PRODUCT_SCORED events', () => {
+  it('TC-10.001a: Fulfillment Recommendation receives PRODUCT_SCORED events', () => {
     const fulfillment = new FulfillmentRecommendationEngine()
     expect(fulfillment.config.subscribes).toContain(ENGINE_EVENTS.PRODUCT_SCORED)
   })
 
   /* Comm #3.009: PRODUCT_SCORED payload includes all data needed by Opportunity Feed */
-  it('PRODUCT_SCORED payload includes tier and stage for Opportunity Feed', async () => {
+  it('TC-3.009a: PRODUCT_SCORED payload includes tier and stage for Opportunity Feed', async () => {
     const bus = getEventBus()
     const received: EngineEvent[] = []
     bus.subscribe(ENGINE_EVENTS.PRODUCT_SCORED, (e) => received.push(e))
@@ -141,7 +141,7 @@ describe('Inter-Engine: Scoring → Downstream Consumers', () => {
   })
 
   /* Verify PRODUCT_REJECTED does NOT trigger downstream scoring consumers */
-  it('PRODUCT_REJECTED goes to different subscribers than PRODUCT_SCORED', async () => {
+  it('TC-3.010a: PRODUCT_REJECTED goes to different subscribers than PRODUCT_SCORED', async () => {
     const bus = getEventBus()
     const scoredEvents: EngineEvent[] = []
     const rejectedEvents: EngineEvent[] = []

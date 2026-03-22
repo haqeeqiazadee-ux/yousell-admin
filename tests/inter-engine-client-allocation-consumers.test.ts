@@ -49,26 +49,26 @@ describe('Inter-Engine: Client Allocation Consumers', () => {
   })
 
   // Comm 4.006: Allocation reads product_clusters for diversification
-  it('uses cluster data for portfolio diversification (Comm 4.006)', () => {
+  it('TC-4.006: uses cluster data for portfolio diversification (Comm 4.006)', () => {
     // Allocation engine accesses DB where cluster data is stored
     expect(engine.config.subscribes).toContain('scoring.product_scored')
     expect(typeof engine.allocateProduct).toBe('function')
   })
 
   // Comm 10.008: Allocation reads profitability for tier matching
-  it('reads profitability data for allocation decisions (Comm 10.008)', () => {
+  it('TC-10.008: reads profitability data for allocation decisions (Comm 10.008)', () => {
     // Engine subscribes to scoring events which carry profitability context
     expect(engine.config.subscribes).toContain('scoring.product_scored')
   })
 
   // Comm 11.010: Allocation reads financial models for ROI matching
-  it('reads financial models for ROI-aware allocation (Comm 11.010)', () => {
+  it('TC-11.010: reads financial models for ROI-aware allocation (Comm 11.010)', () => {
     expect(engine.config.name).toBe('client-allocation')
     // Financial data is accessed via DB reads during allocation
   })
 
   // Allocation respects tier limits
-  it('enforces tier-based allocation limits', async () => {
+  it('TC-13.001: enforces tier-based allocation limits', async () => {
     const db = createMockDbClient()
     engine.setDbClient(db as any)
 
@@ -77,13 +77,13 @@ describe('Inter-Engine: Client Allocation Consumers', () => {
   })
 
   // Allocation checks exclusivity from upstream data
-  it('checks product exclusivity during allocation', () => {
+  it('TC-13.007: checks product exclusivity during allocation', () => {
     // allocateProduct reads from product_allocations to check exclusivity
     expect(typeof engine.allocateProduct).toBe('function')
   })
 
   // Allocation event emitted
-  it('emits PRODUCT_ALLOCATED event after successful allocation', async () => {
+  it('TC-13.003: emits PRODUCT_ALLOCATED event after successful allocation', async () => {
     const db = createMockDbClient()
     engine.setDbClient(db as any)
 

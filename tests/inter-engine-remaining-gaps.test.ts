@@ -58,14 +58,14 @@ describe('Inter-Engine: Remaining Cross-Engine Gaps', () => {
   })
 
   // Comm 2.005: TikTok Discovery → Discovery enrichment chain
-  it('TikTok Discovery publishes events consumed by enrichment (Comm 2.005)', () => {
+  it('TC-2.005: TikTok Discovery publishes events consumed by enrichment', () => {
     const engine = new TikTokDiscoveryEngine()
     expect(engine.config.publishes).toContain(ENGINE_EVENTS.TIKTOK_VIDEOS_FOUND)
     expect(engine.config.publishes).toContain(ENGINE_EVENTS.TIKTOK_HASHTAGS_ANALYZED)
   })
 
   // Comm 8.005: Competitor Intel writes data → Scoring reads for profit_score
-  it('Competitor Intel produces data for Scoring engine (Comm 8.005)', () => {
+  it('TC-8.005: Competitor Intel produces data for Scoring engine', () => {
     const engine = new CompetitorIntelligenceEngine()
     engine.setDbClient(createMockDbClient() as any)
     expect(engine.config.publishes).toContain(ENGINE_EVENTS.COMPETITOR_DETECTED)
@@ -73,7 +73,7 @@ describe('Inter-Engine: Remaining Cross-Engine Gaps', () => {
   })
 
   // Comm 8.007: Competitor Intel → Launch Blueprint via DB
-  it('Competitor data is accessible to Launch Blueprint (Comm 8.007)', () => {
+  it('TC-8.007: Competitor data is accessible to Launch Blueprint', () => {
     const blueprint = new LaunchBlueprintEngine()
     const db = createMockDbClient()
     blueprint.setDbClient(db as any)
@@ -84,7 +84,7 @@ describe('Inter-Engine: Remaining Cross-Engine Gaps', () => {
   })
 
   // Comm 12.012: Blueprint Approval Gate
-  it('Blueprint has approval gate (Comm 12.012)', () => {
+  it('TC-12.012: Blueprint has approval gate', () => {
     const engine = new LaunchBlueprintEngine()
     const db = createMockDbClient()
     engine.setDbClient(db as any)
@@ -96,13 +96,13 @@ describe('Inter-Engine: Remaining Cross-Engine Gaps', () => {
   })
 
   // Comm 16.008-16.009: Order Tracking → Financial validation
-  it('Order Tracking emits ORDER_RECEIVED for Financial validation (Comm 16.008)', () => {
+  it('TC-16.008: Order Tracking emits ORDER_RECEIVED for Financial validation', () => {
     const engine = new OrderTrackingEngine()
     expect(engine.config.publishes).toContain(ENGINE_EVENTS.ORDER_RECEIVED)
     expect(engine.config.publishes).toContain(ENGINE_EVENTS.ORDER_FULFILLED)
   })
 
-  it('Financial Modelling reads order data from DB (Comm 16.009)', () => {
+  it('TC-16.009: Financial Modelling reads order data from DB', () => {
     const engine = new FinancialModellingEngine()
     engine.setDbClient(createMockDbClient() as any)
     // Financial Modelling reads orders table directly (DB pathway, not event subscription)
@@ -110,13 +110,13 @@ describe('Inter-Engine: Remaining Cross-Engine Gaps', () => {
   })
 
   // Comm 18.004-18.006: Affiliate Commission → Financial/Profitability
-  it('Affiliate Commission writes data for Financial engine (Comm 18.004)', () => {
+  it('TC-18.004: Affiliate Commission writes data for Financial engine', () => {
     const engine = new AffiliateCommissionEngine()
     expect(engine.config.publishes).toContain(ENGINE_EVENTS.COMMISSION_RECORDED)
     expect(engine.config.publishes).toContain(ENGINE_EVENTS.PAYOUT_CALCULATED)
   })
 
-  it('Financial Modelling reads commission data from DB (Comm 18.006)', () => {
+  it('TC-18.006: Financial Modelling reads commission data from DB', () => {
     const engine = new FinancialModellingEngine()
     engine.setDbClient(createMockDbClient() as any)
     // Financial Modelling reads affiliate_commissions table directly (DB pathway)
@@ -124,13 +124,13 @@ describe('Inter-Engine: Remaining Cross-Engine Gaps', () => {
   })
 
   // Comm 19.007-19.008: Fulfillment Rec → Profitability/Financial
-  it('Fulfillment Rec emits events for Profitability/Financial (Comm 19.007)', () => {
+  it('TC-19.007: Fulfillment Rec emits events for Profitability/Financial', () => {
     const engine = new FulfillmentRecommendationEngine()
     expect(engine.config.publishes).toContain(ENGINE_EVENTS.FULFILLMENT_RECOMMENDED)
   })
 
   // Event bus delivers cross-engine events correctly
-  it('event bus delivers events between engines', async () => {
+  it('TC-INFRA-01: event bus delivers events between engines', async () => {
     const bus = getEventBus()
     const received: string[] = []
 
@@ -146,7 +146,7 @@ describe('Inter-Engine: Remaining Cross-Engine Gaps', () => {
   })
 
   // Cross-engine event chain: Score → Blueprint → Allocation
-  it('supports multi-hop event chains', async () => {
+  it('TC-INFRA-02: supports multi-hop event chains', async () => {
     const bus = getEventBus()
     const chain: string[] = []
 

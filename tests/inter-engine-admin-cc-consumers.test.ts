@@ -47,7 +47,7 @@ describe('Inter-Engine: Admin CC Consumers', () => {
   })
 
   // Comm 4.004: Admin CC reads product_clusters
-  it('reads product_clusters for cluster aggregation (Comm 4.004)', async () => {
+  it('TC-4.004: reads product_clusters for cluster aggregation (Comm 4.004)', async () => {
     const db = createMockDbClient()
     engine.setDbClient(db as any)
 
@@ -57,7 +57,7 @@ describe('Inter-Engine: Admin CC Consumers', () => {
   })
 
   // Comm 6.008: Admin CC reads creator_product_matches
-  it('reads creator_product_matches for dashboard (Comm 6.008)', async () => {
+  it('TC-6.008: reads creator_product_matches for dashboard (Comm 6.008)', async () => {
     const db = createMockDbClient()
     engine.setDbClient(db as any)
 
@@ -67,18 +67,18 @@ describe('Inter-Engine: Admin CC Consumers', () => {
   })
 
   // Comm 8.008: Admin CC reads competitor_products
-  it('reads competitor data for aggregation (Comm 8.008)', () => {
+  it('TC-8.008: reads competitor data for aggregation (Comm 8.008)', () => {
     expect(engine.config.subscribes).toContain('scoring.product_scored')
     expect(engine.config.name).toBe('admin-command-center')
   })
 
   // Comm 9.008: Admin CC reads suppliers
-  it('subscribes to scoring events for dashboard updates (Comm 9.008)', () => {
+  it('TC-9.008: subscribes to scoring events for dashboard updates (Comm 9.008)', () => {
     expect(engine.config.subscribes).toContain('scoring.product_scored')
   })
 
   // Comm 11.008: Admin CC reads financial_models
-  it('aggregates financial data from upstream engines (Comm 11.008)', async () => {
+  it('TC-11.008: aggregates financial data from upstream engines (Comm 11.008)', async () => {
     const db = createMockDbClient()
     engine.setDbClient(db as any)
 
@@ -88,7 +88,7 @@ describe('Inter-Engine: Admin CC Consumers', () => {
   })
 
   // Dashboard data includes all upstream sources
-  it('getDashboardData aggregates data from 9+ tables', async () => {
+  it('TC-17.014: getDashboardData aggregates data from 9+ tables', async () => {
     const db = createMockDbClient()
     engine.setDbClient(db as any)
 
@@ -102,7 +102,7 @@ describe('Inter-Engine: Admin CC Consumers', () => {
   })
 
   // Deployment pipeline reads from upstream
-  it('deployProduct reads product data before pushing', async () => {
+  it('TC-17.007: deployProduct reads product data before pushing', async () => {
     const db = createMockDbClient()
     engine.setDbClient(db as any)
 
@@ -114,7 +114,7 @@ describe('Inter-Engine: Admin CC Consumers', () => {
   })
 
   // Batch deploy reads multiple upstream records
-  it('batchDeploy reads multiple products from upstream data', async () => {
+  it('TC-17.008: batchDeploy reads multiple products from upstream data', async () => {
     const db = createMockDbClient()
     engine.setDbClient(db as any)
 

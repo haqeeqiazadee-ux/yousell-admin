@@ -45,12 +45,12 @@ describe('Inter-Engine: Ad Intelligence Producer', () => {
     engine = new AdIntelligenceEngine()
   })
 
-  it('publishes ADS_DISCOVERED event (Comm 7.002, 7.005)', () => {
+  it('TC-7.002: publishes ADS_DISCOVERED event (Comm 7.002, 7.005)', () => {
     expect(engine.config.publishes).toContain(ENGINE_EVENTS.ADS_DISCOVERED)
   })
 
   // Comm 7.002: Scoring reads ad data for profit_score adjustment
-  it('ad data is consumable by Scoring engine (Comm 7.002)', async () => {
+  it('TC-7.002a: ad data is consumable by Scoring engine (Comm 7.002)', async () => {
     const bus = getEventBus()
     const events: unknown[] = []
     bus.subscribe(ENGINE_EVENTS.ADS_DISCOVERED, (e) => events.push(e))
@@ -65,12 +65,12 @@ describe('Inter-Engine: Ad Intelligence Producer', () => {
   })
 
   // Comm 7.005: Financial Modelling reads ad benchmarks
-  it('has runDiscovery method for ad benchmark storage (Comm 7.005)', () => {
+  it('TC-7.005: has runDiscovery method for ad benchmark storage (Comm 7.005)', () => {
     expect(typeof engine.runDiscovery).toBe('function')
   })
 
   // Comm 11.005: Subscribes to product discovery for ad scanning trigger
-  it('subscribes to PRODUCT_DISCOVERED for ad scanning (Comm 11.005)', () => {
+  it('TC-7.001: subscribes to PRODUCT_DISCOVERED for ad scanning (Comm 11.005)', () => {
     expect(engine.config.subscribes).toContain(ENGINE_EVENTS.PRODUCT_DISCOVERED)
   })
 })
