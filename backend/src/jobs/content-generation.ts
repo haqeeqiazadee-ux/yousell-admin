@@ -1,8 +1,13 @@
 /**
  * Content Generation Job Processor
  *
- * Async content generation via Claude Haiku. Provides an alternative
+ * Async content generation via Claude API. Provides an alternative
  * to the sync generation in /api/dashboard/content/generate/route.ts.
+ *
+ * Canonical template definitions are in src/lib/content/templates.ts.
+ * This file mirrors them for backend (non-Next.js) context.
+ *
+ * Model selection: HOT products (score >= 80) → Claude Sonnet, else → Claude Haiku
  */
 import { Job } from 'bullmq'
 import { createClient } from '@supabase/supabase-js'
@@ -12,27 +17,42 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || '',
 )
 
+// Mirror of src/lib/content/templates.ts — keep in sync
 const TEMPLATES: Record<string, { systemPrompt: string; maxTokens: number }> = {
   product_description: {
     systemPrompt: 'You are an expert e-commerce copywriter. Write a compelling product description that highlights benefits, uses power words, and drives conversions. Keep it under 200 words.',
     maxTokens: 400,
   },
   social_post: {
-    systemPrompt: 'You are a social media marketing expert. Write an engaging social media post that drives clicks and engagement. Include relevant hashtags. Keep it under 280 characters.',
+    systemPrompt: 'You are a social media marketing expert. Write an engaging social media post that drives clicks and engagement. Include relevant hashtags. Keep it under 280 characters for Twitter compatibility.',
     maxTokens: 200,
   },
   ad_copy: {
-    systemPrompt: 'You are a direct-response advertising copywriter. Write ad copy with a strong hook, clear value proposition, and compelling CTA.',
+    systemPrompt: 'You are a direct-response advertising copywriter. Write ad copy with a strong hook, clear value proposition, and compelling CTA. Include a headline (under 40 chars) and body (under 125 chars).',
     maxTokens: 300,
   },
   email_sequence: {
-    systemPrompt: 'You are an email marketing specialist. Write a 3-email welcome/launch sequence for a product.',
+    systemPrompt: 'You are an email marketing specialist. Write a 3-email welcome/launch sequence for a product. Each email should have a subject line and body. Focus on building interest, demonstrating value, and driving purchase.',
     maxTokens: 1000,
   },
   video_script: {
-    systemPrompt: 'You are a short-form video content strategist. Write a 30-60 second video script for TikTok/Reels.',
+    systemPrompt: 'You are a short-form video content strategist. Write a 30-60 second video script for TikTok/Reels that hooks viewers in the first 3 seconds, demonstrates the product, and ends with a CTA.',
     maxTokens: 500,
   },
+  blog_post: {
+    systemPrompt: 'You are an SEO content writer. Write a 500-800 word blog post about this product that naturally incorporates search keywords, provides genuine value to readers, and includes a compelling CTA at the end.',
+    maxTokens: 1500,
+  },
+  seo_listing: {
+    systemPrompt: 'You are an Amazon/marketplace SEO specialist. Write an optimized product listing with: title (under 200 chars with top keywords), 5 bullet points highlighting key features and benefits, and a keyword-rich description (under 2000 chars).',
+    maxTokens: 800,
+  },
+}
+
+function selectModel(finalScore?: number): string {
+  return (finalScore != null && finalScore >= 80)
+    ? 'claude-sonnet-4-5-20250514'
+    : 'claude-haiku-4-5-20251001'
 }
 
 interface ContentJobData {
@@ -81,6 +101,8 @@ export async function processContentGeneration(job: Job<ContentJobData>) {
     throw new Error('ANTHROPIC_API_KEY not configured')
   }
 
+  const model = selectModel(product.final_score)
+
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -89,7 +111,7 @@ export async function processContentGeneration(job: Job<ContentJobData>) {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
+      model,
       max_tokens: template.maxTokens,
       system: template.systemPrompt,
       messages: [{ role: 'user', content: prompt }],
