@@ -40,11 +40,11 @@ interface ContentItem {
 
 function ScoreBadge({ label, score, icon: Icon }: { label: string; score?: number; icon: React.ElementType }) {
   if (score === undefined || score === null) return null
-  const color = score >= 80 ? "text-emerald-400" : score >= 60 ? "text-yellow-400" : score >= 40 ? "text-orange-400" : "text-red-400"
+  const color = score >= 80 ? "text-emerald-600" : score >= 60 ? "text-amber-600" : score >= 40 ? "text-orange-600" : "text-red-600"
   return (
-    <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col items-center gap-1">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 flex flex-col items-center gap-1">
       <Icon className={`h-5 w-5 ${color}`} />
-      <span className="text-2xl font-bold text-white">{score}</span>
+      <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{score}</span>
       <span className="text-xs text-gray-500 uppercase tracking-wider">{label}</span>
     </div>
   )
@@ -67,7 +67,6 @@ export default function ProductDetailPage() {
         if (data.products?.length > 0) {
           setProduct(data.products[0])
         }
-        // Load content for this product
         const contentRes = await authFetch(`/api/dashboard/content?product_id=${params.id}`)
         const contentData = await contentRes.json()
         setContent(contentData.items || [])
@@ -81,14 +80,14 @@ export default function ProductDetailPage() {
   }, [params.id])
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-[50vh] text-gray-400">Loading...</div>
+    return <div className="flex items-center justify-center min-h-[50vh] text-muted-foreground">Loading...</div>
   }
 
   if (!product) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-        <p className="text-gray-400">Product not found</p>
-        <button onClick={() => router.back()} className="text-sm text-rose-400 hover:underline">Go back</button>
+        <p className="text-muted-foreground">Product not found</p>
+        <button onClick={() => router.back()} className="text-sm text-blue-600 hover:underline">Go back</button>
       </div>
     )
   }
@@ -98,15 +97,15 @@ export default function ProductDetailPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <button onClick={() => router.back()} className="flex items-center gap-1 text-sm text-gray-400 hover:text-white transition-colors">
+      <button onClick={() => router.back()} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
         <ArrowLeft className="h-4 w-4" /> Back to products
       </button>
 
       {/* Header */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
         <div className="flex items-start gap-4">
           {product.image_url && (
-            <img src={product.image_url} alt={product.title} className="w-24 h-24 rounded-xl object-cover border border-white/10" />
+            <img src={product.image_url} alt={product.title} className="w-24 h-24 rounded-xl object-cover border border-gray-200 dark:border-gray-700" />
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
@@ -114,12 +113,12 @@ export default function ProductDetailPage() {
               {product.trend_stage && <span className="text-xs text-gray-500 capitalize">{product.trend_stage}</span>}
               {product.platform && <span className="text-xs text-gray-500">{product.platform}</span>}
             </div>
-            <h1 className="text-xl font-bold text-white truncate">{product.title}</h1>
-            {product.description && <p className="text-sm text-gray-400 mt-1 line-clamp-3">{product.description}</p>}
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 truncate">{product.title}</h1>
+            {product.description && <p className="text-sm text-gray-500 mt-1 line-clamp-3">{product.description}</p>}
             <div className="flex items-center gap-4 mt-3">
-              {product.price !== undefined && <span className="text-lg font-semibold text-emerald-400">${product.price}</span>}
+              {product.price !== undefined && <span className="text-lg font-semibold text-emerald-600">${product.price}</span>}
               {product.external_url && (
-                <a href={product.external_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-blue-400 hover:underline">
+                <a href={product.external_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-blue-600 hover:underline">
                   View source <ExternalLink className="h-3 w-3" />
                 </a>
               )}
@@ -138,16 +137,16 @@ export default function ProductDetailPage() {
 
       {/* AI Insights */}
       {(product.ai_summary || product.ai_insight_haiku) && (
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <h2 className="text-sm font-semibold text-white mb-2 uppercase tracking-wider">AI Insights</h2>
-          {product.ai_summary && <p className="text-sm text-gray-300 mb-2">{product.ai_summary}</p>}
-          {product.ai_insight_haiku && <p className="text-sm text-gray-400 italic">{product.ai_insight_haiku}</p>}
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+          <h2 className="text-sm font-semibold text-gray-500 mb-2 uppercase tracking-wider">AI Insights</h2>
+          {product.ai_summary && <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{product.ai_summary}</p>}
+          {product.ai_insight_haiku && <p className="text-sm text-gray-500 italic">{product.ai_insight_haiku}</p>}
         </div>
       )}
 
       {/* Push to Store */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-        <h2 className="text-sm font-semibold text-white mb-3 uppercase tracking-wider">Push to Store</h2>
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+        <h2 className="text-sm font-semibold text-gray-500 mb-3 uppercase tracking-wider">Push to Store</h2>
         <div className="flex gap-3">
           {(["shopify", "tiktok", "amazon"] as const).map(channel => (
             <button
@@ -174,7 +173,7 @@ export default function ProductDetailPage() {
                 }
               }}
               disabled={pushing !== null}
-              className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-300 hover:bg-white/10 hover:text-white transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
             >
               {pushing === channel ? <Loader2 className="h-4 w-4 animate-spin" /> : <Store className="h-4 w-4" />}
               <span className="capitalize">{channel === "tiktok" ? "TikTok Shop" : channel}</span>
@@ -182,31 +181,31 @@ export default function ProductDetailPage() {
           ))}
         </div>
         {pushResult && (
-          <p className={`text-xs mt-2 ${pushResult.success ? "text-emerald-400" : "text-red-400"}`}>
+          <p className={`text-xs mt-2 ${pushResult.success ? "text-emerald-600" : "text-red-600"}`}>
             {pushResult.message}
           </p>
         )}
       </div>
 
       {/* Generated Content */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-white uppercase tracking-wider">Generated Content</h2>
-          <a href="/dashboard/content" className="text-xs text-rose-400 hover:underline">Generate new</a>
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Generated Content</h2>
+          <a href="/dashboard/content" className="text-xs text-blue-600 hover:underline">Generate new</a>
         </div>
         {content.length === 0 ? (
-          <p className="text-sm text-gray-500">No content generated yet for this product.</p>
+          <p className="text-sm text-gray-400">No content generated yet for this product.</p>
         ) : (
           <div className="space-y-3">
             {content.map((c) => (
-              <div key={c.id} className="bg-white/5 border border-white/10 rounded-lg p-3">
+              <div key={c.id} className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-medium text-gray-300 capitalize">{c.content_type.replace(/_/g, " ")}</span>
-                  <span className={`text-xs px-1.5 py-0.5 rounded ${c.status === "generated" ? "bg-emerald-500/20 text-emerald-400" : "bg-gray-500/20 text-gray-400"}`}>
+                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300 capitalize">{c.content_type.replace(/_/g, " ")}</span>
+                  <span className={`text-xs px-1.5 py-0.5 rounded ${c.status === "generated" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"}`}>
                     {c.status}
                   </span>
                 </div>
-                {c.generated_content && <p className="text-sm text-gray-400 line-clamp-3">{c.generated_content}</p>}
+                {c.generated_content && <p className="text-sm text-gray-500 line-clamp-3">{c.generated_content}</p>}
               </div>
             ))}
           </div>
