@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Activity, AlertTriangle, CheckCircle, XCircle, DollarSign, Clock, RefreshCw } from "lucide-react";
+import { authFetch } from "@/lib/auth-fetch";
 
 interface EngineHealth {
   name: string;
@@ -41,7 +42,7 @@ export default function MonitoringPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await fetch("/api/admin/monitoring");
+      const res = await authFetch("/api/admin/monitoring");
       if (res.ok) setData(await res.json());
     } catch { /* ignore */ }
     setLoading(false);

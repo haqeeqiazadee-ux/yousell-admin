@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Palette, Truck, RefreshCw, Loader2 } from "lucide-react"
+import { authFetch } from "@/lib/auth-fetch"
 
 interface Product {
   id: string
@@ -25,7 +26,7 @@ export default function AdminPODPage() {
 
   async function loadProducts() {
     try {
-      const res = await fetch("/api/admin/products?channel=pod")
+      const res = await authFetch("/api/admin/products?channel=pod")
       const data = await res.json()
       setProducts(data.products || [])
     } catch (err) {
@@ -38,7 +39,7 @@ export default function AdminPODPage() {
   async function triggerScan() {
     setScanning(true)
     try {
-      await fetch("/api/admin/scan", {
+      await authFetch("/api/admin/scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ channel: "pod", niche: "trending" }),

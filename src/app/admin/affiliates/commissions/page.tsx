@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { DollarSign, CheckCircle, Clock } from "lucide-react"
+import { authFetch } from "@/lib/auth-fetch"
 
 interface Commission {
   id: string
@@ -20,7 +21,7 @@ export default function AdminCommissionsPage() {
   const [filter, setFilter] = useState<string>("all")
 
   useEffect(() => {
-    fetch("/api/admin/affiliates/commissions")
+    authFetch("/api/admin/affiliates/commissions")
       .then(r => r.json())
       .then(data => setCommissions(data.commissions || []))
       .catch(console.error)
@@ -28,7 +29,7 @@ export default function AdminCommissionsPage() {
   }, [])
 
   const updateStatus = async (id: string, status: string) => {
-    await fetch("/api/admin/affiliates/commissions", {
+    await authFetch("/api/admin/affiliates/commissions", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, status }),

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { ArrowLeft, ExternalLink, Sparkles, TrendingUp, Zap, DollarSign } from "lucide-react"
+import { authFetch } from "@/lib/auth-fetch"
 
 interface Product {
   id: string
@@ -59,13 +60,13 @@ export default function ProductDetailPage() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch(`/api/dashboard/products?id=${params.id}`)
+        const res = await authFetch(`/api/dashboard/products?id=${params.id}`)
         const data = await res.json()
         if (data.products?.length > 0) {
           setProduct(data.products[0])
         }
         // Load content for this product
-        const contentRes = await fetch(`/api/dashboard/content?product_id=${params.id}`)
+        const contentRes = await authFetch(`/api/dashboard/content?product_id=${params.id}`)
         const contentData = await contentRes.json()
         setContent(contentData.items || [])
       } catch (err) {

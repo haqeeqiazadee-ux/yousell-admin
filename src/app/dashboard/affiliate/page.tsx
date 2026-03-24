@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Copy, Check, DollarSign, Users, TrendingUp } from "lucide-react"
+import { authFetch } from "@/lib/auth-fetch"
 
 interface Commission {
   id: string
@@ -24,7 +25,7 @@ export default function AffiliateDashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch("/api/dashboard/affiliate/referral")
+    authFetch("/api/dashboard/affiliate/referral")
       .then(r => r.json())
       .then(setData)
       .catch(console.error)
