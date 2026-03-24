@@ -20,6 +20,7 @@ import { ENGINE_EVENTS } from './types';
 const log = engineLogger('creator-matching');
 
 /** V9 Task 3.040: Influencer pricing benchmarks by tier */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const PRICING_BENCHMARKS: Record<string, { min: number; max: number }> = {
   nano: { min: 50, max: 200 },       // 1K-10K followers
   micro: { min: 200, max: 2000 },    // 10K-100K followers
@@ -32,6 +33,7 @@ const PRICING_BENCHMARKS: Record<string, { min: number; max: number }> = {
  * V9 Tasks 3.005-3.018: Primary API integration
  * Falls back to empty array when not configured.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function discoverViaAinfluencer(query: string, platform: string = 'tiktok'): Promise<Array<{
   id: string;
   username: string;
@@ -94,6 +96,7 @@ async function discoverViaAinfluencer(query: string, platform: string = 'tiktok'
  * Calculate audience demographics match score.
  * V9 Task 3.032: 5 sub-scores including audience overlap
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function calculateAudienceDemographicsScore(
   demographics?: { ageRange?: string; gender?: string; topCountries?: string[] },
 ): number {

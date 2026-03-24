@@ -343,19 +343,6 @@ export class CompetitorIntelligenceEngine implements Engine {
 
     for (const result of rawResults) {
       const estimatedRevenue = (result.monthlySales || 0) * result.price;
-      const record: CompetitorRecord = {
-        product_id: productId,
-        store_name: result.storeName,
-        store_url: result.storeUrl,
-        platform,
-        price: result.price,
-        estimated_monthly_revenue: estimatedRevenue,
-        has_ads: false,
-        ad_spend_estimate: 0,
-        review_count: result.reviewCount || 0,
-        rating: result.rating || 0,
-      };
-
       // Check if competitor exists
       const { data: existing } = await db
         .from('competitor_products')
