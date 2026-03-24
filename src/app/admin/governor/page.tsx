@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { authFetch } from '@/lib/auth-fetch'
 import {
-  Shield, Activity, DollarSign, Users, ArrowRight,
+  Shield, Activity, DollarSign, Users,
   AlertTriangle, ChevronRight, Cpu, RefreshCw,
   BarChart2, Zap, Settings,
 } from 'lucide-react'

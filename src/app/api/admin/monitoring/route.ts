@@ -20,14 +20,6 @@ interface EngineHealth {
   costLast24h: number;
 }
 
-interface QueueMetrics {
-  name: string;
-  active: number;
-  waiting: number;
-  failed: number;
-  completed: number;
-}
-
 export async function GET() {
   try {
     await requireAdmin();

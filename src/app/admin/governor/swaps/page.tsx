@@ -28,7 +28,7 @@ const ENGINE_NAMES = [
 export default function SwapManagerPage() {
   const [active, setActive] = useState<Swap[]>([])
   const [history, setHistory] = useState<Swap[]>([])
-  const [loading, setLoading] = useState(true)
+  const [, setLoading] = useState(true)
 
   // Form state
   const [source, setSource] = useState('')
