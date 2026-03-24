@@ -1340,3 +1340,34 @@ Engine inventory (all 20):
 - **Result:** SUCCESS — All external API calls protected by circuit breakers + structured JSON logging
 - **Commits:** 4b530f7, 82cf1f5, 6f343bd, 18698cc, a8d976a
 - **Next step:** All infrastructure complete. Ready for UI/dashboard work.
+
+------------------------------------------------------------
+
+### [2026-03-24 00:00] DONE — Generate YOUSELL_INTEGRATION_WIRING.md (verified)
+
+- **Task:** Create full integration wiring map between codebase and frontend UI
+- **Batch:** WIRING-1 (research + draft), WIRING-2 (verification pass)
+- **Action:**
+  1. Read all 6 v9 docs, v9 spec key sections (database, API, auth, realtime)
+  2. Cataloged all 97+ API routes (via agent reading every route.ts)
+  3. Cataloged all 37 migration files (53 tables, 120+ RLS policies)
+  4. Cataloged all 25 backend workers (35 queues, external APIs)
+  5. Mapped all 54 page.tsx files to their API calls
+  6. Grep confirmed: 1 realtime channel, 0 edge functions
+  7. Read middleware.ts + 3 auth files for complete auth flow
+  8. VERIFICATION PASS: 4 agents read every page.tsx, extracted exact authFetch/fetch URLs
+  9. Found 11 corrections from original draft, rewrote entire document
+- **Files touched:** `docs/YOUSELL_INTEGRATION_WIRING.md` (created + rewritten)
+- **Result:** SUCCESS — 5-section wiring map, 100% verified against source
+- **Commits:** 6c6f74a (draft), cfb9c35 (verified rewrite)
+- **Next step:** Use wiring map as bridge to build frontend UI
+
+### Key Corrections Found During Verification:
+1. /admin dashboard calls ONLY GET /api/admin/dashboard (not multiple routes)
+2. /admin/scoring page does NOT exist
+3. /admin/shopify calls /api/admin/products?platform=shopify (not /api/admin/shopify)
+4. /admin/settings also calls /api/admin/automation
+5. /admin/affiliates makes zero API calls (navigation only)
+6. /admin/analytics calls only GET /api/admin/analytics
+7. 20+ API routes are backend-only (never called from UI)
+8. 5 pages use raw fetch() instead of authFetch() (auth inconsistency)

@@ -3116,3 +3116,26 @@ Wired the circuit breaker and structured logger infrastructure (created in Phase
 - 14 files with structured JSON logging
 - 0 stubs or placeholder implementations
 - 0 breaking changes throughout all phases
+
+------------------------------------------------------------
+
+## [2026-03-24] Integration Wiring Map — COMPLETE
+
+Created `docs/YOUSELL_INTEGRATION_WIRING.md` — verified bridge between codebase and frontend UI.
+
+### Document Contents (5 sections)
+1. Supabase table → component map (45+ tables, 15 verified components)
+2. Every UI page → exact API routes (37 admin + 9 dashboard, verified from source)
+3. Edge Functions → UI features (none exist)
+4. Real-time subscriptions (1 active channel on admin dashboard)
+5. Auth & RLS flow (middleware, 3-tier auth, engine gating)
+
+### Key Findings
+- 20+ API routes are backend-only (never called from any UI page)
+- /admin/scoring and /admin/financial pages do NOT exist
+- 5 pages use raw fetch() instead of authFetch() (auth inconsistency)
+- Zero Edge Functions, zero explicit Realtime publications in migrations
+
+### Files
+- Created: `docs/YOUSELL_INTEGRATION_WIRING.md`
+- Commits: 6c6f74a, cfb9c35

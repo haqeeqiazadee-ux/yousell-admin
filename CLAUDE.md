@@ -473,6 +473,7 @@ Claude must verify these **before every code change**:
 | `docs/content_publishing_shop_integration_strategy.md` | Content & shop integration | On strategy changes |
 | `docs/USE_CASE_DIAGRAM.md` | Use case diagrams and data flows | On flow changes |
 | `docs/MARKET_RESEARCH_LOG_SESSION3.md` | Market research (80+ sources) | On new research |
+| `docs/YOUSELL_INTEGRATION_WIRING.md` | **UI ↔ API ↔ DB wiring map (VERIFIED)** | On UI/API changes |
 
 
 ================================================================

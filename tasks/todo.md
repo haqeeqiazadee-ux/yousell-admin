@@ -233,3 +233,10 @@ Last updated: 2026-03-21 (end of day snapshot)
   - Admin dashboard engine status grid
   - 8 engine pages wrapped with EnginePageLayout
   - 33/33 tests passing, zero breaking changes
+- [x] Integration Wiring Map — 2026-03-24
+  - Created docs/YOUSELL_INTEGRATION_WIRING.md (verified page-by-page)
+  - 5 sections: Table→Component, Page→API, Edge Functions, Realtime, Auth/RLS
+  - 37 admin pages + 9 dashboard pages mapped to exact API calls
+  - 45+ Supabase tables mapped, 15 components verified
+  - 20+ backend-only API routes identified
+  - Found: no Edge Functions, 1 realtime channel, 5 auth inconsistencies
