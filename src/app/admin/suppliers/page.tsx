@@ -24,7 +24,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Truck, Plus, Check, X } from "lucide-react";
+import { Truck, Plus, Check, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { authFetch } from "@/lib/auth-fetch";
 
 interface Supplier {
@@ -47,6 +47,8 @@ export default function SuppliersPage() {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 25;
 
   const [newName, setNewName] = useState("");
   const [newCountry, setNewCountry] = useState("");
@@ -279,7 +281,7 @@ export default function SuppliersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {suppliers.map((supplier) => (
+                {suppliers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((supplier) => (
                   <TableRow key={supplier.id}>
                     <TableCell className="font-medium">
                       {supplier.name}
@@ -327,6 +329,21 @@ export default function SuppliersPage() {
                 ))}
               </TableBody>
             </Table>
+            {suppliers.length > PAGE_SIZE && (
+              <div className="flex items-center justify-between px-4 py-3 border-t">
+                <span className="text-xs text-muted-foreground">
+                  Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, suppliers.length)} of {suppliers.length}
+                </span>
+                <div className="flex gap-2">
+                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="flex items-center gap-1 px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-muted transition-colors">
+                    <ChevronLeft className="h-4 w-4" /> Prev
+                  </button>
+                  <button onClick={() => setPage(p => p + 1)} disabled={page >= Math.ceil(suppliers.length / PAGE_SIZE)} className="flex items-center gap-1 px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-muted transition-colors">
+                    Next <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           )}
         </CardContent>
       </Card>

@@ -23,7 +23,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Swords, Plus, ExternalLink } from "lucide-react";
+import { Swords, Plus, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import { authFetch } from "@/lib/auth-fetch";
 
 interface Competitor {
@@ -43,6 +43,8 @@ export default function CompetitorsPage() {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 25;
 
   const [newName, setNewName] = useState("");
   const [newUrl, setNewUrl] = useState("");
@@ -198,7 +200,7 @@ export default function CompetitorsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {competitors.map((comp) => (
+                {competitors.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((comp) => (
                   <TableRow key={comp.id}>
                     <TableCell className="font-medium">{comp.name}</TableCell>
                     <TableCell>
@@ -237,6 +239,21 @@ export default function CompetitorsPage() {
                 ))}
               </TableBody>
             </Table>
+            {competitors.length > PAGE_SIZE && (
+              <div className="flex items-center justify-between px-4 py-3 border-t">
+                <span className="text-xs text-muted-foreground">
+                  Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, competitors.length)} of {competitors.length}
+                </span>
+                <div className="flex gap-2">
+                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="flex items-center gap-1 px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-muted transition-colors">
+                    <ChevronLeft className="h-4 w-4" /> Prev
+                  </button>
+                  <button onClick={() => setPage(p => p + 1)} disabled={page >= Math.ceil(competitors.length / PAGE_SIZE)} className="flex items-center gap-1 px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-muted transition-colors">
+                    Next <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           )}
         </CardContent>
       </Card>
