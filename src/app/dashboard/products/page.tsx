@@ -162,9 +162,9 @@ export default function ClientProductsPage() {
             }
             return true;
           }).map((product) => (
+            <Link key={product.id} href={`/dashboard/products/${product.id}`}>
             <Card
-              key={product.id}
-              className="overflow-hidden hover:border-foreground/20 transition-colors"
+              className="overflow-hidden hover:border-foreground/20 transition-colors cursor-pointer"
             >
               {product.image_url ? (
                 <div className="relative h-44 bg-muted">
@@ -230,6 +230,7 @@ export default function ClientProductsPage() {
                 )}
               </CardContent>
             </Card>
+            </Link>
           ))}
         </div>
       )}

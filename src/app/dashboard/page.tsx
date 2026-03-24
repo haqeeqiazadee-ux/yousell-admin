@@ -31,6 +31,8 @@ function getBadge(score: number | null) {
 
 export default function DashboardPage() {
   const [products, setProducts] = useState<AllocatedProduct[]>([]);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 12;
   const [stats, setStats] = useState<DashboardStats>({
     productsAvailable: 0,
     hotProducts: 0,
@@ -175,7 +177,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {products.map((product) => {
+              {products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((product) => {
                 const badge = getBadge(product.final_score);
                 return (
                   <div
@@ -218,6 +220,30 @@ export default function DashboardPage() {
                   </div>
                 );
               })}
+              {/* Pagination */}
+              {products.length > PAGE_SIZE && (
+                <div className="flex items-center justify-between pt-3">
+                  <span className="text-xs text-gray-500">
+                    Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, products.length)} of {products.length}
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className="px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-gray-50"
+                    >
+                      Prev
+                    </button>
+                    <button
+                      onClick={() => setPage(p => Math.min(Math.ceil(products.length / PAGE_SIZE), p + 1))}
+                      disabled={page >= Math.ceil(products.length / PAGE_SIZE)}
+                      className="px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-gray-50"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

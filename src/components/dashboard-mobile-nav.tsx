@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Package, FileText, CreditCard, Link2, Sparkles, ShoppingBag, Menu, X } from 'lucide-react';
+import { Package, FileText, CreditCard, Link2, Sparkles, ShoppingBag, BarChart3, Cog, Menu, X } from 'lucide-react';
 
 const navItems = [
   { href: '/dashboard/products', label: 'My Products', icon: Package },
@@ -11,6 +11,8 @@ const navItems = [
   { href: '/dashboard/content', label: 'Content', icon: Sparkles },
   { href: '/dashboard/integrations', label: 'Integrations', icon: Link2 },
   { href: '/dashboard/orders', label: 'Orders', icon: ShoppingBag },
+  { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/dashboard/engines', label: 'Engines', icon: Cog },
   { href: '/dashboard/billing', label: 'Billing', icon: CreditCard },
 ];
 
