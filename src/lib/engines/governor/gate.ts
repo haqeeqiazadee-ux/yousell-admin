@@ -15,7 +15,6 @@ import type { EngineName } from '../types';
 import type {
   GateResult,
   GateDenialCode,
-  ClientBudgetEnvelope,
   EngineAllowance,
   GovernorOverride,
 } from './types';

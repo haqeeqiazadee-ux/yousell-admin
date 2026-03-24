@@ -31,7 +31,7 @@ type TrendLifecycleStage = 'emerging' | 'rising' | 'exploding' | 'saturated';
 function classifyLifecycleStage(
   score: number,
   growth: number,
-  platformCount: number,
+  _platformCount: number,
 ): TrendLifecycleStage {
   if (score >= 80 && growth > 0.3) return 'exploding';
   if (score >= 60 && growth > 0.1) return 'rising';
