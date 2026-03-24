@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
 import { authFetch } from '@/lib/auth-fetch'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -50,13 +51,38 @@ export default function OrdersPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string | null>(null)
 
-  useEffect(() => {
+  const loadOrders = useCallback(() => {
     authFetch('/api/dashboard/orders')
       .then(r => r.json())
       .then(data => setOrders(data.orders || []))
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    loadOrders()
+  }, [loadOrders])
+
+  // Realtime: auto-refresh on new orders
+  useEffect(() => {
+    const sb = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    )
+    let timer: ReturnType<typeof setTimeout> | null = null
+    const debouncedFetch = () => {
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(() => loadOrders(), 2000)
+    }
+    const channel = sb
+      .channel('orders-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, debouncedFetch)
+      .subscribe()
+    return () => {
+      if (timer) clearTimeout(timer)
+      sb.removeChannel(channel)
+    }
+  }, [loadOrders])
 
   const filtered = orders.filter(o => {
     if (statusFilter && o.status !== statusFilter) return false

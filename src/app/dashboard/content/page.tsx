@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
 import { authFetch } from '@/lib/auth-fetch'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -84,6 +85,27 @@ export default function ContentPage() {
       .then(r => r.json())
       .then(data => setProducts(data.products || []))
       .catch(console.error)
+  }, [loadContent])
+
+  // Realtime: auto-refresh on content_queue changes
+  useEffect(() => {
+    const sb = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    )
+    let timer: ReturnType<typeof setTimeout> | null = null
+    const debouncedFetch = () => {
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(() => loadContent(), 2000)
+    }
+    const channel = sb
+      .channel('content-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'content_queue' }, debouncedFetch)
+      .subscribe()
+    return () => {
+      if (timer) clearTimeout(timer)
+      sb.removeChannel(channel)
+    }
   }, [loadContent])
 
   const handleGenerate = async () => {
