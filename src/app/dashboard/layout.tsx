@@ -4,7 +4,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Package, FileText, LogOut, CreditCard, Link2, Sparkles, ShoppingBag, BarChart3, Cog } from "lucide-react";
+import { Package, FileText, LogOut, CreditCard, Link2, Sparkles, ShoppingBag, BarChart3, Cog, Users } from "lucide-react";
 import { SubscriptionProvider } from "@/components/subscription-context";
 import { SubscriptionBanner } from "@/components/subscription-banner";
 import { DashboardMobileNav } from "@/components/dashboard-mobile-nav";
@@ -135,6 +135,12 @@ export default async function DashboardLayout({
                 <Button variant="ghost" size="sm" className="gap-2">
                   <Cog className="h-4 w-4" />
                   Engines
+                </Button>
+              </Link>
+              <Link href="/dashboard/affiliate">
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <Users className="h-4 w-4" />
+                  Affiliate
                 </Button>
               </Link>
               <Link href="/dashboard/billing">

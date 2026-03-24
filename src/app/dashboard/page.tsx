@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { authFetch } from '@/lib/auth-fetch';
 
 interface AllocatedProduct {
@@ -180,8 +181,9 @@ export default function DashboardPage() {
               {products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((product) => {
                 const badge = getBadge(product.final_score);
                 return (
-                  <div
+                  <Link
                     key={product.id}
+                    href={`/dashboard/products/${product.id}`}
                     className="flex items-center justify-between rounded-lg border p-4 hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-center gap-4">
@@ -217,7 +219,7 @@ export default function DashboardPage() {
                         {badge.label}
                       </span>
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
               {/* Pagination */}

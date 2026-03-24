@@ -33,6 +33,7 @@ import {
   DollarSign,
   Lightbulb,
   Bug,
+  Palette,
   type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
@@ -81,6 +82,7 @@ const channelNav: NavItem[] = [
   { title: "Digital Products", href: "/admin/digital", icon: FileText, iconColor: "text-blue-600", iconBg: "bg-blue-50" },
   { title: "AI Affiliates", href: "/admin/affiliates/ai", icon: Bot, iconColor: "text-violet-600", iconBg: "bg-violet-50", badge: "NEW" },
   { title: "Physical Affiliates", href: "/admin/affiliates/physical", icon: HandCoins, iconColor: "text-amber-600", iconBg: "bg-amber-50" },
+  { title: "Print on Demand", href: "/admin/pod", icon: Palette, iconColor: "text-purple-600", iconBg: "bg-purple-50" },
 ];
 
 const intelligenceNav: NavItem[] = [
