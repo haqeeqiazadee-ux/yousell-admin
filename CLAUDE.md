@@ -1,4 +1,4 @@
-# YOUSELL Platform — Claude Project Context (WARMODE v3)
+# YOUSELL Platform — Claude Project Context (v4)
 
 > **CRITICAL DIRECTIVE — NON-NEGOTIABLE**
 >
@@ -44,21 +44,21 @@ This takes <30 seconds. No excuses to skip.
 PARALLEL GROUP 1 (launch simultaneously):
   → Read CLAUDE.md                                            (this file)
   → Read system/execution_trace.md                            (live trace)
-  → Read system/development_log.md                            (history)
+  → Read system/development_log.md                            (history — last 200 lines)
 
 PARALLEL GROUP 2 (launch simultaneously):
   → Read tasks/todo.md                                        (current tasks)
   → Read tasks/lessons.md                                     (mistake patterns)
 
 PARALLEL GROUP 3 (launch simultaneously):
-  → Read docs/YouSell_Platform_Technical_Specification_v8.md  (architecture — first 200 lines minimum)
+  → Read docs/YouSell_Platform_Technical_Specification_v8.md  (architecture — first 200 lines)
   → Read system/ai_logic.md                                   (operational logic)
 ```
 
 After boot, output exactly:
 
 ```
-WARMODE v3 BOOT COMPLETE
+BOOT COMPLETE (v4)
   Session:        <timestamp or session id>
   Last trace:     <last entry from execution_trace.md>
   Active tasks:   <count of unchecked items in todo.md>
@@ -93,7 +93,7 @@ Do NOT abort. Do NOT ask the user. Create and continue.
 
 
 ================================================================
-3. PROJECT PURPOSE
+3. PROJECT PURPOSE & CURRENT STATE
 ================================================================
 
 YOUSELL is an AI-powered commerce intelligence SaaS platform.
@@ -108,6 +108,42 @@ Two applications:
 
 Users: Super admins, admin operators, client businesses.
 
+### Platform Status (as of 2026-03-24)
+
+The platform is **fully built**. All engines, UI pages, API routes, and
+infrastructure are implemented. The current phase is **polish, testing,
+and production readiness**.
+
+| Metric | Count |
+|--------|-------|
+| Admin pages | 44 |
+| Dashboard pages | 11 |
+| API routes | 97 |
+| Backend engine jobs | 29 |
+| Database migrations | 32 (numbered 000–032) |
+| Test files | 46 |
+| Engines | 25 (24 original + Governor) |
+| Discovery providers | 14 platforms |
+| Circuit breakers | 8 active |
+
+### What's Done (DO NOT REBUILD)
+
+- All 25 engines implemented and tested
+- 14-platform discovery (TikTok, Amazon, Shopify, Instagram, YouTube, Reddit, Twitter, Product Hunt, eBay, TikTok Shop, Etsy, Temu, AliExpress, Pinterest)
+- Engine Governor with AI optimizer (L1/L2/L3 autonomy levels)
+- Automation Orchestrator (event-driven routing)
+- Media generation (Bannerbear images + Shotstack video)
+- Multi-channel store integration (Shopify GraphQL, TikTok Shop, Amazon SP-API)
+- OAuth for Shopify, TikTok, Amazon, WooCommerce, BigCommerce, Etsy
+- POD integration (Printful, Printify, Gelato)
+- Content generation (7 types, batch support, scheduling)
+- Affiliate system with commission tracking
+- Stripe billing (Checkout, Webhooks, Customer Portal)
+- Production hardening (Redis EventBus, structured logging, circuit breakers, monitoring, alerting)
+- All auth uses `authFetch()` consistently — zero raw fetch() calls
+- All dashboard pages use consistent light + dark-mode theming
+- Supabase Realtime on admin dashboard, products, trends, influencers
+
 
 ================================================================
 4. REPOSITORY STRUCTURE
@@ -115,65 +151,114 @@ Users: Super admins, admin operators, client businesses.
 
 ```
 yousell-admin/
-├── CLAUDE.md                             — THIS FILE (WARMODE v3)
+├── CLAUDE.md                             — THIS FILE (v4)
 ├── system/
 │   ├── development_log.md                — Change history and session log
-│   ├── execution_trace.md                — LIVE execution trace
+│   ├── execution_trace.md                — LIVE execution trace (crash recovery)
 │   ├── ai_logic.md                       — Platform operational logic
+│   ├── final_step_logs.md                — Last actions before session end
 │   └── yousell_master_qa_prompt_v7.md    — QA execution prompt
 ├── docs/
 │   ├── YouSell_Platform_Technical_Specification_v8.md — Master architecture (THE BIBLE)
+│   ├── YOUSELL_INTEGRATION_WIRING.md     — UI ↔ API ↔ DB wiring map (VERIFIED)
 │   ├── content_publishing_shop_integration_strategy.md
 │   ├── USE_CASE_DIAGRAM.md
 │   ├── MARKET_RESEARCH_LOG_SESSION3.md
-│   └── v9/                               — V9 engine docs (task breakdown, checklists, test strategy)
+│   └── v9/                               — V9 engine docs (reference only — all complete)
 ├── tasks/
 │   ├── todo.md                           — Task planning and progress
 │   ├── lessons.md                        — Mistake patterns (review every session)
 │   └── execution_plan.md                 — Step-by-step implementation plan
 ├── archive/                              — Deprecated files (reference only)
 ├── src/
-│   ├── app/                              — Next.js App Router pages & API routes
-│   ├── components/                       — UI components
-│   ├── hooks/                            — React hooks
-│   ├── lib/                              — Shared utilities and clients
-│   └── middleware.ts                     — Auth/routing middleware
-├── backend/                              — Express API and workers
-└── supabase/                             — Database migrations
+│   ├── app/
+│   │   ├── admin/                        — 44 admin pages (see Section 5)
+│   │   ├── dashboard/                    — 11 client dashboard pages
+│   │   └── api/                          — 97 API routes (admin, dashboard, engine, auth, webhooks)
+│   ├── components/
+│   │   ├── ui/                           — shadcn/ui primitives
+│   │   ├── engines/                      — Engine UI components (StatusCard, Panel, etc.)
+│   │   ├── shop-connect/                 — Store connection modals
+│   │   ├── auth/                         — Auth components
+│   │   ├── admin-sidebar.tsx             — Admin navigation sidebar
+│   │   ├── dashboard-mobile-nav.tsx      — Dashboard mobile navigation
+│   │   └── subscription-context.tsx      — Client subscription state
+│   ├── hooks/                            — React hooks (useEngine, etc.)
+│   ├── lib/
+│   │   ├── supabase/                     — Supabase clients (admin + browser)
+│   │   ├── engines/                      — Engine implementations & registry
+│   │   ├── integrations/                 — Store integrations (Shopify, TikTok, Amazon)
+│   │   ├── providers/                    — Discovery providers (14 platforms)
+│   │   ├── auth/                         — Auth utilities (roles, requireAdmin)
+│   │   ├── api/                          — API client types
+│   │   ├── content/                      — Content templates & generation
+│   │   ├── scoring/                      — Product scoring engine
+│   │   ├── automation/                   — Automation orchestrator
+│   │   ├── types/                        — Shared TypeScript types
+│   │   ├── auth-fetch.ts                 — Authenticated fetch wrapper (USE THIS, not raw fetch)
+│   │   ├── circuit-breaker.ts            — Circuit breaker implementation
+│   │   ├── logger.ts                     — Structured JSON logger
+│   │   ├── stripe.ts                     — Stripe client
+│   │   ├── crypto.ts                     — AES-256-GCM encryption
+│   │   └── email.ts                      — Resend email client
+│   └── middleware.ts                     — Auth middleware + security headers
+├── backend/
+│   └── src/
+│       ├── index.ts                      — Express API server
+│       ├── worker.ts                     — BullMQ worker entry
+│       ├── jobs/                         — 29 engine job processors
+│       └── lib/                          — Backend utilities (queue, scoring, supabase, etc.)
+└── supabase/
+    └── migrations/                       — 32 numbered migrations (000–032)
 ```
 
 
 ================================================================
-5. CANONICAL ARCHITECTURE
+5. KEY PAGES & ROUTES MAP
 ================================================================
 
-Single source of truth:
+### Admin Pages (44 total — admin.yousell.online/admin/*)
 
-    docs/YouSell_Platform_Technical_Specification_v8.md
+| Category | Pages |
+|----------|-------|
+| Dashboard | `/admin` (main), `/admin/debug` (API health), `/admin/monitoring` |
+| Products | `/admin/products`, `/admin/scan`, `/admin/import`, `/admin/scoring`, `/admin/financial` |
+| Discovery | `/admin/tiktok`, `/admin/amazon`, `/admin/shopify`, `/admin/pinterest` |
+| Intelligence | `/admin/trends`, `/admin/clusters`, `/admin/competitors`, `/admin/opportunities` |
+| People | `/admin/influencers`, `/admin/creator-matches`, `/admin/suppliers`, `/admin/clients` |
+| Content | `/admin/content`, `/admin/blueprints`, `/admin/digital`, `/admin/ads` |
+| Commerce | `/admin/allocate`, `/admin/pod`, `/admin/revenue` |
+| Governor | `/admin/governor` (main), `/governor/budgets`, `/governor/decisions`, `/governor/overrides`, `/governor/swaps` |
+| System | `/admin/analytics`, `/admin/alerts`, `/admin/automation`, `/admin/notifications`, `/admin/settings`, `/admin/setup` |
+| Affiliates | `/admin/affiliates` (main), `/affiliates/ai`, `/affiliates/commissions`, `/affiliates/physical` |
+| Other | `/admin/login`, `/admin/unauthorized`, `/admin/funnel` |
 
-**v8 supersedes ALL prior documents.** If anything conflicts, v8 wins.
+### Dashboard Pages (11 total — yousell.online/dashboard/*)
 
-### V9 ENGINE TASK BREAKDOWN (MANDATORY REFERENCE)
+| Page | Purpose |
+|------|---------|
+| `/dashboard` | Client KPI overview with paginated product cards |
+| `/dashboard/products` | Allocated products list with search/filter |
+| `/dashboard/products/[id]` | Product detail with scores, AI insights, push-to-store |
+| `/dashboard/analytics` | Client analytics with score distributions |
+| `/dashboard/content` | Content generation & scheduling |
+| `/dashboard/orders` | Order tracking |
+| `/dashboard/billing` | Stripe subscription management |
+| `/dashboard/integrations` | Store connections (Shopify, TikTok, Amazon) |
+| `/dashboard/engines` | Engine status & controls |
+| `/dashboard/affiliate` | Referral program & commissions |
+| `/dashboard/requests` | Product allocation requests |
 
-**Before starting ANY engine-related task, READ:**
+### API Route Groups (97 total)
 
-    docs/v9/V9_Engine_Task_Breakdown.md            — 668 atomic tasks across 14 engines
-    docs/v9/V9_Gap_Closure_Execution_Plan.md       — 23 test batches (all complete)
-    docs/v9/V9_Inter_Engine_Communication_Breakdown.md — 44 Comm pathways
-    docs/v9/V9_Inter_Engine_Checklist.md             — Completion checklist (all gaps closed)
-    docs/v9/V9_Inter_Engine_Communication_Test_Strategy.md — Test strategy
-
-**V9 Engine Status (as of 2026-03-24):**
-- 25 engines implemented (24 original + Governor)
-- 14 discovery providers (all V9 platforms covered)
-- 23/23 test batches complete (148+ tests across 33 files)
-- Media generation: Bannerbear (images) + Shotstack (video)
-- All P0/P1/P2 tasks complete — 0 remaining engine tasks
-- Phase 8: Production hardening complete (Redis EventBus, structured logging, monitoring, alerting, circuit breakers, deep health checks)
-- Phase 8B: All infrastructure wired — 8 circuit breakers active, 14 files with structured logging
-- UI Polish Sprint (P0-P11): auth fixes, 10 new pages, theme consistency, pagination, governor overrides
-- Migration 032 (system_alerts) applied to Supabase
-- 32 migrations, 53 tables, 105 API routes, 44 admin pages, 11 dashboard pages
+| Group | Count | Path Pattern |
+|-------|-------|-------------|
+| Admin | 54 | `/api/admin/*` |
+| Dashboard | 18 | `/api/dashboard/*` |
+| Engine | 17 | `/api/engine/*` |
+| Webhooks | 8 | `/api/webhooks/*` (Stripe, Shopify, Amazon, TikTok, Printful, Printify, Square, Resend) |
+| Auth | 5 | `/api/auth/*` |
+| Health | 1 | `/api/health` |
 
 
 ================================================================
@@ -182,14 +267,17 @@ Single source of truth:
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js 14 (App Router), TypeScript, TailwindCSS, shadcn/ui |
+| Frontend | Next.js 15 (App Router), TypeScript, TailwindCSS, shadcn/ui, Recharts |
 | Hosting | Netlify (frontend), Railway (backend services) |
-| Backend | Node.js, Express API, BullMQ job queue, Redis |
-| Database | Supabase PostgreSQL, Supabase Auth, Supabase Realtime |
+| Backend | Node.js, Express API, BullMQ job queue, Redis (ioredis) |
+| Database | Supabase PostgreSQL, Supabase Auth (SSR), Supabase Realtime |
 | Payments | Stripe (Checkout, Webhooks, Customer Portal) |
-| Scraping | Apify Actors |
+| Scraping | Apify Actors (all 14 discovery providers) |
 | AI | Anthropic Claude API (Haiku for bulk, Sonnet for premium) |
+| Media | Bannerbear (image generation), Shotstack (video generation) |
 | Email | Resend API |
+| POD | Printful, Printify, Gelato (multi-provider routing) |
+| Icons | Lucide React |
 | VCS | GitHub |
 
 
@@ -212,24 +300,49 @@ POD products use same model with POD-specific modifiers.
 
 
 ================================================================
-8. DEVELOPMENT GUARDRAILS (HARD RULES — VIOLATING = BUG)
+8. ARCHITECTURE REFERENCE
+================================================================
+
+Single source of truth:
+
+    docs/YouSell_Platform_Technical_Specification_v8.md
+
+**v8 supersedes ALL prior documents.** If anything conflicts, v8 wins.
+
+### V9 Engine Reference (ALL COMPLETE — reference only)
+
+    docs/v9/V9_Engine_Task_Breakdown.md                  — 668 atomic tasks (all done)
+    docs/v9/V9_Gap_Closure_Execution_Plan.md             — 23 test batches (all complete)
+    docs/v9/V9_Inter_Engine_Communication_Breakdown.md   — 44 comm pathways
+    docs/v9/V9_Inter_Engine_Checklist.md                 — Completion checklist (all gaps closed)
+
+### Integration Wiring Map (VERIFIED)
+
+    docs/YOUSELL_INTEGRATION_WIRING.md    — Page-by-page UI ↔ API ↔ DB mapping
+
+This document maps every UI page to its exact API routes and Supabase tables.
+Read this FIRST when debugging data flow issues.
+
+
+================================================================
+9. DEVELOPMENT GUARDRAILS (HARD RULES — VIOLATING = BUG)
 ================================================================
 
 | # | Rule |
 |---|------|
-| G01 | Do NOT rebuild completed functionality |
+| G01 | Do NOT rebuild completed functionality — the platform is built |
 | G02 | Always inspect the repo before creating new files |
 | G03 | Only implement missing or broken components |
 | G04 | Always check `system/development_log.md` before starting work |
 | G05 | Use the existing Supabase singleton client — never create another |
-| G06 | Use Apify actors as the primary scraping method |
+| G06 | Use `authFetch()` for ALL API calls from components — never raw `fetch()` |
 | G07 | Ensure compatibility with Netlify deployment constraints |
 | G08 | Never run scraping logic inside API request handlers |
 | G09 | API routes serve stored/cached data — never trigger live scraping |
 | G10 | All automation jobs DISABLED by default — manual-first cost control |
 | G11 | Apply cost optimizations from day one |
 | G12 | Use Claude Haiku for bulk operations, Sonnet only for premium |
-| G13 | Store OAuth tokens encrypted; never handle client passwords |
+| G13 | Store OAuth tokens encrypted (AES-256-GCM); never handle client passwords |
 | G14 | Update `system/development_log.md` after each meaningful change |
 | G15 | Update `system/execution_trace.md` after every task step |
 | G16 | v8 spec is the architecture bible |
@@ -237,17 +350,20 @@ POD products use same model with POD-specific modifiers.
 | G18 | No placeholder/stub implementations marked as "done" |
 | G19 | Max 3 files changed per micro-batch |
 | G20 | Every batch must be independently committable |
-| G21 | **Split large docs/writes into ≤150-line chunks** — never write a full doc in one tool call. Write section-by-section to avoid timeouts. |
-| G22 | **Max single Write/Edit output: 150 lines** — if content exceeds this, split into multiple sequential writes (append pattern). |
-| G23 | **Prefer append-to-file over monolithic write** — for docs >100 lines, create file with header first, then append sections one at a time. |
-| G24 | **Timeout prevention: plan before write** — for any file >200 lines, outline all sections first, then write each section as a separate tool call. |
+| G21 | **Split large docs/writes into ≤150-line chunks** — write section-by-section |
+| G22 | **Max single Write/Edit output: 150 lines** — split into multiple calls if larger |
+| G23 | **Prefer append-to-file over monolithic write** — for docs >100 lines |
+| G24 | **Timeout prevention: plan before write** — outline sections first for files >200 lines |
+| G25 | Use consistent light theme with `dark:` variants on all dashboard pages |
+| G26 | All admin tables with potentially many rows MUST have pagination (25/page) |
+| G27 | Use Apify actors as the primary scraping method |
 
 
 ================================================================
-9. FULL AUTONOMOUS EXECUTION ENGINE
+10. AUTONOMOUS EXECUTION ENGINE
 ================================================================
 
-### 9.1 AUTONOMOUS MODE (DEFAULT — NO APPROVAL NEEDED BETWEEN BATCHES)
+### 10.1 AUTONOMOUS MODE (DEFAULT)
 
 Claude operates in **full auto mode**:
 
@@ -259,19 +375,15 @@ Claude operates in **full auto mode**:
 - If two approaches seem equal, pick the simpler one and go.
 - Only stop for: (1) ambiguous requirements, (2) destructive operations on production, (3) architectural decisions not covered by v8.
 
-### 9.2 MAX RESOURCE UTILIZATION
+### 10.2 MAX RESOURCE UTILIZATION
 
 - **Subagents are MANDATORY** for any task with 2+ independent research needs
 - Launch **multiple subagents simultaneously** — never serialize what can parallelize
 - Use subagents for: file exploration, code audits, dependency mapping, test verification
 - Main context window is for: decision-making, writing code, committing
 - **Offload ALL heavy reads to subagents** — keep main context lean and fast
-- When given a large task, decompose into parallel subtasks and fan out immediately
-- One subagent = one focused job. Never overload a single subagent.
 
-### 9.3 MICRO-BATCH PATTERN (THE CORE LOOP)
-
-**This is the heartbeat of every session. Never deviate.**
+### 10.3 MICRO-BATCH PATTERN (THE CORE LOOP)
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -286,61 +398,29 @@ Claude operates in **full auto mode**:
 │  7. COMMIT → git commit with clear message   │
 │  8. REPEAT → Go to step 1                    │
 │                                             │
-│  Total time per loop: 2-5 minutes           │
 │  Max files per loop: 3                      │
 │  Max uncommitted changes: NEVER             │
 └─────────────────────────────────────────────┘
 ```
 
-**Why micro-batches?**
-- Context compression can't destroy committed work
-- Every commit is a save point — recovery is instant
-- Small diffs are easy to review and revert
-- Claude never "loses track" because each batch is tiny
-- Progress is always visible in the trace log
-
-### 9.4 SELF-CORRECTION LOOP
+### 10.4 SELF-CORRECTION & VERIFICATION
 
 - After ANY user correction → update `tasks/lessons.md` immediately
-- Write a prevention rule, not just a description
-- Review lessons at session start (part of boot sequence)
-- If the same mistake happens twice → escalate to a guardrail in this file
-
-### 9.5 VERIFICATION GATES
-
-Every batch must pass before marking DONE:
-- TypeScript compiles (`npx tsc --noEmit` or equivalent)
-- No import errors
-- No runtime errors in modified code paths
-- Existing tests still pass (if test framework exists)
-- Self-review: "Would a staff engineer approve this?"
-
-### 9.6 AUTONOMOUS BUG FIXING
-
-When given a bug report:
-1. Read the error/logs
-2. Find root cause (use subagents for exploration)
-3. Fix it
-4. Verify the fix
-5. Commit and move on
-
-Zero questions asked. Zero context switching for the user.
+- Every batch must pass before marking DONE:
+  - TypeScript compiles (`npx tsc --noEmit` or equivalent)
+  - No import errors or runtime errors
+  - Existing tests still pass
+- When given a bug report: read logs → find root cause → fix → verify → commit. Zero questions.
 
 
 ================================================================
-10. LIVE EXECUTION TRACE LOG
+11. EXECUTION TRACE LOG
 ================================================================
 
 ### Purpose
 
 The execution trace is a **persistent, append-only, crash-recovery journal**.
 It is the MOST IMPORTANT file in the project after this one.
-
-It serves as:
-- **Crash recovery** — after compression, Claude reconstructs from here
-- **Audit trail** — user sees what was done, when, and why
-- **Deduplication guard** — check before working to avoid repeating steps
-- **Progress dashboard** — real-time view of what's done vs pending
 
 ### File Location
 
@@ -352,7 +432,6 @@ It serves as:
 ### [YYYY-MM-DD HH:MM] <STATUS> — <Short description>
 
 - **Task:** <What was being done>
-- **Batch:** <Batch ID if applicable, e.g., 0.3>
 - **Action:** <Specific action taken>
 - **Files touched:** <list of files created/modified>
 - **Result:** SUCCESS | PARTIAL | FAILED | BLOCKED
@@ -364,98 +443,25 @@ It serves as:
 
 | Tag | Meaning |
 |-----|---------|
-| `START` | Beginning a new task/batch |
+| `START` | Beginning a new task |
 | `PROGRESS` | Mid-task checkpoint (forced every 15 min) |
 | `DONE` | Task completed and verified |
 | `FAILED` | Task failed — includes reason and pivot plan |
 | `BLOCKED` | Blocked on external dependency |
 | `RECOVERY` | Re-entering after context compression |
-| `CORRECTION` | Fixing a mistake from a previous step |
 | `PIVOT` | Changing approach after failed attempts |
 
 ### Trace Rules (NON-NEGOTIABLE)
 
 1. **Append-only** — never edit or delete previous entries
 2. **Log BEFORE and AFTER** — every task gets START + DONE/FAILED minimum
-3. **Log on recovery** — first action after compression = RECOVERY entry
-4. **Include next step** — future-Claude must know exactly where to pick up
-5. **Include commit SHA** — ties trace to verifiable code state
-6. **Force checkpoint every 15 minutes** — even mid-batch
-7. **Keep entries concise** — 3-5 lines, not paragraphs
+3. **Include next step** — future-Claude must know exactly where to pick up
+4. **Include commit SHA** — ties trace to verifiable code state
+5. **Keep entries concise** — 3-5 lines, not paragraphs
 
 
 ================================================================
-11. TASK MANAGEMENT PROTOCOL
-================================================================
-
-### The Flow (Sequential — No Skipping)
-
-```
-1. CHECK  → Read execution_trace.md — am I resuming?
-2. PLAN   → Write plan to tasks/todo.md (checkable items)
-3. TRACE  → Log START in execution_trace.md
-4. BUILD  → Execute the micro-batch (≤3 files)
-5. VERIFY → Prove it works
-6. TRACE  → Log DONE/FAILED in execution_trace.md
-7. LOG    → Update system/development_log.md
-8. COMMIT → git add specific files + git commit
-9. LOOP   → Back to step 1 for next batch
-```
-
-### Autonomous Decision Rules
-
-| Situation | Action |
-|-----------|--------|
-| Task is clear | Execute immediately. No preamble. |
-| Task is ambiguous | Check v8 spec first. If still unclear, ask user. |
-| Two valid approaches | Pick simpler one. Document why in trace. |
-| Something breaks | Fix it in the current batch. Don't defer. |
-| Batch is too large | Split it. Log the split in trace. |
-| Blocked by external dep | Mock it. Move on. Log BLOCKED entry. |
-| User gives feedback | Update lessons.md. Apply immediately. |
-| Context feels compressed | Trigger recovery protocol. No questions. |
-
-
-================================================================
-12. MEMORY SAFEGUARD CHECKLIST
-================================================================
-
-Claude must verify these **before every code change**:
-
-```
-[ ] I have run the boot sequence this session
-[ ] I checked execution_trace.md for last known state
-[ ] I checked development_log.md for relevant history
-[ ] I am NOT rebuilding something that already exists
-[ ] I verified all file paths with Glob/Read (no guessing)
-[ ] This batch touches ≤3 files
-[ ] I will log this action in execution_trace.md when done
-[ ] I will commit immediately after this batch
-```
-
-**If ANY box fails → pause, fix it, then proceed.**
-
-
-================================================================
-13. CORE PRINCIPLES
-================================================================
-
-| Principle | Meaning |
-|-----------|---------|
-| Micro-Batch Everything | 1-3 files per batch. Always. No exceptions. |
-| Commit Is Checkpoint | Every commit = save point. Recovery is instant. |
-| Trace Is Truth | The trace log is more reliable than your memory. |
-| Files Over Memory | Write state to disk first, then execute. |
-| Parallel By Default | If two things are independent, run them simultaneously. |
-| Fix Forward | Don't roll back. Fix the issue and keep moving. |
-| Prove It Works | Verification is part of the batch, not a separate step. |
-| No Ghosts | Every action is logged. Nothing happens in the dark. |
-| Simplicity Wins | Simpler solution beats clever solution every time. |
-| Autonomy Is Speed | Don't ask. Decide, document, execute. |
-
-
-================================================================
-14. PROJECT MEMORY SYSTEM (FILE REGISTRY)
+12. PROJECT MEMORY SYSTEM (FILE REGISTRY)
 ================================================================
 
 | File | Purpose | Update Frequency |
@@ -464,21 +470,17 @@ Claude must verify these **before every code change**:
 | `system/execution_trace.md` | **LIVE execution trace — MOST CRITICAL** | **Every batch** |
 | `system/development_log.md` | Change history and session log | After each meaningful change |
 | `system/ai_logic.md` | Platform operational logic | On logic changes |
+| `system/final_step_logs.md` | Last actions before session end | After each session |
 | `docs/YouSell_Platform_Technical_Specification_v8.md` | Master architecture (THE BIBLE) | On architecture changes |
+| `docs/YOUSELL_INTEGRATION_WIRING.md` | **UI ↔ API ↔ DB wiring map (VERIFIED)** | On UI/API changes |
 | `tasks/todo.md` | Task planning and progress | Continuously |
 | `tasks/lessons.md` | Patterns and lessons from corrections | After every correction |
 | `tasks/execution_plan.md` | Step-by-step implementation plan | On plan changes |
-| `system/final_step_logs.md` | Last actions before session end — quick recovery | After each session |
-| `docs/v9/V9_Engine_Task_Breakdown.md` | 668 atomic tasks across 14 engines | Reference only |
-| `docs/v9/V9_Inter_Engine_Checklist.md` | Inter-engine completion checklist | Reference only |
-| `docs/content_publishing_shop_integration_strategy.md` | Content & shop integration | On strategy changes |
-| `docs/USE_CASE_DIAGRAM.md` | Use case diagrams and data flows | On flow changes |
-| `docs/MARKET_RESEARCH_LOG_SESSION3.md` | Market research (80+ sources) | On new research |
-| `docs/YOUSELL_INTEGRATION_WIRING.md` | **UI ↔ API ↔ DB wiring map (VERIFIED)** | On UI/API changes |
+| `docs/v9/` | V9 engine docs (all complete — reference only) | Reference only |
 
 
 ================================================================
-15. EMERGENCY PROTOCOLS
+13. EMERGENCY PROTOCOLS
 ================================================================
 
 ### Protocol: LOST (Don't know where I am)
@@ -500,8 +502,9 @@ Claude must verify these **before every code change**:
 ```
 1. Read CLAUDE.md (this file)
 2. Read v8 spec for the relevant section
-3. Read development_log.md for recent history
-4. If still confused, announce the specific confusion and recover
+3. Read docs/YOUSELL_INTEGRATION_WIRING.md for data flow
+4. Read development_log.md for recent history
+5. If still confused, announce the specific confusion and recover
 ```
 
 ### Protocol: BIG TASK (Received a large multi-step request)
@@ -516,25 +519,25 @@ Claude must verify these **before every code change**:
 
 
 ================================================================
-16. SPEED MULTIPLIERS
+14. CORE PRINCIPLES
 ================================================================
 
-These patterns make Claude faster. Use them aggressively.
-
-| Pattern | How |
-|---------|-----|
-| Parallel boot | Read 2-3 files simultaneously during boot |
-| Subagent fan-out | Launch 3-4 subagents for independent research |
-| Speculative reads | Read files you'll probably need before you need them |
-| Batch pre-planning | While committing batch N, mentally prep batch N+1 |
-| Skip preamble | Don't explain what you're about to do. Just do it. |
-| Inline verification | Verify as you build, not as a separate pass |
-| Commit immediately | Don't accumulate. Commit the moment a batch is done. |
-| Background subagents | Launch research agents in background while you code |
+| Principle | Meaning |
+|-----------|---------|
+| Micro-Batch Everything | 1-3 files per batch. Always. No exceptions. |
+| Commit Is Checkpoint | Every commit = save point. Recovery is instant. |
+| Trace Is Truth | The trace log is more reliable than your memory. |
+| Files Over Memory | Write state to disk first, then execute. |
+| Parallel By Default | If two things are independent, run them simultaneously. |
+| Fix Forward | Don't roll back. Fix the issue and keep moving. |
+| Prove It Works | Verification is part of the batch, not a separate step. |
+| No Ghosts | Every action is logged. Nothing happens in the dark. |
+| Simplicity Wins | Simpler solution beats clever solution every time. |
+| Autonomy Is Speed | Don't ask. Decide, document, execute. |
 
 
 ================================================================
-END OF PROMPT — WARMODE v3 ACTIVE
+END OF PROMPT — v4 ACTIVE
 ================================================================
 
 If you read this far, the boot sequence worked.
