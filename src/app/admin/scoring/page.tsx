@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { authFetch } from "@/lib/auth-fetch"
-import { Sparkles, TrendingUp, Zap, DollarSign, RefreshCw, Filter } from "lucide-react"
+import { Sparkles, TrendingUp, Zap, DollarSign, RefreshCw, Filter, ChevronLeft, ChevronRight } from "lucide-react"
 
 interface Product {
   id: string
@@ -50,6 +50,8 @@ export default function ScoringPage() {
   const [loading, setLoading] = useState(true)
   const [tierFilter, setTierFilter] = useState<string>("all")
   const [sortField, setSortField] = useState<string>("final_score")
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 25
 
   async function loadProducts() {
     setLoading(true)
@@ -71,6 +73,9 @@ export default function ScoringPage() {
   const filtered = tierFilter === "all"
     ? products
     : products.filter(p => getTier(p.final_score || 0) === tierFilter)
+
+  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
 
   const tierCounts = {
     HOT: products.filter(p => getTier(p.final_score || 0) === "HOT").length,
@@ -118,7 +123,7 @@ export default function ScoringPage() {
       {/* Filters */}
       <div className="flex items-center gap-3">
         <Filter className="h-4 w-4 text-muted-foreground" />
-        <select value={tierFilter} onChange={e => setTierFilter(e.target.value)} className="text-sm bg-muted rounded-lg px-3 py-1.5 border-0">
+        <select value={tierFilter} onChange={e => { setTierFilter(e.target.value); setPage(1) }} className="text-sm bg-muted rounded-lg px-3 py-1.5 border-0">
           <option value="all">All Tiers</option>
           <option value="HOT">HOT (&ge;80)</option>
           <option value="WARM">WARM (&ge;60)</option>
@@ -158,7 +163,7 @@ export default function ScoringPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map(p => {
+              {paged.map(p => {
                 const tier = getTier(p.final_score || 0)
                 return (
                   <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30">
@@ -181,6 +186,21 @@ export default function ScoringPage() {
             </tbody>
           </table>
         </div>
+        {filtered.length > PAGE_SIZE && (
+          <div className="flex items-center justify-between px-4 py-3 border-t">
+            <span className="text-xs text-muted-foreground">
+              Page {page} of {totalPages} ({filtered.length} products)
+            </span>
+            <div className="flex gap-2">
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="flex items-center gap-1 px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-muted transition-colors">
+                <ChevronLeft className="h-4 w-4" /> Prev
+              </button>
+              <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages} className="flex items-center gap-1 px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-muted transition-colors">
+                Next <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

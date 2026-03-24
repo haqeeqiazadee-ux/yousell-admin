@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { authFetch } from "@/lib/auth-fetch"
-import { DollarSign, AlertTriangle, CheckCircle, XCircle, RefreshCw } from "lucide-react"
+import { DollarSign, AlertTriangle, CheckCircle, XCircle, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react"
 
 interface FinancialModel {
   id: string
@@ -26,6 +26,8 @@ export default function FinancialPage() {
   const [models, setModels] = useState<FinancialModel[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 25
 
   async function loadModels() {
     setLoading(true)
@@ -95,7 +97,7 @@ export default function FinancialPage() {
               </tr>
             </thead>
             <tbody>
-              {models.map(m => {
+              {models.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(m => {
                 const marginPct = (m.gross_margin * 100).toFixed(1)
                 const marginColor = m.gross_margin >= 0.6 ? "text-emerald-600" : m.gross_margin >= 0.4 ? "text-amber-600" : "text-red-600"
                 return (
@@ -140,6 +142,21 @@ export default function FinancialPage() {
             </tbody>
           </table>
         </div>
+        {models.length > PAGE_SIZE && (
+          <div className="flex items-center justify-between px-4 py-3 border-t">
+            <span className="text-xs text-muted-foreground">
+              Page {page} of {Math.ceil(models.length / PAGE_SIZE)} ({models.length} models)
+            </span>
+            <div className="flex gap-2">
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="flex items-center gap-1 px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-muted transition-colors">
+                <ChevronLeft className="h-4 w-4" /> Prev
+              </button>
+              <button onClick={() => setPage(p => p + 1)} disabled={page >= Math.ceil(models.length / PAGE_SIZE)} className="flex items-center gap-1 px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-muted transition-colors">
+                Next <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Rejection Analysis */}

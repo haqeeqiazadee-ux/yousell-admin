@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { authFetch } from "@/lib/auth-fetch"
-import { Lightbulb, ExternalLink, Users, Layers, RefreshCw, Filter } from "lucide-react"
+import { Lightbulb, ExternalLink, Users, Layers, RefreshCw, Filter, ChevronLeft, ChevronRight } from "lucide-react"
 
 interface Opportunity {
   id: string
@@ -46,6 +46,8 @@ export default function OpportunitiesPage() {
   const [loading, setLoading] = useState(true)
   const [tierFilter, setTierFilter] = useState<string>("all")
   const [platformFilter, setPlatformFilter] = useState<string>("all")
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 25
 
   async function loadData() {
     setLoading(true)
@@ -116,14 +118,14 @@ export default function OpportunitiesPage() {
       {/* Filters */}
       <div className="flex items-center gap-3">
         <Filter className="h-4 w-4 text-muted-foreground" />
-        <select value={tierFilter} onChange={e => setTierFilter(e.target.value)} className="text-sm bg-muted rounded-lg px-3 py-1.5 border-0">
+        <select value={tierFilter} onChange={e => { setTierFilter(e.target.value); setPage(1) }} className="text-sm bg-muted rounded-lg px-3 py-1.5 border-0">
           <option value="all">All Tiers</option>
           <option value="HOT">HOT</option>
           <option value="WARM">WARM</option>
           <option value="WATCH">WATCH</option>
           <option value="COLD">COLD</option>
         </select>
-        <select value={platformFilter} onChange={e => setPlatformFilter(e.target.value)} className="text-sm bg-muted rounded-lg px-3 py-1.5 border-0">
+        <select value={platformFilter} onChange={e => { setPlatformFilter(e.target.value); setPage(1) }} className="text-sm bg-muted rounded-lg px-3 py-1.5 border-0">
           <option value="all">All Platforms</option>
           {platforms.map(p => <option key={p} value={p}>{p}</option>)}
         </select>
@@ -149,7 +151,7 @@ export default function OpportunitiesPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map(o => (
+              {filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(o => (
                 <tr key={o.id} className="border-b last:border-0 hover:bg-muted/30">
                   <td className="px-4 py-2">
                     <div className="flex items-center gap-2">
@@ -192,6 +194,22 @@ export default function OpportunitiesPage() {
             </tbody>
           </table>
         </div>
+        {/* Pagination */}
+        {filtered.length > PAGE_SIZE && (
+          <div className="flex items-center justify-between px-4 py-3 border-t">
+            <span className="text-xs text-muted-foreground">
+              Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
+            </span>
+            <div className="flex gap-2">
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="flex items-center gap-1 px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-muted transition-colors">
+                <ChevronLeft className="h-4 w-4" /> Prev
+              </button>
+              <button onClick={() => setPage(p => p + 1)} disabled={page >= Math.ceil(filtered.length / PAGE_SIZE)} className="flex items-center gap-1 px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-muted transition-colors">
+                Next <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
