@@ -266,7 +266,6 @@ export class ContentCreationEngine implements Engine {
       }
 
       // V9 Tasks 9.18-9.21: Media generation (image/video) when applicable
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       let mediaUrl: string | undefined;
       try {
         if (input.contentType === 'image' || input.contentType === 'carousel') {
@@ -316,6 +315,7 @@ export class ContentCreationEngine implements Engine {
           trendingKeywords,
           creatorContext,
           competitorContext,
+          mediaUrl,
         },
         created_at: new Date().toISOString(),
       };
