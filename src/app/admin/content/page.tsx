@@ -181,6 +181,7 @@ export default function AdminContentPage() {
           ) : content.length === 0 ? (
             <p className="text-gray-500 text-center py-8">No content found</p>
           ) : (
+            <>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -320,6 +321,7 @@ export default function AdminContentPage() {
                 </div>
               </div>
             )}
+            </>
           )}
         </CardContent>
       </Card>

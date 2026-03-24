@@ -135,6 +135,7 @@ export default function CreatorMatchesPage() {
               <p className="text-sm text-muted-foreground mt-1">Run matching to pair high-scoring products with influencers</p>
             </div>
           ) : (
+            <>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -205,6 +206,7 @@ export default function CreatorMatchesPage() {
                 </div>
               </div>
             )}
+            </>
           )}
         </CardContent>
       </Card>

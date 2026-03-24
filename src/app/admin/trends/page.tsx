@@ -206,6 +206,7 @@ export default function TrendsPage() {
                 </p>
               </div>
             ) : (
+              <>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -262,6 +263,7 @@ export default function TrendsPage() {
                   </div>
                 </div>
               )}
+              </>
             )}
           </CardContent>
         </Card>

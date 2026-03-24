@@ -267,6 +267,7 @@ export default function SuppliersPage() {
               </p>
             </div>
           ) : (
+            <>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -344,6 +345,7 @@ export default function SuppliersPage() {
                 </div>
               </div>
             )}
+            </>
           )}
         </CardContent>
       </Card>

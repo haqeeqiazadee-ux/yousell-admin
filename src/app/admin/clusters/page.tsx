@@ -122,6 +122,7 @@ export default function ClustersPage() {
                 <p className="text-sm text-muted-foreground mt-1">Run clustering to group similar products by keywords</p>
               </div>
             ) : (
+              <>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -181,6 +182,7 @@ export default function ClustersPage() {
                   </div>
                 </div>
               )}
+              </>
             )}
           </CardContent>
         </Card>

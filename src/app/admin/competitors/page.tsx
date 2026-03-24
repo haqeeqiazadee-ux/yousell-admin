@@ -188,6 +188,7 @@ export default function CompetitorsPage() {
               </p>
             </div>
           ) : (
+            <>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -254,6 +255,7 @@ export default function CompetitorsPage() {
                 </div>
               </div>
             )}
+            </>
           )}
         </CardContent>
       </Card>

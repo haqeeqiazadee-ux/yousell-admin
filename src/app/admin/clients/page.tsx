@@ -233,6 +233,7 @@ export default function ClientsPage() {
               </p>
             </div>
           ) : (
+            <>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -316,6 +317,7 @@ export default function ClientsPage() {
                 </div>
               </div>
             )}
+            </>
           )}
         </CardContent>
       </Card>
