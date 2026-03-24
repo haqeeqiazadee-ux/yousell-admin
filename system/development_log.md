@@ -3139,3 +3139,87 @@ Created `docs/YOUSELL_INTEGRATION_WIRING.md` — verified bridge between codebas
 ### Files
 - Created: `docs/YOUSELL_INTEGRATION_WIRING.md`
 - Commits: 6c6f74a, cfb9c35
+
+------------------------------------------------------------
+
+## [2026-03-24] UI Polish Sprint — P0 through P11 (22 commits)
+
+Major UI overhaul across admin and dashboard pages. All changes on branch `claude/check-repo-connection-bYiaI`.
+
+### P0 — Auth Consistency (7 pages fixed)
+- Replaced raw `fetch()` with `authFetch()` in: admin dashboard, products, trends, influencers, suppliers, competitors, clients
+- All API calls now include proper auth headers
+
+### P1 — New Admin Pages (4 pages)
+- `/admin/revenue` — MRR, churn rate, subscription breakdown, recent subscriptions
+- `/admin/opportunities` — Opportunity table with tier/platform filters, stats overview
+- `/admin/debug` — Live API health checker for all backend routes
+- `/admin/funnel` — Client conversion funnel visualization
+
+### P2 — Realtime Subscriptions (4 pages)
+- Added Supabase realtime auto-refresh to: admin dashboard, products, trends, influencers
+- Changes to underlying tables now reflect in UI without page reload
+
+### P3 — New Admin Pages (2 pages)
+- `/admin/scoring` — Product scoring overview with tier breakdown, sort by score columns
+- `/admin/financial` — Financial model listing with margin/ROI/auto-rejection analysis
+
+### P4 — Dashboard Pages (3 pages)
+- `/dashboard/analytics` — Client analytics with score distributions, platform breakdown
+- `/dashboard/engines` — Engine controls with status, toggle, and run buttons
+- `/admin/alerts` — System alerts with severity filtering, bulk acknowledge/resolve
+
+### P5 — UX Improvements (4 features)
+- Search + platform/tier filters on dashboard products
+- Push-to-store buttons on product detail (Shopify, TikTok, Amazon)
+- Content scheduling button on content page
+- Disconnect confirmation dialog on integrations page
+
+### P6 — Mobile Nav + Product Links
+- Added Analytics + Engines to dashboard mobile navigation
+- Made product cards clickable (linked to detail pages)
+- Added pagination to dashboard main page (12 items per page)
+
+### P7 — Nav Completeness
+- Added /dashboard/affiliate to desktop + mobile nav
+- Added /admin/pod to admin sidebar
+- Product table rows in dashboard now link to /dashboard/products/[id]
+
+### P8 — Auth Final Cleanup
+- Fixed raw fetch() in admin sidebar kill switch → authFetch
+- Fixed raw fetch() in subscription context → authFetch
+- Verified: zero raw fetch("/api) calls remain in any .tsx file
+
+### P9 — Theme Consistency
+- Rewrote /dashboard/affiliate from dark glassmorphism to light theme
+- Rewrote /dashboard/products/[id] from dark to light theme
+- All 11 dashboard pages now use consistent light + dark-mode theming
+
+### P10 — Pagination
+- Added 25-per-page pagination to /admin/opportunities
+- Added 25-per-page pagination to /admin/scoring
+- Added 25-per-page pagination to /admin/financial
+
+### P11 — Governor Overrides
+- Created /admin/governor/overrides page (create, deactivate, history)
+- Added Overrides link to governor dashboard header
+
+### Summary Stats
+- **22 commits** on branch `claude/check-repo-connection-bYiaI`
+- **10 new pages** created
+- **30+ files** modified
+- **0 raw fetch() calls** remaining
+- **All dashboard pages** theme-consistent
+- **3 admin tables** paginated (25/page)
+
+### Files Created
+- src/app/admin/revenue/page.tsx
+- src/app/admin/opportunities/page.tsx
+- src/app/admin/debug/page.tsx
+- src/app/admin/funnel/page.tsx
+- src/app/admin/scoring/page.tsx
+- src/app/admin/financial/page.tsx
+- src/app/admin/alerts/page.tsx
+- src/app/dashboard/analytics/page.tsx
+- src/app/dashboard/engines/page.tsx
+- src/app/admin/governor/overrides/page.tsx
