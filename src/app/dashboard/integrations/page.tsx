@@ -102,6 +102,9 @@ export default function IntegrationsPage() {
   }
 
   const handleDisconnect = async (channelId: string, channelType: string) => {
+    if (!confirm(`Are you sure you want to disconnect ${channelType}? This will stop all product syncing to this store.`)) {
+      return
+    }
     setDisconnecting(channelId)
     try {
       const res = await authFetch('/api/dashboard/channels/disconnect', {

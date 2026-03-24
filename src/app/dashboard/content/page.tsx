@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
   Sparkles, FileText, Clock, CheckCircle, AlertCircle, Copy, X,
-  Loader2, ChevronDown,
+  Loader2, ChevronDown, CalendarClock,
 } from 'lucide-react'
 import { EngineGate } from '@/components/engine-gate'
 
@@ -64,6 +64,7 @@ export default function ContentPage() {
   const [generating, setGenerating] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
+  const [scheduling, setScheduling] = useState<string | null>(null)
 
   // Generator form state
   const [selectedProduct, setSelectedProduct] = useState('')
@@ -315,6 +316,34 @@ export default function ContentPage() {
                           <Copy className="h-3 w-3 mr-1" />
                           {copied === item.id ? 'Copied!' : 'Copy'}
                         </Button>
+                        {item.status === 'generated' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={scheduling === item.id}
+                            onClick={async () => {
+                              setScheduling(item.id)
+                              try {
+                                const scheduledAt = new Date(Date.now() + 3600000).toISOString()
+                                const res = await authFetch('/api/dashboard/content/schedule', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ content_id: item.id, scheduled_at: scheduledAt }),
+                                })
+                                if (res.ok) {
+                                  setItems(prev => prev.map(i => i.id === item.id ? { ...i, status: 'scheduled' } : i))
+                                }
+                              } catch (err) {
+                                console.error('Failed to schedule:', err)
+                              } finally {
+                                setScheduling(null)
+                              }
+                            }}
+                          >
+                            {scheduling === item.id ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <CalendarClock className="h-3 w-3 mr-1" />}
+                            Schedule (1h)
+                          </Button>
+                        )}
                       </div>
                     )}
                   </CardContent>
