@@ -1416,3 +1416,44 @@ Engine inventory (all 20):
 - **Result:** SUCCESS — All 26 tasks complete
 - **Commits:** d7083b0, e1d2e6e, 45e8a5d, 705b9ba, 65a51e0, 036cd63, 8e7ca30, 34a632c, 98c4e83, ebcebcb, 1e0d860, facee54, 6498031
 - **Next step:** Consider adding mobile nav updates, dashboard pagination, or theme consistency pass
+
+------------------------------------------------------------
+
+### [2026-03-24 04:00] DONE — UI Polish Sprint (P6–P11, 7 commits)
+
+- **Task:** Fix nav gaps, auth consistency, theme alignment, pagination, governor overrides
+- **Batch:** P6 through P11
+- **Action:**
+  **P6 — Missing Nav Links:**
+  1. Added Analytics + Engines to dashboard mobile nav
+  2. Made product cards clickable (Link to detail pages)
+  3. Added pagination to dashboard main page (12 per page)
+  
+  **P7 — Nav Completeness:**
+  4. Added /dashboard/affiliate to desktop + mobile nav
+  5. Added /admin/pod (Print on Demand) to admin sidebar
+  6. Linked dashboard product rows to /dashboard/products/[id]
+  
+  **P8 — Auth Cleanup:**
+  7. Fixed raw fetch() in admin sidebar kill switch → authFetch
+  8. Fixed raw fetch() in subscription context → authFetch
+  9. VERIFIED: zero raw fetch("/api calls remain in any .tsx file
+  
+  **P9 — Theme Consistency:**
+  10. Rewrote /dashboard/affiliate from dark to light theme
+  11. Rewrote /dashboard/products/[id] from dark to light theme
+  12. All 11 dashboard pages now use consistent light+dark-mode theming
+  
+  **P10 — Pagination:**
+  13. Added 25-per-page pagination to /admin/opportunities
+  14. Added 25-per-page pagination to /admin/scoring
+  15. Added 25-per-page pagination to /admin/financial
+  
+  **P11 — Governor Overrides:**
+  16. Created /admin/governor/overrides page (create, deactivate, history)
+  17. Added Overrides link to governor dashboard header
+
+- **Files touched:** 15 files (1 new page, 14 modified)
+- **Result:** SUCCESS — All tasks complete
+- **Commits:** d168d38, 8665864, c6d4bdb, 89c40d8, f1da41a, 9fd7e6a, a8f0a1c
+- **Next step:** Consider pagination for remaining admin tables (clients, suppliers, competitors, trends)
