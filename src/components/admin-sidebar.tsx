@@ -30,6 +30,9 @@ import {
   Sparkles,
   OctagonX,
   Shield,
+  DollarSign,
+  Lightbulb,
+  Bug,
   type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
@@ -66,6 +69,8 @@ const mainNav: NavItem[] = [
   { title: "Products", href: "/admin/products", icon: Package, iconColor: "text-white", iconBg: "gradient-blue" },
   { title: "Trend Scout", href: "/admin/trends", icon: TrendingUp, iconColor: "text-white", iconBg: "gradient-emerald" },
   { title: "Analytics", href: "/admin/analytics", icon: BarChart2, iconColor: "text-white", iconBg: "gradient-purple" },
+  { title: "Revenue", href: "/admin/revenue", icon: DollarSign, iconColor: "text-white", iconBg: "gradient-emerald" },
+  { title: "Opportunities", href: "/admin/opportunities", icon: Lightbulb, iconColor: "text-white", iconBg: "gradient-coral", badge: "NEW" },
 ];
 
 const channelNav: NavItem[] = [
@@ -96,6 +101,7 @@ const managementNav: NavItem[] = [
   { title: "Automation", href: "/admin/automation", icon: Sparkles, iconColor: "text-amber-600", iconBg: "bg-amber-50", badge: "NEW" },
   { title: "Notifications", href: "/admin/notifications", icon: Bell, iconColor: "text-blue-600", iconBg: "bg-blue-50" },
   { title: "Import CSV", href: "/admin/import", icon: FileText, iconColor: "text-gray-600", iconBg: "bg-gray-100" },
+  { title: "Debug", href: "/admin/debug", icon: Bug, iconColor: "text-gray-600", iconBg: "bg-gray-100" },
   { title: "Settings", href: "/admin/settings", icon: Settings, iconColor: "text-gray-600", iconBg: "bg-gray-100" },
 ];
 
