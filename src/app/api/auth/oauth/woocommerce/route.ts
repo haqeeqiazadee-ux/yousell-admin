@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { storeConnectedChannel, encryptToken } from '@/lib/engines/store-oauth';
+import { storeConnectedChannel } from '@/lib/engines/store-oauth';
 
 export async function POST(request: NextRequest) {
   try {

@@ -69,7 +69,7 @@ export async function middleware(request: NextRequest) {
   // Rate limit API routes (except health check and webhooks)
   if (pathname.startsWith('/api/') && !pathname.startsWith('/api/health') && !pathname.startsWith('/api/webhooks')) {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'unknown'
-    const { allowed, remaining } = checkRateLimit(ip)
+    const { allowed } = checkRateLimit(ip)
 
     if (!allowed) {
       const rateLimitResponse = NextResponse.json(
