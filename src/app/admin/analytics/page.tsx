@@ -31,6 +31,15 @@ interface AnalyticsData {
   trendKeywords: { keyword: string; score: number; direction: string; volume: number }[];
 }
 
+interface FunnelData {
+  funnel: { discovered: number; scored: number; allocated: number; contentCreated: number; deployed: number; ordersReceived: number };
+  conversions: Record<string, string>;
+  platformBreakdown: Record<string, { discovered: number; scored: number }>;
+  tierBreakdown: Record<string, number>;
+  contentMetrics: { total: number; generated: number; published: number; failed: number; byType: Record<string, number> };
+  revenue: { totalOrders: number; totalRevenue: number; fulfilled: number };
+}
+
 const PLATFORM_COLORS: Record<string, string> = {
   tiktok: "#ff0050",
   amazon: "#ff9900",
@@ -61,15 +70,18 @@ const PIE_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#14b
 
 export default function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
+  const [funnel, setFunnel] = useState<FunnelData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
-        const res = await authFetch("/api/admin/analytics");
-        if (res.ok) {
-          setData(await res.json());
-        }
+        const [analyticsRes, funnelRes] = await Promise.all([
+          authFetch("/api/admin/analytics"),
+          authFetch("/api/admin/analytics/funnel"),
+        ]);
+        if (analyticsRes.ok) setData(await analyticsRes.json());
+        if (funnelRes.ok) setFunnel(await funnelRes.json());
       } catch (e) {
         console.error("Failed to load analytics:", e);
       }
@@ -317,6 +329,62 @@ export default function AnalyticsPage() {
           </ResponsiveContainer>
         )}
       </div>
+
+      {/* Product Funnel */}
+      {funnel && (
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp size={16} className="text-gray-700" />
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100">Product Funnel</h2>
+          </div>
+          <div className="grid grid-cols-6 gap-2 mb-4">
+            {([
+              { label: "Discovered", value: funnel.funnel.discovered, color: "bg-blue-500" },
+              { label: "Scored", value: funnel.funnel.scored, color: "bg-indigo-500" },
+              { label: "Allocated", value: funnel.funnel.allocated, color: "bg-violet-500" },
+              { label: "Content", value: funnel.funnel.contentCreated, color: "bg-purple-500" },
+              { label: "Deployed", value: funnel.funnel.deployed, color: "bg-fuchsia-500" },
+              { label: "Orders", value: funnel.funnel.ordersReceived, color: "bg-pink-500" },
+            ] as const).map((stage, i) => {
+              const maxVal = funnel.funnel.discovered || 1;
+              const pct = Math.max(10, (stage.value / maxVal) * 100);
+              return (
+                <div key={stage.label} className="text-center">
+                  <div className="relative mx-auto mb-2" style={{ width: `${pct}%`, minWidth: "2rem" }}>
+                    <div className={`h-12 rounded-lg ${stage.color} flex items-center justify-center`}>
+                      <span className="text-white text-sm font-bold">{stage.value}</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500">{stage.label}</p>
+                  {i < 5 && (
+                    <p className="text-[10px] text-gray-400 mt-0.5">
+                      {funnel.conversions[Object.keys(funnel.conversions)[i]]}%
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+            <div className="text-center">
+              <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{funnel.conversions.overallConversion}%</p>
+              <p className="text-xs text-gray-500">Overall Conversion</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{funnel.revenue.totalOrders}</p>
+              <p className="text-xs text-gray-500">Total Orders</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-emerald-600">${funnel.revenue.totalRevenue.toLocaleString()}</p>
+              <p className="text-xs text-gray-500">Total Revenue</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{funnel.contentMetrics.total}</p>
+              <p className="text-xs text-gray-500">Content Pieces ({funnel.contentMetrics.published} published)</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Row: Top Categories + Trending Keywords */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
