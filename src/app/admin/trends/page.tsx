@@ -25,7 +25,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScoreBadge } from "@/components/score-badge";
 import { EnginePageLayout } from "@/components/engines";
-import { TrendingUp, Plus, ArrowUp, ArrowDown, Minus } from "lucide-react";
+import { TrendingUp, Plus, ArrowUp, ArrowDown, Minus, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface TrendKeyword {
   id: string;
@@ -50,6 +50,8 @@ export default function TrendsPage() {
   const [trends, setTrends] = useState<TrendKeyword[]>([]);
   const [loading, setLoading] = useState(true);
   const [, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 25;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [keywords, setKeywords] = useState("");
   const [category, setCategory] = useState("");
@@ -216,7 +218,7 @@ export default function TrendsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {trends.map((trend) => (
+                  {trends.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((trend) => (
                     <TableRow key={trend.id}>
                       <TableCell className="font-medium">{trend.keyword}</TableCell>
                       <TableCell>
@@ -245,6 +247,21 @@ export default function TrendsPage() {
                   ))}
                 </TableBody>
               </Table>
+              {trends.length > PAGE_SIZE && (
+                <div className="flex items-center justify-between px-4 py-3 border-t">
+                  <span className="text-xs text-muted-foreground">
+                    Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, trends.length)} of {trends.length}
+                  </span>
+                  <div className="flex gap-2">
+                    <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="flex items-center gap-1 px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-muted transition-colors">
+                      <ChevronLeft className="h-4 w-4" /> Prev
+                    </button>
+                    <button onClick={() => setPage(p => p + 1)} disabled={page >= Math.ceil(trends.length / PAGE_SIZE)} className="flex items-center gap-1 px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-muted transition-colors">
+                      Next <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
             )}
           </CardContent>
         </Card>

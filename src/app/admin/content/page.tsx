@@ -23,6 +23,8 @@ import {
   ChevronDown,
   ChevronUp,
   Copy,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 interface ContentItem {
@@ -64,6 +66,8 @@ export default function AdminContentPage() {
   const [filter, setFilter] = useState<string>("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 25;
 
   const fetchContent = useCallback(async () => {
     setLoading(true);
@@ -188,7 +192,7 @@ export default function AdminContentPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {content.map((item) => (
+                {content.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((item) => (
                   <>
                     <TableRow
                       key={item.id}
@@ -301,6 +305,21 @@ export default function AdminContentPage() {
                 ))}
               </TableBody>
             </Table>
+            {content.length > PAGE_SIZE && (
+              <div className="flex items-center justify-between px-4 py-3 border-t">
+                <span className="text-xs text-muted-foreground">
+                  Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, content.length)} of {content.length}
+                </span>
+                <div className="flex gap-2">
+                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="flex items-center gap-1 px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-muted transition-colors">
+                    <ChevronLeft className="h-4 w-4" /> Prev
+                  </button>
+                  <button onClick={() => setPage(p => p + 1)} disabled={page >= Math.ceil(content.length / PAGE_SIZE)} className="flex items-center gap-1 px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-muted transition-colors">
+                    Next <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           )}
         </CardContent>
       </Card>

@@ -16,7 +16,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScoreBadge } from "@/components/score-badge";
 import { EnginePageLayout } from "@/components/engines";
-import { Layers, Rocket } from "lucide-react";
+import { Layers, Rocket, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ProductCluster {
   id: string;
@@ -40,6 +40,8 @@ export default function ClustersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [runLoading, setRunLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 25;
   const [runResult, setRunResult] = useState<string | null>(null);
 
   const fetchClusters = useCallback(async () => {
@@ -132,7 +134,7 @@ export default function ClustersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {clusters.map((c) => (
+                  {clusters.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((c) => (
                     <TableRow key={c.id}>
                       <TableCell className="font-medium">{c.name}</TableCell>
                       <TableCell>
@@ -164,6 +166,21 @@ export default function ClustersPage() {
                   ))}
                 </TableBody>
               </Table>
+              {clusters.length > PAGE_SIZE && (
+                <div className="flex items-center justify-between px-4 py-3 border-t">
+                  <span className="text-xs text-muted-foreground">
+                    Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, clusters.length)} of {clusters.length}
+                  </span>
+                  <div className="flex gap-2">
+                    <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="flex items-center gap-1 px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-muted transition-colors">
+                      <ChevronLeft className="h-4 w-4" /> Prev
+                    </button>
+                    <button onClick={() => setPage(p => p + 1)} disabled={page >= Math.ceil(clusters.length / PAGE_SIZE)} className="flex items-center gap-1 px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-muted transition-colors">
+                      Next <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
             )}
           </CardContent>
         </Card>
