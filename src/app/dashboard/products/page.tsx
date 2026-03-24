@@ -14,7 +14,10 @@ import {
   TrendingUp,
   Sparkles,
   FileText,
+  Search,
+  Filter,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import type { Product } from "@/lib/types/product";
 
 const platformColors: Record<string, string> = {
@@ -39,6 +42,9 @@ export default function ClientProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [platformFilter, setPlatformFilter] = useState("all");
+  const [tierFilter, setTierFilter] = useState("all");
 
   useEffect(() => {
     authFetch("/api/dashboard/products")
@@ -75,6 +81,37 @@ export default function ClientProductsPage() {
           </Button>
         </Link>
       </div>
+
+      {/* Filters */}
+      {!loading && products.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search products..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <select value={platformFilter} onChange={e => setPlatformFilter(e.target.value)} className="text-sm bg-muted rounded-lg px-3 py-2 border-0">
+              <option value="all">All Platforms</option>
+              {[...new Set(products.map(p => p.platform))].sort().map(p => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+            <select value={tierFilter} onChange={e => setTierFilter(e.target.value)} className="text-sm bg-muted rounded-lg px-3 py-2 border-0">
+              <option value="all">All Tiers</option>
+              <option value="HOT">HOT</option>
+              <option value="WARM">WARM</option>
+              <option value="WATCH">WATCH</option>
+              <option value="COLD">COLD</option>
+            </select>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-red-700 text-sm">
@@ -115,7 +152,16 @@ export default function ClientProductsPage() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {products.map((product) => (
+          {products.filter(product => {
+            if (search && !product.title.toLowerCase().includes(search.toLowerCase())) return false;
+            if (platformFilter !== "all" && product.platform !== platformFilter) return false;
+            if (tierFilter !== "all") {
+              const score = product.final_score || 0;
+              const tier = score >= 80 ? "HOT" : score >= 60 ? "WARM" : score >= 40 ? "WATCH" : "COLD";
+              if (tier !== tierFilter) return false;
+            }
+            return true;
+          }).map((product) => (
             <Card
               key={product.id}
               className="overflow-hidden hover:border-foreground/20 transition-colors"
