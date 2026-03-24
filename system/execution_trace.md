@@ -1371,3 +1371,48 @@ Engine inventory (all 20):
 6. /admin/analytics calls only GET /api/admin/analytics
 7. 20+ API routes are backend-only (never called from UI)
 8. 5 pages use raw fetch() instead of authFetch() (auth inconsistency)
+
+------------------------------------------------------------
+
+### [2026-03-24 02:00] DONE — UI Build Sprint (P0–P5, 16 commits)
+
+- **Task:** Build out missing UI pages, fix auth bugs, add realtime, wire orphan APIs, UX improvements
+- **Batch:** P0 through P5 (26 atomic tasks across 5 priority tiers)
+- **Action:**
+  **P0 — Auth Fixes (5 pages):**
+  1. Fixed fetch→authFetch in pod, monitoring, commissions, product detail, affiliate
+  
+  **P1 — Wire Ghost APIs (4 features):**
+  2. Created /admin/revenue page (MRR, ARR, churn, plan breakdown)
+  3. Created /admin/opportunities page (enriched product feed with filters)
+  4. Created /admin/debug page (layered system diagnostics)
+  5. Added funnel visualization to /admin/analytics
+  6. Added Revenue, Opportunities, Debug to sidebar
+  
+  **P2 — Realtime Subscriptions (4 pages):**
+  7. /admin/products: subscribes to products table
+  8. /admin/allocate: subscribes to product_allocations + product_requests
+  9. /dashboard/content: subscribes to content_queue
+  10. /dashboard/orders: subscribes to orders
+  
+  **P3 — Missing Pages (2 pages):**
+  11. Created /admin/scoring page (score breakdown with visual bars)
+  12. Created /admin/financial page (margins, projections, auto-rejection)
+  13. Added Scoring + Financial to sidebar
+  
+  **P4 — Orphan API Wiring (3 pages):**
+  14. Created /dashboard/analytics (client KPIs, credits, usage)
+  15. Created /dashboard/engines (toggle cards with plan gating)
+  16. Created /admin/alerts (severity filtering, acknowledge, dismiss)
+  17. Added nav links for all new pages
+  
+  **P5 — UX Improvements (4 enhancements):**
+  18. Product filters on /dashboard/products (search, platform, tier)
+  19. Push-to-store buttons on /dashboard/products/[id]
+  20. Content scheduling button in /dashboard/content
+  21. Disconnect confirmation in /dashboard/integrations
+
+- **Files touched:** 22 files (8 new pages, 14 modified)
+- **Result:** SUCCESS — All 26 tasks complete
+- **Commits:** d7083b0, e1d2e6e, 45e8a5d, 705b9ba, 65a51e0, 036cd63, 8e7ca30, 34a632c, 98c4e83, ebcebcb, 1e0d860, facee54, 6498031
+- **Next step:** Consider adding mobile nav updates, dashboard pagination, or theme consistency pass
