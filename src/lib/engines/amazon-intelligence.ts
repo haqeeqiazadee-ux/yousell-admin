@@ -44,7 +44,7 @@ export class AmazonIntelligenceEngine implements Engine {
   private _dbClient: SupabaseMinimalClient | null = null;
 
   readonly config: EngineConfig = {
-    name: 'amazon-intelligence' as any,
+    name: 'amazon-intelligence',
     version: '2.0.0',
     dependencies: [],
     queues: ['amazon-intelligence'],
@@ -181,7 +181,7 @@ export class AmazonIntelligenceEngine implements Engine {
       count: products.length,
       stored,
       topASINs: products.slice(0, 10).map(p => p.asin),
-    }, 'amazon-intelligence' as any);
+    }, 'amazon-intelligence');
 
     return { query, productsFound: products.length, productsStored: stored, topProducts: products.slice(0, 10) };
   }

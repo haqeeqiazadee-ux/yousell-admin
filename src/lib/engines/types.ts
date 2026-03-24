@@ -35,7 +35,8 @@ export type EngineName =
   | 'competitor-intelligence'
   | 'profitability'
   | 'client-allocation'
-  | 'fulfillment-recommendation';
+  | 'fulfillment-recommendation'
+  | 'automation-orchestrator';
 
 export type EngineStatus = 'idle' | 'running' | 'paused' | 'error' | 'stopped';
 
