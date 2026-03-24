@@ -118,6 +118,9 @@ export default function GovernorDashboard() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Link href="/admin/governor/overrides" className="text-xs font-medium bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-700 dark:text-red-400 px-3 py-2 rounded-lg flex items-center gap-1.5">
+            <Shield size={12} /> Overrides
+          </Link>
           <Link href="/admin/governor/swaps" className="text-xs font-medium bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-lg flex items-center gap-1.5">
             <RefreshCw size={12} /> Swaps
           </Link>
