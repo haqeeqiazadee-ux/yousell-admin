@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, ExternalLink, Sparkles, TrendingUp, Zap, DollarSign } from "lucide-react"
+import { ArrowLeft, ExternalLink, Sparkles, TrendingUp, Zap, DollarSign, Store, Loader2 } from "lucide-react"
 import { authFetch } from "@/lib/auth-fetch"
 
 interface Product {
@@ -56,6 +56,8 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null)
   const [content, setContent] = useState<ContentItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [pushing, setPushing] = useState<string | null>(null)
+  const [pushResult, setPushResult] = useState<{ channel: string; success: boolean; message: string } | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -142,6 +144,49 @@ export default function ProductDetailPage() {
           {product.ai_insight_haiku && <p className="text-sm text-gray-400 italic">{product.ai_insight_haiku}</p>}
         </div>
       )}
+
+      {/* Push to Store */}
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+        <h2 className="text-sm font-semibold text-white mb-3 uppercase tracking-wider">Push to Store</h2>
+        <div className="flex gap-3">
+          {(["shopify", "tiktok", "amazon"] as const).map(channel => (
+            <button
+              key={channel}
+              onClick={async () => {
+                setPushing(channel)
+                setPushResult(null)
+                try {
+                  const res = await authFetch("/api/dashboard/shop/push", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ productId: params.id, channel }),
+                  })
+                  const data = await res.json()
+                  setPushResult({
+                    channel,
+                    success: res.ok,
+                    message: res.ok ? "Product queued for push!" : (data.error || "Push failed"),
+                  })
+                } catch {
+                  setPushResult({ channel, success: false, message: "Network error" })
+                } finally {
+                  setPushing(null)
+                }
+              }}
+              disabled={pushing !== null}
+              className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-300 hover:bg-white/10 hover:text-white transition-colors disabled:opacity-50"
+            >
+              {pushing === channel ? <Loader2 className="h-4 w-4 animate-spin" /> : <Store className="h-4 w-4" />}
+              <span className="capitalize">{channel === "tiktok" ? "TikTok Shop" : channel}</span>
+            </button>
+          ))}
+        </div>
+        {pushResult && (
+          <p className={`text-xs mt-2 ${pushResult.success ? "text-emerald-400" : "text-red-400"}`}>
+            {pushResult.message}
+          </p>
+        )}
+      </div>
 
       {/* Generated Content */}
       <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
