@@ -44,7 +44,7 @@ export class PodEngine implements Engine {
   private _dbClient: SupabaseMinimalClient | null = null;
 
   readonly config: EngineConfig = {
-    name: 'pod-engine' as any,
+    name: 'pod-engine',
     version: '2.0.0',
     dependencies: [],
     queues: ['pod-discovery', 'pod-provision', 'pod-fulfillment-sync'],
@@ -203,7 +203,7 @@ export class PodEngine implements Engine {
         price: p.price,
         category: p.category,
         raw_data: p,
-      }, { onConflict: 'title,source' as any });
+      }, { onConflict: 'title,source' });
     }
 
     const bus = getEventBus();
@@ -211,7 +211,7 @@ export class PodEngine implements Engine {
       count: products.length,
       niche,
       platforms,
-    }, 'pod-engine' as any);
+    }, 'pod-engine');
 
     return products;
   }

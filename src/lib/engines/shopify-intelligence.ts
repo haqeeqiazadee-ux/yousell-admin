@@ -41,7 +41,7 @@ export class ShopifyIntelligenceEngine implements Engine {
   private _dbClient: SupabaseMinimalClient | null = null;
 
   readonly config: EngineConfig = {
-    name: 'shopify-intelligence' as any,
+    name: 'shopify-intelligence',
     version: '2.0.0',
     dependencies: [],
     queues: ['shopify-intelligence'],
@@ -199,7 +199,7 @@ export class ShopifyIntelligenceEngine implements Engine {
       niche,
       storesFound: stores.length,
       productsStored: stored,
-    }, 'shopify-intelligence' as any);
+    }, 'shopify-intelligence');
 
     return { niche, storesFound: stores.length, productsStored: stored, stores };
   }

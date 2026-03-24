@@ -91,7 +91,7 @@ export class AutomationOrchestratorEngine implements Engine {
   private _dbClient: SupabaseMinimalClient | null = null;
 
   readonly config: EngineConfig = {
-    name: 'automation-orchestrator' as any,
+    name: 'automation-orchestrator',
     version: '1.0.0',
     dependencies: [],
     queues: ['automation-orchestrator', 'automation-approval'],
@@ -180,7 +180,7 @@ export class AutomationOrchestratorEngine implements Engine {
         await bus.emit(
           'automation.guardrail_hit',
           { clientId, feature: mapping.feature, reasons: guardrailCheck.reasons },
-          'automation-orchestrator' as any,
+          'automation-orchestrator',
         );
         await this.createNotification(clientId, 'guardrail_hit',
           `Automation paused: ${guardrailCheck.reasons.join(', ')}`);
@@ -420,7 +420,7 @@ export class AutomationOrchestratorEngine implements Engine {
     await bus.emit(
       'automation.action_queued',
       { clientId, feature, actionType, expiresAt },
-      'automation-orchestrator' as any,
+      'automation-orchestrator',
     );
 
     // Create notification for admin
@@ -500,7 +500,7 @@ export class AutomationOrchestratorEngine implements Engine {
         await bus.emit(
           'automation.action_executed',
           { clientId, feature, actionType, automated: true },
-          'automation-orchestrator' as any,
+          'automation-orchestrator',
         );
       } catch (err) {
         console.error(`[AutomationOrchestrator] Auto-execute failed:`, err);
