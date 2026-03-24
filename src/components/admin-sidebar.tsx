@@ -91,6 +91,8 @@ const intelligenceNav: NavItem[] = [
   { title: "Influencers", href: "/admin/influencers", icon: UserSearch, iconColor: "text-purple-600", iconBg: "bg-purple-50" },
   { title: "Suppliers", href: "/admin/suppliers", icon: Truck, iconColor: "text-teal-600", iconBg: "bg-teal-50" },
   { title: "Blueprints", href: "/admin/blueprints", icon: Eye, iconColor: "text-sky-600", iconBg: "bg-sky-50" },
+  { title: "Scoring", href: "/admin/scoring", icon: Sparkles, iconColor: "text-violet-600", iconBg: "bg-violet-50" },
+  { title: "Financial", href: "/admin/financial", icon: DollarSign, iconColor: "text-emerald-600", iconBg: "bg-emerald-50" },
 ];
 
 const managementNav: NavItem[] = [
