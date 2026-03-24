@@ -52,6 +52,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
+import { authFetch } from "@/lib/auth-fetch";
 import { useUser } from "@/components/user-context";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -119,7 +120,7 @@ export function AdminSidebar() {
     if (!confirm("This will DISABLE ALL automation jobs. Continue?")) return;
     setKillSwitchLoading(true);
     try {
-      await fetch("/api/admin/automation", {
+      await authFetch("/api/admin/automation", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ killSwitch: true }),

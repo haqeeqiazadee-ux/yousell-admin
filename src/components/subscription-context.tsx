@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { authFetch } from "@/lib/auth-fetch";
 
 export interface SubscriptionInfo {
   plan: string | null;
@@ -38,7 +39,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const [sub, setSub] = useState<SubscriptionInfo>(defaultSub);
 
   useEffect(() => {
-    fetch("/api/dashboard/subscription")
+    authFetch("/api/dashboard/subscription")
       .then((r) => r.json())
       .then((data) => {
         const subscription = data.subscription;
