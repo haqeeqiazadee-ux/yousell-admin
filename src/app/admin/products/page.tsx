@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { createBrowserClient } from "@supabase/ssr";
 import Image from "next/image";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -108,6 +109,27 @@ export default function ProductsPage() {
 
   useEffect(() => {
     fetchProducts();
+  }, [fetchProducts]);
+
+  // Realtime: auto-refresh on product changes
+  useEffect(() => {
+    const sb = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+    );
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const debouncedFetch = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => fetchProducts(), 2000);
+    };
+    const channel = sb
+      .channel("products-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "products" }, debouncedFetch)
+      .subscribe();
+    return () => {
+      if (timer) clearTimeout(timer);
+      sb.removeChannel(channel);
+    };
   }, [fetchProducts]);
 
   const handleAddProduct = async (e: React.FormEvent) => {
