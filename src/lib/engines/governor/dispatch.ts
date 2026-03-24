@@ -10,7 +10,7 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import { getEngineRegistry } from '../registry';
 import type { EngineName } from '../types';
-import type { DispatchContext, EngineOperationResult, EngineSwapEntry } from './types';
+import type { DispatchContext, EngineOperationResult } from './types';
 
 export class GovernorDispatch {
   /** In-memory swap table cache — refreshed from DB periodically */
@@ -86,10 +86,14 @@ export class GovernorDispatch {
 
     if (data) {
       const now = new Date();
-      for (const swap of data as EngineSwapEntry[]) {
+      for (const row of data) {
         // Skip expired swaps
-        if (swap.expiresAt && new Date(swap.expiresAt) < now) continue;
-        this.swapCache.set(swap.sourceEngine, swap.targetEngine);
+        const expiresAt = row.expires_at as string | null;
+        if (expiresAt && new Date(expiresAt) < now) continue;
+        this.swapCache.set(
+          row.source_engine as EngineName,
+          row.target_engine as EngineName,
+        );
       }
     }
 

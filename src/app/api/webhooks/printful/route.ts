@@ -42,7 +42,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
 
-  let event: { type: string; data?: Record<string, unknown>; retries?: number };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let event: { type: string; data?: Record<string, any>; retries?: number };
   try {
     event = JSON.parse(body);
   } catch {

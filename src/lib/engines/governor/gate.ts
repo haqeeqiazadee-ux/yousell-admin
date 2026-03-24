@@ -42,7 +42,8 @@ export class GovernorGate {
     }
 
     // 3. Is the engine in the client's plan?
-    const allowance = envelope.engine_allowances?.[engineName] as EngineAllowance | undefined;
+    const allowances = envelope.engine_allowances as Record<string, EngineAllowance> | undefined;
+    const allowance = allowances?.[engineName];
     if (!allowance || !allowance.enabled) {
       return this.deny(
         'NOT_IN_PLAN',
