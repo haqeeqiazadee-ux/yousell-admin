@@ -3386,3 +3386,40 @@ Files Modified:
 - [x] Section 24: High contrast mode
 - [x] Section 11: Dark/light mode CSS variable switching
 - [x] Section 3: Layout dimension variables
+
+## 2026-03-27 — Session 2: Layouts + Components + Command Palette
+
+### Files Created (10)
+
+**Layouts:**
+- `src/app/(marketing)/layout.tsx` — Marketing layout, light-default, imports MarketingNavbar + MarketingFooter
+- `src/app/dashboard/layout.tsx` — REWRITTEN: Client dashboard layout with ClientTopBar + ClientSidebar, dark default
+
+**Components:**
+- `src/components/MarketingNavbar.tsx` — 72px sticky, transparent→solid on scroll (80px threshold), Products/Solutions dropdowns, mobile hamburger overlay
+- `src/components/MarketingFooter.tsx` — 4-column dark footer (Brand/Product/Use Cases/Company), bottom bar with copyright
+- `src/components/ClientTopBar.tsx` — 48px sticky, platform tabs (TikTok/Amazon/Shopify/Pinterest/Reddit/Digital/AI-SaaS/Affiliates), search/bell/star/avatar
+- `src/components/ClientSidebar.tsx` — 240px collapsible, 4 nav groups (Discovery/Research/My Tools/Account), Sheet overlay on mobile, active item detection
+- `src/components/CommandPalette.tsx` — CMD+K/Ctrl+K, glassmorphism overlay, 5 result groups (AI Queries/Recent/Actions/Navigation/Products), keyboard nav, localStorage recent pages
+
+**Missing shadcn Components (7):**
+- `src/components/ui/select.tsx` — Native select wrapper with styling
+- `src/components/ui/textarea.tsx` — Styled textarea with forwardRef
+- `src/components/ui/progress.tsx` — Progress bar (brand-800 track, brand-400 fill)
+- `src/components/ui/checkbox.tsx` — Checkbox with check animation
+- `src/components/ui/scroll-area.tsx` — Custom scrollbar container
+- `src/components/ui/slider.tsx` — Range input with custom styling
+- `src/components/ui/accordion.tsx` — Accordion with grid-rows animation, chevron rotation
+
+### Files Modified (2)
+- `src/app/admin/layout.tsx` — Added dark class, surface-base bg, max-w-screen-2xl container
+- `src/app/dashboard/layout.tsx` — Complete rewrite with new component architecture
+
+### Session 2 Completion Status
+- [x] Section 29.2: Marketing navbar (transparent→solid, mobile hamburger, dropdowns)
+- [x] Section 29.4: Marketing footer (4-column, bottom bar)
+- [x] Section 27: Client dashboard layout (topbar + platform tabs + collapsible sidebar)
+- [x] Section 3: Admin layout dark default + max-width container
+- [x] Section 6.6: Command palette (CMD+K, 5 groups, glassmorphism, keyboard nav)
+- [x] Section 1.1: Missing shadcn components (7 created)
+- [x] Section 19.1: Breadcrumb-ready layout structure
