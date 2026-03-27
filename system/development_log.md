@@ -3508,3 +3508,82 @@ Files Modified:
 - API routes: 104 → 120 (+16 client dashboard routes)
 - Custom components: 14 → 24 (+10 new: MetricCard, AIInsightCard, StreamingText, ConfidenceIndicator, ProductRow, EmptyState, Breadcrumb, CommandPalette, IntelligenceChain, ClientSidebar/TopBar, MarketingNavbar/Footer)
 - shadcn components: 14 → 21 (+7: select, textarea, progress, checkbox, scroll-area, slider, accordion)
+
+## 2026-03-27 — Sessions 10-12: Marketing Website (19 pages) + Onboarding
+
+### Marketing Pages Created (19)
+- `(marketing)/page.tsx` — Homepage with ALL 13 sections
+- `(marketing)/pricing/page.tsx` — 3 tiers, ROI calculator, FAQ, comparison table
+- `(marketing)/features/page.tsx` — Features overview (6 feature cards)
+- `(marketing)/features/trend-radar/page.tsx` — Trend Radar detail
+- `(marketing)/features/ai-agents/page.tsx` — AI Agents detail
+- `(marketing)/features/pricing-intelligence/page.tsx` — Pricing Intelligence detail
+- `(marketing)/features/demand-forecasting/page.tsx` — Demand Forecasting detail
+- `(marketing)/features/ai-briefings/page.tsx` — AI Briefings detail
+- `(marketing)/integrations/page.tsx` — 50+ integrations grid with category tabs
+- `(marketing)/about/page.tsx` — About page (team, mission, stats)
+- `(marketing)/blog/page.tsx` — Blog listing (featured + 6 posts)
+- `(marketing)/for-dropshippers/page.tsx` — SEO landing page
+- `(marketing)/for-resellers/page.tsx` — SEO landing page
+- `(marketing)/for-agencies/page.tsx` — SEO landing page
+- `(marketing)/comparison/vs-fastmoss/page.tsx` — Honest comparison
+- `(marketing)/comparison/vs-junglescout/page.tsx` — Honest comparison
+- `(marketing)/comparison/vs-triple-whale/page.tsx` — Honest comparison
+- `(marketing)/demo/page.tsx` — Interactive demo (no signup)
+- `(marketing)/onboarding/page.tsx` — 6-step onboarding flow
+
+## 2026-03-27 — Sessions 13-14: State Management + Gestures + Accessibility + Polish
+
+### State Management (Section 16)
+- `src/lib/stores/theme-store.ts` — Dark/light + high contrast, persisted
+- `src/lib/stores/user-store.ts` — User profile/role/plan state
+- `src/lib/stores/sidebar-store.ts` — Sidebar open/collapsed, persisted
+- `src/lib/stores/filter-store.ts` — Page-keyed filter state (nuqs-backed)
+- `src/lib/stores/watchlist-store.ts` — Watchlist items + alert configs
+- `src/lib/stores/engine-store.ts` — 25 engine statuses
+- `src/lib/stores/index.ts` — Re-exports
+
+### TanStack Query Hooks
+- `src/lib/hooks/use-engines.ts` — Poll /api/admin/engines/health every 5s
+- `src/lib/hooks/use-products.ts` — Products, trending, detail queries (60s stale)
+- `src/lib/hooks/use-alerts.ts` — Alerts query + unread count + mark read mutation
+- `src/lib/hooks/index.ts` — Re-exports
+
+### AI & Realtime (Sections 16.3, 16.4)
+- `src/lib/ai-streaming.ts` — SSE stream reader + useAIStream hook (30ms chunks)
+- `src/lib/realtime.ts` — Supabase Realtime: engine status, alerts, scan progress
+
+### Gestures (Section 17)
+- `src/lib/hooks/use-gestures.ts` — useSwipe, usePullToRefresh (70px threshold), useLongPress (500ms)
+
+### URL State (Section 16.5)
+- `src/lib/hooks/use-url-state.ts` — Lightweight nuqs-pattern URL state sync
+
+### UI Components
+- `src/components/MobileBottomNav.tsx` — Admin (5 items) + Client (5 items) variants
+- `src/components/PageTransition.tsx` — CSS mount animation (250ms ease-out)
+
+### Accessibility (Section 8)
+- `src/lib/accessibility.ts` — trapFocus, announceToScreenReader, getContrastRatio, FOCUS_RING_CLASS, setupKeyboardNavigation
+
+### Admin Page (Section 33.5)
+- `src/app/admin/setup/architecture/page.tsx` — Read-only orchestration stack + V9 3-section platform architecture
+
+## FINAL CUMULATIVE METRICS (2026-03-27 end of day)
+
+| Metric | Count |
+|--------|-------|
+| Admin pages | 66 |
+| Client dashboard pages | 29 |
+| Marketing pages | 19 |
+| **Total UI pages** | **114** |
+| API routes | 120 |
+| Zustand stores | 6 |
+| TanStack Query hooks | 6 |
+| Custom components | 26 |
+| shadcn components | 21 |
+| Utility libraries | 5 (ai-streaming, realtime, accessibility, gestures, url-state) |
+| Design token files | 2 (tokens.css, design-tokens.ts) |
+| Engines | 25 + external adapter |
+| Discovery providers | 14 |
+| Database migrations | 34 |

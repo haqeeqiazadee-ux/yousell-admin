@@ -116,10 +116,10 @@ and production readiness**.
 
 | Metric | Count |
 |--------|-------|
-| Admin pages | 65 |
+| Admin pages | 66 |
 | Client dashboard pages | 29 |
 | Marketing pages | 19 |
-| **Total UI pages** | **113** |
+| **Total UI pages** | **114** |
 | API routes | 120 |
 | Backend engine jobs | 29 |
 | Database migrations | 34 (numbered 000–034) |
