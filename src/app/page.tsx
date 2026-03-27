@@ -1,6 +1,9 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { headers } from 'next/headers';
+import { MarketingNavbar } from '@/components/MarketingNavbar';
+import { MarketingFooter } from '@/components/MarketingFooter';
+import MarketingHomepage from '@/components/MarketingHomepage';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +22,14 @@ export default async function Home() {
     redirect('/dashboard');
   }
 
-  // Redirect to marketing site — served by (marketing) layout
-  // This avoids the route group conflict
-  redirect('/home');
+  // Unauthenticated users see the marketing homepage
+  return (
+    <div className="min-h-screen bg-[var(--surface-base)]" data-theme="light">
+      <MarketingNavbar />
+      <main>
+        <MarketingHomepage />
+      </main>
+      <MarketingFooter />
+    </div>
+  );
 }
