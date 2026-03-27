@@ -3306,3 +3306,83 @@ bringing AI-native intelligence management directly into the admin dashboard.
 - Admin pages: 45 → 50 (+5 AI intelligence pages)
 - API routes: 99 → 104 (+5 AI intelligence routes)
 - Database migrations: 33 → 34 (+1 AI intelligence migration with 13 tables)
+
+## 2026-03-27 — Automated Git Strategy + UI Execution Plan
+
+### Session 1 of 25: Phase 0 Foundation — Design System
+
+**Git Automation:**
+- Created `scripts/auto-git.bat` — background watcher, auto-commits every 60s
+- Created `scripts/push.bat` — manual quick-push
+- Created `scripts/setup-git.bat` — first-time git identity config
+- Auto-git confirmed working (first auto-push at 13:47:05)
+
+**Complete Execution Plan Created:**
+- `system/EXECUTION_STRATEGY.md` — 25-session plan covering all 33 sections
+- Plan file at `.claude/plans/reflective-churning-bumblebee.md` — full implementation blueprint
+- Covers: 3 surfaces (Admin 48+15 pages, Client 15 pages, Marketing 15+ pages)
+- Phases: 0-Foundation, 1-Components, 2-Admin, 3-Client, 4-Marketing, 5-Onboarding, 6-State, 7-Polish
+
+**Phase 0 Foundation — Design Tokens (Session 1):**
+
+Files Created:
+- `src/styles/tokens.css` — Complete "Obsidian Intelligence" design system:
+  - Brand palette (050-900): #EEF2FF → #0A0E1A
+  - Semantic colors: success (#10B981), warning (#F59E0B), danger (#EF4444)
+  - AI colors: glow (#6366F1), pulse (#818CF8), insight (#A78BFA)
+  - Data viz palette (8 colors)
+  - Surface tokens (dark + light mode)
+  - Typography fonts: Cal Sans, DM Sans, JetBrains Mono
+  - Typography scale: 11px (xs) → 72px (7xl)
+  - 8pt spacing grid (4px → 64px)
+  - Border radius scale (6px → 9999px)
+  - Shadow scale (card, elevated, ai-glow, focus)
+  - Layout dimensions (topbar 48px, sidebar 240px/56px, AI rail 320px, navbar 72px)
+  - State tokens (Section 23): hover, active, focus, disabled, loading/shimmer, error, success, warning, AI
+  - Light mode overrides
+  - Shimmer keyframe (1.5s)
+  - AI glow pulse keyframe (2s)
+  - Aurora gradient (8s, marketing hero)
+  - Mesh gradient (Pro pricing card)
+  - Glassmorphism (4 contexts only: AI rail, CMD+K, toasts, marketing hero)
+  - Live pulse dot animation (1.5s)
+  - Streaming cursor blink (0.8s)
+  - High contrast mode (Section 24): prefers-contrast + .high-contrast class
+
+- `src/lib/design-tokens.ts` — TypeScript exports:
+  - COLORS (brand, semantic, ai, chart)
+  - MOTION (ease, duration, stagger, presets: cardEntrance, streamingText, pageTransition, hover, active)
+  - BREAKPOINTS (xs-3xl)
+  - LAYOUT (topbar, sidebar, aiRail, navbar dimensions)
+  - AI_SCORE_BADGES (hot/rising/stable/cooling thresholds)
+  - CONFIDENCE (high/medium/low thresholds)
+  - POLLING (engineStatus 5s, productData 60s, aiInsights never)
+  - TYPOGRAPHY scale
+  - SPACING grid
+
+Files Modified:
+- `tailwind.config.js` — Complete rewrite:
+  - Brand colors mapped to CSS vars
+  - Surface colors, semantic, AI, chart colors
+  - shadcn compatibility colors preserved
+  - 8pt spacing grid
+  - Border radius scale
+  - Shadow scale
+  - Font families (display, body, mono)
+  - Keyframe animations (shimmer, ai-glow, live-pulse, blink-cursor)
+  - Custom breakpoints (xs-3xl from Section 9)
+- `src/app/globals.css` — Added `@import '../styles/tokens.css'`
+- `src/app/layout.tsx` — Added DM Sans + JetBrains Mono via next/font, font variables on body, antialiased
+
+### Session 1 Completion Status
+- [x] Section 2.1: All CSS variable tokens
+- [x] Section 2.2: Typography scale
+- [x] Section 2.3: Motion constants (TypeScript)
+- [x] Section 9: Breakpoints
+- [x] Section 22.1: Aurora gradient, mesh gradient, AI glow pulse
+- [x] Section 22.2: Glassmorphism (4 contexts)
+- [x] Section 22.3: Sparklines, live dots, streaming cursor
+- [x] Section 23: All state tokens (hover/active/focus/disabled/loading/error/success/warning/AI)
+- [x] Section 24: High contrast mode
+- [x] Section 11: Dark/light mode CSS variable switching
+- [x] Section 3: Layout dimension variables
