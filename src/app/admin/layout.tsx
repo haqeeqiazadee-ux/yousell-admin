@@ -39,10 +39,10 @@ export default async function AdminLayout({
   return (
     <UserProvider user={profile}>
       <SidebarProvider>
-        <div className="flex min-h-screen w-full">
+        <div className="flex min-h-screen w-full dark bg-[var(--surface-base)]">
           <AdminSidebar />
-          <main className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-950">
-            <div className="p-6">{children}</div>
+          <main className="flex-1 overflow-auto">
+            <div className="max-w-screen-2xl mx-auto p-6">{children}</div>
           </main>
         </div>
       </SidebarProvider>
