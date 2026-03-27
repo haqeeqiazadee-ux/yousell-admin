@@ -1,0 +1,1024 @@
+═══════════════════════════════════════════════════════════════════════════════
+MASTER BUILD PROMPT — ECOMMERCE COMPETITIVE GAP ANALYSIS ENGINE
+Version  : 2.0
+Output   : Python application → Word document (.docx) business plan report
+Inputs   : (1) Project specs document  (2) Excel file of ~500 companies
+Mode     : FULLY AUTONOMOUS — zero human input required after launch
+═══════════════════════════════════════════════════════════════════════════════
+
+You are a senior Python engineer and business intelligence architect.
+Build a complete, production-grade Python application that performs competitive
+gap analysis at scale — scanning up to 500 ecommerce-related companies live,
+comparing each against a project specification document, and producing a
+professional Word document report that can be directly used to update a
+business plan.
+
+Read every section of this prompt in full before writing a single line of code.
+Do not ask clarifying questions. Do not summarise this prompt back.
+Build it completely. Build it now.
+
+AUTONOMOUS MODE IS NON-NEGOTIABLE:
+Once launched with valid CLI arguments, this application must run to completion
+without asking for any human input whatsoever. No prompts. No confirmations.
+No "are you sure?" dialogs. No pauses. No interactive menus. It starts, it
+runs, it saves, it exits. Every decision the app would otherwise ask a human
+about must be resolved automatically using the rules defined in this prompt.
+If something is ambiguous, the app makes the safest reasonable assumption,
+logs what it decided, and continues. It never blocks waiting for input.
+
+───────────────────────────────────────────────────────────────────────────────
+SECTION 1 — WHAT THIS TOOL IS (AND IS NOT)
+───────────────────────────────────────────────────────────────────────────────
+
+This is NOT a company profiler.
+This is NOT an SEO report generator.
+This is NOT a directory scraper.
+
+This IS a competitive intelligence engine that:
+
+  1. Reads a project specification document to understand what a new ecommerce
+     platform/product intends to offer.
+
+  2. Scans each company in a provided Excel list — live, using real web access —
+     to understand what THEY offer across five dimensions.
+
+  3. Compares each company against the project specs to identify:
+     - Features and services they have that the project is MISSING
+     - UX/design patterns that work well and should be adopted
+     - Content strategies and messaging approaches worth borrowing
+     - Business model mechanics that could add value to the project
+     - Audience segments being served that the project hasn't addressed
+     - Gaps in the market that NONE of them are serving well
+     - Opportunities: things the project could do BETTER than incumbents
+
+  4. Synthesises all findings into a structured Word document report
+     organised as actionable business plan input — not just observations.
+
+The output of this tool feeds directly into a business plan update. Every
+finding must be framed as an actionable recommendation, not a description.
+
+───────────────────────────────────────────────────────────────────────────────
+SECTION 2 — INPUTS
+───────────────────────────────────────────────────────────────────────────────
+
+INPUT 1: PROJECT SPECS DOCUMENT
+  File format  : .docx, .pdf, or .txt (detect automatically)
+  CLI flag     : --specs path/to/specs.docx
+  What to do   :
+    - Extract full text using python-docx (docx), pdfminer (pdf), or open (txt)
+    - Pass to Claude with this instruction:
+        "Read this project specification document line by line.
+         Extract and summarise:
+         (a) Every service, feature, and product the project plans to offer
+         (b) The stated target audience and customer segments
+         (c) The stated business model and revenue model
+         (d) The technology stack or platform type described
+         (e) Any stated differentiators or unique value propositions
+         (f) Any explicitly listed competitors or reference companies
+         Output this as a structured JSON object — the PROJECT PROFILE."
+    - Store the PROJECT PROFILE as a Python dict — it is used as the
+      comparison baseline for EVERY company analysis in this run.
+    - Print a human-readable summary of the project profile at startup
+      so the user can confirm it was read correctly before processing begins.
+
+INPUT 2: EXCEL FILE WITH COMPANY DATA
+  File format  : .xlsx
+  CLI flag     : --companies path/to/companies.xlsx
+  
+  Expected columns (use flexible header matching — exact names may vary):
+    - Company Name     : display name
+    - URL              : company website URL (primary scraping target)
+    - Category         : top-level ecommerce category (e.g. "Fulfilment")
+    - Niche            : specific sub-category (e.g. "Last-mile delivery")
+    - Description      : short description of the company
+    - SEO/Traffic data : any traffic, keyword, DR, or authority columns present
+                         (treat all numeric columns not mapped above as SEO data)
+
+  Handling:
+    - Read with openpyxl or pandas
+    - Skip rows with no URL
+    - Normalise URLs (ensure https://, strip trailing slash)
+    - Group companies by Category for report structure
+    - Store all original Excel data per company — include it in analysis context
+    - Print startup summary: X companies across Y categories loaded
+
+───────────────────────────────────────────────────────────────────────────────
+SECTION 3 — LIVE WEB SCANNING (PER COMPANY)
+───────────────────────────────────────────────────────────────────────────────
+
+For EACH company, perform live scanning using the following sources in order.
+Failures in any source must be logged and handled gracefully — never abort.
+
+SOURCE A: FIRECRAWL (primary content extraction)
+  Use the Firecrawl API to scrape these pages:
+    1. Homepage        ({url}/)
+    2. Features/Product ({url}/features OR /product OR /platform OR /solutions)
+    3. Pricing         ({url}/pricing OR /plans OR /packages)
+    4. About           ({url}/about OR /about-us OR /company)
+    5. Customers       ({url}/customers OR /case-studies OR /testimonials)
+    6. Blog index      ({url}/blog OR /resources OR /insights — index page only)
+    7. Integrations    ({url}/integrations OR /apps OR /marketplace)
+  
+  Configuration:
+    - formats: ["markdown"]
+    - onlyMainContent: true
+    - waitFor: 1500
+    - timeout: 35 seconds per page
+    - Max 3500 characters per page (trim to this after extraction)
+    - Record which pages returned 404 (signals product completeness)
+    - Combine all pages into one structured document with clear PAGE labels
+  
+  Fallback: if Firecrawl fails entirely for a URL, attempt a direct
+  requests.get() with a realistic User-Agent and extract visible text
+  using BeautifulSoup as a degraded fallback.
+
+SOURCE B: PLAYWRIGHT (dynamic/JS-heavy pages)
+  Use Playwright (headless Chromium) for:
+    - Any page that Firecrawl returned empty or near-empty content for
+    - The homepage if it appears to be a React/Vue/Angular SPA
+    - Any page where JavaScript rendering is needed (detect via empty Firecrawl)
+  
+  Configuration:
+    - wait_until: "networkidle"
+    - timeout: 25000ms
+    - viewport: {"width": 1280, "height": 800}
+    - User-Agent: realistic Chrome on Windows string
+    - After load: asyncio.sleep(2) then extract inner_text("body")
+    - Max 4000 characters from body text
+
+SOURCE C: COMPANY DATA FROM EXCEL
+  Pass the following directly to Claude as context (no scraping needed):
+    - Category
+    - Niche
+    - Description (from Excel)
+    - All SEO/traffic columns (DR, traffic, keywords, authority score, etc.)
+  
+  This is often the most reliable data — always include it regardless of
+  whether scraping succeeded.
+
+RATE LIMITING AND CONCURRENCY:
+  - MAX_WORKERS = 3 (parallel company processing — configurable via CLI)
+  - Delay 0.8 seconds between Firecrawl calls to same API
+  - Use asyncio.Semaphore to manage concurrency
+  - Exponential backoff: retry up to 3 times (delays: 2s, 4s, 8s)
+  - Total timeout per company: 120 seconds — skip and log if exceeded
+
+───────────────────────────────────────────────────────────────────────────────
+SECTION 4 — CLAUDE ANALYSIS ENGINE
+───────────────────────────────────────────────────────────────────────────────
+
+MODEL: claude-sonnet-4-5-20251022
+MAX_TOKENS: 2000 per company analysis
+TEMPERATURE: default (not set)
+
+After collecting all raw data for a company, send a single prompt to Claude.
+The prompt must be structured, comprehensive, and framed precisely.
+
+THE CLAUDE PROMPT TEMPLATE (construct this for each company):
+
+  """
+  You are a senior product strategist and competitive intelligence analyst
+  preparing a board-level briefing for an ecommerce platform startup.
+
+  YOUR PROJECT (the startup you are advising):
+  {project_profile_json}
+
+  THE COMPANY YOU ARE ANALYSING:
+  Name        : {company_name}
+  URL         : {company_url}
+  Category    : {category}
+  Niche       : {niche}
+  Description : {description}
+  SEO Data    : {seo_data}
+
+  LIVE SCRAPED CONTENT:
+  {scraped_content}
+
+  ══════════════════════════════════════════════════════════
+  YOUR TASK: Analyse this company across all five dimensions
+  below, then identify specific gaps, opportunities, and
+  recommendations for YOUR PROJECT based on what you find.
+  ══════════════════════════════════════════════════════════
+
+  Return ONLY a JSON object with these exact keys.
+  No markdown. No preamble. No explanation outside the JSON.
+
+  {
+    "company_name": string,
+    "url": string,
+    "category": string,
+    "niche": string,
+
+    "dim1_design_ux": {
+      "design_language": string,       // Visual style, brand maturity, layout approach
+      "ux_quality": string,            // Navigation, CTA clarity, user journey quality
+      "trust_signals": string,         // Social proof, logos, awards, certifications
+      "mobile_posture": string,        // Evidence of mobile-first vs desktop-first
+      "design_maturity": string,       // Bootstrapped / Early / Growth-funded / Enterprise
+      "gap_for_your_project": string   // What YOUR PROJECT should adopt, avoid, or do better
+    },
+
+    "dim2_functionality_tech": {
+      "core_product": string,          // What it actually does — concisely
+      "key_features": [string],        // List of top 5-8 features
+      "tech_signals": string,          // Inferred stack from scripts, integrations, job posts
+      "integrations": string,          // Key integrations offered
+      "product_maturity": string,      // Beta / Early / Mature / Enterprise
+      "gap_for_your_project": string   // Features/capabilities YOUR PROJECT is missing
+    },
+
+    "dim3_content_messaging": {
+      "primary_message": string,       // Their core headline value proposition
+      "messaging_clarity": string,     // Clear / Moderate / Confusing + why
+      "content_tone": string,          // Voice, style, who they're speaking to
+      "seo_depth": string,             // Content investment level + evidence
+      "social_proof": string,          // Quality and type of social proof
+      "primary_cta": string,           // What action they most want visitors to take
+      "gap_for_your_project": string   // Content/messaging ideas YOUR PROJECT should use
+    },
+
+    "dim4_services_products": {
+      "product_catalogue": string,     // Full list of what they sell/offer
+      "pricing_model": string,         // Freemium / Tiered / Usage / Enterprise / Transaction
+      "pricing_visibility": string,    // Public / Partial / Hidden
+      "packaging": string,             // How they bundle offerings
+      "upsell_mechanics": string,      // How they expand revenue from customers
+      "gap_for_your_project": string   // Services/products YOUR PROJECT should add or copy
+    },
+
+    "dim5_business_model": {
+      "business_model": string,        // SaaS/Marketplace/Agency/Platform/D2C/Services
+      "revenue_model": string,         // How they make money — specifically
+      "icp": string,                   // Ideal customer: size, industry, role, geography
+      "gtm_motion": string,            // PLG/SLG/Channel/Community/Content/Mixed
+      "competitive_position": string,  // How they differentiate in their market
+      "growth_stage": string,          // Seed/Early/Growth/Scale-up/Mature/Enterprise
+      "gap_for_your_project": string   // Business model mechanics YOUR PROJECT should adopt
+    },
+
+    "top_opportunities": [string],     // Top 3-5 specific actionable opportunities for YOUR PROJECT
+                                       // derived from this company — be concrete, not generic
+
+    "value_add_ideas": [string],       // Ideas this company sparks that YOUR PROJECT could
+                                       // implement as features, services, or positioning moves
+
+    "watch_out_for": [string],         // Things this company does that YOUR PROJECT must
+                                       // match or beat to be competitive in this niche
+
+    "one_line_verdict": string         // One sharp sentence: what your project learns from this company
+  }
+  """
+
+JSON PARSING:
+  - Strip ```json fences before parsing
+  - On JSONDecodeError: retry Claude once with a simplified 8-field prompt
+  - On second failure: store raw text and mark company as "parse_failed"
+  - Never crash the pipeline on a single company failure
+
+───────────────────────────────────────────────────────────────────────────────
+SECTION 5 — AGGREGATION AND SYNTHESIS ENGINE
+───────────────────────────────────────────────────────────────────────────────
+
+After ALL companies have been processed, run a final Claude call to synthesise
+cross-company patterns into a master strategic intelligence report.
+
+THE SYNTHESIS PROMPT:
+
+  """
+  You are the lead strategist preparing the final competitive intelligence
+  briefing for the board.
+
+  YOUR PROJECT:
+  {project_profile_json}
+
+  You have just completed analysis of {total_companies} companies across
+  {total_categories} categories in the ecommerce ecosystem.
+
+  Here is a structured summary of all findings:
+  {aggregated_findings_summary}   // Pass top_opportunities + value_add_ideas
+                                  // + watch_out_for from ALL companies, grouped by category
+
+  Produce a MASTER STRATEGIC REPORT as a JSON object with:
+
+  {
+    "executive_summary": string,            // 5-6 sentences — what the overall
+                                            // competitive landscape looks like
+                                            // and what it means for the project
+
+    "top_missing_features": [               // Top 10 features/capabilities that
+      {"feature": string,                   // appear across multiple companies
+       "seen_at": [string],                 // but are absent from project specs
+       "priority": "High/Medium/Low",
+       "recommendation": string}
+    ],
+
+    "top_ux_patterns_to_adopt": [string],   // UX/design patterns seen repeatedly
+                                            // that the project should implement
+
+    "content_strategy_gaps": [string],      // Content and messaging approaches
+                                            // the project is not currently using
+
+    "underserved_niches": [string],         // Niches/audiences in the 500 companies
+                                            // that no one serves well — opportunities
+
+    "business_model_enhancements": [string],// Revenue model improvements to consider
+
+    "category_by_category_insights": [     // One block per category from the Excel
+      {"category": string,
+       "key_players": [string],
+       "dominant_patterns": string,
+       "project_gaps": string,
+       "recommendations": [string]}
+    ],
+
+    "quick_wins": [string],                 // 5 things the project can do immediately
+                                            // with minimal effort for outsized impact
+
+    "strategic_priorities": [string],       // Top 5 long-term strategic moves
+                                            // informed by this competitive analysis
+
+    "risks_if_not_addressed": [string]      // What happens if the project ignores
+                                            // these findings
+  }
+  """
+
+───────────────────────────────────────────────────────────────────────────────
+SECTION 6 — WORD DOCUMENT OUTPUT
+───────────────────────────────────────────────────────────────────────────────
+
+Generate a professional Word document (.docx) using the docx npm package
+(Node.js). Write a JavaScript file, execute it with node, then validate.
+
+The document must be structured for direct use as a business plan input.
+US Letter size (12240 x 15840 DXA). 1-inch margins. Arial font throughout.
+Professional dark navy (#1B2A4A) headings. Table of contents at the start.
+
+DOCUMENT STRUCTURE:
+
+  COVER PAGE
+    Title    : "Competitive Intelligence Report"
+    Subtitle : "Ecommerce Ecosystem Analysis — {total_companies} Companies"
+    Date     : {run_date}
+    Version  : "1.0 — Confidential"
+
+  TABLE OF CONTENTS
+    Auto-generated from Heading 1 and Heading 2 styles
+
+  SECTION 1: EXECUTIVE SUMMARY
+    - Project profile summary (what YOUR project offers)
+    - Overall competitive landscape summary
+    - Top 5 strategic priorities (from synthesis)
+    - Quick wins table (action | effort | impact)
+
+  SECTION 2: KEY FINDINGS BY DIMENSION
+    Sub-section per dimension (Design/UX, Tech, Content, Services, Business Model)
+    Per dimension:
+      - What the market is doing (pattern summary)
+      - What YOUR project is missing
+      - Specific recommendations with company examples
+
+  SECTION 3: FINDINGS BY CATEGORY
+    One sub-section per category from the Excel (e.g. Payments, Fulfilment, etc.)
+    Per category:
+      - Category overview (what type of companies, total count)
+      - Key players identified
+      - Dominant patterns in this category
+      - Specific gaps vs your project
+      - Category-specific recommendations (bullet list)
+
+  SECTION 4: COMPANY-BY-COMPANY ANALYSIS
+    One sub-section per company, using a consistent card format:
+      Company Name + URL (hyperlinked)
+      Category | Niche | One-Line Verdict
+      Table with 5 rows (one per dimension), each showing:
+        Dimension | What They Do | Gap For Your Project
+      Top Opportunities (bullet list)
+      Value-Add Ideas (bullet list)
+      Watch Out For (bullet list)
+    
+    NOTE: With 500 companies this section will be long.
+    Group companies by category with a clear heading.
+    Use compact formatting — avoid large whitespace.
+
+  SECTION 5: MASTER OPPORTUNITY MATRIX
+    A table listing all unique opportunities identified across all companies:
+      Opportunity | Seen At (companies) | Priority | Dimension | Recommendation
+    Sort by Priority (High first), then by frequency of occurrence.
+
+  SECTION 6: STRATEGIC RECOMMENDATIONS
+    - Top 10 missing features (detailed, with evidence and company examples)
+    - UX patterns to adopt (with visual description)
+    - Content strategy gaps and how to close them
+    - Business model enhancements to consider
+    - Underserved niches to target
+
+  SECTION 7: RISKS IF NOT ADDRESSED
+    Table: Risk | Impact | Mitigation | Timeline
+
+  APPENDIX A: FULL COMPANY INDEX
+    Simple table: Company | URL | Category | Niche | Analysis Status
+    (all 500 companies listed, with tick/cross for analysis completed)
+
+  APPENDIX B: DATA SOURCES
+    Firecrawl pages scraped, Playwright fallback usage, Excel data used,
+    Analysis date, Claude model used, Total processing time
+
+WORD DOCUMENT TECHNICAL REQUIREMENTS:
+  - Use docx npm package (npm install -g docx)
+  - Never use \n inside TextRun — use separate Paragraph elements
+  - Never use unicode bullets — use LevelFormat.BULLET with numbering config
+  - Always set WidthType.DXA for tables (never PERCENTAGE)
+  - Tables need dual widths: columnWidths array AND width on each cell
+  - Use ShadingType.CLEAR (never SOLID) for table shading
+  - outlineLevel required on headings for TOC (0 for H1, 1 for H2, etc.)
+  - Validate with: python scripts/office/validate.py output.docx
+  - Page size: { width: 12240, height: 15840 } (US Letter)
+  - Margins: { top: 1440, right: 1440, bottom: 1440, left: 1440 }
+
+COLOUR SCHEME:
+  - Heading 1: #1B2A4A (dark navy), size 32, bold
+  - Heading 2: #2C3E50 (dark slate), size 28, bold
+  - Heading 3: #2E86C1 (mid blue), size 24, bold
+  - Body text: #1A1A1A, size 22 (11pt)
+  - Table header fill: #1B2A4A, white text
+  - Table alt row fill: #EAF2FF
+  - High priority: #922B21 (red text)
+  - Medium priority: #7D6608 (amber text)
+  - Low priority: #0D6B4F (teal text)
+
+───────────────────────────────────────────────────────────────────────────────
+SECTION 7 — FILE STRUCTURE
+───────────────────────────────────────────────────────────────────────────────
+
+gap_analyzer/
+├── gap_analyzer.py           ← main entry point / orchestrator
+├── scrapers/
+│   ├── __init__.py
+│   ├── firecrawl.py          ← Firecrawl API scraping module
+│   └── playwright_scraper.py ← Playwright fallback scraping module
+├── loaders/
+│   ├── __init__.py
+│   ├── specs_loader.py       ← reads project specs (.docx/.pdf/.txt)
+│   └── excel_loader.py       ← reads company Excel, normalises data
+├── analysis/
+│   ├── __init__.py
+│   ├── claude_engine.py      ← per-company Claude analysis
+│   └── synthesiser.py        ← cross-company synthesis Claude call
+├── output/
+│   ├── __init__.py
+│   ├── report_builder.js     ← Word document generator (Node.js / docx)
+│   └── report_runner.py      ← Python wrapper to execute report_builder.js
+├── utils/
+│   ├── __init__.py
+│   ├── domain.py             ← URL/domain normalisation utilities
+│   └── retry.py              ← exponential backoff retry decorator
+├── .env.example              ← ANTHROPIC_API_KEY + FIRECRAWL_API_KEY
+├── requirements.txt          ← Python dependencies
+├── package.json              ← Node.js dependencies (docx)
+├── companies_template.xlsx   ← Example input Excel with correct column structure
+└── README.md                 ← Full setup + usage documentation
+
+───────────────────────────────────────────────────────────────────────────────
+SECTION 8 — CLI INTERFACE
+───────────────────────────────────────────────────────────────────────────────
+
+python gap_analyzer.py \
+  --specs     specs.docx \
+  --companies companies.xlsx \
+  --output    competitive_report.docx \
+  --workers   3 \
+  --limit     50 \
+  --category  "Payments" \
+  --resume    results_cache.json
+
+FLAGS:
+  --specs       REQUIRED. Path to project specification document
+  --companies   REQUIRED. Path to company Excel file
+  --output      Output Word document path (default: competitive_report.docx)
+  --workers     Parallel company processing threads (default: 3, max: 5)
+  --limit       Process only first N companies (useful for testing)
+  --category    Process only companies in this category (for focused runs)
+  --resume      Path to a JSON cache file from a previous partial run.
+                If provided, skip companies already in the cache and
+                continue from where the last run stopped.
+  --no-synthesis  Skip the final synthesis step (faster, no master report)
+
+STARTUP OUTPUT (print to console):
+  ══════════════════════════════════════════════════
+  Gap Analysis Engine — Ecommerce Competitive Intel
+  ══════════════════════════════════════════════════
+  Specs file    : specs.docx
+  Companies     : 500 across 18 categories
+  Workers       : 3
+  Output        : competitive_report.docx
+  ──────────────────────────────────────────────────
+  PROJECT PROFILE SUMMARY:
+  Services      : [list extracted from specs]
+  Target audience: [extracted]
+  Business model : [extracted]
+  ──────────────────────────────────────────────────
+  Starting analysis... Press Ctrl+C to pause.
+  Results cached to: gap_analyzer_cache.json
+  ══════════════════════════════════════════════════
+
+PER-COMPANY PROGRESS OUTPUT:
+  [  1/500] ━━ Klaviyo (Email/SMS Automation) ━━
+    [1/3] Firecrawl  → 6 pages scraped
+    [2/3] Claude     → Analysis complete
+    [3/3] Cached     → gap_analyzer_cache.json
+           ✓ 3 opportunities  ·  2 value-add ideas
+
+  [ 25/500] ━━ Gorgias (Customer Engagement) ━━
+    [1/3] Firecrawl  → 4 pages (3 returned 404)
+    [2/3] Playwright → Fallback used for homepage
+    [3/3] Claude     → Analysis complete
+           ✓ 5 opportunities  ·  4 value-add ideas
+
+END-OF-RUN SUMMARY:
+  ══════════════════════════════════════════════════
+  ✅  Completed   : 487 / 500
+  ⚠️  Partial     : 9  (scrape degraded, analysis done)
+  ✗   Failed      : 4  (see gap_analyzer_errors.log)
+  ──────────────────────────────────────────────────
+  Total opportunities identified : 1,247
+  Total value-add ideas          : 893
+  Total watch-out flags          : 412
+  ──────────────────────────────────────────────────
+  Building Word document...
+  ✅  Report saved → competitive_report.docx
+  ══════════════════════════════════════════════════
+
+───────────────────────────────────────────────────────────────────────────────
+SECTION 9 — CACHING AND RESUME LOGIC
+───────────────────────────────────────────────────────────────────────────────
+
+With 500 companies, runs can take a long time. Implement a cache:
+
+  - After each company analysis completes, write the result to a JSON cache
+    file (gap_analyzer_cache.json by default)
+  - Cache key: normalised domain of the company URL
+  - If --resume is provided and cache file exists, load it at startup and skip
+    any company whose domain is already in the cache
+  - The Word document is always built from the cache (all results), not just
+    the current run — so a resumed run produces a complete report
+  - Cache format:
+    {
+      "metadata": {"run_date": "...", "specs_file": "...", "companies_file": "..."},
+      "project_profile": {...},
+      "companies": {
+        "klaviyo.com": { ...full analysis dict... },
+        "gorgias.com": { ...full analysis dict... }
+      }
+    }
+
+───────────────────────────────────────────────────────────────────────────────
+SECTION 10 — DEPENDENCIES
+───────────────────────────────────────────────────────────────────────────────
+
+requirements.txt:
+  anthropic>=0.40.0
+  requests>=2.31.0
+  playwright>=1.40.0
+  openpyxl>=3.1.0
+  pandas>=2.0.0
+  python-dotenv>=1.0.0
+  python-docx>=1.1.0       ← for reading specs .docx input
+  pdfminer.six>=20221105   ← for reading specs .pdf input
+  beautifulsoup4>=4.12.0   ← for HTML fallback parsing
+  lxml>=4.9.0              ← HTML parser for BeautifulSoup
+
+package.json:
+  { "dependencies": { "docx": "^8.5.0" } }
+
+Post-install:
+  pip install -r requirements.txt
+  playwright install chromium
+  npm install
+
+ENV (.env):
+  ANTHROPIC_API_KEY=sk-ant-...
+  FIRECRAWL_API_KEY=fc-...
+
+───────────────────────────────────────────────────────────────────────────────
+SECTION 11 — QUALITY AND ROBUSTNESS REQUIREMENTS
+───────────────────────────────────────────────────────────────────────────────
+
+RESILIENCE:
+  - No single company failure should stop the pipeline
+  - All failures logged to gap_analyzer_errors.log with timestamp, company,
+    source, and error message
+  - Scrape failure → still run Claude on Excel data alone
+  - Claude failure → retry once, then store as "analysis_failed"
+  - Word doc build → test with 3 companies before full run
+
+DATA QUALITY:
+  - All scraped content must be cleaned before sending to Claude:
+    * Remove navigation menus, footers, cookie banners (already handled by
+      Firecrawl's onlyMainContent but double-check)
+    * Collapse multiple blank lines
+    * Strip HTML entities that survived markdown conversion
+  - Domain normalisation: strip www., strip trailing slash, lowercase, handle
+    subdomains (app., docs., etc. — warn but don't fail)
+
+CLAUDE PROMPT QUALITY:
+  - Always include the PROJECT PROFILE in every company prompt
+  - Tell Claude explicitly: "Do not invent data. If you cannot determine
+    something from the scraped content or Excel data, say 'Not determinable'
+    rather than guessing."
+  - Tell Claude: "Every gap_for_your_project field must be specific and
+    actionable — not generic. Reference actual features or patterns you saw."
+  - The synthesis prompt must receive a structured summary, not raw JSON of
+    all 500 companies — that would exceed context limits. Summarise by
+    extracting only top_opportunities, value_add_ideas, watch_out_for,
+    and one_line_verdict from each company, grouped by category.
+
+WORD DOC QUALITY:
+  - Validate with python scripts/office/validate.py before declaring done
+  - If validation fails: unpack, fix XML, repack
+  - Test open in LibreOffice Writer before delivering
+  - Company analysis cards in Section 4 must be consistent — same layout
+    every time, no variation
+  - Tables must not overflow page margins
+
+───────────────────────────────────────────────────────────────────────────────
+SECTION 12 — README REQUIREMENTS
+───────────────────────────────────────────────────────────────────────────────
+
+Write a comprehensive README.md covering:
+
+  1. What this tool does (2 paragraphs)
+  2. Setup — step by step for Windows/PowerShell:
+       pip install -r requirements.txt
+       playwright install chromium
+       npm install
+       Copy-Item .env.example .env  # then fill in keys
+  3. How to prepare your inputs:
+       a. Project specs document — what format, what to include
+       b. Companies Excel — required columns, optional columns, format tips
+  4. Running the tool — all CLI examples including --limit for testing
+  5. Understanding the output — what each Word doc section contains
+  6. Troubleshooting — common errors, fixes for scrape failures, cache usage
+  7. Performance tips — recommended workers, how long 500 companies takes
+
+───────────────────────────────────────────────────────────────────────────────
+SECTION 13 — DELIVERABLES
+───────────────────────────────────────────────────────────────────────────────
+
+When complete, produce:
+
+  1. A zip file containing all source code and files
+  2. A plain text summary of what was built
+  3. The exact PowerShell commands to install and run it
+
+───────────────────────────────────────────────────────────────────────────────
+SECTION 14 — FULL AUTONOMOUS OPERATION PROTOCOL
+───────────────────────────────────────────────────────────────────────────────
+
+This section defines every autonomous decision rule the application must follow.
+There are NO exceptions. The app must never pause, prompt, or wait for a human.
+
+14.1 — PRE-FLIGHT AUTONOMOUS DECISIONS
+
+  MISSING --specs FILE:
+    Auto-action: Scan current directory for any .docx, .pdf, or .txt file.
+    If exactly one found → use it, log: "Auto-detected specs file: {filename}"
+    If multiple found   → use the most recently modified, log the decision
+    If none found       → print clear error, exit with code 1 (this is the
+                          only legitimate exit before processing begins)
+
+  MISSING --companies FILE:
+    Auto-action: Scan current directory for any .xlsx file.
+    If exactly one found → use it, log: "Auto-detected companies file: {filename}"
+    If multiple found   → use the most recently modified, log the decision
+    If none found       → print clear error, exit with code 1
+
+  OUTPUT FILE ALREADY EXISTS:
+    Auto-action: Overwrite silently. Log: "Overwriting existing output: {path}"
+    Never ask "are you sure?". Never append a timestamp suffix unless
+    --no-overwrite flag is explicitly passed.
+
+  CACHE FILE EXISTS FROM PREVIOUS RUN (without --resume flag):
+    Auto-action: Automatically use the cache. Log:
+    "Found existing cache ({N} companies). Resuming automatically.
+     Pass --fresh to start over."
+    This means --resume behaviour is ON BY DEFAULT if a cache file exists.
+    The user must explicitly pass --fresh to discard a previous cache.
+
+  MISSING API KEY IN .env:
+    Auto-action: Check environment variables directly (os.environ) as fallback.
+    If still missing → print which key is absent, exit with code 1.
+
+  UNRECOGNISED COLUMN NAMES IN EXCEL:
+    Auto-action: Use fuzzy matching (case-insensitive substring match) to find
+    the best column for each required field. Log every mapping decision.
+    Example: "Mapped 'Company' → company_name, 'Web URL' → url"
+    If URL column genuinely cannot be found → skip that company, log it,
+    continue with the rest. Never abort the full run.
+
+  SPECS FILE FORMAT UNRECOGNISED:
+    Auto-action: Try all three readers in order: python-docx → pdfminer → plain
+    text read. Use whichever succeeds first. Log which reader was used.
+
+14.2 — PER-COMPANY AUTONOMOUS DECISIONS
+
+  FIRECRAWL RETURNS EMPTY FOR A PAGE:
+    Auto-action: Mark that page as "empty", try Playwright fallback for that
+    specific page only. Do not retry Firecrawl for empty responses (it has
+    already returned — it is just empty content, not an error).
+
+  FIRECRAWL RETURNS HTTP ERROR (4xx/5xx):
+    Auto-action: Retry up to 3 times with exponential backoff (2s, 4s, 8s).
+    After 3 failures → mark page as "failed", continue with other pages.
+    Log: "[WARN] Firecrawl failed for {url}/{page} after 3 retries: {error}"
+
+  PLAYWRIGHT TIMES OUT:
+    Auto-action: Set a hard 25-second timeout. On timeout → log the failure,
+    return whatever partial text was extracted, continue. Never hang.
+
+  ALL SCRAPING FAILS FOR A COMPANY (Firecrawl + Playwright both fail):
+    Auto-action: Run Claude analysis on Excel data ONLY (category, niche,
+    description, SEO metrics). Mark company as "excel_only" in cache.
+    Do not skip the company. Partial analysis is better than no analysis.
+
+  CLAUDE RETURNS MALFORMED JSON:
+    Auto-action: Strip markdown fences, attempt json.loads(). On failure,
+    try ast.literal_eval(). On second failure, retry Claude once with a
+    simplified prompt requesting only 8 core fields. On third failure,
+    store raw text in cache under key "raw_claude_response", mark as
+    "parse_failed", continue. Never block on JSON errors.
+
+  CLAUDE API RATE LIMIT (429):
+    Auto-action: Implement token bucket rate limiting. On 429 response,
+    wait exactly 60 seconds, then retry. Log every wait.
+    Do not reduce quality or skip analysis — just wait and retry.
+
+  CLAUDE API TIMEOUT OR CONNECTION ERROR:
+    Auto-action: Retry up to 3 times with 10-second delays.
+    After 3 failures → mark company as "claude_failed", continue.
+
+  COMPANY URL RETURNS 404 OR REDIRECT LOOP:
+    Auto-action: Try the apex domain if a path was given. Try http:// if
+    https:// fails. After two attempts → mark as "url_unreachable",
+    run Claude on Excel data only, continue.
+
+  COMPANY URL IS BLANK OR MALFORMED IN EXCEL:
+    Auto-action: Skip scraping entirely. Run Claude on Excel data only.
+    Log: "[SKIP] No valid URL for {company_name} — analysis from Excel only"
+
+  DUPLICATE COMPANIES IN EXCEL (same domain appears twice):
+    Auto-action: Process the first occurrence. Mark subsequent duplicates
+    as "duplicate_skipped" in the cache. Log each duplicate found.
+
+  COMPANY COUNT EXCEEDS 500:
+    Auto-action: Process all of them. The 500 figure is approximate —
+    never truncate the list unless --limit is explicitly set.
+
+14.3 — SYNTHESIS AND REPORT AUTONOMOUS DECISIONS
+
+  SYNTHESIS CLAUDE CALL EXCEEDS CONTEXT LIMIT:
+    Auto-action: Split companies into batches of 100. Run synthesis on each
+    batch. Then run a final meta-synthesis across all batch summaries.
+    Log: "Synthesis split into {N} batches due to context limits"
+
+  WORD DOCUMENT VALIDATION FAILS:
+    Auto-action: Attempt auto-repair (unpack XML, fix known issues, repack).
+    Log every repair action taken. If repair fails after 2 attempts →
+    save a plain-text fallback report as {output_name}_fallback.txt
+    containing all findings in structured plain text. Never exit without
+    saving SOMETHING.
+
+  OUTPUT DIRECTORY DOES NOT EXIST:
+    Auto-action: Create it with os.makedirs(exist_ok=True). Never fail on
+    a missing directory.
+
+  NODE.JS NOT INSTALLED (Word doc builder requires it):
+    Auto-action: Detect at startup with shutil.which("node"). If missing →
+    fall back to python-docx for the entire Word document. Log the fallback.
+    The report is produced regardless of whether Node.js is present.
+
+14.4 — SIGNAL HANDLING AND GRACEFUL SHUTDOWN
+
+  CTRL+C (KeyboardInterrupt):
+    Auto-action: Catch the signal. Save the current cache immediately.
+    Print: "Interrupted. Progress saved to {cache_file}. Re-run to resume."
+    Exit cleanly with code 0. Never lose completed work on interruption.
+
+  SYSTEM CRASH / UNEXPECTED EXCEPTION:
+    Auto-action: Wrap the entire main() in a top-level try/except.
+    On any unhandled exception → write the cache, write an error report
+    to gap_analyzer_crash.log with full traceback, exit with code 1.
+
+  LONG RUN HEARTBEAT:
+    Every 5 minutes of processing, write a heartbeat line to the log:
+    "[HEARTBEAT] {timestamp} — {N}/{total} companies processed, {M} remaining"
+    This ensures the user can monitor progress without interaction.
+
+14.5 — AUTONOMOUS LOGGING PROTOCOL
+
+  All autonomous decisions must be logged. Log format:
+    [TIMESTAMP] [LEVEL] [SOURCE] Message
+
+  Levels: INFO, WARN, ERROR, DECISION, HEARTBEAT
+  
+  DECISION level is used specifically when the app makes an autonomous choice
+  that a human might have been asked about:
+    [2026-03-19 14:23:01] [DECISION] [PRE-FLIGHT] Auto-detected specs file: project_specs.docx
+    [2026-03-19 14:23:01] [DECISION] [PRE-FLIGHT] Cache found (247 companies). Resuming automatically.
+    [2026-03-19 14:25:44] [DECISION] [klaviyo.com] Playwright fallback used — Firecrawl returned empty homepage
+    [2026-03-19 14:31:02] [DECISION] [gorgias.com] All scraping failed — Claude running on Excel data only
+
+  Log to both console (stdout) and gap_analyzer.log file simultaneously.
+  Console shows INFO+ only. Log file captures everything including DEBUG.
+
+───────────────────────────────────────────────────────────────────────────────
+SECTION 15 — SESSION AND MEMORY RETENTION PROTOCOL
+───────────────────────────────────────────────────────────────────────────────
+
+This section defines how the application preserves, restores, and builds on
+its own state — both within a single run and across multiple runs over time.
+The goal: the tool gets smarter with every run and never loses work.
+
+15.1 — WITHIN-RUN STATE (the live session)
+
+  STATE OBJECT:
+    Maintain a single in-memory AppState object throughout the run:
+
+    AppState {
+      run_id          : str   # UUID generated at start, e.g. "run_20260319_142301"
+      run_started_at  : str   # ISO timestamp
+      specs_file      : str   # resolved absolute path
+      companies_file  : str   # resolved absolute path
+      output_file     : str   # resolved absolute path
+      project_profile : dict  # extracted from specs — the comparison baseline
+      total_companies : int
+      processed       : int   # incremented after each company completes
+      succeeded       : int
+      partial         : int   # scrape degraded but analysis completed
+      failed          : int
+      companies       : dict  # domain → analysis result (grows during run)
+      synthesis       : dict  # populated at end of run
+      errors          : list  # all errors encountered
+      decisions       : list  # all autonomous decisions logged
+    }
+
+  WRITE FREQUENCY:
+    The AppState is serialised to the cache file (gap_analyzer_cache.json)
+    after EVERY single company completes. Not in batches. After every one.
+    This ensures that if the process dies after company 347, companies 1-347
+    are all saved and the next run resumes from 348.
+
+  ATOMIC WRITES:
+    Write cache to a temp file first ({cache}.tmp), then rename to final
+    path. This prevents a corrupt cache if the process dies mid-write.
+
+15.2 — CROSS-RUN PERSISTENCE (the long-term memory)
+
+  CACHE FILE STRUCTURE:
+  {
+    "metadata": {
+      "run_id":         "run_20260319_142301",
+      "created_at":     "2026-03-19T14:23:01Z",
+      "last_updated":   "2026-03-19T16:47:22Z",
+      "specs_file":     "project_specs.docx",
+      "companies_file": "companies.xlsx",
+      "total_companies": 500,
+      "runs": [
+        {
+          "run_id":     "run_20260319_142301",
+          "started":    "2026-03-19T14:23:01Z",
+          "ended":      "2026-03-19T16:47:22Z",
+          "completed":  487,
+          "partial":    9,
+          "failed":     4
+        }
+      ]
+    },
+    "project_profile": { ...extracted from specs... },
+    "companies": {
+      "klaviyo.com": {
+        "status":      "success",           // success / partial / failed
+        "run_id":      "run_20260319_142301",
+        "analysed_at": "2026-03-19T14:31:55Z",
+        "source":      "firecrawl+claude",  // firecrawl+claude / excel_only / playwright+claude
+        "pages_scraped": ["homepage", "pricing", "about", "features"],
+        "pages_failed":  ["integrations"],
+        "analysis":    { ...full JSON from Claude... }
+      }
+    },
+    "synthesis": { ...populated after final synthesis call... },
+    "decisions_log": [ ...all DECISION-level log entries... ]
+  }
+
+  CACHE MERGING ACROSS RUNS:
+    When a new run starts with an existing cache:
+    - Load existing cache into AppState
+    - For each company in the Excel: check if domain exists in cache
+    - If exists AND status is "success" → skip (use cached result)
+    - If exists AND status is "partial" or "failed" → RE-ANALYSE
+      (partial/failed companies are always retried on resume)
+    - If not in cache → analyse fresh
+    - After all companies: re-run synthesis with full combined results
+    - Append new run metadata to the "runs" array in cache
+    This means each run IMPROVES the cache, never overwrites it wholesale.
+
+  SPECS CHANGE DETECTION:
+    Hash the specs file content at startup (md5). Store hash in cache metadata.
+    On resume: if hash has changed → invalidate project_profile, re-extract,
+    log: "[DECISION] Specs file changed — project profile re-extracted"
+    Company analyses are NOT invalidated (the specs change only affects how
+    findings are framed in the final report, not the raw company data).
+
+  COMPANIES FILE CHANGE DETECTION:
+    Hash the companies Excel at startup. Store in cache metadata.
+    On resume: if hash has changed →
+    - Load new Excel, compare domain list to cache
+    - New domains not in cache → add to analysis queue
+    - Domains in cache but removed from Excel → keep in cache (never delete)
+      but exclude from the current report's company section
+    - Log all additions detected
+
+15.3 — REPORT VERSIONING
+
+  Every time a report is generated, record it in the cache:
+  "reports_generated": [
+    {
+      "run_id":      "run_20260319_142301",
+      "generated_at":"2026-03-19T16:47:22Z",
+      "output_file": "competitive_report.docx",
+      "companies_in_report": 487,
+      "synthesis_included": true
+    }
+  ]
+
+  The output file itself should include in its Appendix B:
+    - This run ID
+    - Date/time generated
+    - Number of companies analysed vs total in Excel
+    - Cache file path used
+    - Previous runs (if resumed)
+    - Claude model version used
+    - Total API calls made (Firecrawl + Claude combined)
+    - Total processing time
+
+15.4 — INCREMENTAL UPDATES (re-running on new data)
+
+  The tool is designed to be run repeatedly as new companies are added to
+  the Excel file or as the project specs evolve. The cache/resume system
+  makes this efficient:
+
+  SCENARIO: User adds 50 new companies to the Excel
+    → Run the tool again with the same --companies flag
+    → Existing 450 companies load from cache instantly
+    → Only the 50 new companies are scraped and analysed
+    → Synthesis is re-run with all 500 results
+    → New report reflects the full 500 including the new additions
+    → Total runtime: ~15 minutes instead of 3+ hours
+
+  SCENARIO: User updates the specs document
+    → Run the tool again with the same flags
+    → All company analyses load from cache
+    → Project profile is re-extracted from new specs
+    → Synthesis re-run with updated project profile for comparison
+    → New report reflects updated strategic recommendations
+    → Total runtime: ~5 minutes (synthesis only)
+
+  SCENARIO: User wants to refresh a specific company
+    → Pass --refresh "klaviyo.com" (support multiple: --refresh "a.com,b.com")
+    → Those specific companies are re-scraped and re-analysed
+    → All others load from cache
+    → Report regenerated with fresh data for specified companies
+
+15.5 — SESSION CONTINUITY FOR CLAUDE CODE ENVIRONMENTS
+
+  Claude Code sessions can be interrupted (timeouts, restarts, network issues).
+  Build the following safeguards specifically for Claude Code usage:
+
+  PROGRESS CHECKPOINT FILE:
+    Maintain a lightweight checkpoint file: gap_analyzer_checkpoint.txt
+    Updated every 10 companies with plain text progress:
+      "CHECKPOINT: 2026-03-19T15:44:12Z
+       Run ID    : run_20260319_142301
+       Progress  : 234 / 500 companies complete
+       Last done : recharge.com (234/500)
+       Cache     : gap_analyzer_cache.json (2.1 MB)
+       ETA       : ~47 minutes remaining"
+
+  This file lets the user (or Claude Code) instantly understand where a
+  run is without parsing JSON.
+
+  SELF-DESCRIBING STATE:
+    At the start of every run, print a full state summary including whether
+    this is a fresh run or a resume, and what the cache contains.
+    This allows Claude Code to reconstruct context after a session restart.
+
+  CLAUDE CODE RESUME INSTRUCTION:
+    When the tool is interrupted mid-run, the final line printed to console
+    must always be:
+      "TO RESUME: python gap_analyzer.py --specs {specs} --companies {companies} --output {output}"
+    This exact command can be copied and re-run to continue from where it stopped.
+
+═══════════════════════════════════════════════════════════════════════════════
+BUILD IT NOW. COMPLETE. PRODUCTION-READY. FULLY AUTONOMOUS.
+ZERO HUMAN INPUT AFTER LAUNCH. ZERO DATA LOSS ON INTERRUPTION.
+NO SUMMARIES. NO QUESTIONS. NO SHORTCUTS.
+═══════════════════════════════════════════════════════════════════════════════

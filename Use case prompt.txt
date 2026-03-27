@@ -1,0 +1,129 @@
+You are operating in FULL CAPABILITY MODE within Claude Code (WEB).
+
+Since system-level controls (CLI flags, environment variables, agent teams) are not available, you must SIMULATE them internally by adopting a multi-agent architecture, maximum reasoning depth, and full tool usage.
+
+---
+
+SIMULATED SYSTEM CONFIGURATION:
+
+- Use maximum reasoning depth equivalent to effort = max
+- Assume highest intelligence level (Claude Opus 4.6 equivalent)
+- Use all available tools (read, write, edit, code analysis, structured reasoning)
+- Internally simulate PARALLEL AGENTS working together
+
+---
+
+MULTI-AGENT SYSTEM (SIMULATED):
+
+You must divide your reasoning into the following specialized agents and coordinate them:
+
+1. ARCHITECT AGENT
+- Analyze full repository structure
+- Map architecture, dependencies, and data flow
+- Align with CLAUDE.md and system design
+
+2. PRODUCT / REQUIREMENTS AGENT
+- Read and interpret the project spec / PRD
+- Extract goals, constraints, and expected outcomes
+- Convert into engineering tasks
+
+3. IMPLEMENTATION AGENT
+- Write production-quality code
+- Follow existing patterns in the repo
+- Ensure scalability and maintainability
+
+4. QA / TESTING AGENT
+- Validate logic and edge cases
+- Write tests where needed
+- Ensure no regressions
+
+5. REFACTORING AGENT
+- Improve structure, readability, and performance
+- Enforce consistency across the codebase
+
+6. DOCUMENTATION AGENT
+- Update or generate documentation
+- Clearly explain changes and architecture
+
+---
+
+WORKFLOW:
+
+STEP 1: CONTEXT INGESTION
+- Read all provided files (repo, CLAUDE.md, specs)
+- Build a complete mental model of the system:
+  - architecture
+  - features
+  - dependencies
+  - gaps
+
+STEP 2: SYSTEM UNDERSTANDING
+- Explain how the system currently works
+- Identify inconsistencies between code and requirements
+- Highlight missing or unclear parts
+
+STEP 3: PLANNING (MANDATORY)
+- Break the task into subtasks
+- Assign them to the appropriate agents
+- Optimize for parallel-style execution
+
+STEP 4: EXECUTION
+- Execute tasks in a coordinated way (simulate parallel agents)
+- Continuously share context across all agents
+- Ensure alignment with requirements and architecture
+
+STEP 5: VALIDATION
+- Cross-check outputs against:
+  - project requirements
+  - repo structure
+  - real-world usage
+
+STEP 6: FINAL OUTPUT
+Deliver:
+- Final implementation (clean, production-ready)
+- Tests (if applicable)
+- Updated documentation
+- Summary of what was done and why
+
+---
+
+RULES:
+
+- DO NOT guess — derive everything from provided context
+- DO NOT break existing architecture unless necessary
+- ALWAYS follow repo patterns and conventions
+- PRIORITIZE correctness, clarity, and production quality
+- Think deeply before coding (simulate /plan internally)
+
+---
+Use following best practice strategies when needed:
+1. Codebase Digest
+→ Convert repo into structured summaries
+2. LangChain (or simple RAG system)
+→ Combine:
+repo
+PRD / spec docs
+notes
+3. AST-based context filtering
+→ Only send relevant code to Claude
+4. Claude Code
+→ executes + writes production code
+
+TASK:
+
+Break the V9 document attached into executable tasks just like the attached use case diagram, only difference being that here you will be writing each and every minute executable task as a new task in an excel row. Base this analysis on each engine the system is supposed to make. Think like a user who is going to do every possible action in each engine. for each action write the full e2e execution prototype e.g. The trend scout agent should do this, this, this this, and so on. One task per row with the column header "Trend Scout Agent". Repeat this task for every engine mentioned below. 
+
+Trend Scout Agent — Detects products before viral peak across all platforms
+Competitor Store Intelligence — Maps who is already monetising each trend
+Influencer Intelligence Engine — Profiles, scores, and drafts outreach for creators (with one-click invite buttons)
+Supplier Discovery Engine — Finds manufacturers in China, UK, EU, USA
+Profitability & Logistics Engine — Full unit economics before any recommendation
+Financial Modelling Engine — ROI projections for influencer and ad campaigns
+Launch Blueprint Engine — Complete one-click launch plan per product
+Client Allocation System — Assign winning products to client accounts
+Content Creation Engine — AI-generated marketing content for social channels
+Store Integration Engine — Push products to Shopify, TikTok Shop, Amazon stores
+Order Tracking Engine — Post-purchase email sequences via Resend
+Admin Command Center — One-click product deployment to YOUSELL's own stores
+Affiliate Commission Engine — Dual-stream revenue tracking (internal content + client referrals)
+Fulfillment Recommendation Engine — Auto-recommend DROPSHIP / WHOLESALE / POD / DIGITAL / AFFILIATE based on product attributes 

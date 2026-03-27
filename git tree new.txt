@@ -1,0 +1,425 @@
+├── archive/
+│   ├── ai/
+│   │   ├── platform_strategy.md
+│   │   ├── pricing_strategy_prompt.md
+│   │   └── YOUSELL_DEVELOPER_HANDOFF.md
+│   ├── ai_operating_manual.md.txt
+│   ├── API_KEY.txt
+│   ├── AUDIT_REPORT.md
+│   ├── Chat with Claude code about work done so far.pdf
+│   ├── CLAUDE AUTONOMOUS DEVELOPMENT SYSTEM PROMPT.pdf
+│   ├── Current session.docx
+│   ├── DEPLOY.md
+│   ├── EXECUTE_ALL_FIXES.md
+│   ├── Fastmoss.png
+│   ├── PROJECT_BOOTSTRAP.md
+│   ├── QA_AUDIT_REPORT_2026-03-09.md
+│   ├── QA_AUDIT_REPORT.md
+│   ├── quality check.txt
+│   ├── YouSell_BuildBrief_v6_DEFINITIVE (4).pdf
+│   ├── YouSell_BuildBrief_v6_DEFINITIVE.docx
+│   ├── YOUSELL_FIX_STRATEGY_PROMPT.md
+│   ├── YOUSELL_MASTER_BUILD_BRIEF_v4.pdf
+│   ├── YOUSELL_MASTER_BUILD_BRIEF_v5.pdf
+│   ├── YOUSELL_OPUS_MASTER_PROMPT_v1 (1).md
+│   ├── YouSell_QA_Audit_Report.md
+│   ├── YOUSELL_QA_FINAL_REPORT.md
+│   ├── YOUSELL_QA_FIX_PROMPT.md
+│   ├── YouSell_QA_Master_Prompt.md
+│   ├── YOUSELL_QA_TESTING_PROMPT.md
+│   └── yousell-qa-master-prompt-12 march 10 am.md
+├── backend/
+│   ├── src/
+│   │   ├── jobs/
+│   │   │   ├── ad-intelligence.ts
+│   │   │   ├── amazon-intelligence.ts
+│   │   │   ├── creator-matching.ts
+│   │   │   ├── enrich-product.ts
+│   │   │   ├── index.ts
+│   │   │   ├── influencer-discovery.ts
+│   │   │   ├── product-clustering.ts
+│   │   │   ├── product-scan.ts
+│   │   │   ├── shopify-intelligence.ts
+│   │   │   ├── supplier-discovery.ts
+│   │   │   ├── tiktok-cross-match.ts
+│   │   │   ├── tiktok-discovery.ts
+│   │   │   ├── tiktok-engagement-analysis.ts
+│   │   │   ├── tiktok-product-extract.ts
+│   │   │   ├── trend-detection.ts
+│   │   │   ├── trend-scan.ts
+│   │   │   └── types.ts
+│   │   ├── lib/
+│   │   │   ├── email.ts
+│   │   │   ├── mock-data.ts
+│   │   │   ├── providers.ts
+│   │   │   ├── queue.ts
+│   │   │   ├── scoring.ts
+│   │   │   └── supabase.ts
+│   │   ├── index.ts
+│   │   └── worker.ts
+│   ├── .env.example
+│   ├── Dockerfile
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── railway.toml
+│   └── tsconfig.json
+├── docs/
+│   └── YouSell_Platform_Technical_Specification_v7.md
+├── src/
+│   ├── app/
+│   │   ├── admin/
+│   │   │   ├── ads/
+│   │   │   │   └── page.tsx
+│   │   │   ├── affiliates/
+│   │   │   │   ├── ai/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── physical/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── page.tsx
+│   │   │   ├── allocate/
+│   │   │   │   └── page.tsx
+│   │   │   ├── amazon/
+│   │   │   │   └── page.tsx
+│   │   │   ├── analytics/
+│   │   │   │   └── page.tsx
+│   │   │   ├── automation/
+│   │   │   │   └── page.tsx
+│   │   │   ├── blueprints/
+│   │   │   │   └── page.tsx
+│   │   │   ├── clients/
+│   │   │   │   └── page.tsx
+│   │   │   ├── clusters/
+│   │   │   │   └── page.tsx
+│   │   │   ├── competitors/
+│   │   │   │   └── page.tsx
+│   │   │   ├── creator-matches/
+│   │   │   │   └── page.tsx
+│   │   │   ├── digital/
+│   │   │   │   └── page.tsx
+│   │   │   ├── import/
+│   │   │   │   └── page.tsx
+│   │   │   ├── influencers/
+│   │   │   │   └── page.tsx
+│   │   │   ├── login/
+│   │   │   │   └── page.tsx
+│   │   │   ├── notifications/
+│   │   │   │   └── page.tsx
+│   │   │   ├── pinterest/
+│   │   │   │   └── page.tsx
+│   │   │   ├── products/
+│   │   │   │   └── page.tsx
+│   │   │   ├── scan/
+│   │   │   │   └── page.tsx
+│   │   │   ├── settings/
+│   │   │   │   └── page.tsx
+│   │   │   ├── setup/
+│   │   │   │   └── page.tsx
+│   │   │   ├── shopify/
+│   │   │   │   └── page.tsx
+│   │   │   ├── suppliers/
+│   │   │   │   └── page.tsx
+│   │   │   ├── tiktok/
+│   │   │   │   └── page.tsx
+│   │   │   ├── trends/
+│   │   │   │   └── page.tsx
+│   │   │   ├── unauthorized/
+│   │   │   │   └── page.tsx
+│   │   │   ├── layout.tsx
+│   │   │   └── page.tsx
+│   │   ├── api/
+│   │   │   ├── admin/
+│   │   │   │   ├── ads/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── affiliates/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── allocations/
+│   │   │   │   │   ├── requests/
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── amazon/
+│   │   │   │   │   ├── scan/
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── analytics/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── automation/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── blueprints/
+│   │   │   │   │   ├── [id]/
+│   │   │   │   │   │   └── pdf/
+│   │   │   │   │   │       └── route.ts
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── clients/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── clusters/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── competitors/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── creator-matches/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── dashboard/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── debug/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── digital/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── e2e/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── engines/
+│   │   │   │   │   └── health/
+│   │   │   │   │       └── route.ts
+│   │   │   │   ├── financial/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── import/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── influencers/
+│   │   │   │   │   ├── invite/
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── notifications/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── opportunities/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── pinterest/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── products/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── scan/
+│   │   │   │   │   ├── health/
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── scoring/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── settings/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── setup/
+│   │   │   │   │   └── migrate/
+│   │   │   │   │       └── route.ts
+│   │   │   │   ├── shopify/
+│   │   │   │   │   └── scan/
+│   │   │   │   │       └── route.ts
+│   │   │   │   ├── suppliers/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── tiktok/
+│   │   │   │   │   ├── discover/
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   ├── signals/
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   ├── videos/
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── trends/
+│   │   │   │       └── route.ts
+│   │   │   ├── auth/
+│   │   │   │   ├── callback/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── oauth/
+│   │   │   │   │   └── callback/
+│   │   │   │   │       └── route.ts
+│   │   │   │   └── signout/
+│   │   │   │       └── route.ts
+│   │   │   ├── dashboard/
+│   │   │   │   ├── channels/
+│   │   │   │   │   ├── connect/
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   ├── disconnect/
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── content/
+│   │   │   │   │   ├── generate/
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── orders/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── products/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── requests/
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── subscription/
+│   │   │   │       ├── portal/
+│   │   │   │       │   └── route.ts
+│   │   │   │       └── route.ts
+│   │   │   └── webhooks/
+│   │   │       ├── amazon/
+│   │   │       │   └── route.ts
+│   │   │       ├── shopify/
+│   │   │       │   └── route.ts
+│   │   │       ├── stripe/
+│   │   │       │   └── route.ts
+│   │   │       └── tiktok/
+│   │   │           └── route.ts
+│   │   ├── dashboard/
+│   │   │   ├── billing/
+│   │   │   │   └── page.tsx
+│   │   │   ├── content/
+│   │   │   │   └── page.tsx
+│   │   │   ├── integrations/
+│   │   │   │   └── page.tsx
+│   │   │   ├── orders/
+│   │   │   │   └── page.tsx
+│   │   │   ├── products/
+│   │   │   │   └── page.tsx
+│   │   │   ├── requests/
+│   │   │   │   └── page.tsx
+│   │   │   ├── layout.tsx
+│   │   │   └── page.tsx
+│   │   ├── fonts/
+│   │   │   ├── GeistMonoVF.woff
+│   │   │   └── GeistVF.woff
+│   │   ├── login/
+│   │   │   └── page.tsx
+│   │   ├── pricing/
+│   │   │   └── page.tsx
+│   │   ├── signup/
+│   │   │   └── page.tsx
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components/
+│   │   ├── auth/
+│   │   │   └── SocialLoginButtons.tsx
+│   │   ├── ui/
+│   │   │   ├── avatar.tsx
+│   │   │   ├── badge.tsx
+│   │   │   ├── button.tsx
+│   │   │   ├── card.tsx
+│   │   │   ├── dialog.tsx
+│   │   │   ├── dropdown-menu.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── label.tsx
+│   │   │   ├── separator.tsx
+│   │   │   ├── sheet.tsx
+│   │   │   ├── sidebar.tsx
+│   │   │   ├── skeleton.tsx
+│   │   │   ├── switch.tsx
+│   │   │   ├── table.tsx
+│   │   │   ├── tabs.tsx
+│   │   │   └── tooltip.tsx
+│   │   ├── admin-sidebar.tsx
+│   │   ├── dashboard-mobile-nav.tsx
+│   │   ├── engine-gate.tsx
+│   │   ├── platform-products.tsx
+│   │   ├── product-card.tsx
+│   │   ├── score-badge.tsx
+│   │   ├── subscription-banner.tsx
+│   │   ├── subscription-context.tsx
+│   │   ├── theme-provider.tsx
+│   │   ├── theme-toggle.tsx
+│   │   └── user-context.tsx
+│   ├── hooks/
+│   │   └── use-mobile.ts
+│   ├── lib/
+│   │   ├── auth/
+│   │   │   ├── admin-api-auth.ts
+│   │   │   ├── client-api-auth.ts
+│   │   │   ├── get-user.ts
+│   │   │   ├── require-client.ts
+│   │   │   └── roles.ts
+│   │   ├── engines/
+│   │   │   ├── ad-intelligence.ts
+│   │   │   ├── clustering.ts
+│   │   │   ├── creator-matching.ts
+│   │   │   ├── discovery.ts
+│   │   │   ├── opportunity-feed.ts
+│   │   │   ├── tiktok-discovery.ts
+│   │   │   └── trend-detection.ts
+│   │   ├── providers/
+│   │   │   ├── affiliate/
+│   │   │   │   └── index.ts
+│   │   │   ├── amazon/
+│   │   │   │   └── index.ts
+│   │   │   ├── digital/
+│   │   │   │   └── index.ts
+│   │   │   ├── influencer/
+│   │   │   │   └── index.ts
+│   │   │   ├── pinterest/
+│   │   │   │   └── index.ts
+│   │   │   ├── shopify/
+│   │   │   │   └── index.ts
+│   │   │   ├── supplier/
+│   │   │   │   └── index.ts
+│   │   │   ├── tiktok/
+│   │   │   │   └── index.ts
+│   │   │   ├── trends/
+│   │   │   │   └── index.ts
+│   │   │   ├── cache.ts
+│   │   │   ├── config.ts
+│   │   │   ├── index.ts
+│   │   │   └── types.ts
+│   │   ├── scoring/
+│   │   │   ├── composite.ts
+│   │   │   └── profitability.ts
+│   │   ├── supabase/
+│   │   │   ├── admin.ts
+│   │   │   ├── client.ts
+│   │   │   └── server.ts
+│   │   ├── types/
+│   │   │   ├── database.ts
+│   │   │   └── product.ts
+│   │   ├── auth-fetch.ts
+│   │   ├── email-orders.ts
+│   │   ├── email.ts
+│   │   ├── stripe.ts
+│   │   ├── supabase.ts
+│   │   └── utils.ts
+│   └── middleware.ts
+├── supabase/
+│   └── migrations/
+│       ├── 000_initial_schema.sql
+│       ├── 001_profiles_and_rbac.sql
+│       ├── 001a_seed_admin.sql
+│       ├── 002_trend_keywords.sql
+│       ├── 003_products.sql
+│       ├── 004_trends_competitors.sql
+│       ├── 005_complete_schema.sql
+│       ├── 007_remaining_fixes.sql
+│       ├── 008_client_rls_fix.sql
+│       ├── 009_v7_new_tables.sql
+│       ├── 010_tiktok_videos.sql
+│       ├── 011_tiktok_hashtag_signals.sql
+│       ├── 012_product_clusters.sql
+│       ├── 013_creator_product_match.sql
+│       ├── 014_ads_table.sql
+│       ├── 015_admin_check_rpc.sql
+│       ├── 016_missing_tables_consolidated.sql
+│       ├── 016_run_this_DEPRECATED.sql
+│       ├── 017_security_fixes.sql
+│       ├── 018_security_and_indexes.sql
+│       ├── 019_order_tracking_enhancements.sql
+│       ├── 020_rls_security_fixes.sql
+│       ├── CONSOLIDATED_MIGRATION.sql
+│       └── RUN_ALL_IN_SQL_EDITOR.sql
+├── system/
+│   ├── ai_logic.md
+│   ├── DEBUG_STRATEGY.md
+│   ├── development_log.md
+│   ├── e2e_testing_strategy.md
+│   ├── fix_log.md
+│   └── yousell_master_qa_prompt_v7.md
+├── tests/
+│   ├── phase1-supabase.test.ts
+│   ├── phase2-api-smoke.test.ts
+│   ├── phase3-business-logic.test.ts
+│   ├── phase4-new-features.test.ts
+│   ├── phase5-security.test.ts
+│   └── setup.ts
+├── .env.example
+├── .env.local.example
+├── .eslintrc.json
+├── .gitignore
+├── Claude Code – Full System QA + Debu.txt
+├── CLAUDE.md
+├── components.json
+├── last time.docx
+├── netlify.toml
+├── next-env.d.ts
+├── next.config.mjs
+├── package-lock.json
+├── package.json
+├── postcss.config.js
+├── postcss.config.mjs
+├── README.md
+├── tailwind.config.js
+├── tsconfig.json
+└── vitest.config.ts

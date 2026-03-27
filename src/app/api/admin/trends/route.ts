@@ -1,0 +1,59 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { authenticateAdmin } from "@/lib/auth/admin-api-auth";
+import { detectTrends } from "@/lib/engines/trend-detection";
+
+export async function GET(request: NextRequest) {
+  try { await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+  const supabase = createAdminClient();
+
+  const { data, error, count } = await supabase
+    .from("trend_keywords")
+    .select("*", { count: "exact" })
+    .order("trend_score", { ascending: false })
+    .limit(100);
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ trends: data || [], total: count || 0 });
+}
+
+export async function POST(request: NextRequest) {
+  let user;
+  try { user = await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+  const supabase = createAdminClient();
+
+  const body = await request.json();
+  const keywords: string[] = Array.isArray(body.keywords) ? body.keywords : [body.keyword];
+
+  const inserts = keywords.map((keyword: string) => ({
+    keyword: keyword.trim(),
+    category: body.category || null,
+    created_by: user.id,
+  }));
+
+  const { data, error } = await supabase
+    .from("trend_keywords")
+    .insert(inserts)
+    .select();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ trends: data }, { status: 201 });
+}
+
+// PUT = Run automated trend detection engine
+export async function PUT(request: NextRequest) {
+  try { await authenticateAdmin(request); } catch { return NextResponse.json({ error: "Forbidden" }, { status: 403 }); }
+
+  try {
+    const result = await detectTrends();
+    return NextResponse.json({
+      status: "completed",
+      trendsDetected: result.trendsDetected,
+      trendsUpdated: result.trendsUpdated,
+      ...(result.errors.length > 0 ? { warnings: result.errors } : {}),
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Trend detection failed";
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
+}

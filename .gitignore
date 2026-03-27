@@ -1,0 +1,16 @@
+node_modules/
+.next/
+dist/
+.env
+.env.local
+*.log
+*.tsbuildinfo
+.env.test
+supabase/.temp/
+e2e-results/
+e2e-report/
+e2e/.auth/
+*-snapshots/
+
+# Netlify deploy artifacts
+deploy-*.zip
