@@ -116,12 +116,16 @@ and production readiness**.
 
 | Metric | Count |
 |--------|-------|
-| Admin pages | 50 |
-| Dashboard pages | 11 |
-| API routes | 104 |
+| Admin pages | 65 |
+| Client dashboard pages | 29 |
+| Marketing pages | 19 |
+| **Total UI pages** | **113** |
+| API routes | 120 |
 | Backend engine jobs | 29 |
 | Database migrations | 34 (numbered 000–034) |
 | Test files | 46 |
+| Custom components | 24 (MetricCard, AIInsightCard, StreamingText, IntelligenceChain, etc.) |
+| shadcn components | 21 |
 | Engines | 25 (24 original + Governor) + external engine adapter |
 | Discovery providers | 14 platforms |
 | Circuit breakers | 8 active + dynamic per external engine |
