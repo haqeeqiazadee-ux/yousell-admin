@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { headers } from 'next/headers';
 import { MarketingNavbar } from '@/components/MarketingNavbar';
-import { MarketingFooter } from '@/components/MarketingFooter';
+import MarketingFooter from '@/components/MarketingFooter';
 import MarketingHomepage from '@/components/MarketingHomepage';
 
 export const dynamic = 'force-dynamic';
