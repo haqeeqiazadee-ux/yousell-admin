@@ -21,6 +21,12 @@
     "e2e:auth": "npx playwright test auth-flows",
     "e2e:visual": "npx playwright test visual-regression",
     "e2e:admin": "npx playwright test admin-dashboard",
+    "e2e:admin:all": "npx playwright test admin-pages-comprehensive",
+    "e2e:marketing": "npx playwright test marketing-website",
+    "e2e:client": "npx playwright test client-dashboard",
+    "e2e:components": "npx playwright test components",
+    "e2e:responsive": "npx playwright test responsive",
+    "e2e:a11y": "npx playwright test accessibility",
     "e2e:update-snapshots": "npx playwright test --update-snapshots",
     "e2e:report": "npx playwright show-report e2e-report"
   },
