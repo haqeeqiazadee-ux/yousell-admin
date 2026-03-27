@@ -1,5 +1,5 @@
 import { MarketingNavbar } from '@/components/MarketingNavbar';
-import { MarketingFooter } from '@/components/MarketingFooter';
+import MarketingFooter from '@/components/MarketingFooter';
 
 // Force dynamic rendering — never statically cache marketing pages
 export const dynamic = 'force-dynamic';
