@@ -3423,3 +3423,26 @@ Files Modified:
 - [x] Section 6.6: Command palette (CMD+K, 5 groups, glassmorphism, keyboard nav)
 - [x] Section 1.1: Missing shadcn components (7 created)
 - [x] Section 19.1: Breadcrumb-ready layout structure
+
+## 2026-03-27 — Session 3: Custom Component Library
+
+### Files Created (8)
+- `src/components/MetricCard.tsx` — KPI card: Cal Sans 36px, delta pill, Recharts sparkline 40px, shimmer skeleton, hover scale(1.01)
+- `src/components/AIInsightCard.tsx` — AI card: 2px ai-insight left border, 4% indigo tint, confidence right-border (green≥85/amber≥60/none), "Why?" chip, streaming cursor
+- `src/components/StreamingText.tsx` — 30ms/char typewriter, blinking cursor, Copy button on complete, aria-live="polite"
+- `src/components/ConfidenceIndicator.tsx` — Color-only dot (green/amber/null), sizes sm/md/lg, aria-label
+- `src/components/ProductRow.tsx` — TanStack-ready table row: checkbox, trend donut SVG, image 40px, title, platform badge, price, 7d change%, AI score badge (Hot/Rising/Stable/Cooling), action buttons
+- `src/components/EmptyState.tsx` — 6 variants: no-products, first-login, engine-offline, no-alerts, no-briefing, generic
+- `src/components/Breadcrumb.tsx` — Auto-generated from usePathname(), built-in label map, max 4 levels, mobile 2 items, collapse middle segments
+
+### Existing (verified)
+- `src/components/engines/engine-status-card.tsx` — Already exists, functional
+
+### Session 3 Completion Status
+- [x] Section 6.1: AIInsightCard (confidence, streaming, Why? chip)
+- [x] Section 6.2: MetricCard (sparkline, delta pill, shimmer)
+- [x] Section 6.3: ProductRow (TanStack table columns, AI score badge)
+- [x] Section 6.4: EngineStatusCard (already exists)
+- [x] Section 6.5: StreamingText (30ms/char, cursor, Copy)
+- [x] Section 7: EmptyState (6 variants with defaults)
+- [x] Section 19.1: Breadcrumb (auto-generate, collapse, mobile)
