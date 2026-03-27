@@ -3446,3 +3446,65 @@ Files Modified:
 - [x] Section 6.5: StreamingText (30ms/char, cursor, Copy)
 - [x] Section 7: EmptyState (6 variants with defaults)
 - [x] Section 19.1: Breadcrumb (auto-generate, collapse, mobile)
+
+## 2026-03-27 — Sessions 4-6: Client Dashboard (ALL 18 pages) + Product Detail + 16 API Routes
+
+### Client Dashboard Pages Created (18 total)
+1. `/dashboard` — Trending Now (AI briefing, product grid, filters, infinite scroll)
+2. `/dashboard/product/[id]` — Product Detail (composite score gauge, sticky header, 7-row chain, bottom CTA)
+3. `/dashboard/pre-viral` — Pre-Viral Detection (signal meter, breakdown accordion, AI prediction streaming)
+4. `/dashboard/opportunities` — Opportunity Feed (preference controls, WHY NOW streaming, signal bars)
+5. `/dashboard/tiktok` — TikTok Intelligence (5 sub-tabs: Products/Videos/Shops/Creators/Ads)
+6. `/dashboard/amazon` — Amazon Intelligence (4 sub-tabs: Products/BSR Movers/Sellers/Reviews)
+7. `/dashboard/shopify` — Shopify Intelligence (4 sub-tabs: Stores/Products/App Stack/Traffic)
+8. `/dashboard/ads` — Ad Intelligence (platform tabs, spend timeline, scaling signals)
+9. `/dashboard/creators` — Creator Discovery (profile panel, outreach email generator)
+10. `/dashboard/watchlist` — Watchlist (alert config dialog, bulk actions)
+11. `/dashboard/blueprints` — Launch Blueprints (4-step generator wizard, StreamingText)
+12. `/dashboard/alerts` — Alerts Center (timeline, preferences, digest config)
+13. `/dashboard/usage` — Usage & Plan (progress bars, feature unlock table)
+14. `/dashboard/settings` — Settings (5 tabs: Profile/Notifications/Platforms/AI Prefs/API)
+15. `/dashboard/digital` — Digital Products (Gumroad, Etsy, Udemy, etc.)
+16. `/dashboard/ai-saas` — AI/SaaS Affiliates (PartnerStack, ShareASale, etc.)
+17. `/dashboard/affiliates` — Physical Affiliates (Amazon Associates, AWIN, etc.)
+18. `/dashboard/saved` — Saved Searches + `/dashboard/help` — Help & Onboarding
+
+### Key Components Created
+- `src/components/IntelligenceChain.tsx` — Universal 7-Row Intelligence Chain (THE CORE PRODUCT)
+  - Row 1: Product Identity (120px image, badges, composite score)
+  - Row 2: Product Stats (4 tabs: Overview/Trend/Sales/Forecast)
+  - Row 3: Related Influencers (horizontal scroll, filter by size)
+  - Row 4: TikTok Shops (table, AI insight)
+  - Row 5: Other Channels (Amazon/Shopify/eBay/YouTube/Pinterest/Reddit)
+  - Row 6: Viral Videos & Ads (4 tabs, thumbnails, spend)
+  - Row 7: Opportunity Score & Action Plan (engine bars, StreamingText actions)
+  - Exports: ProductIntelligence type, MOCK_PRODUCT constant
+
+### Client Dashboard API Routes Created (16)
+- pre-viral, opportunities, tiktok, amazon, shopify, ads, creators, watchlist, saved, alerts, blueprints, usage, settings, digital, ai-saas, affiliates
+
+## 2026-03-27 — Sessions 7-9: Admin Dashboard (15 new pages)
+
+### Admin Pages Created (15)
+- `/admin/settings/users` — User Management (invite modal, role badges, bulk actions)
+- `/admin/settings/billing` — Billing (plan card, usage bars, invoices)
+- `/admin/settings/experiments` — A/B Test Manager (experiment cards, significance bars)
+- `/admin/orders` — Order Insights (AI anomaly banner, status badges)
+- `/admin/settings/fraud` — Fraud Detection (3-layer architecture card, rules, flagged orders)
+- `/admin/customers/segments` — RFM Segmentation (6 segment tiles, scatter plot placeholder)
+- `/admin/customers/churn` — Churn Risk (risk table, AI actions, intervention history)
+- `/admin/customers/cohorts` — Cohort Personalisation (6 cohort cards, clustering)
+- `/admin/engines/feedback` — AI Feedback (model accuracy, retrain toggles)
+- `/admin/pricing/elasticity` — Price Elasticity (spectrum bar, simulation tool)
+- `/admin/ai-costs` — AI Cost Dashboard (5 tabs: Overview/Breakdown/Routing/Traces/Quality)
+- `/admin/health` — System Health (ALL 25 engines + ALL 14 providers)
+- `/admin/logs` — System Logs (filter by level/source, expandable details)
+- `/admin/webhooks` — Webhooks (CRUD, event selection, delivery history)
+- `/admin/schedule` — Scheduled Jobs (cron, run now, pause/resume)
+
+### Cumulative Metrics
+- Admin pages: 50 → 65 (+15 new admin pages)
+- Client dashboard pages: 11 → 29 (+18 new pages)
+- API routes: 104 → 120 (+16 client dashboard routes)
+- Custom components: 14 → 24 (+10 new: MetricCard, AIInsightCard, StreamingText, ConfidenceIndicator, ProductRow, EmptyState, Breadcrumb, CommandPalette, IntelligenceChain, ClientSidebar/TopBar, MarketingNavbar/Footer)
+- shadcn components: 14 → 21 (+7: select, textarea, progress, checkbox, scroll-area, slider, accordion)
