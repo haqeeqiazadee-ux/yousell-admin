@@ -30,9 +30,14 @@ export interface SelectProps {
   defaultValue?: string
   disabled?: boolean
   children?: React.ReactNode
+  className?: string
+  placeholder?: string
+  name?: string
+  required?: boolean
+  id?: string
 }
 
-function Select({ value, onValueChange, defaultValue, disabled, children }: SelectProps) {
+function Select({ value, onValueChange, defaultValue, disabled, children, className }: SelectProps) {
   const [open, setOpen] = React.useState(false)
   const [internalValue, setInternalValue] = React.useState(defaultValue ?? "")
 
@@ -63,7 +68,7 @@ function Select({ value, onValueChange, defaultValue, disabled, children }: Sele
     <SelectContext.Provider
       value={{ value: currentValue, onValueChange: handleValueChange, open, setOpen, disabled }}
     >
-      <div ref={ref} data-slot="select" className="relative inline-block">
+      <div ref={ref} data-slot="select" className={cn("relative inline-block", className)}>
         {children}
       </div>
     </SelectContext.Provider>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { authFetch } from '@/lib/auth-fetch'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -49,7 +49,7 @@ const AVAILABLE_CHANNELS = [
   },
 ]
 
-export default function IntegrationsPage() {
+function IntegrationsPageInner() {
   const [channels, setChannels] = useState<Channel[]>([])
   const [loading, setLoading] = useState(true)
   const [connecting, setConnecting] = useState<string | null>(null)
@@ -220,5 +220,13 @@ export default function IntegrationsPage() {
       )}
     </div>
     </EngineGate>
+  )
+}
+
+export default function IntegrationsPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
+      <IntegrationsPageInner />
+    </Suspense>
   )
 }

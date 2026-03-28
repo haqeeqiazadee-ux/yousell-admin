@@ -97,6 +97,12 @@ export interface OpportunityData {
   recommendedActions: string
 }
 
+export interface ProductEngine {
+  name: string
+  score: number
+  detail?: string
+}
+
 export interface ProductIntelligence {
   id: string
   title: string
@@ -108,6 +114,7 @@ export interface ProductIntelligence {
   productType: "Physical" | "Digital"
   compositeScore: number
   engineConfidence: number
+  engines?: ProductEngine[]
   stats: ProductStats
   creators: CreatorInfo[]
   tiktokShops: TikTokShop[]
@@ -136,6 +143,11 @@ export const MOCK_PRODUCT: ProductIntelligence = {
   productType: "Physical",
   compositeScore: 84,
   engineConfidence: 92,
+  engines: [
+    { name: "Social Proof", score: 88, detail: "12 viral videos in 7 days" },
+    { name: "Predictive", score: 79, detail: "Pre-viral window detected" },
+    { name: "Market Intel", score: 82, detail: "Low saturation, growing demand" },
+  ],
   stats: {
     trendScore: 87,
     predictiveScore: 79,

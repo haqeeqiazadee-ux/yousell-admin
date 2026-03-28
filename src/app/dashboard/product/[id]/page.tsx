@@ -129,17 +129,17 @@ export default function ProductDetailPage() {
   const topSignals: TopSignal[] = [
     {
       engine: "Social Proof",
-      score: product.engines[0]?.score ?? 0,
+      score: product.engines?.[0]?.score ?? 0,
       detail: "12 viral videos in 7 days",
     },
     {
       engine: "Predictive",
-      score: product.engines[1]?.score ?? 0,
+      score: product.engines?.[1]?.score ?? 0,
       detail: "Pre-viral window detected",
     },
     {
       engine: "Market Intel",
-      score: product.engines[2]?.score ?? 0,
+      score: product.engines?.[2]?.score ?? 0,
       detail: "Low saturation, growing demand",
     },
   ];
@@ -176,7 +176,7 @@ export default function ProductDetailPage() {
         </h1>
 
         <Badge variant="secondary" className="shrink-0 font-mono font-bold gap-1">
-          {product.composite_score} <span aria-label="fire">&#128293;</span>
+          {product.compositeScore} <span aria-label="fire">&#128293;</span>
         </Badge>
 
         <Button
@@ -219,7 +219,7 @@ export default function ProductDetailPage() {
             {/* Badges */}
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="outline">{product.platform}</Badge>
-              <Badge variant="outline">{product.product_type}</Badge>
+              <Badge variant="outline">{product.productType}</Badge>
               <Badge variant="secondary">{product.category}</Badge>
             </div>
 
@@ -254,7 +254,7 @@ export default function ProductDetailPage() {
           <div className="lg:w-[40%] flex flex-col items-center">
             <Card className="w-full">
               <CardContent className="flex flex-col items-center py-6">
-                <CompositeScoreGauge score={product.composite_score} />
+                <CompositeScoreGauge score={product.compositeScore} />
                 <TopSignals signals={topSignals} />
               </CardContent>
             </Card>
