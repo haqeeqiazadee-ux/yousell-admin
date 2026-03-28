@@ -2,23 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Search, Bell, Star, User } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Menu, Search, Bell, Star, User, Lock } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface PlatformTab {
   label: string;
   href: string;
+  key: string; // matches platform_access.platform value
 }
 
 const platformTabs: PlatformTab[] = [
-  { label: "TikTok", href: "/dashboard/tiktok" },
-  { label: "Amazon", href: "/dashboard/amazon" },
-  { label: "Shopify", href: "/dashboard/shopify" },
-  { label: "Pinterest", href: "/dashboard/pinterest" },
-  { label: "Reddit", href: "/dashboard/reddit" },
-  { label: "Digital", href: "/dashboard/digital" },
-  { label: "AI/SaaS", href: "/dashboard/ai-saas" },
-  { label: "Affiliates", href: "/dashboard/affiliates" },
+  { label: "TikTok", href: "/dashboard/tiktok", key: "tiktok" },
+  { label: "Amazon", href: "/dashboard/amazon", key: "amazon" },
+  { label: "Shopify", href: "/dashboard/shopify", key: "shopify" },
+  { label: "Pinterest", href: "/dashboard/pinterest", key: "pinterest" },
+  { label: "Reddit", href: "/dashboard/reddit", key: "reddit" },
+  { label: "Digital", href: "/dashboard/digital", key: "digital" },
+  { label: "AI/SaaS", href: "/dashboard/ai-saas", key: "ai_saas" },
+  { label: "Affiliates", href: "/dashboard/affiliates", key: "affiliates" },
 ];
 
 interface ClientTopBarProps {
@@ -27,8 +29,21 @@ interface ClientTopBarProps {
 
 export function ClientTopBar({ onToggleSidebar }: ClientTopBarProps) {
   const pathname = usePathname();
+  const [enabledPlatforms, setEnabledPlatforms] = useState<string[]>([]);
+  const [accessLoaded, setAccessLoaded] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/dashboard/platform-access')
+      .then((r) => r.ok ? r.json() : { platforms: [] })
+      .then((d) => {
+        setEnabledPlatforms(d.platforms || []);
+        setAccessLoaded(true);
+      })
+      .catch(() => setAccessLoaded(true));
+  }, []);
 
   const isTabActive = (href: string) => pathname.startsWith(href);
+  const isLocked = (key: string) => accessLoaded && !enabledPlatforms.includes(key);
 
   return (
     <header
@@ -56,7 +71,17 @@ export function ClientTopBar({ onToggleSidebar }: ClientTopBarProps) {
         <nav className="flex items-center gap-1 h-full">
           {platformTabs.map((tab) => {
             const active = isTabActive(tab.href);
-            return (
+            const locked = isLocked(tab.key);
+            return locked ? (
+              <span
+                key={tab.href}
+                title="Upgrade your plan to unlock this platform"
+                className="whitespace-nowrap px-3 py-1 text-sm shrink-0 h-full flex items-center gap-1 cursor-not-allowed opacity-40 select-none"
+              >
+                <Lock className="h-2.5 w-2.5" />
+                {tab.label}
+              </span>
+            ) : (
               <Link
                 key={tab.href}
                 href={tab.href}

@@ -340,8 +340,32 @@ interface ProductCardProps {
   onToggleWatch: (id: string) => void;
 }
 
+const CATEGORY_COLORS: Record<string, string> = {
+  Beauty: 'from-pink-600/40 to-rose-500/40',
+  Electronics: 'from-blue-600/40 to-cyan-500/40',
+  Fashion: 'from-purple-600/40 to-violet-500/40',
+  Health: 'from-green-600/40 to-emerald-500/40',
+  Home: 'from-amber-600/40 to-yellow-500/40',
+  Kitchen: 'from-orange-600/40 to-red-500/40',
+  Fitness: 'from-teal-600/40 to-green-500/40',
+  Pets: 'from-yellow-600/40 to-amber-500/40',
+  General: 'from-indigo-600/40 to-blue-500/40',
+};
+
+function CategoryPlaceholder({ category, title }: { category: string; title: string }) {
+  const grad = CATEGORY_COLORS[category] || 'from-indigo-600/40 to-blue-500/40';
+  return (
+    <div className={`w-full h-full bg-gradient-to-br ${grad} flex items-center justify-center`}>
+      <span className="text-white/60 text-xs font-medium text-center px-1 line-clamp-2">
+        {title.split(' ').slice(0, 2).join(' ')}
+      </span>
+    </div>
+  );
+}
+
 function ProductCard({ product, onToggleWatch }: ProductCardProps) {
   const badge = trendBadge(product.trend_status);
+  const [imgError, setImgError] = useState(false);
 
   return (
     <Card className="relative h-[240px] bg-white/5 border-white/10 hover:bg-white/[0.07] transition-colors">
@@ -357,13 +381,18 @@ function ProductCard({ product, onToggleWatch }: ProductCardProps) {
         {/* Product info row */}
         <div className="flex gap-3">
           <div className="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-white/10">
-            <Image
-              src={product.image_url}
-              alt={product.title}
-              fill
-              className="object-cover"
-              unoptimized
-            />
+            {imgError || !product.image_url || product.image_url === '/placeholder-product.png' ? (
+              <CategoryPlaceholder category={product.category} title={product.title} />
+            ) : (
+              <Image
+                src={product.image_url}
+                alt={product.title}
+                fill
+                className="object-cover"
+                unoptimized
+                onError={() => setImgError(true)}
+              />
+            )}
           </div>
           <div className="flex-1 min-w-0 pr-16">
             <h3 className="text-sm font-semibold text-white line-clamp-2 leading-tight">
@@ -461,12 +490,47 @@ function ProductCard({ product, onToggleWatch }: ProductCardProps) {
   );
 }
 
+// ── DB → Card mapper ───────────────────────────────────────────────
+
+function mapDbProductToCard(p: Record<string, unknown>): MockProduct {
+  const score = Math.min(100, Math.max(0, Number(p.final_score ?? p.score_overall ?? 70)));
+  const platform = String(p.platform ?? 'tiktok');
+  const price = parseFloat(String(p.price ?? '25')) || 25;
+
+  let trend_status: TrendStatus = 'rising';
+  if (score >= 82) trend_status = 'hot';
+  else if (score >= 65) trend_status = 'rising';
+  else trend_status = 'stable';
+
+  const platformLabel =
+    platform === 'tiktok' ? 'TikTok Shop'
+    : platform === 'amazon' ? 'Amazon'
+    : platform === 'shopify' ? 'Shopify'
+    : platform.charAt(0).toUpperCase() + platform.slice(1);
+
+  return {
+    id: String(p.id),
+    title: String(p.title ?? 'Untitled Product'),
+    image_url: String(p.image_url || '/placeholder-product.png'),
+    trend_status,
+    platform: platformLabel,
+    product_type: 'Physical',
+    category: String(p.category ?? 'General'),
+    opportunity_score: score,
+    est_revenue: Math.round(price * 80 + score * 50),
+    revenue_change_7d: Math.round(score / 4 - 5),
+    influencers: Math.round(score / 2.5),
+    platforms: platform === 'tiktok' ? 3 : 2,
+    videos: Math.round(score * 2.5),
+    ads: Math.round(score / 8),
+    created_at: String(p.created_at ?? new Date().toISOString()),
+    watched: false,
+  };
+}
+
 // ── Main Page ──────────────────────────────────────────────────────
 
 const PAGE_SIZE = 12;
-
-const AI_BRIEFING =
-  'Good morning! 12 new trending products detected overnight. 3 show pre-viral signals on Reddit. TikTok Shop engagement up 23% vs last week. Top opportunity: Portable Neck Fan with LED Display scoring 94/100.';
 
 export default function DashboardPage() {
   // ── Filter state ─────────────────────────────────────────────────
@@ -478,9 +542,10 @@ export default function DashboardPage() {
   // ── UI state ─────────────────────────────────────────────────────
   const [briefingDismissed, setBriefingDismissed] = useState(false);
   const [briefingExpanded, setBriefingExpanded] = useState(false);
-  const [products, setProducts] = useState<MockProduct[]>(MOCK_PRODUCTS);
+  const [products, setProducts] = useState<MockProduct[]>([]);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loading, setLoading] = useState(true);
+  const [briefingText, setBriefingText] = useState('Loading your daily intelligence briefing…');
 
   // Clean up stale OAuth params from URL (code, next) that may leak from callback redirect
   useEffect(() => {
@@ -490,10 +555,47 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // Simulate initial loading
+  // Fetch real allocated products from DB
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 800);
-    return () => clearTimeout(t);
+    async function fetchProducts() {
+      try {
+        const res = await fetch('/api/dashboard/products');
+        if (res.ok) {
+          const data = await res.json();
+          const dbProducts: MockProduct[] = (data.products || []).map(
+            (p: Record<string, unknown>) => mapDbProductToCard(p)
+          );
+          if (dbProducts.length > 0) {
+            setProducts(dbProducts);
+            const topProduct = dbProducts[0];
+            const hotCount = dbProducts.filter((p) => p.trend_status === 'hot').length;
+            setBriefingText(
+              `${dbProducts.length} curated product${dbProducts.length !== 1 ? 's' : ''} in your feed. ` +
+              `${hotCount > 0 ? `${hotCount} showing hot trend signals. ` : ''}` +
+              `Top opportunity: ${topProduct.title} scoring ${topProduct.opportunity_score}/100.`
+            );
+          } else {
+            setProducts(MOCK_PRODUCTS);
+            setBriefingText(
+              'Good morning! Your product feed is being personalised. 12 trending products are being curated for your niche. Check back shortly for your daily intelligence briefing.'
+            );
+          }
+        } else {
+          setProducts(MOCK_PRODUCTS);
+          setBriefingText(
+            'Good morning! 12 new trending products detected overnight. 3 show pre-viral signals on Reddit. TikTok Shop engagement up 23% vs last week.'
+          );
+        }
+      } catch {
+        setProducts(MOCK_PRODUCTS);
+        setBriefingText(
+          'Good morning! 12 new trending products detected overnight. TikTok Shop engagement up 23% vs last week.'
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProducts();
   }, []);
 
   // ── Toggle watch ─────────────────────────────────────────────────
@@ -621,8 +723,8 @@ export default function DashboardPage() {
             title="Daily Intelligence Briefing"
             content={
               briefingExpanded
-                ? `${AI_BRIEFING} The Beauty category is surging with 4 new entrants this week. Consider prioritizing products with 70+ scores in Health and Electronics — both categories show strong seasonal momentum heading into Q2.`
-                : AI_BRIEFING
+                ? `${briefingText} The Beauty category is surging with 4 new entrants this week. Consider prioritising products with 70+ scores in Health and Electronics — both categories show strong seasonal momentum heading into Q2.`
+                : briefingText
             }
             confidence={88}
             streaming

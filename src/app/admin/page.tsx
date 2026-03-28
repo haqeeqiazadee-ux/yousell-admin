@@ -330,17 +330,20 @@ export default function AdminDashboard() {
           </div>
           <div className="flex gap-3 overflow-x-auto pb-1">
             {preViralProducts.map(p => (
-              <div key={p.id} className="flex-shrink-0 bg-white dark:bg-gray-900 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 flex items-center gap-2.5 card-hover">
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold ${
-                  (p.viral_score ?? 0) >= 90 ? 'gradient-coral text-white' :
-                  (p.viral_score ?? 0) >= 80 ? 'bg-red-100 text-red-700' :
+              <div key={p.id} className="flex-shrink-0 bg-white dark:bg-gray-900 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 flex items-center gap-2.5 card-hover min-w-[200px] max-w-[240px]">
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                  (p.final_score ?? 0) >= 90 ? 'gradient-coral text-white' :
+                  (p.final_score ?? 0) >= 80 ? 'bg-red-100 text-red-700' :
                   'bg-amber-100 text-amber-700'
                 }`}>
-                  {Math.round(p.viral_score ?? 0)}
+                  {Math.round(p.final_score ?? 0)}
                 </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-900 dark:text-gray-100 max-w-[130px] truncate">{p.title}</p>
-                  <p className="text-xs text-gray-400 capitalize">{p.trend_stage} · {p.platform}</p>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate" title={p.title}>{p.title}</p>
+                  <p className="text-xs text-gray-400 capitalize">
+                    {p.platform === 'tiktok' ? 'TikTok' : p.platform === 'amazon' ? 'Amazon' : p.platform}
+                    {p.trend_stage ? ` · ${p.trend_stage}` : ' · Trending'}
+                  </p>
                 </div>
               </div>
             ))}

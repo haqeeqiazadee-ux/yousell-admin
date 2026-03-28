@@ -148,6 +148,26 @@
   --state-ai-streaming-cursor: rgba(165, 180, 252, 0.8);
 }
 
+/* ── Dark Mode Explicit (when .dark class is on any ancestor div, not just :root) ── */
+/* This ensures dashboard/admin dark layouts correctly scope all surface tokens */
+.dark {
+  --surface-base: var(--color-brand-900);
+  --surface-card: var(--color-brand-800);
+  --surface-elevated: var(--color-brand-700);
+  --surface-border: var(--color-brand-600);
+  --surface-glass: rgba(20, 29, 54, 0.7);
+
+  --state-hover-bg: rgba(255, 255, 255, 0.04);
+  --state-hover-border: rgba(255, 255, 255, 0.12);
+  --state-loading-shimmer-from: rgba(255, 255, 255, 0);
+  --state-loading-shimmer-via: rgba(255, 255, 255, 0.05);
+  --state-loading-shimmer-to: rgba(255, 255, 255, 0);
+  --state-active-bg: rgba(255, 255, 255, 0.08);
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-elevated: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
 /* ── Light Mode Overrides (Section 2.1) ── */
 .light,
 :root:not(.dark) {

@@ -88,9 +88,73 @@ function HeroSection() {
           No credit card &middot; 5 min setup &middot; Cancel anytime
         </p>
 
-        {/* Floating dashboard mockup placeholder */}
-        <div className="mt-16 mx-auto max-w-[600px] aspect-[16/10] rounded-xl shadow-2xl bg-gray-900 flex items-center justify-center">
-          <span className="text-gray-500 text-sm">Dashboard Preview</span>
+        {/* Floating dashboard mockup */}
+        <div className="mt-16 mx-auto max-w-[860px] rounded-2xl shadow-2xl overflow-hidden border border-white/10" style={{ background: '#0A0E1A' }}>
+          {/* Top bar */}
+          <div className="flex items-center gap-3 px-4 py-2.5 border-b border-white/10" style={{ background: '#0F1629' }}>
+            <span className="font-bold text-white text-sm tracking-widest">YOUSELL</span>
+            <div className="flex gap-1 ml-2 overflow-x-hidden">
+              {['TikTok', 'Amazon', 'Shopify', 'Pinterest', 'Digital'].map((t, i) => (
+                <span key={t} className={`text-xs px-3 py-1 rounded ${i === 0 ? 'text-white border-b-2 border-indigo-400' : 'text-white/40'}`}>{t}</span>
+              ))}
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center"><Bell className="w-3 h-3 text-white/50" /></div>
+              <div className="w-6 h-6 rounded-full bg-indigo-600/60" />
+            </div>
+          </div>
+          {/* Briefing strip */}
+          <div className="px-4 py-2.5 border-b border-white/5 text-left" style={{ background: 'rgba(99,102,241,0.06)', borderLeft: '2px solid #A78BFA' }}>
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-3 h-3 text-purple-400 shrink-0" />
+              <span className="text-xs text-purple-300 font-medium">Daily Intelligence Briefing</span>
+              <span className="ml-1 text-xs text-white/50">3 curated products in your feed. 2 showing hot signals. Top: LED Sunset Lamp scoring 88/100.</span>
+            </div>
+          </div>
+          {/* Filter bar */}
+          <div className="flex items-center gap-2 px-4 py-2 border-b border-white/5" style={{ background: 'rgba(10,14,26,0.95)' }}>
+            {['Today', '7 Days', '30 Days'].map((f, i) => (
+              <span key={f} className={`text-xs px-2.5 py-1 rounded border ${i === 1 ? 'bg-white/15 text-white border-white/20' : 'text-white/40 border-transparent'}`}>{f}</span>
+            ))}
+            <span className="text-xs px-2.5 py-1 rounded border border-white/10 text-white/40 ml-1">Trend Score ▾</span>
+            <span className="text-xs px-2.5 py-1 rounded border border-white/10 text-white/40">All Categories ▾</span>
+            <span className="ml-auto text-xs text-white/30">3 products</span>
+          </div>
+          {/* Product grid */}
+          <div className="grid grid-cols-3 gap-3 p-4">
+            {[
+              { title: 'LED Sunset Projection Lamp', platform: 'TikTok Shop', score: 88, status: 'HOT', cat: 'Home Decor', rev: '$5.1k', chg: '+22%', color: 'from-amber-600/40 to-yellow-500/40' },
+              { title: 'UV Phone Sanitizer Box', platform: 'Amazon', score: 85, status: 'HOT', cat: 'Electronics', rev: '$4.3k', chg: '+18%', color: 'from-blue-600/40 to-cyan-500/40' },
+              { title: 'Cloud Shaped Humidifier', platform: 'TikTok Shop', score: 77, status: 'RISING', cat: 'Home & Garden', rev: '$3.2k', chg: '+11%', color: 'from-green-600/40 to-emerald-500/40' },
+            ].map((p) => (
+              <div key={p.title} className="rounded-xl border border-white/10 p-3 text-left" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                <div className="flex items-start justify-between mb-2">
+                  <div className={`w-14 h-14 rounded-lg bg-gradient-to-br ${p.color} flex items-center justify-center shrink-0`}>
+                    <span className="text-[9px] text-white/70 text-center leading-tight px-1">{p.title.split(' ').slice(0,2).join(' ')}</span>
+                  </div>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${p.status === 'HOT' ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'}`}>
+                    ↑ {p.status}
+                  </span>
+                </div>
+                <p className="text-[10px] font-semibold text-white leading-tight line-clamp-1 mb-1">{p.title}</p>
+                <div className="flex gap-1 mb-2">
+                  <span className="text-[8px] bg-indigo-500/20 text-indigo-300 px-1 py-0.5 rounded">{p.platform}</span>
+                  <span className="text-[8px] bg-white/10 text-white/50 px-1 py-0.5 rounded">{p.cat}</span>
+                </div>
+                <div className="text-[9px] text-white/40 mb-1">Opportunity Score</div>
+                <div className="h-1 w-full rounded-full bg-white/10 mb-2">
+                  <div className="h-full rounded-full bg-emerald-500" style={{ width: `${p.score}%` }} />
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-bold text-white">{p.rev}</span>
+                  <span className="text-[9px] text-emerald-400 font-medium">{p.chg}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="px-4 pb-3 text-center">
+            <span className="text-[10px] text-white/20">Showing 3 of 100 products · Powered by 25 AI engines</span>
+          </div>
         </div>
       </div>
     </section>
