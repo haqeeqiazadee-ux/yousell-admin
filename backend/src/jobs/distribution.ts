@@ -194,7 +194,7 @@ export async function processDistribution(job: Job<DistributionJobData>) {
               )
               results[channel] = publishRes.ok ? 'published' : `failed: ${publishRes.status}`
             } else {
-              results[channel] = `failed: ${createData.error?.message || 'container creation failed'}`
+              results[channel] = `failed: ${(createData.error as Record<string, unknown>)?.message || 'container creation failed'}`
             }
           } else if (pageId) {
             // Facebook Page post
@@ -280,7 +280,8 @@ export async function processDistribution(job: Job<DistributionJobData>) {
 
           if (postRes.ok) {
             const postData = await postRes.json() as Record<string, unknown>
-            results[channel] = (postData.error?.code === 'ok' || !postData.error) ? 'published' : `failed: ${postData.error?.message}`
+            const postError = postData.error as Record<string, unknown> | undefined
+            results[channel] = (postError?.code === 'ok' || !postError) ? 'published' : `failed: ${postError?.message}`
           } else {
             results[channel] = `failed: ${postRes.status}`
           }
