@@ -201,12 +201,17 @@ function SelectSeparator({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+// SelectOption — alias for SelectItem for backward compatibility
+function SelectOption(props: React.ComponentProps<"div"> & { value: string }) {
+  return <SelectItem {...props} />
+}
+
 export {
   Select,
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectItem as SelectOption,
+  SelectOption,
   SelectLabel,
   SelectSeparator,
   SelectTrigger,
