@@ -18,8 +18,11 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'YouSell Admin',
-  description: 'Admin intelligence platform for YouSell.Online',
+  title: {
+    template: '%s | YouSell',
+    default: 'YouSell — AI Commerce Intelligence Platform',
+  },
+  description: 'The AI-powered commerce intelligence platform. Discover winning products, track trends across 14 platforms, and grow your ecommerce business with 25 AI engines.',
 };
 
 export default function RootLayout({

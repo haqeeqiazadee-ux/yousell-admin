@@ -1,5 +1,11 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, Check, X, Minus } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'YouSell vs Triple Whale',
+  description: 'YouSell vs Triple Whale: Product discovery intelligence vs ad attribution analytics.',
+};
 
 /* ------------------------------------------------------------------ */
 /*  Data                                                               */

@@ -1,5 +1,11 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, Check, X, Minus } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'YouSell vs FastMoss',
+  description: 'See how YouSell compares to FastMoss for product research and trend detection.',
+};
 
 /* ------------------------------------------------------------------ */
 /*  Data                                                               */

@@ -1,5 +1,11 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, Linkedin, Twitter } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'About YouSell',
+  description: 'Meet the team behind YouSell...',
+};
 
 /* ------------------------------------------------------------------ */
 /*  Data                                                               */

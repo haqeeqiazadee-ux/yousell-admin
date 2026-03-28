@@ -1,5 +1,11 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, BarChart3, DollarSign, Truck, Target, LineChart, ShieldCheck } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'YouSell for Resellers',
+  description: 'Buy smarter. Price sharper. Sell faster with AI-powered reseller intelligence.',
+};
 
 /* ------------------------------------------------------------------ */
 /*  Data                                                               */

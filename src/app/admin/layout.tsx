@@ -3,9 +3,18 @@ import { UserProvider } from '@/components/user-context';
 import { AdminSidebar } from '@/components/admin-sidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import type { Profile } from '@/lib/types/database';
+import type { Metadata } from 'next';
 
 // Force dynamic rendering — never statically cache admin pages
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: {
+    template: '%s | YouSell Admin',
+    default: 'YouSell Admin',
+  },
+  description: 'Admin intelligence platform for YouSell.Online',
+};
 
 export default async function AdminLayout({
   children,

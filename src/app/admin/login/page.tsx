@@ -52,7 +52,7 @@ function LoginContent() {
     <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-900">YouSell Admin</h1>
+          <h1 className="text-3xl font-bold text-gray-900">YouSell</h1>
           <p className="text-gray-500 mt-2">Sign in to your account</p>
         </div>
 
@@ -90,6 +90,15 @@ function LoginContent() {
               {error}
             </div>
           )}
+
+          <div className="flex items-center justify-between text-sm">
+            <a href="/signup" className="text-blue-600 hover:underline">
+              Create an account
+            </a>
+            <a href="/forgot-password" className="text-gray-500 hover:underline">
+              Forgot password?
+            </a>
+          </div>
 
           <button
             type="submit"

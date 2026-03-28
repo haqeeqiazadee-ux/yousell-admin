@@ -7,26 +7,27 @@ const productLinks = [
   { label: "Ad Intelligence", href: "/dashboard/ads" },
   { label: "Creator Discovery", href: "/dashboard/creators" },
   { label: "Pricing", href: "/pricing" },
-  { label: "Changelog", href: "#" },
+  { label: "Changelog", href: "/changelog" },
 ];
 
 const useCaseLinks = [
   { label: "For Dropshippers", href: "/for-dropshippers" },
   { label: "For Resellers", href: "/for-resellers" },
   { label: "For Agencies", href: "/for-agencies" },
-  { label: "Enterprise", href: "#" },
+  { label: "Enterprise", href: "/enterprise" },
   { label: "Compare vs FastMoss", href: "/comparison/vs-fastmoss" },
   { label: "Compare vs JungleScout", href: "/comparison/vs-junglescout" },
+  { label: "Compare vs Triple Whale", href: "/comparison/vs-triple-whale" },
 ];
 
 const companyLinks = [
   { label: "About", href: "/about" },
   { label: "Blog", href: "/blog" },
-  { label: "Careers", href: "#" },
-  { label: "Contact", href: "#" },
+  { label: "Careers", href: "/careers" },
+  { label: "Contact", href: "/contact" },
   { label: "Privacy Policy", href: "/privacy" },
   { label: "Terms of Service", href: "/terms" },
-  { label: "Cookie Policy", href: "#" },
+  { label: "Cookie Policy", href: "/cookie-policy" },
 ];
 
 const socialLinks = [

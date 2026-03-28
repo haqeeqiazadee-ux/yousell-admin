@@ -1,5 +1,11 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, Users, Code2, LayoutDashboard, Shield, Globe, Layers } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'YouSell for Agencies',
+  description: 'One platform for every client. White-label intelligence for ecommerce agencies.',
+};
 
 /* ------------------------------------------------------------------ */
 /*  Data                                                               */

@@ -1,5 +1,11 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, Check, X, Minus } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'YouSell vs JungleScout',
+  description: 'YouSell vs JungleScout: Multi-platform AI intelligence vs single-marketplace tools.',
+};
 
 /* ------------------------------------------------------------------ */
 /*  Data                                                               */

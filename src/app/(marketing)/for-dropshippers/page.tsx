@@ -1,5 +1,11 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, TrendingUp, Zap, Package, Search, BarChart3, Users } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'YouSell for Dropshippers',
+  description: 'Find winning products before they peak. Built for TikTok and Shopify dropshippers.',
+};
 
 /* ------------------------------------------------------------------ */
 /*  Data                                                               */

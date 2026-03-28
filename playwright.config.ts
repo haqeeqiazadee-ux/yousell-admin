@@ -25,6 +25,7 @@ export default defineConfig({
   workers: 1,
   reporter: [
     ['html', { outputFolder: 'e2e-report', open: 'never' }],
+    ['json', { outputFile: 'e2e-results/results.json' }],
     ['list'],
   ],
   use: {
